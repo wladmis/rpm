@@ -20,6 +20,8 @@
 
 PROG="${0##*/}"
 
+RPM_COMPRESS_METHOD="${RPM_COMPRESS_METHOD## }"
+RPM_COMPRESS_METHOD="${RPM_COMPRESS_METHOD%% }"
 case "$RPM_COMPRESS_METHOD" in
 	no|none|plain|skip)
 		exit 0

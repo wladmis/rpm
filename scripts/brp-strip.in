@@ -176,8 +176,8 @@ export STRIP_EXECUTABLE=
 export STRIP_RELOCATABLE=
 export STRIP_SHARED=
 export STRIP_STATIC=
-for	t in $RPM_STRIP_METHOD; do
-	case "${t/%,}" in
+for t in `echo "$RPM_STRIP_METHOD" |tr , ' '`; do
+	case "$t" in
 		no|none|off|false)
 			exit 0
 			;;

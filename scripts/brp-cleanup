@@ -21,6 +21,8 @@
 
 PROG="${0##*/}"
 
+RPM_CLEANUP_METHOD="${RPM_CLEANUP_METHOD## }"
+RPM_CLEANUP_METHOD="${RPM_CLEANUP_METHOD%% }"
 echo "Cleaning files in $RPM_BUILD_ROOT ($RPM_CLEANUP_METHOD)"
 
 if [ "$RPM_CLEANUP_METHOD" = skip ]; then
