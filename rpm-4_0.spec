@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt14
+Release: alt15
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -51,7 +51,7 @@ BuildPreReq: automake >= 1.6.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindi
 BuildConflicts: rpm-devel
 
 # Automatically added by buildreq on Thu Nov 01 2001
-BuildRequires: bison bzlib-devel-static cpio gcc-c++ gettext-tools gnupg libbeecrypt-devel-static libdb4-devel-static libpopt-devel-static libstdc++-devel openssh-clients zlib-devel-static
+BuildRequires: bison bzlib-devel-static cpio gcc-c++ gettext-tools gnupg libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static libstdc++-devel openssh-clients zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -61,7 +61,7 @@ PreReq: %get_dep libbeecrypt
 PreReq: %get_dep libpopt
 PreReq: %get_dep zlib
 PreReq: %get_dep bzlib
-PreReq: %get_dep libdb4
+PreReq: %get_dep libdb4.0
 
 %package -n lib%name-devel
 Summary: Development files for applications which will manipulate RPM packages
@@ -70,14 +70,14 @@ Group: Development/C
 Provides: %name-devel = %version-%release
 Obsoletes: %name-devel
 Requires: lib%name = %version-%release
-Requires: bzlib-devel, libbeecrypt-devel, libdb4-devel, libpopt-devel, zlib-devel
+Requires: bzlib-devel, libbeecrypt-devel, libdb4.0-devel, libpopt-devel, zlib-devel
 
 %package -n lib%name-devel-static
 Summary: Static libraries for developing statically linked applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Статические библиотеки, необходимые для разработки статических приложений, взаимодействующих с RPM-пакетами
 Group: Development/C
 Requires: lib%name-devel = %version-%release
-Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4-devel-static, libpopt-devel-static, zlib-devel-static
+Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.0-devel-static, libpopt-devel-static, zlib-devel-static
 
 %package build
 Summary: Scripts and executable programs used to build packages
@@ -482,6 +482,13 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Apr 22 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt15
+- platform.in:
+  + export MAKEFLAGS variable (#0001796).
+  + changed macros: %%post_service, %%preun_service.
+- update-alternatives.8: fixed atavism (#0002273).
+- Updated libdb4 build requirements.
+
 * Sat Feb 01 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt14
 - rpmio/macro.c: filter out non-alphanumeric macro files (#0001925).
 - perl.req: fixed typo (#0002056).
