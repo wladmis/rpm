@@ -269,6 +269,9 @@ bzip2 -9 CHANGES ||:
 # Valid groups.
 %__install -p -m644 GROUPS $RPM_BUILD_ROOT%_libdir/%name/
 
+# buildreq ignore rules.
+install -p -m644 rpm-build.buildreq $RPM_BUILD_ROOT%_sysconfdir/buildreqs/files/ignore.d/rpm-build
+
 chmod a+x scripts/find-lang
 # Manpages have been moved to their own packages.
 #./scripts/find-lang --with-man %name rpm2cpio --output %name.lang
@@ -406,6 +409,7 @@ fi
 %_mandir/man?/update-alternatives*
 
 %files build
+%config %_sysconfdir/buildreqs/files/ignore.d/*
 %rpmattr %_bindir/gendiff
 %_bindir/rpmbuild
 %_bindir/relative
@@ -504,6 +508,9 @@ fi
   + %%add_verify_elf_skiplist()
   + %%add_findreq_skiplist()
   + %%add_findprov_skiplist()
+- New group: Development/Objective-C.
+- rpm-build: added buildreq ignore rules.
+
 
 * Mon Sep 09 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt4
 - new brp method: verify_elf.
