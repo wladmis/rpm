@@ -21,12 +21,23 @@
 
 PROG="${0##*/}"
 
+: ${RPM_VERIFY_ELF_SKIPLIST:=}
+export RPM_VERIFY_ELF_SKIPLIST
+
 rc=0
 for f in "$@"; do
 	if [ ! -f "$f" ]; then
 		echo "$PROG: $f: file unavailable" >&2
 		rc=1
 		continue
+	fi
+
+	if [ -n "$RPM_VERIFY_ELF_SKIPLIST" ]; then
+		for skip in $RPM_VERIFY_ELF_SKIPLIST; do
+			if [ -z "${f//$skip}" ]; then
+				continue 2
+			fi
+		done
 	fi
 
 	t="$(/usr/bin/file -b "$f")"

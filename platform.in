@@ -347,7 +347,7 @@
 @alt@%clean_wms	[ "$1" = 0 -a -x %_update_wms_bin ] && %_update_wms_bin ||:
 @alt@
 @alt@# Synchronize the scrollkeeper database.
-@alt@%_update_scrollkeeper_bin	%_sbindir/scrollkeeper-update
+@alt@%_update_scrollkeeper_bin	%_bindir/scrollkeeper-update
 @alt@%update_scrollkeeper	[ -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin ||:
 @alt@%clean_scrollkeeper	[ "$1" = 0 -a -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin ||:
 @alt@
@@ -361,10 +361,45 @@
 @alt@%_findreq_default_method	files lib pam perl shell
 @alt@%_findprov_default_method	pam lib perl
 @alt@
+@alt@%_cleanup_topdir	%nil
+@alt@%_compress_topdir	%_usr
+@alt@%_strip_topdir	%nil
+@alt@%_verify_elf_topdir	%nil
+@alt@%_findreq_topdir	%nil
+@alt@%_findprov_topdir	%nil
+@alt@
+@alt@%_cleanup_skiplist	%nil
+@alt@%_compress_skiplist	%nil
+@alt@%_strip_skiplist	*/debug/*
+@alt@%_verify_elf_skiplist	%nil
+@alt@%_findreq_skiplist	%_docdir/*
+@alt@%_findprov_skiplist	%_docdir/*
+@alt@
+@alt@%set_cleanup_method()	%global _cleanup_method %*
 @alt@%set_compress_method()	%global _compress_method %*
 @alt@%set_strip_method()	%global _strip_method %*
-@alt@%set_strip_autoskip()	%global _strip_autoskip %*
 @alt@%set_verify_elf_method()	%global _verify_elf_method %*
+@alt@
+@alt@%set_cleanup_topdir()	%global _cleanup_topdir %*
+@alt@%set_compress_topdir()	%global _compress_topdir %*
+@alt@%set_strip_topdir()	%global _strip_topdir %*
+@alt@%set_verify_elf_topdir()	%global _verify_elf_topdir %*
+@alt@%set_findreq_topdir()	%global _findreq_topdir %*
+@alt@%set_findprov_topdir()	%global _findprov_topdir %*
+@alt@
+@alt@%set_cleanup_skiplist()	%global _cleanup_skiplist %*
+@alt@%set_compress_skiplist()	%global _compress_skiplist %*
+@alt@%set_strip_skiplist()	%global _strip_skiplist %*
+@alt@%set_verify_elf_skiplist()	%global _verify_elf_skiplist %*
+@alt@%set_findreq_skiplist()	%global _findreq_skiplist %*
+@alt@%set_findprov_skiplist()	%global _findprov_skiplist %*
+@alt@
+@alt@%add_cleanup_skiplist()	%global _cleanup_skiplist %_cleanup_skiplist %*
+@alt@%add_compress_skiplist()	%global _compress_skiplist %_compress_skiplist %*
+@alt@%add_strip_skiplist()	%global _strip_skiplist %_strip_skiplist %*
+@alt@%add_verify_elf_skiplist()	%global _verify_elf_skiplist %_verify_elf_skiplist %*
+@alt@%add_findreq_skiplist()	%global _findreq_skiplist %_findreq_skiplist %*
+@alt@%add_findprov_skiplist()	%global _findprov_skiplist %_findprov_skiplist %*
 @alt@
 @alt@%strip_executable	RPM_STRIP_METHOD=executable @RPMCONFIGDIR@/brp-strip
 @alt@%strip_relocatable	RPM_STRIP_METHOD=relocatable @RPMCONFIGDIR@/brp-strip

@@ -153,7 +153,20 @@ FindLibProvs()
 	fi
 }
 
+: ${RPM_FINDPROV_TOPDIR:=}
+: ${RPM_FINDPROV_SKIPLIST:=}
+
 while IFS= read -r f; do
+	if [ -n "$RPM_FINDPROV_TOPDIR" ] && [ -z "${f%%$RPM_BUILD_ROOT$RPM_FINDPROV_TOPDIR/*}" ]; then
+		continue;
+	fi
+	if [ -n "$RPM_FINDPROV_SKIPLIST" ]; then
+		for skip in $RPM_FINDPROV_SKIPLIST; do
+			if [ -z "${f//$skip}" ]; then
+				continue 2
+			fi
+		done
+	fi
 	if t="$(file -bL "$f")"; then
 		if [ -z "${t##* text*}" ]; then
 			ListScriptProvs "$f" "$t"

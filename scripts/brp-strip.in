@@ -70,10 +70,12 @@ EOF
 TEMP=`getopt -n "$PROG" -o hpR:sgSN:K:xXvT: -l help,preserve-dates,remove-section:,skip-files:,strip-all,strip-symbol:,keep-symbol:,discard-all,discard-locals,verbose,topdir: -- "$@"` || USAGE
 eval set -- "$TEMP"
 
-: ${TOPDIR:=$RPM_BUILD_ROOT}
+: ${RPM_STRIP_SKIPLIST:=}
+: ${RPM_STRIP_TOPDIR:=}
+export RPM_STRIP_SKIPLIST
+
 export STRIP_FORCED=
 export STRIP_FORCED_OPTS=
-export STRIP_AUTOSKIP="$RPM_STRIP_AUTOSKIP"
 
 AddForcedOpts()
 {
@@ -101,7 +103,7 @@ while :; do
 			;;
 		--skip-files)
 			shift
-			STRIP_AUTOSKIP="$STRIP_AUTOSKIP $1"
+			RPM_STRIP_SKIPLIST="$RPM_STRIP_SKIPLIST $1"
 			shift
 			;;
 		-s|--strip-all)
@@ -161,8 +163,16 @@ while :; do
 	esac
 done
 
-cd "$TOPDIR"
-cd "$OLDPWD"
+if [ -z "$TOPDIR" ]; then
+	TOPDIR="$RPM_BUILD_ROOT"
+	cd "$TOPDIR"
+	cd "$OLDPWD"
+	[ -d "$TOPDIR$RPM_STRIP_TOPDIR" ] || exit 0
+	TOPDIR="$TOPDIR$RPM_STRIP_TOPDIR"
+else
+	cd "$TOPDIR"
+	cd "$OLDPWD"
+fi
 
 TOPDIR="$(echo "$TOPDIR" |sed '
 s:/\(\./\)\+:/:g
@@ -229,8 +239,6 @@ StripTree()
 	echo "Stripping binaries in $1 ($SHOW_METHODS)"
 	find "$1" -type f $PERMS -print0 |xargs -r0 @RPMCONFIGDIR@/strip_files
 }
-
-[ -n "$STRIP_AUTOSKIP" ] || STRIP_AUTOSKIP='*/debug/*'
 
 if [ -n "$*" ]; then
 	for d in "$@"; do

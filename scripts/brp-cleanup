@@ -41,11 +41,17 @@ if [ "$RPM_CLEANUP_METHOD" = none ]; then
 	exit 0
 fi
 
+: ${RPM_CLEANUP_TOPDIR:=}
+[ -d "$RPM_BUILD_ROOT$RPM_CLEANUP_TOPDIR" ] || exit 0
+
+: ${RPM_CLEANUP_SKIPLIST:=}
+export RPM_CLEANUP_SKIPLIST
+
 if [ -n "$RPM_CLEANUP_METHOD" -a "$RPM_CLEANUP_METHOD" != auto ]; then
 	exec "$RPM_CLEANUP_METHOD"
 fi
 
-find -type f \(	\
+find .$RPM_CLEANUP_TOPDIR -type f \(	\
 	-name '#*#'	\
 	-o -name '*~'	\
 	-o -name DEADJOE	\
@@ -62,10 +68,12 @@ find -type f \(	\
 	\) -print0 |
 		xargs -r0 rm -vf --
 
-find -type d -name CVS -print0 |
+find .$RPM_CLEANUP_TOPDIR -type d -name CVS -print0 |
 	xargs -r0 rm -vrf --
 
-cd usr/lib/perl5 &>/dev/null || exit 0
+# All the rest is perl cleanup stuff.
+
+cd ./usr/lib/perl5 &>/dev/null || exit 0
 
 find -type f -name .packlist -print0 |
 	xargs -r0 rm -vf --

@@ -36,6 +36,9 @@ fi
 
 cd "$RPM_BUILD_ROOT" || exit
 
+: ${RPM_COMPRESS_TOPDIR:=}
+[ -d "$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR" ] || exit 0
+
 StripSuffix()
 {
 	for s in gz bz2 Z; do
@@ -48,13 +51,13 @@ StripSuffix()
 	echo -nE "$1"
 }
 
-for d in `find "$RPM_BUILD_ROOT" -type d -name info`; do
+for d in `find "$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR" -type d -name info`; do
 	find "$d" -type f \( -name \*.gz -o -name \*.Z \) -print0 |xargs -r0 gunzip
 	find "$d" -type f -name \*.bz2 -print0 |xargs -r0 bunzip2
 	find "$d" -type f -a \! -name dir -print0 |xargs -r0 @RPMCONFIGDIR@/compress_files
 done
 
-for d in `find "$RPM_BUILD_ROOT" -type d -name man`; do
+for d in `find "$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR" -type d -name man`; do
 	find "$d" -type f -size 0 -print0 |xargs -r0 rm -fv
 	find "$d" -type f -print0 |xargs -r0 chmod a-x
 	# Uncompress everything.

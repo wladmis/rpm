@@ -40,4 +40,7 @@ case "$RPM_VERIFY_ELF_METHOD" in
 		;;
 esac
 
-find -type f -print0 |xargs -r0 @RPMCONFIGDIR@/verify-elf
+: ${RPM_VERIFY_ELF_TOPDIR:=}
+[ -d "$RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR" ] || exit 0
+
+find .$RPM_VERIFY_ELF_TOPDIR -type f -print0 |xargs -r0 @RPMCONFIGDIR@/verify-elf

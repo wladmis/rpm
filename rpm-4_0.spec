@@ -4,7 +4,7 @@
 
 Name: rpm
 Version: %rpm_version
-Release: alt4
+Release: alt5
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -472,6 +472,39 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Sep 26 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt5
+- New macros:
+  + %%_cleanup_topdir
+  + %%_compress_topdir
+  + %%_strip_topdir
+  + %%_verify_elf_topdir
+  + %%_findreq_topdir
+  + %%_findprov_topdir
+  + %%_cleanup_skiplist
+  + %%_compress_skiplist
+  + %%_strip_skiplist
+  + %%_verify_elf_skiplist
+  + %%_findreq_skiplist
+  + %%_findprov_skiplist
+  + %%set_cleanup_topdir()
+  + %%set_compress_topdir()
+  + %%set_strip_topdir()
+  + %%set_verify_elf_topdir()
+  + %%set_findreq_topdir()
+  + %%set_findprov_topdir()
+  + %%set_cleanup_skiplist()
+  + %%set_compress_skiplist()
+  + %%set_strip_skiplist()
+  + %%set_verify_elf_skiplist()
+  + %%set_findreq_skiplist()
+  + %%set_findprov_skiplist()
+  + %%add_cleanup_skiplist()
+  + %%add_compress_skiplist()
+  + %%add_strip_skiplist()
+  + %%add_verify_elf_skiplist()
+  + %%add_findreq_skiplist()
+  + %%add_findprov_skiplist()
+
 * Mon Sep 09 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt4
 - new brp method: verify_elf.
 - platform:
