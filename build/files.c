@@ -2826,6 +2826,9 @@ static int checkFiles(StringBuf fileList, int fileListLen)
     int rc = 0;
     char *buf;
 
+    if (fileListLen == 0)
+        return 0;
+
     s = rpmExpand("%{?__check_files}", NULL);
     if (!(s && *s)) {
 	rc = -1;
