@@ -53,27 +53,13 @@ fix()
 	local old_val=
 	local new_val=
 
-	while [ "$includedir" != "$saved_val" ]; do
-		saved_val="$includedir"
-		includedir="${includedir//\/\///}"
-	done
-
-	saved_val=
-	while [ "$libdir" != "$saved_val" ]; do
-		saved_val="$libdir"
-		libdir="${libdir//\/\///}"
-	done
+	includedir="$(printf %s "$includedir" |tr -s /)"
+	libdir="$(printf %s "$libdir" |tr -s /)"
 
 	# fix cflags
 
 	old_val=`sed -ne "s/^Cflags: \([^']*\)\$/\1/pg" "$f"` || return 1
-	new_val="$old_val"
-
-	saved_val=
-	while [ "$new_val" != "$saved_val" ]; do
-		saved_val="$new_val"
-		new_val="${new_val//\/\///}"
-	done
+	new_val="$(printf %s "$old_val" |tr -s /)"
 
 	saved_val=
 	while [ "$new_val" != "$saved_val" ]; do
@@ -89,11 +75,7 @@ fix()
 		done
 	fi
 
-	saved_val=
-	while [ "$new_val" != "$saved_val" ]; do
-		saved_val="$new_val"
-		new_val="${new_val//  / }"
-	done
+	new_val="$(printf %s "$new_val" |tr -s ' ')"
 	new_val="${new_val## }"
 	new_val="${new_val%% }"
 
@@ -105,13 +87,7 @@ fix()
 	# fix libs
 
 	old_val=`sed -ne "s/^Libs: \([^']*\)\$/\1/pg" "$f"` || return 1
-	new_val="$old_val"
-
-	saved_val=
-	while [ "$new_val" != "$saved_val" ]; do
-		saved_val="$new_val"
-		new_val="${new_val//\/\///}"
-	done
+	new_val="$(printf %s "$old_val" |tr -s /)"
 
 	saved_val=
 	while [ "$new_val" != "$saved_val" ]; do
@@ -128,11 +104,8 @@ fix()
 			new_val=`printf %s "$new_val" |sed -e 's,\(^\| \+\)-L\${libdir}\($\| \+\),\1\2,g'` || return 1
 		done
 	fi
-	saved_val=
-	while [ "$new_val" != "$saved_val" ]; do
-		saved_val="$new_val"
-		new_val="${new_val//  / }"
-	done
+
+	new_val="$(printf %s "$new_val" |tr -s ' ')"
 	new_val="${new_val## }"
 	new_val="${new_val%% }"
 
@@ -155,7 +128,7 @@ for f in "$@"; do
 
 	if [ -n "$RPM_FIXUP_SKIPLIST" ]; then
 		for skip in $RPM_FIXUP_SKIPLIST; do
-			if [ -z "${fname//$skip}" ]; then
+			if [ -z "${fname##$skip}" ]; then
 				continue 2
 			fi
 		done

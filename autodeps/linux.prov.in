@@ -252,7 +252,7 @@ while IFS= read -r f; do
 	fi
 	if [ -n "$RPM_FINDPROV_SKIPLIST" ]; then
 		for skip in $RPM_FINDPROV_SKIPLIST; do
-			if [ -z "${fname//$skip}" ]; then
+			if [ -z "${fname##$skip}" ]; then
 				continue 2
 			fi
 		done

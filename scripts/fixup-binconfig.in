@@ -54,30 +54,10 @@ fix()
 
 	[ ! -s "$TMPFILE" ] || . "$TMPFILE" || return 1
 
-	local saved_val=
-	local old_val=
-	local new_val=
-
-	while [ "$prefix" != "$saved_val" ]; do
-		saved_val="$prefix"
-		prefix="${prefix//\/\///}"
-	done
-
-	while [ "$exec_prefix" != "$saved_val" ]; do
-		saved_val="$exec_prefix"
-		exec_prefix="${exec_prefix//\/\///}"
-	done
-
-	while [ "$includedir" != "$saved_val" ]; do
-		saved_val="$includedir"
-		includedir="${includedir//\/\///}"
-	done
-
-	saved_val=
-	while [ "$libdir" != "$saved_val" ]; do
-		saved_val="$libdir"
-		libdir="${libdir//\/\///}"
-	done
+	prefix="$(printf %s "$prefix" |tr -s /)"
+	exec_prefix="$(printf %s "$exec_prefix" |tr -s /)"
+	includedir="$(printf %s "$includedir" |tr -s /)"
+	libdir="$(printf %s "$libdir" |tr -s /)"
 
 	# fix cflags
 
@@ -182,7 +162,7 @@ for f in "$@"; do
 
 	if [ -n "$RPM_FIXUP_SKIPLIST" ]; then
 		for skip in $RPM_FIXUP_SKIPLIST; do
-			if [ -z "${fname//$skip}" ]; then
+			if [ -z "${fname##$skip}" ]; then
 				continue 2
 			fi
 		done
