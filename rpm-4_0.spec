@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt29
+Release: alt30
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -44,7 +44,6 @@ PreReq: alt-gpgkeys, coreutils
 # XXX linked binaries like /bin/rpm.
 Requires: glibc-core
 
-BuildPreReq: python22
 %{?_with_python:BuildPreReq: python-devel = %__python_version}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 
@@ -504,6 +503,19 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Jan 25 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt30
+- Reviewed all shell helpers for unneeded pattern
+  substitutions (#2743).
+- find-provides: output extra provides for sonames found in
+  non-default locations.
+- build/parseReqs.c(parseRCPOT):
+  tokens must not contain '%' symbol since it is common
+  macros manipulation error.
+- build/reqprov.c(addReqProv):
+  + enhanced duplicates detection algorithm;
+  + do not generate provided requires.
+- Build python module with latest python.
+
 * Sun Jan 04 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt29
 - brp-cleanup: fixed possible cleanup misses.
 - brp-cleanup, platform: implemented %%_keep_libtool_files support.
