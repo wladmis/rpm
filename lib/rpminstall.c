@@ -18,6 +18,10 @@
 /*@access IDTX @*/
 /*@access IDT @*/
 
+#include <sys/ioctl.h>
+
+int	fancyPercents = 0;
+ 
 /*@unchecked@*/
 static int hashesPrinted = 0;
 
@@ -28,48 +32,101 @@ static int progressTotal = 0;
 /*@unchecked@*/
 static int progressCurrent = 0;
 
+static void checkTTY( void )
+{
+	struct winsize ws;
+
+	if ( checkedTTY )
+		return;
+
+	checkedTTY = 1;
+
+	if ( ioctl( STDOUT_FILENO, TIOCGWINSZ, (char *)&ws ) < 0 )
+	{
+		fancyPercents = 0;
+	}
+	else
+	{
+		int w = ws.ws_col;
+		int i;
+		if ( w <= 2 )
+			w = 80;
+
+		if ( w < 39 )
+		{
+			fancyPercents = 0;
+			nameWidth = w - 2;
+			hashesTotal = 1;
+			return;
+		}
+
+		if ( fancyPercents )
+		{
+			w -= 6;
+
+			for ( i = packagesTotal; i > 0; i /= 10 )
+				++countWidth;
+
+			nameWidth -= countWidth + 2;
+		}
+
+		hashesTotal = w - 30;
+		if ( hashesTotal > 100 )
+		{
+			nameWidth += (hashesTotal - 100 );
+			hashesTotal = 100;
+		}
+	}
+}
+
 /**
  */
 static void printHash(const unsigned long amount, const unsigned long total)
 	/*@globals hashesPrinted, progressCurrent, fileSystem @*/
 	/*@modifies hashesPrinted, progressCurrent, fileSystem @*/
 {
-    int hashesNeeded;
-    int hashesTotal = 50;
+	checkTTY();
+	if ( hashesPrinted <= hashesTotal )
+	{
+		int hashesNeeded = hashesTotal * (total ? (((float) amount) / total) : 1);
+		while ( hashesNeeded > hashesPrinted )
+		{
+			if ( fancyPercents )
+			{
+				int i;
+				for ( i = 0; i < hashesPrinted; ++i )
+					putchar( '#' );
+				for ( ; i < hashesTotal; ++i )
+					putchar( ' ' );
+				printf( "(%3d%%)", (int)(100 * (total ? (((float) amount) / total) : 1)) );
+				for ( i = 0; i < (hashesTotal + 6); ++i )
+					putchar( '\b' );
+			} else
+				putchar( '#' );
 
-    if (isatty (STDOUT_FILENO))
-	hashesTotal = 44;
+			fflush( stdout );
+			++hashesPrinted;
+		}
 
-    if (hashesPrinted != hashesTotal) {
-	hashesNeeded = hashesTotal * (total ? (((float) amount) / total) : 1);
-	while (hashesNeeded > hashesPrinted) {
-	    if (isatty (STDOUT_FILENO)) {
-		int i;
-		for (i = 0; i < hashesPrinted; i++) (void) putchar ('#');
-		for (; i < hashesTotal; i++) (void) putchar (' ');
-		fprintf(stdout, "(%3d%%)",
-			(int)(100 * (total ? (((float) amount) / total) : 1)));
-		for (i = 0; i < (hashesTotal + 6); i++) (void) putchar ('\b');
-	    } else
-		fprintf(stdout, "#");
+		fflush( stdout );
+		hashesPrinted = hashesNeeded;
 
-	    hashesPrinted++;
+		if ( hashesPrinted >= hashesTotal )
+		{
+			if ( fancyPercents )
+			{
+				int i;
+				++progressCurrent;
+				for ( i = 1; i < hashesPrinted; ++i )
+					putchar( '#' );
+				printf( " [%3d%%]\n", (int)(100 * (progressTotal ? 
+					(((float) progressCurrent) / progressTotal) : 1))) ;
+			} else
+				putchar( '\n' );
+		}
+
+		fflush( stdout );
 	}
-	(void) fflush(stdout);
-	hashesPrinted = hashesNeeded;
-
-	if (hashesPrinted == hashesTotal) {
-	    int i;
-	    progressCurrent++;
-	    if (isatty(STDOUT_FILENO)) {
-	        for (i = 1; i < hashesPrinted; i++) (void) putchar ('#');
-		fprintf(stdout, " [%3d%%]", (int)(100 * (progressTotal ?
-			(((float) progressCurrent) / progressTotal) : 1)));
-	    }
-	    fprintf(stdout, "\n");
-	}
-	(void) fflush(stdout);
-    }
 }
 
 void * rpmShowProgress(/*@null@*/ const void * arg,
@@ -117,10 +174,10 @@ void * rpmShowProgress(/*@null@*/ const void * arg,
 	if (flags & INSTALL_HASH) {
 	    s = headerSprintf(h, "%{NAME}",
 				rpmTagTable, rpmHeaderFormats, NULL);
-	    if (isatty (STDOUT_FILENO))
-		fprintf(stdout, "%4d:%-23.23s", progressCurrent + 1, s);
+	    if ( fancyPercents )
+		printf( "%*d: %-*.*s", countWidth, progressCurrent + 1, nameWidth, nameWidth, s );
 	    else
-		fprintf(stdout, "%-28.28s", s);
+		printf("%-*.*s", nameWidth, nameWidth, s);
 	    (void) fflush(stdout);
 	    s = _free(s);
 	} else {
@@ -149,10 +206,16 @@ void * rpmShowProgress(/*@null@*/ const void * arg,
 	progressCurrent = 0;
 	if (!(flags & INSTALL_LABEL))
 	    break;
-	if (flags & INSTALL_HASH)
-	    fprintf(stdout, "%-28s", _("Preparing..."));
-	else
-	    fprintf(stdout, "%s\n", _("Preparing packages for installation..."));
+	if (flags & INSTALL_HASH) {
+	    int width;
+	    checkTTY();
+	    if ( fancyPercents )
+		width = countWidth + 2 + nameWidth;
+	    else
+		width = nameWidth;
+	    printf( "%-*.*s", width, width, _("Preparing...") );
+	} else
+	    printf("%s\n", _("Preparing packages for installation..."));
 	(void) fflush(stdout);
 	break;
 
