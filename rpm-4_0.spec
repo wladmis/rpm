@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt23
+Release: alt24
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -412,9 +412,6 @@ fi
 %rpmattr %_libdir/%name/rpmb
 %rpmattr %_libdir/%name/brp-*
 %rpmattr %_libdir/%name/*_files
-%rpmattr %_libdir/%name/config.guess
-%rpmattr %_libdir/%name/config.site
-%rpmattr %_libdir/%name/config.sub
 %rpmattr %_libdir/%name/mkinstalldirs
 %rpmattr %_libdir/%name/convertrpmrc.sh
 %rpmattr %_libdir/%name/rpm2cpio.sh
@@ -473,6 +470,16 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri Sep 12 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt24
+- rpm-build: do not package %_libdir/%name/config.* files (#2732).
+- build/pack.c: create %%_srcrpmdir (#2353).
+- rpmrc.in:
+  + added armv5 arch support (#2801, Sergey Bolshakov).
+- configure.in:
+  + fixed build without python (#2802, Sergey Bolshakov).
+- perl.{req,prov}:
+  + new version from perl maintainer (Alexey Tourbin).
+
 * Sat Aug 16 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt23
 - autogen.sh:
   + removed all autotools restrictions.
@@ -483,11 +490,14 @@ fi
   + updated to support ELF objects with private flags.
 
 * Mon Jul 21 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt22
-- lib/depends.c: fixed "Requires(post,preun)" problem.
-- lib/psm.c: do syslog only when geteuid() == 0.
+- lib/depends.c:
+  + fixed "Requires(post,preun)" problem.
+- lib/psm.c:
+  + do syslog only when geteuid() == 0.
 - build/poptBT.c, build/rpmbuild.h, build.c, rpmqv.c:
   + implemented "rpmbuild -bM" (raorn).
-- build/parsePreamble.c: disabled readIcon() code (fixes #0002637).
+- build/parsePreamble.c:
+  + disabled readIcon() code (fixes #0002637).
 - rpmpopt.in:
   + ignore build dependencies in "rpm* -C" (at);
   + added alias for "rpm -bM".
@@ -512,7 +522,8 @@ fi
   + honor $PAM_NAME_SUFFIX.
 - pam.req:
   + honor %PAM_SO_SUFFIX and $PAM_NAME_SUFFIX.
-- build/files.c: honor generateDepends() return code.
+- build/files.c:
+  + honor generateDepends() return code.
 - rpminit:
   + do not be verbose by default;
   + parse -v/--verbose option.
