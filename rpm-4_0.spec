@@ -44,14 +44,15 @@ PreReq: alt-gpgkeys, coreutils, grep, perl-base, gawk, mktemp, shadow-utils
 # XXX linked binaries like /bin/rpm.
 Requires: glibc-core
 
+BuildPreReq: python
 %{?_with_python:BuildPreReq: python-devel = %__python_version}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 
 BuildPreReq: automake >= 1.6.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 BuildConflicts: rpm-devel
 
-# Automatically added by buildreq on Thu Nov 01 2001
-BuildRequires: bzlib-devel-static cpio gcc-c++ gettext-tools gnupg libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static libstdc++-devel openssh-clients zlib-devel-static
+# Automatically added by buildreq on Mon May 05 2003
+BuildRequires: bzlib-devel-static cpio gcc-c++ glibc-devel-static gnupg libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static unzip zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -185,7 +186,9 @@ find -type f \( -name .cvsignore -o -name \*~ -o -name \*.orig \) -print0 |
 %build
 ./autogen.sh --noconfigure
 export \
-	ac_cv_path_CTAGS=/usr/bin/ctags
+	ac_cv_path_CTAGS=/usr/bin/ctags \
+	ac_cv_path___SSH=/usr/bin/ssh \
+	#
 %configure \
 	%{?_with_python} %{?_without_python} \
 	%{?_with_apidocs} %{?_without_apidocs} \
