@@ -119,6 +119,7 @@ fix()
 	while [ "$new_val" != "$saved_val" ]; do
 		saved_val="$new_val"
 		new_val=`echo "$new_val" |sed -e 's,\(^\| \+\)-L/usr\(/local\)\?/lib\($\| \+\),\1\3,g'`
+		new_val=`echo "$new_val" |sed -e 's,\(^\| \+\)-L\('$RPM_BUILD_ROOT'\|'$RPM_BUILD_DIR'\|/usr/lib/gcc-lib\)[^ ]*\($\| \+\),\1\3,g'`
 	done
 
 	if [ "$libdir" = /usr/lib ]; then

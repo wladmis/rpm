@@ -129,6 +129,7 @@ fix()
 	while ! cmp -s "$f_new" "$f_saved"; do
 		cat "$f_new" >"$f_saved"
 		subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)/usr\(/local\)\?/lib\($\|["'\'']\| \+\)@\1\4@g' -- "$f_new"
+		subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\('$RPM_BUILD_ROOT'\|'$RPM_BUILD_DIR'\|/usr/lib/gcc-lib\)["'\'' ]*\($\|["'\'']\| \+\)@\1\4@g' -- "$f_new"
 	done
 
 	if [ "$libdir" = /usr/lib ]; then
