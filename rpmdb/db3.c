@@ -123,6 +123,7 @@ static int db_fini(dbiIndex dbi, const char * dbhome,
 {
     rpmdb rpmdb = dbi->dbi_rpmdb;
     DB_ENV * dbenv = rpmdb->db_dbenv;
+    int _printit;
     int rc;
 
     if (dbenv == NULL)
@@ -147,7 +148,9 @@ static int db_fini(dbiIndex dbi, const char * dbhome,
 #else
 	xx = dbenv->remove(dbenv, dbhome, NULL, 0);
 #endif
-	xx = cvtdberr(dbi, "dbenv->remove", xx, _debug);
+	/* XXX ignore "Device or resource busy" error messages. */
+	_printit = (xx == EBUSY ? 0 : _debug);
+	xx = cvtdberr(dbi, "dbenv->remove", xx, _printit);
 
 	if (dbfile)
 	    rpmMessage(RPMMESS_DEBUG, _("removed  db environment %s/%s\n"),
@@ -252,8 +255,10 @@ static int db_init(dbiIndex dbi, const char * dbhome,
 	    sleep(15);
 	}
     } else {
+#if !(DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 3)
 	xx = dbenv->set_verbose(dbenv, DB_VERB_CHKPOINT,
 		(dbi->dbi_verbose & DB_VERB_CHKPOINT));
+#endif
 	xx = dbenv->set_verbose(dbenv, DB_VERB_DEADLOCK,
 		(dbi->dbi_verbose & DB_VERB_DEADLOCK));
 	xx = dbenv->set_verbose(dbenv, DB_VERB_RECOVERY,
@@ -683,6 +688,9 @@ static int db3stat(dbiIndex dbi, unsigned int flags)
 	/*@modifies dbi, fileSystem @*/
 {
     DB * db = dbi->dbi_db;
+#if (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 3)
+    DB_TXN * txnid = NULL;
+#endif
     int rc = 0;
 
     if (db == NULL) return -2;
@@ -695,7 +703,11 @@ static int db3stat(dbiIndex dbi, unsigned int flags)
     dbi->dbi_stats = _free(dbi->dbi_stats);
 /* XXX 3.3.4 change. */
 #if (DB_VERSION_MAJOR == 3 && DB_VERSION_MINOR == 3) || (DB_VERSION_MAJOR == 4)
+#if (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 3)
+    rc = db->stat(db, txnid, &dbi->dbi_stats, flags);
+#else
     rc = db->stat(db, &dbi->dbi_stats, flags);
+#endif
 #else
     rc = db->stat(db, &dbi->dbi_stats, NULL, flags);
 #endif
@@ -717,6 +729,7 @@ static int db3close(/*@only@*/ dbiIndex dbi, /*@unused@*/ unsigned int flags)
     const char * dbfile;
     const char * dbsubfile;
     DB * db = dbi->dbi_db;
+    int _printit;
     int rc = 0, xx;
 
     flags = 0;	/* XXX unused */
@@ -755,7 +768,9 @@ static int db3close(/*@only@*/ dbiIndex dbi, /*@unused@*/ unsigned int flags)
 
     if (db) {
 	rc = db->close(db, 0);
-	rc = cvtdberr(dbi, "db->close", rc, _debug);
+	/* XXX ignore not found error messages. */
+	_printit = (rc == ENOENT ? 0 : _debug);
+	rc = cvtdberr(dbi, "db->close", rc, _printit);
 	db = dbi->dbi_db = NULL;
 
 	rpmMessage(RPMMESS_DEBUG, _("closed   db index       %s/%s\n"),
@@ -788,8 +803,10 @@ static int db3close(/*@only@*/ dbiIndex dbi, /*@unused@*/ unsigned int flags)
 	dbenv->set_errpfx(dbenv, rpmdb->db_errpfx);
  /*	dbenv->set_paniccall(???) */
 	/*@=noeffectuncon@*/
+#if !(DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 3)
 	xx = dbenv->set_verbose(dbenv, DB_VERB_CHKPOINT,
 		(dbi->dbi_verbose & DB_VERB_CHKPOINT));
+#endif
 	xx = dbenv->set_verbose(dbenv, DB_VERB_DEADLOCK,
 		(dbi->dbi_verbose & DB_VERB_DEADLOCK));
 	xx = dbenv->set_verbose(dbenv, DB_VERB_RECOVERY,
@@ -829,13 +846,17 @@ static int db3close(/*@only@*/ dbiIndex dbi, /*@unused@*/ unsigned int flags)
 			(dbhome ? dbhome : ""),
 			(dbfile ? dbfile : tagName(dbi->dbi_rpmtag)));
 
+		/*
+		 * Depending on the DB version,
+		 * the DB handle may not be accessed again after
+		 * DB->verify is called, regardless of its return.
+		 */
 #if (DB_VERSION_MAJOR <= 3) || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR <= 1)
 		xx = db->close(db, 0);
 		xx = cvtdberr(dbi, "db->close", xx, _debug);
 		if (rc == 0 && xx) rc = xx;
 #endif
 		db = NULL;
-
 		dbf = _free(dbf);
 	}
 	xx = dbenv->close(dbenv, 0);
