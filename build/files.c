@@ -2828,8 +2828,8 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
     const char	*runCmd = NULL;
     const char	*rootDir;
     const char	*runScript;
-    const char	*mTemplate = "%{__spec_install_template}";
-    const char	*mPost = "%{__spec_install_post}";
+    const char	*mTemplate = "%{__spec_autodep_template}";
+    const char	*mPost = "%{__spec_autodep_post}";
     urlinfo	u = NULL;
     FD_t	fd, xfd;
     FILE *fp = 0;
