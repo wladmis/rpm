@@ -446,6 +446,10 @@
 @alt@%if_enabled() %if %{expand:%%{?_enable_%{1}:1}%%{!?_enable_%{1}:0}}
 @alt@%if_disabled() %if %{expand:%%{?_disable_%{1}:1}%%{!?_disable_%{1}:0}}
 @alt@
+@alt@# substitute with/without/enable/disable macros.
+@alt@%subst_with() %{expand:%%{?_with_%{1}:%%{_with_%{1}}}} %{expand:%%{?_without_%{1}:%%{_without_%{1}}}}
+@alt@%subst_enable() %{expand:%%{?_enable_%{1}:%%{_enable_%{1}}}} %{expand:%%{?_disable_%{1}:%%{_disable_%{1}}}}
+@alt@
 @alt@# Fetch name/serial/version/release fields.
 @alt@%get_version()	%(rpm -q --qf '%%{VERSION}' %1 2>/dev/null)
 @alt@%get_release()	%(rpm -q --qf '%%{RELEASE}' %1 2>/dev/null)
