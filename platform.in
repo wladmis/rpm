@@ -225,6 +225,8 @@
 @alt@	%{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%_perl_lib_path\"}\
 @alt@	%{?_perl_req_method:export RPM_PERL_REQ_METHOD=\"%_perl_req_method\"}\
 @alt@	%{?_python_lib_path:export RPM_PYTHON_LIB_PATH=\"%_python_lib_path\"}\
+@alt@	%{?_python_module_declared:export RPM_PYTHON_MODULE_DECLARED=\"%_python_module_declared\"}\
+@alt@	%{?_python_req_hier:export RPM_PYTHON_REQ_HIER=\"%_python_req_hier\"}\
 @alt@	%{?_python_req_method:export RPM_PYTHON_REQ_METHOD=\"%_python_req_method\"}\
 @alt@	%{?_python_req_skip:export RPM_PYTHON_REQ_SKIP=\"%_python_req_skip\"}\
 @alt@	%{?_python_compile_method:export RPM_PYTHON_COMPILE_METHOD=\"%_python_compile_method\"}\
