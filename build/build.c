@@ -237,7 +237,7 @@ fprintf(stderr, "*** addMacros\n");
 		};
 		unsigned int i;
 
-		for (i = 0; name[i][0]; ++i)
+		for (i = 0; name[i]; ++i)
 			unsetenv (name[i]);
 	}
 
