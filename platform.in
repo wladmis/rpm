@@ -102,11 +102,6 @@
     @RPMCONFIGDIR@/brp-%{_vendor} \
 %{nil}
 
-%__spec_install_post\
-    %{__arch_install_post}\
-    %{__os_install_post}\
-%{nil}
-
 @redhat@#---------------------------------------------------------------------
 @redhat@#	Expanded at end of %prep
 @redhat@#
@@ -187,7 +182,7 @@
 
 @alt@#---------------------------------------------------------------------
 @alt@#	ALT Linux vendor specific macros.
-@alt@#	Contact rpm@alt-linux.org for details.
+@alt@#	Contact rpm@packages.altlinux.org for details.
 @alt@#
 @alt@%distribution	ALT Linux
 @alt@%vendor	ALT Linux Team
@@ -254,16 +249,6 @@
 @alt@	%__mkdir_p %{u2p:%_builddir}\
 @alt@	cd %{u2p:%_builddir}\
 @alt@%nil
-@alt@
-@alt@%__spec_autodep_shell	%{___build_shell}
-@alt@%__spec_autodep_args	%{___build_args}
-@alt@%__spec_autodep_cmd	%{___build_cmd}
-@alt@%__spec_autodep_pre	%{___build_pre}
-@alt@%__spec_autodep_body	%{___build_body}
-@alt@%__spec_autodep_post	%{___build_post}
-@alt@%__spec_autodep_template	#!%{__spec_autodep_shell}\
-@alt@%{__spec_autodep_pre}\
-@alt@%{nil}
 @alt@
 @alt@%__spec_install_pre	\
 @alt@%{___build_pre}	\

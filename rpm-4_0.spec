@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt11
+Release: alt12
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -35,6 +35,7 @@ Url: http://www.rpm.org/
 Source: %srcname.tar.bz2
 
 Provides: %_sysconfdir/%name/macros.d
+Provides: /usr/sbin/update-alternatives
 
 PreReq: lib%name = %version-%release
 PreReq: alt-gpgkeys, sh-utils, grep, perl-base, fileutils, gawk, textutils, mktemp, shadow-utils
@@ -95,6 +96,7 @@ Requires: gzip >= 1.3.3-alt2
 Requires: tar >= 1.13.22-alt1
 Requires: textutils >= 2.0.17-alt1
 Requires: %_bindir/subst
+Requires: /usr/sbin/update-alternatives
 
 %package build-topdir
 Summary: RPM package installation and build directory tree
@@ -415,7 +417,7 @@ fi
 %rpmattr %_bindir/gendiff
 %_bindir/rpmbuild
 %_bindir/relative
-%rpmattr %dir %_libdir/%name
+%rpmdirattr %_libdir/%name
 %_libdir/%name/rpmt
 %rpmattr %_libdir/%name/rpmb
 %rpmattr %_libdir/%name/brp-*
@@ -479,6 +481,21 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Nov 10 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt12
+- macros:
+  + Removed some obsolete macros.
+  + %%___build_pre: moved to platform;
+  + Added warning about misspelled architecture.
+- platform:
+  + %%___build_pre: moved from macros.
+  + Adjusted %%_configure_target macro,
+    now uses both --build and --host options.
+  + Adjusted %%clean_buildroot,
+    now used "%%__chmod -R u+rwX".
+  + Added CCACHE_CXX support.
+- Fixed permissions on %_libdir/%name in -build subpackage
+  (thanks to Ivan Zakharyaschev).
+
 * Mon Nov 04 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt11
 - Fixed error handling in shell scripts.
 - platform: updated %%optflags_kernel for gcc-3.2.
