@@ -264,7 +264,10 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	rpmTagType dvt = RPM_STRING_ARRAY_TYPE;
 	int *flags = NULL;
 	int *indexes = NULL;
-	int i, duplicate = 0;
+	int i, o_cnt = 0, duplicate = 0;
+	char obsolete[len];
+
+	memset (obsolete, 0, sizeof obsolete);
 
 	if (flagtag) {
 	    xx = hge(h, versiontag, &dvt, (void **) &versions, NULL);
@@ -300,10 +303,8 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 					depName);
 				break;
 			case DEP_WK:
-#ifdef	NOTYET
-				/* swap old and new values */
-				break;
-#endif
+				++o_cnt;
+				obsolete[i] = 1;
 			default:
 				continue;
 		}
@@ -312,8 +313,51 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	    /* This is a duplicate dependency. */
 	    duplicate = 1;
 
+	    if (o_cnt) {
+		rpmMessage(RPMMESS_WARNING, "%d obsolete deps left", o_cnt);
+		o_cnt = 0;
+	    }
+
 	    break;
+	} /* end of main loop */
+
+	if (o_cnt)
+	{
+		int new_len = len - o_cnt;
+		const char *new_names[new_len];
+		const char *new_versions[new_len];
+		int new_flags[new_len];
+		int j;
+
+		rpmMessage (RPMMESS_DEBUG, "%d old deps to be optimized out\n", o_cnt);
+		for (i = 0, j = 0; i < len; ++i)
+		{
+			char *p;
+			if (obsolete[i])
+			{
+				rpmMessage (RPMMESS_DEBUG,
+					"old dep %s optimized out\n", names[i]);
+				continue;
+			}
+
+			p = alloca (1 + strlen (names[i]));
+			strcpy (p, names[i]);
+			new_names[j] = p;
+
+			p = alloca (1 + strlen (versions[i]));
+			strcpy (p, versions[i]);
+			new_versions[j] = p;
+
+			new_flags[j] = flags[i];
+			++j;
+		}
+		if (!headerModifyEntry (h, nametag, RPM_STRING_ARRAY_TYPE, new_names, new_len) ||
+		    !headerModifyEntry (h, versiontag, RPM_STRING_ARRAY_TYPE, new_versions, new_len) ||
+		    !headerModifyEntry (h, flagtag, RPM_INT32_TYPE, new_flags, new_len))
+		    rpmError (RPMERR_BADHEADER, "addReqProv: error modifying entry for dep %s\n", depName);
+		rpmMessage (RPMMESS_DEBUG, "%d old deps optimized out, %d left\n", o_cnt, new_len);
 	}
+
 	versions = hfd(versions, dvt);
 	names = hfd(names, dnt);
 	if (duplicate)
@@ -347,6 +391,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	    if (!(flags[len] & RPMSENSE_SENSEMASK))
 		continue;
 	    if (rpmRangesOverlap ("", versions[len], flags[len], "", depEVR, depFlags)) {
+		rpmMessage (RPMMESS_DEBUG, "new dep %s already provided, optimized out\n", depName);
 		skip = 1;
 		break;
 	    }
