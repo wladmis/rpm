@@ -236,8 +236,10 @@
 @alt@%make_compile	%make_build
 @alt@%make	%_make_bin
 @alt@
-@alt@# Library install (ldconfig) macros.
-@alt@%post_ldconfig /sbin/post_ldconfig
+@alt@# Library cache update (ldconfig) macros.
+@alt@%post_ldconfig_lib /sbin/ldconfig
+@alt@%post_ldconfig_sys /sbin/post_ldconfig
+@alt@%post_ldconfig %post_ldconfig_lib
 @alt@%postun_ldconfig /sbin/postun_ldconfig
 @alt@
 @alt@# Macros for install/uninstall info files.
@@ -457,12 +459,6 @@
 @alt@# Define php_version and php_release to version and release no less than specified one via -n option
 @alt@%php_version(n:)	%rpm_check_field -p php VERSION %{-n:%{-n*}}
 @alt@%php_release(n:)	%rpm_check_field -p php RELEASE %{-n:%{-n*}}
-@alt@
-@alt@# ldconfig update macros.
-@alt@%post_ldconfig_lib /sbin/ldconfig
-@alt@%post_ldconfig_sys /sbin/post_ldconfig
-@alt@%post_ldconfig %post_ldconfig_lib
-@alt@%postun_ldconfig /sbin/postun_ldconfig
 @alt@
 @alt@## compiler optflags defaults
 @alt@
