@@ -480,6 +480,7 @@ fi
   print textrel information even if textrel=relaxed.
 - pam.{prov,req}: better error diagnostics.
 - platform: corrected %%%__python_version definition (#3311).
+- Fixed Makefiles to correct librpm*-4.0.4.so dependencies.
 - Do not package .la files.
 
 * Sun Nov 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27
