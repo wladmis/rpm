@@ -116,6 +116,7 @@ struct SpecStruct {
 
     int force;
     int anyarch;
+    int preprocess_mode;
 
     int gotBuildRootURL;
 
@@ -154,8 +155,8 @@ struct PackageStruct {
 
 /*@owned@*/ struct Source * icon;
 
-    int autoReq;
-    int autoProv;
+    const char *autoReq;
+    const char *autoProv;
 
 /*@only@*/ const char * preInFile;	/*!< %pre scriptlet. */
 /*@only@*/ const char * postInFile;	/*!< %post scriptlet. */
