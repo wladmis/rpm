@@ -3533,8 +3533,14 @@ msgstr "Разработка/Базы данных"
 msgid "Development/Debuggers"
 msgstr "Разработка/Отладчики"
 
+msgid "Development/Functional"
+msgstr "Разработка/Функциональные языки"
+
 msgid "Development/GNOME and GTK+"
 msgstr "Разработка/GNOME и GTK+"
+
+msgid "Development/Haskell"
+msgstr "Разработка/Haskell"
 
 msgid "Development/Java"
 msgstr "Разработка/Java"
@@ -3544,6 +3550,12 @@ msgstr "Разработка/KDE и QT"
 
 msgid "Development/Kernel"
 msgstr "Разработка/Ядро"
+
+msgid "Development/Lisp"
+msgstr "Разработка/Lisp"
+
+msgid "Development/ML"
+msgstr "Разработка/ML"
 
 msgid "Development/Objective-C"
 msgstr "Разработка/Objective-C"
@@ -3559,6 +3571,9 @@ msgstr "Разработка/Python"
 
 msgid "Development/Ruby"
 msgstr "Разработка/Ruby"
+
+msgid "Development/Scheme"
+msgstr "Разработка/Scheme"
 
 msgid "Development/Tcl"
 msgstr "Разработка/Tcl"

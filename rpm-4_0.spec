@@ -484,7 +484,14 @@ fi
 %changelog
 * Thu Apr 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt16
 - Fixed segfault on "rpmquery --qf '%{FILENAMES}' basesystem" command.
-- Implemented shell functions requires/provides autodetection.
+- Implemented shell functions requires/provides autodetection
+  and enabled it by default.
+- New groups (#0002429):
+  + Development/Functional
+  + Development/Haskell
+  + Development/Lisp
+  + Development/ML
+  + Development/Scheme
 - Do not build API docs by default.
 
 * Tue Apr 22 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt15
