@@ -477,8 +477,7 @@ expandT(MacroBuf mb, const char * f, size_t flen)
     sbuf = alloca(flen + 1);
     memset(sbuf, 0, (flen + 1));
 
-    strncpy(sbuf, f, flen);
-    sbuf[flen] = '\0';
+    strncat(sbuf, f, flen);
     mb->s = sbuf;
     rc = expandMacro(mb);
     mb->s = s;
@@ -1197,7 +1196,7 @@ expandMacro(MacroBuf mb)
 	default:
 		SAVECHAR(mb, c);
 		continue;
-		/*@notreached@*/ /*@switchbreak@*/ break;
+		/*@notreached@*/
 	}
 
 	/* Expand next macro */
@@ -1294,6 +1293,10 @@ expandMacro(MacroBuf mb)
 			/*@innerbreak@*/ break;
 		}
 		/*@switchbreak@*/ break;
+	case '\0':
+		SAVECHAR(mb, '%');
+		continue;
+		/*@notreached@*/
 	}
 
 	/* XXX Everything below expects fe > f */
