@@ -3,7 +3,7 @@
 # verify-elf - verify ELF objects.
 #
 # $Id$
-# Copyright (C) 2002,2003  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2002, 2003, 2004  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ for f in "$@"; do
 
 	t="$(/usr/bin/file -b "$f")"
 
-	[ -z "${t##ELF *}" ] || continue
+	[ -z "${t##ELF *}" -o -z "${t##* ELF *}" ] || continue
 
 	info=$(objdump -p "$f") || continue
 

@@ -3,7 +3,7 @@
 # fixup-shared - fix permissions of libraries.
 #
 # $Id$
-# Copyright (C) 2003  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2003, 2004  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,10 +23,10 @@
 for file in "$@"; do
 	type=`file -b "$file"` || continue
 	case "$type" in
-		current\ ar\ archive)
-			chmod -v u+w,a-x "$file"
+		current\ ar\ archive|*\ current\ ar\ archive)
+			chmod -v u+w,a-x,ug-s "$file"
 			;;
-		ELF\ *\ shared\ object,\ *)
+		ELF\ *\ shared\ object,\ *|*\ ELF\ *\ shared\ object,\ *)
 			file_header="$(readelf -h "$file")" || continue
 			entry=`printf %s "$file_header" |sed -ne 's/^ \+Entry point address: \+0x0*\([0-9a-f]\+\)$/\1/p'`
 			[ -n "$entry" ] || continue
@@ -35,7 +35,7 @@ for file in "$@"; do
 			text=`printf %s "$section_header" |sed -ne 's/^ *\[ *[0-9]\+\] \.text \+PROGBITS \+0*\([0-9a-f]\+\) \+.*/\1/p'`
 			[ -n "$text" ] || continue
 
-			[ "$entry" != "$text" ] || chmod -v u+w,a-x "$file"
+			[ "$entry" != "$text" ] || chmod -v u+w,a-x,ug-s "$file"
 			;;
 	esac
 done
