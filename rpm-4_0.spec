@@ -481,7 +481,8 @@ fi
     since it's included in -O2 and -Os.
 - find-provides:
   + enable shell trace mode if $RPM_SCRIPTS_DEBUG is set;
-  + fixed "readlink -fv" bug introduced in 4.0.4-alt20.
+  + fixed "readlink -fv" bug introduced in 4.0.4-alt20;
+  + do not ignore symlinks when parsing PAM scripts.
 - find-requires:
   + enable shell trace mode if $RPM_SCRIPTS_DEBUG is set.
 - find-package:
