@@ -99,12 +99,17 @@ static int parseSimplePart(char *line, /*@out@*/char **name, /*@out@*/int *flag)
 
 /**
  */
-static inline int parseYesNo(const char * s)
-	/*@*/
+static inline const char *parseReqProv(const char *s)
 {
-    return ((!s || (s[0] == 'n' || s[0] == 'N' || s[0] == '0') ||
-	!xstrcasecmp(s, "false") || !xstrcasecmp(s, "off"))
-	    ? 0 : 1);
+    if (!s ||
+	!strcasecmp(s, "no") ||
+	!strcasecmp(s, "false") ||
+	!strcasecmp(s, "off") ||
+	!strcmp(s, "0")) {
+	return xstrdup("");
+    }
+
+    return xstrdup(s);
 }
 
 typedef struct tokenBits_s {
@@ -546,23 +551,10 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
 	    buildRootURL = rpmGenPath(NULL, "%{?buildroot:%{buildroot}}", NULL);
 	    if (strcmp(buildRootURL, "/")) {
 		spec->buildRootURL = buildRootURL;
-		macro = NULL;
-	    } else {
-		const char * specURL = field;
-
-		buildRootURL = _free(buildRootURL);
-		(void) urlPath(specURL, (const char **)&field);
-		/*@-branchstate@*/
-		if (*field == '\0') field = "/";
-		/*@=branchstate@*/
-		buildRootURL = rpmGenPath(spec->rootURL, field, NULL);
-		spec->buildRootURL = buildRootURL;
-		field = (char *) buildRootURL;
+		spec->gotBuildRootURL = 1;
 	    }
-	    spec->gotBuildRootURL = 1;
-	} else {
-	    macro = NULL;
 	}
+	macro = NULL;
 	buildRootURL = rpmGenPath(NULL, spec->buildRootURL, NULL);
 	(void) urlPath(buildRootURL, &buildRoot);
 	/*@-branchstate@*/
@@ -614,14 +606,14 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
 	xx = headerAddEntry(pkg->header, tag, RPM_INT32_TYPE, &num, 1);
 	break;
       case RPMTAG_AUTOREQPROV:
-	pkg->autoReq = parseYesNo(field);
-	pkg->autoProv = pkg->autoReq;
+	pkg->autoReq = parseReqProv(field);
+	pkg->autoProv = xstrdup(pkg->autoReq);
 	break;
       case RPMTAG_AUTOREQ:
-	pkg->autoReq = parseYesNo(field);
+	pkg->autoReq = parseReqProv(field);
 	break;
       case RPMTAG_AUTOPROV:
-	pkg->autoProv = parseYesNo(field);
+	pkg->autoProv = parseReqProv(field);
 	break;
       case RPMTAG_SOURCE:
       case RPMTAG_PATCH:
@@ -634,8 +626,10 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
 	SINGLE_TOKEN_ONLY;
 	if ((rc = addSource(spec, pkg, field, tag)))
 	    return rc;
-	if ((rc = readIcon(pkg->header, field)))
-	    return RPMERR_BADSPEC;
+	if(!spec->preprocess_mode) {
+	    if ((rc = readIcon(pkg->header, field)))
+		return RPMERR_BADSPEC;
+	}
 	break;
       case RPMTAG_NOSOURCE:
       case RPMTAG_NOPATCH:
@@ -906,6 +900,18 @@ int parsePreamble(Spec spec, int initialPackage)
     if (!spec->gotBuildRootURL && spec->buildRootURL) {
 	rpmError(RPMERR_BADSPEC, _("Spec file can't use BuildRoot\n"));
 	return RPMERR_BADSPEC;
+    }
+
+    if (!spec->buildRootURL) {
+	spec->buildRootURL = rpmGenPath(NULL, "%{?buildroot:%{buildroot}}", NULL);
+	if (strcmp(spec->buildRootURL, "/"))
+	    spec->gotBuildRootURL = 1;
+	else
+	{
+	    spec->buildRootURL = NULL;
+	    rpmError(RPMERR_BADSPEC, _("Neither spec file nor macros define BuildRoot"));
+	    return RPMERR_BADSPEC;
+	}
     }
 
     /* XXX Skip valid arch check if not building binary package */
