@@ -45,7 +45,7 @@ fix()
 
 	local includedir=
 	local libdir=
-	sed -ne "s/^\([a-z_]\+\)=\([^']*\)\$/local \1=\2/pg" "$f" >"$TMPFILE"
+	sed -ne "s/^\(\([a-z_]*\)\(prefix\|dir\|path\)\)=\(.*\)\$/local \1=\4/pg" "$f" >"$TMPFILE"
 
 	# source parameters
 
@@ -100,7 +100,7 @@ fix()
 	new_val="${new_val%% }"
 
 	if [ "$new_val" != "$old_val" ]; then
-		subst -p "s,^Cflags: .*,Cflags: $new_val,g" "$f"
+		subst -p "s|^Cflags: .*|Cflags: $new_val|g" -- "$f"
 		echo "${fname#.}: Cflags: '$old_val' --> '$new_val'" >&2
 	fi
 
@@ -137,7 +137,7 @@ fix()
 	new_val="${new_val%% }"
 
 	if [ "$new_val" != "$old_val" ]; then
-		subst -p "s,^Libs: .*,Libs: $new_val,g" "$f"
+		subst -p "s|^Libs: .*|Libs: $new_val|g" -- "$f"
 		echo "${fname#.}: Libs: '$old_val' --> '$new_val'" >&2
 	fi
 }

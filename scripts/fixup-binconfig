@@ -95,7 +95,7 @@ fix()
 		>"$f_saved"
 		while ! cmp -s "$f_new" "$f_saved"; do
 			cat "$f_new" >"$f_saved"
-			subst 's,\(^\|-I\|[="'\'']\| \+\)\${includedir}\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+			subst 's,\(^\|[="'\'']\| \+\)-I\${includedir}\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
 		done
 	fi
 
@@ -103,7 +103,7 @@ fix()
 		>"$f_saved"
 		while ! cmp -s "$f_new" "$f_saved"; do
 			cat "$f_new" >"$f_saved"
-			subst 's,\(^\|-I\|[="'\'']\| \+\)\${exec_prefix}/include\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+			subst 's,\(^\|[="'\'']\| \+\)-I\${exec_prefix}/include\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
 		done
 	fi
 
@@ -111,12 +111,12 @@ fix()
 		>"$f_saved"
 		while ! cmp -s "$f_new" "$f_saved"; do
 			cat "$f_new" >"$f_saved"
-			subst 's,\(^\|-I\|[="'\'']\| \+\)\${prefix}/include\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+			subst 's,\(^\|[="'\'']\| \+\)-I\${prefix}/include\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
 		done
 	fi
 
 	if ! cmp -s "$f_new" "$f"; then
-		diff -u "$f" "$f_new" >&2 ||:
+		diff "$f" "$f_new" >&2 ||:
 		cat "$f_new" >"$f"
 	fi
 
@@ -155,7 +155,7 @@ fix()
 	fi
 
 	if ! cmp -s "$f_new" "$f"; then
-		diff -u "$f" "$f_new" >&2 ||:
+		diff "$f" "$f_new" >&2 ||:
 		cat "$f_new" >"$f"
 	fi
 }
