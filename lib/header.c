@@ -1479,7 +1479,8 @@ headerFindI18NString(Header h, indexEntry entry)
     int strip_lang;
 
     /* XXX Drepper sez' this is the order. */
-    if ((lang = getenv("LC_ALL")) == NULL &&
+    if ((lang = getenv("LANGUAGE")) == NULL &&
+        (lang = getenv("LC_ALL")) == NULL &&
         (lang = getenv("LC_MESSAGES")) == NULL &&
 	(lang = getenv("LANG")) == NULL)
 	    return entry->data;
