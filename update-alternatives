@@ -1,7 +1,7 @@
 #! /usr/bin/perl --
 
-#use POSIX; &ENOENT;
-sub ENOENT { 2; }
+use POSIX; &ENOENT;
+#sub ENOENT { 2; }
 # Sorry about this, but the errno-part of POSIX.pm isn't in perl-*-base
 
 # Global variables:
@@ -25,7 +25,7 @@ sub ENOENT { 2; }
 #  %priorities       Map from @version-index to priority
 #  %slavepath        Map from (@version-index,slavename) to slave-path
 
-$version="1.8.3"; # This line modified by Makefile
+$version="1.8.4"; # This line modified by Makefile
 sub usageversion {
     print(STDERR <<END)
 The update-alternatives $version.  Copyright (C) 1995 Ian Jackson.
@@ -37,7 +37,7 @@ Usage: update-alternatives --install <link> <name> <path> <priority>
        update-alternatives --remove <name> <path>
        update-alternatives --auto <name>
        update-alternatives --display <name>
-       update-alternatives --config <name>
+       update-alternatives --config <name> [<path>]
 <name> is the name in /etc/alternatives.
 <path> is the name referred to.
 <link> is the link pointing to /etc/alternatives/<name>.
@@ -88,11 +88,16 @@ while (@ARGV) {
         @ARGV >= 2 || &badusage("--remove needs <name> <path>");
         ($name,$apath,@ARGV) = @ARGV;
         $mode= 'remove';
-    } elsif (m/^--(display|auto|config)$/) {
+    } elsif (m/^--(display|auto)$/) {
         &checkmanymodes;
         @ARGV || &badusage("--$1 needs <name>");
         $mode= $1;
         $name= shift(@ARGV);
+    } elsif (m/^--config$/) {
+        &checkmanymodes;
+        @ARGV || &badusage("--config needs <name> [<path>]");
+        ($name,$apath,@ARGV) = @ARGV;
+        $mode= 'config';
     } elsif (m/^--slave$/) {
         @ARGV >= 3 || &badusage("--slave needs <link> <name> <path>");
         ($slink,$sname,$spath,@ARGV) = @ARGV;
@@ -115,7 +120,7 @@ defined($aslavelink{$name}) && &badusage("name $name is both primary and slave")
 $aslavelinkcount{$alink} && &badusage("link $link is both primary and slave");
 
 $mode || &badusage("need --display, --config, --install, --remove or --auto");
-$mode eq 'install' || !%slavelink || &badusage("--slave only allowed with --install");
+$mode eq 'install' || !%aslavelink || &badusage("--slave only allowed with --install");
 
 if (open(AF,"$admindir/$name")) {
     $manual= &gl("manflag");
@@ -123,7 +128,7 @@ if (open(AF,"$admindir/$name")) {
     $link= &gl("link");
     while (($sname= &gl("sname")) ne '') {
         push(@slavenames,$sname);
-        defined($slavenum{$sname}) && &badfmt("duplicate slave $tsname");
+        defined($slavenum{$sname}) && &badfmt("duplicate slave $sname");
         $slavenum{$sname}= $#slavenames;
         $slink= &gl("slink");
         $slink eq $link && &badfmt("slave link same as main link $link");
@@ -131,7 +136,7 @@ if (open(AF,"$admindir/$name")) {
         push(@slavelinks,$slink);
     }
     while (($version= &gl("version")) ne '') {
-        defined($versionnum{$version}) && &badfmt("duplicate path $tver");
+        defined($versionnum{$version}) && &badfmt("duplicate path $version");
        if ( -e $version ) {
            push(@versions,$version);
            $versionnum{$version}= $i= $#versions;
@@ -157,9 +162,16 @@ if (open(AF,"$admindir/$name")) {
     &quit("failed to open $admindir/$name: $!");
 }
 
+$best= '';
+for ($i=0; $i<=$#versions; $i++) {
+    if ($best eq '' || $priorities[$i] > $bestpri) {
+        $best= $versions[$i]; $bestpri= $priorities[$i];
+    }
+}
+
 if ($mode eq 'display') {
     if (!$dataread) {
-        &pr("No alternatives for $name.");
+        &quit("No alternatives found for $name.");
     } else {
         &pr("$name - status is $manual.");
         if (defined($linkname= readlink("$altdir/$name"))) {
@@ -169,11 +181,7 @@ if ($mode eq 'display') {
         } else {
             &pr(" link unreadable - $!");
         }
-        $best= '';
         for ($i=0; $i<=$#versions; $i++) {
-            if ($best eq '' || $priorities[$i] > $bestpri) {
-                $best= $versions[$i]; $bestpri= $priorities[$i];
-            }
             &pr("$versions[$i] - priority $priorities[$i]");
             for ($j=0; $j<=$#slavenames; $j++) {
                 next unless length($tspath= $slavepath{$i,$j});
@@ -189,16 +197,9 @@ if ($mode eq 'display') {
     exit 0;
 }
 
-$best= '';
-for ($i=0; $i<=$#versions; $i++) {
-    if ($best eq '' || $priorities[$i] > $bestpri) {
-        $best= $versions[$i]; $bestpri= $priorities[$i];
-    }
-}
-
 if ($mode eq 'config') {
     if (!$dataread) {
-	&pr("No alternatives for $name.");
+	&quit("No alternatives found for $name.");
     } else {
 	&config_alternatives($name);
     }
@@ -207,7 +208,7 @@ if ($mode eq 'config') {
 if (defined($linkname= readlink("$altdir/$name"))) {
     if ($linkname eq $best) {
         $state= 'expected';
-    } elsif (defined($linkname2= readlink("$altdir/$name.rpm-tmp"))) {
+    } elsif (defined(readlink("$altdir/$name.rpm-tmp"))) {
         $state= 'expected-inprogress';
     } else {
         $state= 'unexpected';
@@ -267,7 +268,7 @@ if ($mode eq 'install') {
     if ($link ne $alink && $link ne '') {
         &pr("Renaming $name link from $link to $alink.")
           if $verbosemode > 0;
-        rename_mv($link,$alink) || $! == &ENOENT ||
+        &rename_mv($link,$alink) || $! == &ENOENT ||
             &quit("unable to rename $link to $alink: $!");
     }
     $link= $alink;
@@ -289,7 +290,7 @@ if ($mode eq 'install') {
         if ($newslavelink ne $oldslavelink && $oldslavelink ne '') {
             &pr("Renaming $sname slave link from $oldslavelink to $newslavelink.")
               if $verbosemode > 0;
-            rename_mv($oldslavelink,$newslavelink) || $! == &ENOENT ||
+            &rename_mv($oldslavelink,$newslavelink) || $! == &ENOENT ||
                 &quit("unable to rename $oldslavelink to $newslavelink: $!");
         }
         $slavelinks[$j]= $newslavelink;
@@ -353,7 +354,7 @@ if ($manual eq 'manual') {
 } else {
     if ($state eq 'expected-inprogress') {
         &pr("Recovering from previous failed update of $name ...");
-        rename_mv("$altdir/$name.rpm-tmp","$altdir/$name") ||
+        rename("$altdir/$name.rpm-tmp","$altdir/$name") ||
             &quit("unable to rename $altdir/$name.rpm-tmp to $altdir/$name: $!");
         $state= 'expected';
     }
@@ -408,11 +409,7 @@ if ($manual eq 'auto') {
                 " (or nonexistent); however, readlink failed: $!")
               if $verbosemode > 0;
         } elsif ($linkname ne "$altdir/$name") {
-            unlink("$link.rpm-tmp") || $! == &ENOENT ||
-                &quit("unable to ensure $link.rpm-tmp nonexistent: $!");
-            my_symlink("$altdir/$name","$link.rpm-tmp");
-            rename_mv("$link.rpm-tmp",$link) ||
-                &quit("unable to install $link.rpm-tmp as $link: $!");
+            &tmped_symlink("$altdir/$name",$link);
         }
         if (defined($linkname= readlink("$altdir/$name")) && $linkname eq $best) {
             &pr("Leaving $name ($link) pointing to $best.")
@@ -421,18 +418,15 @@ if ($manual eq 'auto') {
             &pr("Updating $name ($link) to point to $best.")
               if $verbosemode > 0;
         }
-        unlink("$altdir/$name.rpm-tmp") || $! == &ENOENT ||
-            &quit("unable to ensure $altdir/$name.rpm-tmp nonexistent: $!");
-        my_symlink($best,"$altdir/$name.rpm-tmp");
+        &checked_symlink($best,"$altdir/$name.rpm-tmp");
     }
 }
 
-rename_mv("$admindir/$name.rpm-new","$admindir/$name") ||
+rename("$admindir/$name.rpm-new","$admindir/$name") ||
     &quit("unable to rename $admindir/$name.rpm-new to $admindir/$name: $!");
 
 if ($manual eq 'auto') {
-    rename_mv("$altdir/$name.rpm-tmp","$altdir/$name") ||
-        &quit("unable to install $altdir/$name.rpm-tmp as $altdir/$name");
+    &checked_mv("$altdir/$name.rpm-tmp","$altdir/$name");
     for ($j=0; $j<=$#slavenames; $j++) {
         $sname= $slavenames[$j];
         $slink= $slavelinks[$j];
@@ -441,11 +435,7 @@ if ($manual eq 'auto') {
                 " $altdir/$sname, or nonexistent; however, readlink failed: $!")
               if $verbosemode > 0;
         } elsif ($linkname ne "$altdir/$sname") {
-            unlink("$slink.rpm-tmp") || $! == &ENOENT ||
-                &quit("unable to ensure $slink.rpm-tmp nonexistent: $!");
-            my_symlink("$altdir/$sname","$slink.rpm-tmp");
-            rename_mv("$slink.rpm-tmp",$slink) ||
-                &quit("unable to install $slink.rpm-tmp as $slink: $!");
+            &tmped_symlink("$altdir/$sname",$slink);
         }
         $spath= $slavepath{$bestnum,$j};
         unlink("$altdir/$sname.rpm-tmp") || $! == &ENOENT ||
@@ -465,18 +455,16 @@ if ($manual eq 'auto') {
                 &pr("Updating $sname ($slink) to point to $spath.")
                   if $verbosemode > 0;
             }
-            my_symlink("$spath","$altdir/$sname.rpm-tmp");
-            rename_mv("$altdir/$sname.rpm-tmp","$altdir/$sname") ||
-                &quit("unable to install $altdir/$sname.rpm-tmp as $altdir/$sname: $!");
+            &tmped_symlink("$spath","$altdir/$sname");
         }
     }
 }
 
 sub config_message {
     if ($#versions == 0) {
-	print "\nThere is only 1 program which provides $name\n";
-	print "($versions[0]). Nothing to configure.\n";
-	return;
+	&pr("\nThere is only 1 program which provides $name");
+	&pr("($versions[0]). Nothing to configure.");
+	exit(0);
     }
     printf(STDOUT "\nThere are %s programs which provide \`$name'.\n\n", $#versions+1);
     printf(STDOUT "  Selection    Command\n");
@@ -490,37 +478,46 @@ sub config_message {
     printf(STDOUT "\nEnter to keep the default[*], or type selection number: ");
 }
 
+sub config_alternative {
+    my ($preferred) = @_;
+    $manual = "manual";
+    &pr("Using \`$versions[$preferred]' to provide \`$name'.");
+    my $spath = $versions[$preferred];
+    &tmped_symlink("$spath","$altdir/$name");
+    #Link slaves...
+    for( my $slnum = 0; $slnum < @slavenames; $slnum++ ) {
+	my $slave = $slavenames[$slnum];
+	if ($slavepath{$preferred,$slnum} ne '') {
+	    &tmped_symlink($slavepath{$preferred,$slnum}, "$altdir/$slave");
+	} else {
+	    &pr("Removing $slave ($slavelinks[$slnum]), not appropriate with $versions[$preferred].")
+		if $verbosemode > 0;
+	    unlink("$altdir/$slave") || $! == &ENOENT ||
+		&quit("unable to remove $altdir/$slave: $!");
+	}
+    }
+    exit(0);
+}
+
 sub config_alternatives {
+    if (defined($apath)) {
+	if (defined($i= $versionnum{$apath})) {
+	    &config_alternative($i);
+	} else {
+	    &quit("Alternative $apath for $name not registered.");
+	}
+    }
     do {
 	&config_message;
-	if ($#versions == 0) { return; }
 	$preferred=<STDIN>;
 	chop($preferred);
     } until $preferred eq '' || $preferred>=1 && $preferred<=$#versions+1 &&
 	($preferred =~ m/[0-9]*/);
     if ($preferred ne '') {
-    	$manual = "manual";
 	$preferred--;
-	print STDOUT "Using \`$versions[$preferred]' to provide \`$name'.\n";
-	my $spath = $versions[$preferred];
-	my_symlink("$spath","$altdir/$name.rpm-tmp");
-	rename_mv("$altdir/$name.rpm-tmp","$altdir/$name") ||
-	    &quit("unable to install $altdir/$name.rpm-tmp as $altdir/$name: $!");
-	# Link slaves...
-	for( my $slnum = 0; $slnum < @slavenames; $slnum++ ) {
-	    my $slave = $slavenames[$slnum];
-	    if ($slavepath{$preferred,$slnum} ne '') {
-		checked_symlink($slavepath{$preferred,$slnum},
-			"$altdir/$slave.rpm-tmp");
-		checked_mv("$altdir/$slave.rpm-tmp", "$altdir/$slave");
-	    } else {
-		&pr("Removing $slave ($slavelinks[$slnum]), not appropriate with $versions[$preferred].")
-		    if $verbosemode > 0;
-		unlink("$altdir/$slave") || $! == &ENOENT ||
-		    &quit("unable to remove $altdir/$slave: $!");
-	    }
-	}
-
+    	&config_alternative($preferred);
+    } else {
+	&quit("Nothing selected.");
     }
 }
 
@@ -543,27 +540,22 @@ sub rename_mv {
 }
 sub checked_symlink {
     my ($filename, $linkname) = @_;
-    my_symlink($filename, $linkname);
+    unlink($linkname) || $! == &ENOENT ||
+	&quit("unable to ensure $linkname nonexistent: $!");
+    symlink($filename,$linkname) ||
+	&quit("unable to symlink $linkname to $filename: $!");
 }
-
-sub my_symlink {
-	my ($filename, $linkname) = @_;
-	local $_ = $linkname;
-	s|//|/|g;
-	if ( $_ == "/" ) {
-		my $relative = $_;
-	}
-	else {
-		my $relative = join('/', ("..") x (split(m|/|) - 2));
-	}
-	symlink($relative.$filename,$linkname) ||
-	&quit("unable to make $linkname a symlink to $relative.$filename: $!");
-}
-
 sub checked_mv {
     my ($source, $dest) = @_;
-    rename_mv($source, $dest) ||
+    &rename_mv($source, $dest) ||
 	&quit("unable to install $source as $dest: $!");
+}
+sub tmped_symlink {
+    my ($filename, $linkname) = @_;
+    my $tmplink = "$linkname.rpm-tmp";
+
+    &checked_symlink($filename,$tmplink);
+    &checked_mv($tmplink,$linkname);
 }
 
 exit(0);
