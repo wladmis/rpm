@@ -116,7 +116,7 @@ fix()
 	fi
 
 	if ! cmp -s "$f_new" "$f"; then
-		echo "$fname: fixed:" >&2
+		echo "$fname:" >&2
 		diff "$f" "$f_new" >&2 ||:
 		cat "$f_new" >"$f"
 	fi
@@ -156,7 +156,7 @@ fix()
 	fi
 
 	if ! cmp -s "$f_new" "$f"; then
-		echo "$fname: fixed:" >&2
+		echo "$fname:" >&2
 		diff "$f" "$f_new" >&2 ||:
 		cat "$f_new" >"$f"
 	fi
