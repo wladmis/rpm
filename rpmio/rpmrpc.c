@@ -1158,6 +1158,7 @@ fprintf(stderr, "*** ftpReadlink(%s) rc %d\n", path, rc);
     return rc;
 }
 
+#if 0
 struct __dirstream {
     int fd;			/* File descriptor.  */
     char * data;		/* Directory block.  */
@@ -1169,6 +1170,7 @@ struct __dirstream {
     pthread_mutex_t lock;	/* Mutex lock for this structure.  */
 #endif
 };
+#endif
 
 /*@unchecked@*/
 static int ftpmagicdir = 0x8440291;
