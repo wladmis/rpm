@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-# brp-fix-permsp - try to fix permissions.
+# brp-fix-perms - try to fix filesystem permissions.
 #
 # Copyright (C) 2001,2002  Dmitry V. Levin <ldv@altlinux.org>
 #
