@@ -227,17 +227,10 @@ if [ -z "$STRIP_EXECUTABLE" -a -z "$STRIP_RELOCATABLE" -a -z "$STRIP_SHARED" -a 
 	exit 0
 fi
 
-PERMS=
-if [ -z "$STRIP_RELOCATABLE" -a -z "$STRIP_STATIC" ]; then
-	PERMS='-perm +a=x'
-elif [ -z "$STRIP_EXECUTABLE" -a -z "$STRIP_SHARED" ]; then
-	PERMS='-perm +a=r'
-fi
-
 StripTree()
 {
 	echo "Stripping binaries in $1 ($SHOW_METHODS)"
-	find "$1" -type f $PERMS -print0 |xargs -r0 @RPMCONFIGDIR@/strip_files || return 1
+	find "$1" -type f -print0 |xargs -r0 @RPMCONFIGDIR@/strip_files || return 1
 }
 
 if [ -n "$*" ]; then
