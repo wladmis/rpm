@@ -61,6 +61,7 @@
 %__rsh			@__RSH@
 %__sed			@__SED@
 %__ssh			@__SSH@
+%__subst		@__SUBST@
 %__tar			@__TAR@
 %__unzip		@UNZIPBIN@
 

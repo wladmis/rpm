@@ -213,6 +213,7 @@ AC_PATH_PROG(__GREP, grep, /bin/grep, $MYPATH)
 AC_PATH_PROG(GZIPBIN, gzip, /bin/gzip, $MYPATH)
 AC_PATH_PROG(BZIP2BIN, bzip2, /bin/bzip2, $MYPATH)
 AC_PATH_PROG(UNZIPBIN, unzip, /usr/bin/unzip, $MYPATH)
+AC_PATH_PROG(__SUBST, subst, /usr/bin/subst, $MYPATH)
 
 AC_PATH_PROG(__ID, id, /usr/bin/id, $MYPATH)
 AC_MSG_CHECKING(checking whether id supports -u)
