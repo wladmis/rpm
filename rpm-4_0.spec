@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt40
+Release: alt41
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -104,6 +104,7 @@ Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
 Requires: rpm-build-perl
 Requires: rpm-build-python
+Requires: rpm-build-tcl
 
 %package build-topdir
 Summary: RPM package installation and build directory tree
@@ -460,7 +461,6 @@ fi
 %rpmattr %_libdir/%name/pam.*
 %rpmattr %_libdir/%name/shell.*
 %rpmattr %_libdir/%name/sql.*
-%rpmattr %_libdir/%name/tcl.*
 %rpmattr %_libdir/%name/verify-elf
 %rpmattr %_libdir/%name/Specfile.pm
 
@@ -507,6 +507,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Oct 31 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt41
+- brp-bytecompile_python: check that $RPM_PYTHON is executable (#4756).
+- find-lang: changed --with-man mode (#5164).
+- brp-fixup: fixed typo (#5273).
+- platform.in: updated python support (Andrey Orlov, #5291).
+- Added pentium4 arch support (Sir Raorn, #5259).
+- Added tcl findreqprov support (Sergey Bolshakov, #5364).
+
 * Tue Jun 29 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt40
 - find-lang:
   + more tweaks (#4540).
