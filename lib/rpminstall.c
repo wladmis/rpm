@@ -589,7 +589,7 @@ restart:
 	/*@=branchstate@*/
     }
 
-    if (eiu->numRPMS && !(interfaceFlags & INSTALL_NOORDER)) {
+    if (eiu->numRPMS && !stopInstall && !(interfaceFlags & INSTALL_NOORDER)) {
 	if (rpmdepOrder(eiu->ts)) {
 	    eiu->numFailed = eiu->numPkgs;
 	    stopInstall = 1;
@@ -736,6 +736,15 @@ int rpmErase(const char * rootdir, const char ** argv,
 	}
 	/*@=branchstate@*/
     }
+
+#ifdef	NOTYET
+    if (!stopUninstall && !(interfaceFlags & INSTALL_NOORDER)) {
+	if (rpmdepOrder(ts)) {
+	    numFailed += numPackages;
+	    stopUninstall = 1;
+	}
+    }
+#endif
 
     if (!stopUninstall) {
 	transFlags |= RPMTRANS_FLAG_REVERSE;
