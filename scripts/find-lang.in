@@ -240,20 +240,23 @@ s:%lang(en) ::
 	fi
 
 	if [ -n "$CUSTOM_DIR_SCRIPT" ]; then
+		[ -x "$CUSTOM_DIR_SCRIPT" ] && custom_opt=f || custom_opt=e
 		find $TOPDIR -type d |
-			sed -e "s:$TOPDIR::" -e "$CUSTOM_DIR_SCRIPT" |
+			sed -e "s:$TOPDIR::" -$custom_opt "$CUSTOM_DIR_SCRIPT" |
 			grep -v '^$' >> "$OUTFILE" ||:
 	fi
 
 	if [ -n "$CUSTOM_FILE_SCRIPT" ]; then
+		[ -x "$CUSTOM_FILE_SCRIPT" ] && custom_opt=f || custom_opt=e
 		find "$TOPDIR" -type f |
-			sed -e "s:$TOPDIR::" -e "$CUSTOM_FILE_SCRIPT" |
+			sed -e "s:$TOPDIR::" -$custom_opt "$CUSTOM_FILE_SCRIPT" |
 			grep -v '^$' >> "$OUTFILE" ||:
 	fi
 
 	if [ -n "$CUSTOM_LINK_SCRIPT" ]; then
+		[ -x "$CUSTOM_LINK_SCRIPT" ] && custom_opt=f || custom_opt=e
 		find "$TOPDIR" -type l |
-			sed -e "s:$TOPDIR::" -e "$CUSTOM_LINK_SCRIPT" |
+			sed -e "s:$TOPDIR::" -$custom_opt "$CUSTOM_LINK_SCRIPT" |
 			grep -v '^$' >> "$OUTFILE" ||:
 	fi
 }
