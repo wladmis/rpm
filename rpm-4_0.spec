@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt32
+Release: alt33
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -503,6 +503,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Feb 03 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt33
+- lib/psm.c(runScript):
+  + executed scripts expect default SIGPIPE handler,
+    so reset it (fixes #2573).
+- find-provides:
+  + for symlinks to shared libraries, ignore symlinks to shorter
+    locations (workaround for libdb-4.0.so provides problem).
+
 * Thu Jan 29 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt32
 - find-provides: changed output format of extra provides
   for sonames found in non-default locations
