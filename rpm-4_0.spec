@@ -512,8 +512,8 @@ fi
   tokens must not contain '%' symbol since it is common
   macros manipulation error.
 - build/reqprov.c(addReqProv):
-  + enhanced duplicates detection algorithm;
-  + do not generate provided requires.
+  + rewritten duplicates detection algorithm;
+  + implemented "provided requires" detection.
 - Build python module with latest python.
 
 * Sun Jan 04 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt29
