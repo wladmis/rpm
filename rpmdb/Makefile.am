@@ -22,14 +22,12 @@ mylibpaths = \
 mylibs = -lrpm -lrpmio @LIBS@ @INTLLIBS@ @LIBMISC@
 LIBS =
 
-DB3LOBJS = $(shell cat $(top_builddir)/$(WITH_DB_SUBDIR)/db3lobjs)
-
 lib_LTLIBRARIES = librpmdb.la
 librpmdb_la_SOURCES = $(DBLIBSRCS) \
 	dbconfig.c fprint.c poptDB.c rpmhash.c rpmdb.c
 librpmdb_la_LDFLAGS = -release @VERSION@ @libdb3@
-librpmdb_la_LIBADD = $(DBLIBOBJS) $(DB3LOBJS)
-librpmdb_la_DEPENDENCIES = $(DBLIBOBJS) .created
+librpmdb_la_LIBADD = $(DBLIBOBJS)
+librpmdb_la_DEPENDENCIES = $(DBLIBOBJS)
 
 # XXX Add internal libtool dependence
 install-data-local:
@@ -40,14 +38,8 @@ install-data-local:
 falloc.lo: falloc.c $(top_srcdir)/system.h $(top_srcdir)/rpmio/rpmio.h falloc.h
 	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
 
-.created:
-	for lo in $(DB3LOBJS); do \
-	  [ -f $$lo ] || $(LN_S) $(top_builddir)/$(WITH_DB_SUBDIR)/$$lo $$lo ; \
-	done
-	touch $@
-
 clean-local:
-	rm -f $(DB3LOBJS) *.o .created
+	rm -f $(DB3LOBJS) *.o
 
 .PHONY:	sources
 sources:
