@@ -165,13 +165,13 @@ FindLang()
 	if [ -n "$FIND_MO" ]; then
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
-s:\(.*/share/locale/\)\([^/_]\+\)\(.*'"$NAME"'\.mo$\):%lang(\2) \1\2\3:
+s:\(.*/share/locale/\)\([a-z][^/_@]\+\)\(.*'"$NAME"'\.mo$\):%lang(\2) \1\2\3:
 s:^\([^%].*\)::
 s:%lang(en) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
-s:\(.*/share/locale/\)\([^/_]\+\)\(.*'"$NAME"'\.mo$\):%lang(\2) %attr(-,root,root) \1\2\3:
+s:\(.*/share/locale/\)\([a-z][^/_@]\+\)\(.*'"$NAME"'\.mo$\):%lang(\2) %attr(-,root,root) \1\2\3:
 s:^\([^%].*\)::
 s:%lang(en) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
@@ -180,7 +180,7 @@ s:%lang(en) ::
 	if [ -n "$FIND_MAN" ]; then
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
-s:\(.*/share/man/\)\([^/_]\+\)\(.*'"$NAME"'\..\)\(\.[^/]*\)\?$:%lang(\2) \1\2\3*:
+s:\(.*/share/man/\)\([a-z][^/_@]\+\)\(.*'"$NAME"'\..\)\(\.[^/]*\)\?$:%lang(\2) \1\2\3*:
 s:^\([^%].*\)::
 s:%lang(en) ::
 s:^%lang(man.*) .*::
@@ -191,7 +191,7 @@ s:^%lang(man.*) .*::
 		find $TOPDIR -type d |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/gnome/help/'"$NAME"'\)$:%dir \1:
-s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_]\+\):%dir %lang(\2) \1\2:
+s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_@]\+\):%dir %lang(\2) \1\2:
 s:\(.*/share/omf/'"$NAME"'\)$:%dir \1:
 s:^\([^%].*\)::
 s:%lang(en) ::
@@ -199,7 +199,7 @@ s:%lang(C) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
-s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_]\+\):%lang(\2) \1\2:
+s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_@]\+\):%lang(\2) \1\2:
 s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) \1\2\3\4:
 s:^\([^%].*\)::
 s:%lang(en) ::
@@ -207,7 +207,7 @@ s:%lang(C) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
-s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_]\+\):%lang(\2) %attr(-,root,root) \1\2:
+s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_@]\+\):%lang(\2) %attr(-,root,root) \1\2:
 s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) %attr(-,root,root) \1\2\3\4:
 s:^\([^%].*\)::
 s:%lang(en) ::
