@@ -13,15 +13,16 @@ else
     DEFAULTDOCDIR='%{_usr}/doc'
 fi
 
-TEMPRC="/tmp/rpmrc.$$"
-cat << E_O_F > $TEMPRC
-include:	$RPMRC
-macrofiles:	$MACROS
-E_O_F
+#TEMPRC="/tmp/rpmrc.$$"
+#cat << E_O_F > $TEMPRC
+#include:	$RPMRC
+#macrofiles:	$MACROS
+#E_O_F
+#
+#RPM="./rpm --rcfile $TEMPRC"
+RPM=rpm
 
-RPM="./rpm --rcfile $TEMPRC"
-
-arch="`$RPM --eval '%{_arch}'`"
+arch="`$RPM --eval '%{_target_cpu}'`"
 VENDOR="`$RPM --eval '%{_vendor}'`"
 OS="`$RPM --eval '%{_os}'`"
 RPMRC_GNU="`$RPM --eval '%{_gnu}'`"
@@ -34,7 +35,7 @@ rm -f ${DESTDIR}/${pkglibdir}/noarch-${OS}
 ln -s ${arch}-${VENDOR}-${OS} ${DESTDIR}/${pkglibdir}/noarch-${OS}
 
 case "$arch" in
-  i[3456]86) SUBSTS='s_i386_i386_ s_i386_i486_ s_i386_i586_ s_i386_i686_ s_i386_athlon_' ;;
+  i[3456]86|k6|athlon) SUBSTS='s_\(i[3456]86\|k6\|athlon\)_i386_ s_\(i[3456]86\|k6\|athlon\)_i486_ s_\(i[3456]86\|k6\|athlon\)_i586_ s_\(i[3456]86\|k6\|athlon\)_i686_ s_\(i[3456]86\|k6\|athlon\)_k6_ s_\(i[3456]86\|k6\|athlon\)_athlon_' ;;
   alpha*) SUBSTS='s_alpha_alpha_ s_alpha_alphaev5_ s_alpha_alphaev56_ s_alpha_alphapca56_ s_alpha_alphaev6_ s_alpha_alphaev67_' ;;
   sparc*) SUBSTS='s_sparc\(64\|v9\)_sparc_ s_sparc64_sparcv9_;s_sparc\([^v]\|$\)_sparcv9\1_ s_sparcv9_sparc64_;s_sparc\([^6]\|$\)_sparc64\1_' ;;
   powerpc*|ppc*) SUBSTS='s_ppc64_ppc_ s_ppc\([^6]\|$\)_ppc64\1_' ;;
@@ -54,10 +55,6 @@ for SUBST in $SUBSTS ; do
 
   RPMRC_OPTFLAGS="`sed -n 's/^optflags: '$ARCH' //p' $RPMRC`"
   RPMRC_OPTFLAGS="`echo $RPMRC_OPTFLAGS | sed -e 's, ,\ ,g'`"
-  case $RPMRC_OPTFLAGS in
-  *-g*) ;;
-  *) RPMRC_OPTFLAGS="$RPMRC_OPTFLAGS -g" ;;
-  esac
 
   ARCH_INSTALL_POST='%{nil}'
   MULTILIBNO=
@@ -74,6 +71,9 @@ for SUBST in $SUBSTS ; do
   fi
 
   case $VENDOR in
+  alt)
+    VENDORSED='-e s,^@alt@,,'
+    ;;
   pld)
     VENDORSED='-e s,^@pld@,,'
     ;;
@@ -91,28 +91,15 @@ for SUBST in $SUBSTS ; do
 
   cat $PLATFORM \
   | sed -e "s,@RPMRC_OPTFLAGS@,$RPMRC_OPTFLAGS," \
-	-e "s,@RPMRC_ARCH@,$base_arch," \
+	-e "s,@RPMRC_ARCH@,$ARCH," \
 	-e "s,@RPMRC_GNU@,$RPMRC_GNU," \
 	-e "s,@LIB@,$LIB," \
 	-e "s,@ARCH_INSTALL_POST@,$ARCH_INSTALL_POST," \
 	-e "s,@DEFAULTDOCDIR@,$DEFAULTDOCDIR," \
-	-e '/FLAGS:-/!s,\${,%{_,' \
 	$MULTILIBSED \
 	$VENDORSED \
   | grep -v '^@' \
   > ${PPD}/macros
-
-  #
-  # Better try to create these too until the smoke clears. Yuck.
-  [ "${ARCH}-${VENDOR}-${OS}" = "${TARGET}" ] || {
-    rm -f ${DESTDIR}/${pkglibdir}/${TARGET}
-    ln -s ${ARCH}-${VENDOR}-${OS} ${DESTDIR}/${pkglibdir}/${TARGET}
-  }
-  [ "${ARCH}-${VENDOR}-${OS}" = "${TARGET_PLATFORM}" ] || {
-    rm -f ${DESTDIR}/${pkglibdir}/${TARGET_PLATFORM}
-    ln -s ${ARCH}-${VENDOR}-${OS} ${DESTDIR}/${pkglibdir}/${TARGET_PLATFORM}
-  }
-
 done
 
-rm $TEMPRC
+#rm $TEMPRC

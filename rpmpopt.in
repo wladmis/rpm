@@ -12,7 +12,7 @@
 # fit on the head of an executable :-)
 #
 
-rpm	alias --scripts --qf '\
+rpm	alias --scripts -q --qf '\
 %|PREIN?{preinstall scriptlet\
 %|PREINPROG?{ (through %{PREINPROG})}|:\n%{PREIN}\n}:\
 {%|PREINPROG?{preinstall program: %{PREINPROG}\n}|}|\
@@ -42,22 +42,22 @@ rpm	alias --setugids -q --qf \
         --pipe "(echo 'ch() { chown -- \"$1\" \"$3\";chgrp -- \"$2\" \"$3\"; }';grep -v \(none\))|sh" \
 	--POPTdesc=$"set user/group ownership of files in a package"
 
-rpm	alias --conflicts	--qf \
+rpm	alias --conflicts -q --qf \
   "[%{CONFLICTNAME} %{CONFLICTFLAGS:depflags} %{CONFLICTVERSION}\n]" \
 	--POPTdesc=$"list capabilities this package conflicts with"
-rpm	alias --obsoletes	--qf \
+rpm	alias --obsoletes -q --qf \
   "[%{OBSOLETENAME} %|OBSOLETEFLAGS?{%{OBSOLETEFLAGS:depflags} %{OBSOLETEVERSION}}:{}|\n]" \
 	--POPTdesc=$"list other packages removed by installing this package"
-rpm	alias --provides	--qf \
+rpm	alias --provides -q --qf \
   "[%{PROVIDENAME} %|PROVIDEFLAGS?{%{PROVIDEFLAGS:depflags} %{PROVIDEVERSION}}:{}|\n]" \
 	--POPTdesc=$"list capabilities that this package provides"
 
-rpm	alias --requires	--qf \
+rpm	alias --requires -q --qf \
   "[%{REQUIRENAME} %{REQUIREFLAGS:depflags} %{REQUIREVERSION}\n]" \
 	--POPTdesc=$"list capabilities required by package(s)"
 rpm	alias -R --requires
 
-rpm	alias --info --qf 'Name        : %-27{NAME}  Relocations: %|PREFIXES?{[%{PREFIXES} ]}:{(not relocateable)}|\n\
+rpm	alias --info -q --qf 'Name        : %-27{NAME}  Relocations: %|PREFIXES?{[%{PREFIXES} ]}:{(not relocateable)}|\n\
 Version     : %-27{VERSION}       Vendor: %{VENDOR}\n\
 Release     : %-27{RELEASE}   Build Date: %{BUILDTIME:date}\n\
 Install date: %|INSTALLTIME?{%-27{INSTALLTIME:date}}:{(not installed)         }|      Build Host: %{BUILDHOST}\n\
@@ -69,20 +69,22 @@ Summary     : %{SUMMARY}\n\
 Description :\n%{DESCRIPTION}\n' \
 	--POPTdesc=$"list descriptive information from package(s)"
 
-rpm	alias --changelog --qf '[* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n\n]' \
+rpm	alias --changelog -q --qf '[* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n\n]' \
 	--POPTdesc=$"list change logs for this package"
+rpm	alias --lastchange -q --qf '* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n' \
+	--POPTdesc=$"output last changelog entry for this package"
 
-rpm	alias --triggerscripts --qf '\
+rpm	alias --triggerscripts -q --qf '\
 [trigger%{TRIGGERTYPE} script (through %{TRIGGERSCRIPTPROG}) -- %{TRIGGERCONDS}\n\
 %{TRIGGERSCRIPTS}\n]'
 rpm	alias --triggers --triggerscripts \
 	--POPTdesc=$"list trigger scriptlets from package(s)"
 
-rpm	alias --last --qf '%|INSTALLTIME?{%{INSTALLTIME}}:{000000000}| %{NAME}-%{VERSION}-%{RELEASE} %|INSTALLTIME?{%{INSTALLTIME:date}}:{(not installed)}|\n' \
+rpm	alias --last -q --qf '%|INSTALLTIME?{%{INSTALLTIME}}:{000000000}| %{NAME}-%{VERSION}-%{RELEASE} %|INSTALLTIME?{%{INSTALLTIME:date}}:{(not installed)}|\n' \
 	--pipe "sort -r -n | sed 's,^[0-9]\+ ,,' | awk '{printf(\"%-45s %-s\n\", $1, substr($0,length($1)+2))}' " \
 	--POPTdesc=$"list package(s) by install time, most recent first"
 
-rpm	alias --filesbypkg --qf '[%-25{=NAME} %{FILENAMES}\n]' \
+rpm	alias --filesbypkg -q --qf '[%-25{=NAME} %{FILENAMES}\n]' \
 	--POPTdesc=$"list all files from each package"
 
 rpm alias --redhatprovides -q --define '_dbpath /usr/lib/rpmdb/%{_arch}-%{_vendor}-%{_os}/redhat' --whatprovides \
@@ -183,6 +185,11 @@ rpm	alias --with		--define "_with_!#:+       --with-!#:+" \
 rpm	alias --without		--define "_without_!#:+    --without-!#:+" \
 	--POPTdesc=$"disable configure <option> for build" \
 	--POPTargs=$"<option>"
+	
+rpm	alias -C --clean --rmsource --rmspec
+rpm	alias --vendor --eval %vendor
+rpm	alias --packager --eval %packager
+rpm	alias --distribution --eval %distribution
 #==============================================================================
 rpmb	alias --dbpath		--define '_dbpath !#:+' \
 	--POPTdesc=$"use <dir> as the directory for the database" \
@@ -198,6 +205,7 @@ rpmb	alias --with		--define "_with_!#:+       --with-!#:+" \
 rpmb	alias --without		--define "_without_!#:+    --without-!#:+" \
 	--POPTdesc=$"disable configure <option> for build" \
 	--POPTargs=$"<option>"
+rpmb	alias -C --clean --rmsource --rmspec
 #==============================================================================
 rpmbuild	alias --dbpath		--define '_dbpath !#:+' \
 	--POPTdesc=$"use <dir> as the directory for the database" \
@@ -262,7 +270,7 @@ rpmq	alias --ftpproxy	--define '_ftpproxy !#:+'
 rpmq	alias --httpport	--define '_httpport !#:+'
 rpmq	alias --httpproxy	--define '_httpproxy !#:+'
 
-rpmq	alias --scripts --qf '\
+rpmq	alias --scripts -q --qf '\
 %|PREIN?{preinstall scriptlet\
 %|PREINPROG?{ (through %{PREINPROG})}|:\n%{PREIN}\n}:\
 {%|PREINPROG?{preinstall program: %{PREINPROG}\n}|}|\
@@ -283,22 +291,22 @@ rpmq	alias --scripts --qf '\
 ' \
 	--POPTdesc=$"list install/erase scriptlets from package(s)"
 
-rpmq	alias --conflicts	--qf \
+rpmq	alias --conflicts -q --qf \
   "[%{CONFLICTNAME} %{CONFLICTFLAGS:depflags} %{CONFLICTVERSION}\n]" \
 	--POPTdesc=$"list capabilities this package conflicts with"
-rpmq	alias --obsoletes	--qf \
+rpmq	alias --obsoletes -q --qf \
   "[%{OBSOLETENAME} %|OBSOLETEFLAGS?{%{OBSOLETEFLAGS:depflags} %{OBSOLETEVERSION}}:{}|\n]" \
 	--POPTdesc=$"list other packages removed by installing this package"
-rpmq	alias --provides	--qf \
+rpmq	alias --provides -q --qf \
   "[%{PROVIDENAME} %|PROVIDEFLAGS?{%{PROVIDEFLAGS:depflags} %{PROVIDEVERSION}}:{}|\n]" \
 	--POPTdesc=$"list capabilities that this package provides"
 
-rpmq	alias --requires	--qf \
+rpmq	alias --requires -q --qf \
   "[%{REQUIRENAME} %{REQUIREFLAGS:depflags} %{REQUIREVERSION}\n]" \
 	--POPTdesc=$"list capabilities required by package(s)"
 rpmq	alias -R --requires
 
-rpmq	alias --info --qf 'Name        : %-27{NAME}  Relocations: %|PREFIXES?{[%{PREFIXES} ]}:{(not relocateable)}|\n\
+rpmq	alias --info -q --qf 'Name        : %-27{NAME}  Relocations: %|PREFIXES?{[%{PREFIXES} ]}:{(not relocateable)}|\n\
 Version     : %-27{VERSION}       Vendor: %{VENDOR}\n\
 Release     : %-27{RELEASE}   Build Date: %{BUILDTIME:date}\n\
 Install date: %|INSTALLTIME?{%-27{INSTALLTIME:date}}:{(not installed)         }|      Build Host: %{BUILDHOST}\n\
@@ -310,21 +318,27 @@ Summary     : %{SUMMARY}\n\
 Description :\n%{DESCRIPTION}\n' \
 	--POPTdesc=$"list descriptive information from package(s)"
 
-rpmq	alias --changelog --qf '[* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n\n]' \
+rpmq	alias --changelog -q --qf '[* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n\n]' \
 	--POPTdesc=$"list change logs for this package"
+rpmq	alias --lastchange -q --qf '* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n' \
+	--POPTdesc=$"output last changelog entry for this package"
 
-rpmq	alias --triggerscripts --qf '\
+rpmq	alias --triggerscripts -q --qf '\
 [trigger%{TRIGGERTYPE} script (through %{TRIGGERSCRIPTPROG}) -- %{TRIGGERCONDS}\n\
 %{TRIGGERSCRIPTS}\n]'
 rpmq	alias --triggers --triggerscripts \
 	--POPTdesc=$"list trigger scriptlets from package(s)"
 
-rpmq	alias --last --qf '%|INSTALLTIME?{%{INSTALLTIME}}:{000000000}| %{NAME}-%{VERSION}-%{RELEASE} %|INSTALLTIME?{%{INSTALLTIME:date}}:{(not installed)}|\n' \
+rpmq	alias --last -q --qf '%|INSTALLTIME?{%{INSTALLTIME}}:{000000000}| %{NAME}-%{VERSION}-%{RELEASE} %|INSTALLTIME?{%{INSTALLTIME:date}}:{(not installed)}|\n' \
 	--pipe "sort -r -n | sed 's,^[0-9]\+ ,,' | awk '{printf(\"%-45s %-s\n\", $1, substr($0,length($1)+2))}' " \
 	--POPTdesc=$"list package(s) by install time, most recent first"
 
-rpmq	alias --filesbypkg --qf '[%-25{=NAME} %{FILENAMES}\n]' \
+rpmq	alias --filesbypkg -q --qf '[%-25{=NAME} %{FILENAMES}\n]' \
 	--POPTdesc=$"list all files from each package"
+
+rpmq	alias --vendor --eval %vendor
+rpmq	alias --packager --eval %packager
+rpmq	alias --distribution --eval %distribution
 #==============================================================================
 rpmu	alias --dbpath		--define '_dbpath !#:+' \
 	--POPTdesc=$"use <dir> as the directory for the database" \

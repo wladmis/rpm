@@ -11,24 +11,23 @@
 #############################################################
 # Values for RPM_OPT_FLAGS for various platforms
 
-# XXX this is the i386 optflags that rpm has traditionally used in the past.
-#optflags: i386 -O2 -m486 -fno-strength-reduce
-optflags: i386 -O2 -march=i386 -mcpu=i686
-optflags: i486 -O2 -march=i486
-optflags: i586 -O2 -march=i586
-optflags: i686 -O2 -march=i686
-optflags: athlon -O2 -march=athlon
-optflags: ia64 -O2
+optflags: i386 %optflags_default -march=i386 -mcpu=i686
+optflags: i486 %optflags_default -march=i486 -mcpu=i686
+optflags: i586 %optflags_default -march=i586 -mcpu=i686
+optflags: i686 %optflags_default -march=i686
+optflags: k6 %optflags_default -march=k6
+optflags: athlon %optflags_default -march=athlon
+optflags: ia64 %optflags_default
 
 # XXX Please note that -mieee has been added in rpm-3.0.5.
-optflags: alpha -O2 -mieee
+optflags: alpha -O2 -mieee -mcpu=ev4
 optflags: alphaev5 -O2 -mieee -mcpu=ev5
 optflags: alphaev56 -O2 -mieee -mcpu=ev56
 optflags: alphapca56 -O2 -mieee -mcpu=pca56
 optflags: alphaev6 -O2 -mieee -mcpu=ev6
 optflags: alphaev67 -O2 -mieee -mcpu=ev67
 
-optflags: sparc -O2 -m32 -mtune=ultrasparc
+optflags: sparc -O2 -m32 -mcpu=v8 -mtune=ultrasparc
 optflags: sparcv9 -O2 -m32 -mcpu=ultrasparc
 optflags: sparc64 -O2 -m64 -mcpu=ultrasparc
 
@@ -68,6 +67,7 @@ optflags: s390x -O2
 
 arch_canon:	athlon:	athlon	1
 arch_canon:	i686:	i686	1
+arch_canon:	k6:	k6	1
 arch_canon:	i586:	i586	1
 arch_canon:	i486:	i486	1
 arch_canon:	i386:	i386	1
@@ -160,10 +160,11 @@ buildarchtranslate: osfmach3_i386: i386
 
 buildarchtranslate: ia64: ia64
 
-buildarchtranslate: athlon: i386
-buildarchtranslate: i686: i386
-buildarchtranslate: i586: i386
-buildarchtranslate: i486: i386
+buildarchtranslate: athlon: athlon
+buildarchtranslate: i686: i686
+buildarchtranslate: k6: k6
+buildarchtranslate: i586: i586
+buildarchtranslate: i486: i486
 buildarchtranslate: i386: i386
 
 buildarchtranslate: alphaev5: alpha
@@ -205,8 +206,9 @@ arch_compat: alphaev56: alphaev5
 arch_compat: alphaev5: alpha
 arch_compat: alpha: axp noarch
 
-arch_compat: athlon: i686
+arch_compat: athlon: i686 k6
 arch_compat: i686: i586
+arch_compat: k6: i586
 arch_compat: i586: i486
 arch_compat: i486: i386
 arch_compat: i386: noarch
@@ -289,8 +291,9 @@ os_compat: bsdi4.0: bsdi
 
 buildarch_compat: ia64: noarch
 
-buildarch_compat: athlon: i686
+buildarch_compat: athlon: i686 k6
 buildarch_compat: i686: i586
+buildarch_compat: k6: i586
 buildarch_compat: i586: i486
 buildarch_compat: i486: i386
 buildarch_compat: i386: noarch
@@ -343,7 +346,7 @@ buildarch_compat: ia64: noarch
 buildarch_compat: s390: noarch
 buildarch_compat: s390x: noarch
 
-macrofiles:	@RPMCONFIGDIR@/macros:@RPMCONFIGDIR@/%{_target}/macros:@SYSCONFIGDIR@/macros.specspo:@SYSCONFIGDIR@/macros.db1:@SYSCONFIGDIR@/macros.cdb:@SYSCONFIGDIR@/macros:@SYSCONFIGDIR@/%{_target}/macros:~/.rpmmacros
+macrofiles:	@RPMCONFIGDIR@/macros:@RPMCONFIGDIR@/%{_target}/macros:@SYSCONFIGDIR@/macros.specspo:@SYSCONFIGDIR@/macros.db1:@SYSCONFIGDIR@/macros.cdb:@SYSCONFIGDIR@/macros:@SYSCONFIGDIR@/%{_target}/macros:@SYSCONFIGDIR@/%{_target_platform}/macros:~/.rpmmacros
 
 # \endverbatim
 #*/
