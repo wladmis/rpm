@@ -608,7 +608,7 @@ int main(int argc, const char ** argv)
     if ( !(geteuid() || rpmExpandNumeric( "%_allow_root_build" )) )
 	argerror( _("current site policy disallows root to build packages") );
 
-    nice(15);
+    nice(10);
 
     switch (ba->buildMode) {
     case 'b':	bigMode = MODE_BUILD;		break;
