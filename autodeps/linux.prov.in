@@ -127,7 +127,12 @@ ListScriptProvs()
 $r"
 			fi
 			return 0
-		elif [ "${f##*/}" = ".provides.sh" ]; then
+		fi
+
+		# Ignore symlinks for non-PAM scripts.
+		[ ! -L "$f" ] || return 0
+
+		if [ "${f##*/}" = ".provides.sh" ]; then
 			if [ -n "$FIND_SHELL" ]; then
 				local r
 				r="$(@RPMCONFIGDIR@/shell.prov "$f")" || return 1
@@ -137,6 +142,10 @@ $r"
 			return 0
 		fi
 	fi
+
+	# Ignore symlinks for non-PAM scripts.
+	[ ! -L "$f" ] || return 0
+
 	if [ -z "${t##perl script text*}" -o -z "${t##Perl5 module source text}" ] || [ -z "${f%%*.p[lmh]}" -a -z "${t##*text*}" ]; then
 		if [ -n "$FIND_PERL" ]; then
 			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
@@ -234,8 +243,7 @@ while IFS= read -r f; do
 	# Find out file type (dereference symlinks).
 	if t="$(file -bL "$f")"; then
 		if [ -z "${t##* text*}" ]; then
-			# Ignore symlinks for scripts.
-			[ -L "$f" ] || ListScriptProvs "$f" "$t"
+			ListScriptProvs "$f" "$t"
 		elif [ -z "${t##* shared object*}" ]; then
 			r="$(FindLibProvs "$f")"
 			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
