@@ -90,9 +90,9 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		rpmsenseFlags old_flags = flags[len] & sense_mask;
 		rpmsenseFlags new_flags = depFlags & sense_mask;
 		if (old_flags != new_flags) {
-		    if (nametag != RPMTAG_REQUIRENAME)
-			continue;
 		    if (new_flags & RPMSENSE_SENSEMASK)
+			continue;
+		    if (nametag != RPMTAG_REQUIRENAME && nametag != RPMTAG_PROVIDENAME)
 			continue;
 		    if ((new_flags & ~RPMSENSE_SENSEMASK) != (old_flags & ~RPMSENSE_SENSEMASK))
 			continue;
@@ -102,7 +102,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	    if (flagtag && versions) {
 		if (*depEVR && strcmp (versions[len], depEVR))
 		    continue;
-		if (!*depEVR && *versions[len] && (nametag != RPMTAG_REQUIRENAME))
+		if (!*depEVR && *versions[len] && (nametag != RPMTAG_REQUIRENAME) && (nametag != RPMTAG_PROVIDENAME))
 		    continue;
 	    }
 
