@@ -154,19 +154,22 @@ ListScriptReqs()
 	local f="$1"
 	local t="$2"
 	if [ -x "$f" ]; then
-		local r="$(FindPackage "$f" "$(head -1 "$f" |sed -n 's|^#![ 	]*\(/[^ 	]\+\).*|\1|p')")"
+		local r
+		r="$(FindPackage "$f" "$(head -1 "$f" |sed -n 's|^#![ 	]*\(/[^ 	]\+\).*|\1|p')")" || return 1
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 	fi
 	if [ -z "${t##Bourne* shell script text*}" ]; then
 		if [ -n "$FIND_SHELL" -a -x "$f" ]; then
-			local r="$(@RPMCONFIGDIR@/shell.req "$f")"
+			local r
+			r="$(@RPMCONFIGDIR@/shell.req "$f")" || return 1
 			[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 		fi
 	elif [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
 		if [ -n "$FIND_PAM" ]; then
-			local r="$(@RPMCONFIGDIR@/pam.req "$f")"
+			local r
+			r="$(@RPMCONFIGDIR@/pam.req "$f")" || return 1
 			[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 		fi
@@ -181,7 +184,8 @@ $f"
 FindPerlReqs()
 {
 	if [ -n "$LIST_PERL" ]; then
-		local r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.req)"
+		local r
+		r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.req)" || return 1
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 	fi

@@ -66,7 +66,7 @@ ParseMethod()
 				FIND_PERL=1
 				;;
 			default|yes|true)
-				ParseMethod $RPM_FINDPROV_DEFAULT_METHOD
+				ParseMethod $RPM_FINDPROV_DEFAULT_METHOD || return 1
 				;;
 			*)
 				echo "Unrecognized find-provides method: $t" >&2
@@ -103,7 +103,8 @@ ListScriptProvs()
 	local t="$2"
 	if [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
 		if [ -n "$FIND_PAM" ]; then
-			local r="$(@RPMCONFIGDIR@/pam.prov "$f")"
+			local r
+			r="$(@RPMCONFIGDIR@/pam.prov "$f")" || return 1
 			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
 		fi
@@ -118,7 +119,8 @@ $f"
 FindPerlProvs()
 {
 	if [ -n "$LIST_PERL" ]; then
-		local r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.prov)"
+		local r
+		r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.prov)" || return 1
 		[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
 	fi
@@ -133,7 +135,8 @@ FindLibProvs()
 	local f="$1"
 	local d
 	if d="$(objdump -p "$f")"; then
-		local soname="$(echo -E "$d" |awk '/SONAME/ {print $2}')"
+		local soname
+		soname="$(echo -E "$d" |awk '/SONAME/ {print $2}')" || return 1
 		if [ -n "$soname" ]; then
 			if [ ! -L "$f" ]; then
 				# name
@@ -145,7 +148,7 @@ FindLibProvs()
 					/^Version definitions:$/ {START=1;}
 					/^[0-9]/ && (START==1) && ($4!="") && ($4!=soname) {printf("%s(%s)\n",soname,$4);}
 					/^$/ { START=0; }
-				'
+				' || return 1
 			fi
 		else
 			echo "${f##*/}"
