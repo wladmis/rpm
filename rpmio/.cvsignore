@@ -1,0 +1,11 @@
+.created
+.deps
+.depend
+Makefile
+Makefile.in
+.libs
+*.la
+*.lo
+tdigest
+tkey
+trpmio

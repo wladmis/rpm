@@ -1,0 +1,9 @@
+.deps
+.depend
+Makefile
+Makefile.in
+getdate.c
+tagtable.c
+.libs
+*.la
+*.lo

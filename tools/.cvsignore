@@ -1,0 +1,14 @@
+.deps
+.depend
+.libs
+Makefile
+Makefile.in
+dump
+dumpdb
+javadeps
+rpmarchive
+rpmheader
+rpminject
+rpmlead
+rpmsort
+rpmsignature
