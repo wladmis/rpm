@@ -19,7 +19,7 @@
 #
 
 # If using normal root, avoid changing anything.
-[ -n "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
+[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
 
 . @RPMCONFIGDIR@/find-package
 
@@ -31,17 +31,17 @@ $FIND_REQ </dev/null >/dev/null 2>&1
 file="$1"
 fname="${file##$RPM_BUILD_ROOT}"
 dname="${fname%/*}"
-extra=
+#extra=
 
 if ! reqs="$($FIND_REQ "$file" 2>/dev/null)"; then
 	if egrep -vs '^(#|$)' "$file" 2>/dev/null |head -1 |grep -qs '^[ 	]*exec '; then
-		reqs="$(echo "$reqs" |head -1)"
-		extra="$(echo "$reqs" |sed -e 's/^\(executable\)(\(.*\))$/\2/g')"
+		reqs="$(printf %s\\n "$reqs" |head -1)"
+		#extra="$(printf %s\\n "$reqs" |sed -e 's/^\(executable\)(\(.*\))$/\2/g')"
 	else
 		reqs="$($FIND_REQ "$file")"
 	fi
 fi
-reqs="$(echo "$reqs" |sed -e 's/^\(sh\|bash\|executable\)(\(.*\))$/\2/g' |LC_COLLATE=C sort -u)"
+reqs="$(printf %s\\n "$reqs" |sed -e 's/^\(sh\|bash\|executable\)(\(.*\))$/\2/g' |LC_COLLATE=C sort -u)"
 [ -n "$reqs" ] || exit 0
 
 FindReqs()
@@ -57,7 +57,7 @@ FindReqs()
 		if ! grep -qs "^$r\$" "$RPM_BUILD_ROOT/$dname/.provides.sh"; then
 			local f
 			if f=`grep -qs "^$r\$" "/$dname/.provides.sh"`; then
-				echo -E "$dname($r)"
+				printf %s\\n "$dname($r)"
 			else
 				FindPackage "$file" "$r"
 			fi
@@ -69,6 +69,6 @@ FindReqs()
 found="$(FindReqs $reqs)"
 
 # And print them.
-echo -E "$found" |LC_COLLATE=C sort -u
+printf %s "$found" |LC_COLLATE=C sort -u
 
 # TODO: more analysis based on $extra

@@ -19,7 +19,7 @@
 #
 
 # If using normal root, avoid changing anything.
-[ -n "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
+[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
 
 FindPackage()
 {
@@ -46,7 +46,7 @@ FindPackage()
 
 			# Is it an alternative?
 			if readlink "$rep" |grep -qs '^/etc/alternatives/'; then
-				echo -E "$rep"
+				printf %s\\n "$rep"
 				continue
 			fi
 
@@ -54,14 +54,14 @@ FindPackage()
 			if [ -n "$RPM_PKG_CONTENTS_INDEX_ALL" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
 				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_ALL")"
 				if [ -n "$package" ]; then
-					echo -E "$package"
+					printf %s\\n "$package"
 					continue
 				fi
 			# Check for pkg contents binary index.
 			elif [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
 				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
 				if [ -n "$package" ]; then
-					echo -E "$package"
+					printf %s\\n "$package"
 					continue
 				fi
 			fi
@@ -69,17 +69,17 @@ FindPackage()
 			# Check package database.
 			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
 				if [ -n "$package" ]; then
-					echo -E "$package"
+					printf %s\\n "$package"
 					continue
 				fi
 			fi
 
 			# Not found; output raw dependence.
-			echo -E "$rep"
+			printf %s\\n "$rep"
 		else
 			# Check buildroot first.
 			local RPATH
-			RPATH="$(echo "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
+			RPATH="$(printf %s "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
 			if [ -n "$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)" ]; then
 				continue
 			fi
@@ -89,7 +89,7 @@ FindPackage()
 				for location in /sbin /usr/sbin /bin /usr/bin /usr/X11R6/bin; do
 					package="$(awk -v "f=$location/$r" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
 					if [ -n "$package" ]; then
-						echo -E "$package"
+						printf %s\\n "$package"
 						continue 2
 					fi
 				done
@@ -103,7 +103,7 @@ FindPackage()
 			# Check package database.
 			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
 				if [ -n "$package" ]; then
-					echo -E "$package"
+					printf %s\\n "$package"
 					continue
 				fi
 			fi
