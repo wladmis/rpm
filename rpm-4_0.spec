@@ -259,6 +259,10 @@ bzip2 -9 CHANGES ||:
 %__cp -a apidocs/html $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/apidocs/
 %endif #with apidocs
 
+# rpminit(1).
+%__install -pD -m755 rpminit $RPM_BUILD_ROOT%_bindir/rpminit
+%__install -pD -m644 rpminit.1 $RPM_BUILD_ROOT%_man1dir/rpminit.1
+
 # update-alternatives.
 %__mkdir_p $RPM_BUILD_ROOT{%_sbindir,%_man8dir}
 %__install -p -m755 update-alternatives $RPM_BUILD_ROOT%_sbindir/
@@ -384,6 +388,7 @@ fi
 %_bindir/rpmsign
 %_bindir/rpmquery
 %_bindir/rpmverify
+%_bindir/rpminit
 
 %rpmdirattr %_libdir/%name
 %rpmattr %_libdir/%name/delayed_rebuilddb
@@ -398,6 +403,7 @@ fi
 %_libdir/rpmpopt
 %_libdir/rpmrc
 
+%_man1dir/rpminit.*
 %_man8dir/rpm.*
 %_man8dir/rpm2cpio.*
 
