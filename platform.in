@@ -454,6 +454,12 @@
 @alt@%php_version(n:)	%rpm_check_field -p php VERSION %{-n:%{-n*}}
 @alt@%php_release(n:)	%rpm_check_field -p php RELEASE %{-n:%{-n*}}
 @alt@
+@alt@# ldconfig update macros.
+@alt@%post_ldconfig_lib /sbin/ldconfig
+@alt@%post_ldconfig_sys /sbin/post_ldconfig
+@alt@%post_ldconfig %post_ldconfig_lib
+@alt@%postun_ldconfig /sbin/postun_ldconfig
+@alt@
 @alt@## compiler optflags defaults
 @alt@
 @alt@# core flags
