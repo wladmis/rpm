@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt21.3
+Release: alt22
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -473,7 +473,7 @@ fi
 %endif #with contrib
 
 %changelog
-* Sun Jul 20 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt21.3
+* Mon Jul 21 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt22
 - lib/depends.c: fixed "Requires(post,preun)" problem.
 - lib/psm.c: do syslog only when geteuid() == 0.
 - build/poptBT.c, build/rpmbuild.h, build.c, rpmqv.c:
