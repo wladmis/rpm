@@ -14,7 +14,7 @@ Release: alt42
 %define def_without() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _without_%{1} --without-%{1}}}}
 %define if_with() %if %{expand:%%{?_with_%{1}:1}%%{!?_with_%{1}:0}}
 %define if_without() %if %{expand:%%{?_without_%{1}:1}%%{!?_without_%{1}:0}}
-%define %_rpmdir %_prefix/lib/%name
+%define _rpmdir %_prefix/lib/%name
 
 %def_with python
 %def_without apidocs
