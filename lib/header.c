@@ -1478,6 +1478,9 @@ headerFindI18NString(Header h, indexEntry entry)
     indexEntry table;
     int strip_lang;
 
+    if (!entry->data || !entry->data[0])
+	    return entry->data;
+
     /* XXX Drepper sez' this is the order. */
     if ((lang = getenv("LANGUAGE")) == NULL &&
         (lang = getenv("LC_ALL")) == NULL &&
