@@ -237,7 +237,7 @@ else
 		exit 1
 	fi
 
-	[ -n "$STRIP_AUTOSKIP" ] || STRIP_AUTOSKIP=debug
+	[ -n "$STRIP_AUTOSKIP" ] || STRIP_AUTOSKIP='*/debug/*'
 
 	StripTree "$TOPDIR"
 fi
