@@ -204,11 +204,14 @@ FindLibProvs()
 
 				# Treat symlinks specially.
 				if [ -L "$f" ]; then
-					local real realpath
+					local real realpath realdir
 					realpath=$(readlink -fv "$f") || break
 					real="${realpath#$real_buildroot}"
 					# Ignore symlinks leading out of buildroot.
 					[ "$real" != "$realpath" ] || break
+					realdir="${real%/*}"
+					# Ignore symlinks to shorter locations.
+					[ "${#dir}" -le "${#realdir}" ] || break
 				fi
 				
 				# Check for non-default path.
