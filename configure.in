@@ -4,12 +4,12 @@ dnl Don't add checks for things we can't work around, unless those checks
 dnl failing causes the script to bomb out with a message. If we can't fix
 dnl it, why check it?
 
-AC_INIT(rpmqv.c)
+AC_INIT(rpm, 4.0.4)
+AC_PREREQ(2.13)
+AC_CONFIG_SRCDIR(rpmqv.c)
+AC_CONFIG_HEADERS([config.h])
+AM_INIT_AUTOMAKE([1.4 foreign])
 AC_CANONICAL_SYSTEM
-AC_PREREQ(2.12)         dnl Minimum Autoconf version required.
-AC_CONFIG_HEADERS
-AM_INIT_AUTOMAKE(rpm, 4.0.4)
-AM_CONFIG_HEADER(config.h)
 
 dnl XXX AM_MAINTAINER_MODE
 
@@ -21,7 +21,7 @@ AC_PROG_CXX
 AS=${AS-as}
 AC_SUBST(AS)
 if test "$ac_cv_prog_gcc" = yes; then
-    CFLAGS="$CFLAGS -D_GNU_SOURCE -D_REENTRANT -Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wno-char-subscripts"
+	CFLAGS="$CFLAGS -D_GNU_SOURCE -D_REENTRANT -Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wno-char-subscripts"
 fi
 export CFLAGS
 
@@ -58,14 +58,10 @@ else
 fi
 
 RPMUSER=rpm
-RPMUID=37
 RPMGROUP=rpm
-RPMGID=37
-export RPMUSER RPMUID RPMGROUP RPMGID
+export RPMUSER RPMGROUP
 AC_SUBST(RPMUSER)
-AC_SUBST(RPMUID)
 AC_SUBST(RPMGROUP)
-AC_SUBST(RPMGID)
 
 AC_PATH_PROG(CTAGS, ctags, /bin/true)
 AC_PATH_PROG(CSCOPE, cscope, /bin/true)
@@ -181,8 +177,9 @@ AC_PROG_AWK
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
-dnl AM_DISABLE_SHARED
-AM_PROG_LIBTOOL
+dnl AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
+AC_SUBST(LIBTOOL_DEPS)
 
 AC_CHECK_TOOL(AR, ar, :)
 
@@ -256,77 +253,12 @@ AC_PATH_PROG(__OBJCOPY, objcopy, /usr/bin/objcopy, $MYPATH)
 AC_PATH_PROG(__OBJDUMP, objdump, /usr/bin/objdump, $MYPATH)
 AC_PATH_PROG(__STRIP, strip, /usr/bin/strip, $MYPATH)
 
-addlib() {
-  l=$1
-  shift
-  case "$target" in 
-    *-*-solaris*)	LIBS="$LIBS -L$l -R$l $*";;
-    *)		LIBS="$LIBS -L$l $*";;
-  esac
-}
-
 WITH_ZLIB_SUBDIR=
 WITH_ZLIB_INCLUDE=
 WITH_ZLIB_LIB=
-#if test -d zlib ; then
-#  WITH_ZLIB_SUBDIR=zlib
-#  addlib \${top_builddir}/zlib
-#  WITH_ZLIB_INCLUDE="-I\${top_srcdir}/${WITH_ZLIB_SUBDIR}"
-#  INCPATH="$INCPATH -I\${top_srcdir}/${WITH_ZLIB_SUBDIR}"
-#  WITH_ZLIB_LIB="\${top_builddir}/${WITH_ZLIB_SUBDIR}/libz.la"
-#  AC_DEFINE(HAVE_GZSEEK)
-#fi
 AC_SUBST(WITH_ZLIB_SUBDIR)
 AC_SUBST(WITH_ZLIB_INCLUDE)
 AC_SUBST(WITH_ZLIB_LIB)
-
-localdone=
-
-dirs=$prefix
-if test "$cross_compiling" != "yes"; then
-  dirs="$dirs /usr/local"
-fi
-for dir in $dirs
-do
-	case $dir in
-	NONE|/usr)	continue;;
-	/usr/local)
-		if test X$localdone != X ; then continue; fi
-		localdone="$dir"
-		;;
-	esac
-
-	AC_MSG_CHECKING(for $dir/lib in LIBS)
-	if test -d $dir/lib 2> /dev/null ; then
-		addlib $dir/lib
-		AC_MSG_RESULT(yes)
-	else
-		AC_MSG_RESULT(no)
-	fi
-
-	AC_MSG_CHECKING(for $dir/include in INCPATH)
-	if test -d $dir/include 2>/dev/null ; then
-		if [ "$dir" != "/usr/local" ] ; then
-		    INCPATH="$INCPATH -I$dir/include"
-		fi
-		AC_MSG_RESULT(yes)
-	else
-		AC_MSG_RESULT(no)
-	fi
-done
-
-AC_MSG_CHECKING(for /usr/ucblib in LIBS)
-if test -d /usr/ucblib ; then
-	if test "$build" = "mips-sni-sysv4" ; then
-		addlib /usr/ccs/lib -lc
-	fi
-
-	addlib /usr/ucblib
-	
-	AC_MSG_RESULT(yes)
-else
-	AC_MSG_RESULT(no)
-fi
 
 dnl
 dnl Check for features
@@ -375,7 +307,7 @@ AC_CHECK_LIB(port, writev)
 
 WITH_DB_SUBDIR=
 WITH_INTERNAL_DB=0
-DBLIBSRCS=""
+DBLIBSRCS="db3.c"
 libdb3=""
 libdb3a=""
 
@@ -392,13 +324,16 @@ AC_CHECK_HEADERS(db3/db.h)
 AC_CHECK_HEADERS(db4/db.h)
 
 dnl Check for Berkeley db3 API.
-AC_CHECK_FUNC(db_create, [DBLIBSRCS="$DBLIBSRCS db3.c"],
-  AC_CHECK_LIB(db-4.0, db_create, [DBLIBSRCS="$DBLIBSRCS db3.c"; libdb3="-ldb-4.0"],
-    AC_CHECK_LIB(db-3.3, db_create, [DBLIBSRCS="$DBLIBSRCS db3.c"; libdb3="-ldb-3.3"],
-      AC_CHECK_LIB(db-3.2, db_create, [DBLIBSRCS="$DBLIBSRCS db3.c"; libdb3="-ldb-3.2"],
-        AC_CHECK_LIB(db-3.1, db_create, [DBLIBSRCS="$DBLIBSRCS db3.c"; libdb3="-ldb-3.1"],
-          AC_CHECK_LIB(db-3.0, db_create, [DBLIBSRCS="$DBLIBSRCS db3.c"; libdb3="-ldb-3.0"],
-            AC_CHECK_LIB(db, db_create, [DBLIBSRCS="$DBLIBSRCS db3.c"; libdb3="-ldb"],
+AC_CHECK_FUNC(db_create, ,
+  AC_CHECK_LIB(db, db_create, [libdb3="-ldb"],
+    AC_CHECK_LIB(db-4.1, db_create, [libdb3="-ldb-4.1"],
+      AC_CHECK_LIB(db-4.0, db_create, [libdb3="-ldb-4.0"],
+        AC_CHECK_LIB(db-3.3, db_create, [libdb3="-ldb-3.3"],
+          AC_CHECK_LIB(db-3.2, db_create, [libdb3="-ldb-3.2"],
+            AC_CHECK_LIB(db-3.1, db_create, [libdb3="-ldb-3.1"],
+              AC_CHECK_LIB(db-3.0, db_create, [libdb3="-ldb-3.0"],
+	        AC_MSG_ERROR([sorry rpm requires Berkeley db3/db4])
+	      )
             )
           )
         )
@@ -406,10 +341,6 @@ AC_CHECK_FUNC(db_create, [DBLIBSRCS="$DBLIBSRCS db3.c"],
     )
   )
 )
-
-if test X"$DBLIBSRCS" = X; then
-    AC_MSG_ERROR([sorry rpm requires libdb-3.x.a (from the Berkeley db package)]) 
-fi
 
 if test -n "$libdb3" -a -n "$libthread" ; then
    AC_MSG_CHECKING(whether $libdb3 needs $libthread)
@@ -425,7 +356,6 @@ dnl ------------------ with    internal db
   AC_DEFINE(HAVE_DB3_DB_H, 1, [Define if you have the <db3/db.h> header file])
   WITH_DB_SUBDIR=db3
   WITH_INTERNAL_DB=1
-  DBLIBSRCS="db3.c"
   libdb3="# \$(top_builddir)/db3/libdb.la"
   libdb3a="\$(top_builddir)/db3/libdb.a"
 dnl  INCPATH="-I\$(top_builddir)/$(WITH_DB_SUBDIR) $INCPATH"
@@ -481,7 +411,7 @@ AC_CHECK_LIB(bz2, BZ2_bzread, [
 		WITH_BZIP2=0))
 AC_SUBST(WITH_BZIP2)
 
-AC_CHECK_LIB(popt, poptGetContext, [LIBS="$LIBS -lpopt"])
+AC_CHECK_LIB(popt, poptGetContext)
 
 AC_CHECK_LIB(beecrypt, hashFunctionContextInit, [LIBBEECRYPT="-lbeecrypt"])
 AC_SUBST(LIBBEECRYPT)
@@ -720,32 +650,6 @@ AC_CHECK_FUNCS(strdup strerror strtol strtoul strspn strstr)
 AC_CHECK_FUNCS(regcomp)
 
 AC_CHECK_FUNCS(ftok)
-
-dnl
-dnl XXX Regex replacement isn't known to be needed yet.
-dnl
-dnl AC_ARG_WITH(regex, [  --with-regex            use the GNU regex library ],
-dnl     [rpm_cv_regex=yes],
-dnl     [AC_CHECK_FUNCS(regcomp, rpm_cv_regex=no, rpm_cv_regex=yes)])
-dnl 
-dnl if test $rpm_cv_regex = no ; then
-dnl     AC_MSG_CHECKING(whether the regexp library is broken)
-dnl     AC_TRY_RUN([
-dnl #include <unistd.h>
-dnl #include <regex.h>
-dnl main() { regex_t blah ; exit(regcomp(&blah, "foo.*bar", REG_NOSUB) || regexec (&blah, "foobar", 0, NULL, 0)); }],
-dnl     rpm_cv_regex_broken=no, rpm_cv_regex_broken=yes, rpm_cv_regex_broken=yes)
-dnl     AC_MSG_RESULT([$rpm_cv_regex_broken])
-dnl     if test $rpm_cv_regex_broken = yes ; then
-dnl 	    echo "   --> using the included GNU regex instead." >&AC_FD_MSG
-dnl 	    rpm_cv_regex=yes
-dnl     fi
-dnl fi
-dnl 
-dnl if test $rpm_cv_regex = yes; then
-dnl     AC_DEFINE(USE_GNU_REGEX, 1)
-dnl     AC_LIBOBJ(regex)
-dnl fi
 
 dnl
 dnl XXX Glob *is* broken on linux with libc5, solaris and possibly aix when
