@@ -878,7 +878,7 @@ grabArgs(MacroBuf mb, const MacroEntry me, const char * se, char lastc)
     b = be = stpcpy(buf, me->name);
 
     addMacro(mb->mc, "0", NULL, buf, mb->depth);
-    
+
     argc = 1;	/* XXX count argv[0] */
 
     /* Copy args into buf until lastc */
@@ -897,7 +897,7 @@ grabArgs(MacroBuf mb, const MacroEntry me, const char * se, char lastc)
 	*be++ = ' ';
 	argc++;
     }
-    if (c == '\0') se--;	/* one too far */
+    if (c == '\0' || c == '\n') se--;	/* one too far */
     if (be[-1] != ' ')
 	argc++, be++;		/* last word has not trailing ' ' */
     be[-1] = '\0';
