@@ -574,7 +574,7 @@
 @alt@%_optlevel	2
 @alt@
 @alt@# general optimization flags
-@alt@%optflags_optimization -O%{_optlevel} -fexpensive-optimizations
+@alt@%optflags_optimization -O%{_optlevel}
 @alt@
 @alt@# warning flags
 @alt@%optflags_warnings	-Wall
