@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt17
+Release: alt18
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -483,6 +483,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue May 06 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt18
+- rpmio: fixed gzclose error handling.
+
 * Thu May 01 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt17
 - rpm2cpio: return proper exit code.
 - Fixed perl provides autodetection (broken in -alt16).
