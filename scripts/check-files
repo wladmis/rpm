@@ -40,7 +40,7 @@ WORKDIR="$(mktemp -dt check-files.XXXXXXXXXX)"
 
 export LC_ALL=C
 
-sort >packaged
-find "$RPM_BUILD_ROOT" \( -type f -o -type l \) |sort >disk
+sort >"$WORKDIR/packaged"
+find "$RPM_BUILD_ROOT" \( -type f -o -type l \) |sort >"$WORKDIR/disk"
 
-join -v1 disk packaged |sed -e "s#^$RPM_BUILD_ROOT#    #g"
+join -v1 "$WORKDIR/disk" "$WORKDIR/packaged" |sed -e "s#^$RPM_BUILD_ROOT#    #g"
