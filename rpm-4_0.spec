@@ -431,6 +431,7 @@ fi
 %rpmattr %_libdir/%name/shell.*
 %rpmattr %_libdir/%name/sql.*
 %rpmattr %_libdir/%name/tcl.*
+%rpmattr %_libdir/%name/verify-elf
 %rpmattr %_libdir/%name/Specfile.pm
 
 %_mandir/man?/gendiff.*
