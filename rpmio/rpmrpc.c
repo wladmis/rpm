@@ -1005,7 +1005,7 @@ static const char * statstr(const struct stat * st,
 		/*@returned@*/ /*@out@*/ char * buf, size_t size)
 	/*@modifies *buf @*/
 {
-    snprintf(buf, size
+    snprintf(buf, size,
 	"*** dev %x ino %x mode %0o nlink %d uid %d gid %d rdev %x size %x\n",
 	(unsigned)st->st_dev,
 	(unsigned)st->st_ino,
