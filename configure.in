@@ -309,25 +309,12 @@ AC_ARG_WITH(db, [  --with-db            use internal Berkeley db])
 if test $withval = no ; then
 dnl ------------------ without internal db
 
-AC_CHECK_HEADERS(db3/db.h)
-AC_CHECK_HEADERS(db4/db.h)
+AC_CHECK_HEADERS([db4/db.h],,AC_CHECK_HEADERS([db3/db.h]))
 
 dnl Check for Berkeley db3 API.
 AC_CHECK_FUNC(db_create, ,
   AC_CHECK_LIB(db, db_create, [libdb3="-ldb"],
-    AC_CHECK_LIB(db-4.1, db_create, [libdb3="-ldb-4.1"],
-      AC_CHECK_LIB(db-4.0, db_create, [libdb3="-ldb-4.0"],
-        AC_CHECK_LIB(db-3.3, db_create, [libdb3="-ldb-3.3"],
-          AC_CHECK_LIB(db-3.2, db_create, [libdb3="-ldb-3.2"],
-            AC_CHECK_LIB(db-3.1, db_create, [libdb3="-ldb-3.1"],
-              AC_CHECK_LIB(db-3.0, db_create, [libdb3="-ldb-3.0"],
-	        AC_MSG_ERROR([sorry rpm requires Berkeley db3/db4])
-	      )
-            )
-          )
-        )
-      )
-    )
+    AC_MSG_ERROR([sorry rpm requires Berkeley db3/db4])
   )
 )
 
