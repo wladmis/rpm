@@ -23,7 +23,7 @@
 # If using normal root, avoid changing anything.
 [ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
 
-cd "$RPM_BUILD_ROOT"
+cd "$RPM_BUILD_ROOT" || exit 0
 
 WORKDIR=
 exit_handler()
