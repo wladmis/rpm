@@ -3647,6 +3647,9 @@ msgstr "Графические оболочки/Sawfish"
 msgid "Graphical desktop/Window Maker"
 msgstr "Графические оболочки/Window Maker"
 
+msgid "Graphical desktop/XFce"
+msgstr "Графические оболочки/XFce"
+
 msgid "Graphics"
 msgstr "Графика"
 
