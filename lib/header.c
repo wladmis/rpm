@@ -9,6 +9,7 @@
 /* network byte order and is converted on the fly to host order. */
 
 #include "system.h"
+#include <locale.h>
 #include <langinfo.h>
 #include <iconv.h>
 
@@ -1359,6 +1360,37 @@ static int copyEntry(const indexEntry entry,
     return rc;
 }
 
+/* Guess value of current locale from value of the environment variables.  */
+static const char *
+guess_category_value (int category)
+{
+  const char *language;
+  const char *retval;
+
+  /* The highest priority value is the `LANGUAGE' environment
+     variable.  But we don't use the value if the currently selected
+     locale is the C locale.  This is a GNU extension.  */
+  language = getenv ("LANGUAGE");
+  if (language != NULL && language[0] == '\0')
+    language = NULL;
+
+  /* We have to proceed with the POSIX methods of looking to `LC_ALL',
+     `LC_xxx', and `LANG'.  On some systems this can be done by the
+     `setlocale' function itself.  */
+  retval = setlocale (category, NULL);
+
+  /* Ignore LANGUAGE if the locale is set to "C" because
+     1. "C" locale usually uses the ASCII encoding, and most international
+	messages use non-ASCII characters. These characters get displayed
+	as question marks (if using glibc's iconv()) or as invalid 8-bit
+	characters (because other iconv()s refuse to convert most non-ASCII
+	characters to ASCII). In any case, the output is ugly.
+     2. The precise output of some programs in the "C" locale is specified
+	by POSIX and should not depend on environment variables like
+	"LANGUAGE".  We allow such programs to use gettext().  */
+  return language != NULL && strcmp (retval, "C") != 0 ? language : retval;
+}
+
 static int
 locale_match (const char *sample, const char *l_b, const char *l_e,
 	      char delim)
@@ -1478,15 +1510,11 @@ headerFindI18NString(Header h, indexEntry entry)
     indexEntry table;
     int strip_lang;
 
-    if (!entry->data || !*(const char *)entry->data)
-	    return entry->data;
-
-    /* XXX Drepper sez' this is the order. */
-    if ((lang = getenv("LANGUAGE")) == NULL &&
-        (lang = getenv("LC_ALL")) == NULL &&
-        (lang = getenv("LC_MESSAGES")) == NULL &&
-	(lang = getenv("LANG")) == NULL)
-	    return entry->data;
+    if (   !entry->data
+	|| !*(const char *)entry->data
+	|| !(lang = guess_category_value (LC_MESSAGES))
+       )
+	return entry->data;
     
     /*@-mods@*/
     if ((table = findEntry(h, HEADER_I18NTABLE, RPM_STRING_ARRAY_TYPE)) == NULL)
