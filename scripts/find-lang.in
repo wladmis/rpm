@@ -4,7 +4,7 @@
 # Inspired by tool with same name from W. L. Estes <wlestes@uncg.edu>.
 #
 # $Id$
-# Copyright (C) 2000,2003  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2000, 2003, 2004  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ Valid options are:
 --without-mo        do not look for locales files;
 --with-man          look for man pages;
 --with-gnome        look for GNOME help and omf files;
+--with-kde          look for KDE help files;				
 --append            do not truncate output file before writing;
 --output=FILENAME   filename where to write output, by default PACKAGE_NAME.lang;
 --topdir=TOPDIR     the top of the tree containing the files to be processed,
@@ -52,13 +53,14 @@ EOF
 	[ -n "$1" ] && exit "$1" || exit
 }
 
-TEMP=`getopt -n "$PROG" -o h -l without-mo,with-man,with-gnome,append,output:,topdir:,help -- "$@"` || Usage
+TEMP=`getopt -n "$PROG" -o h -l without-mo,with-man,with-gnome,with-kde,append,output:,topdir:,help -- "$@"` || Usage
 eval set -- "$TEMP"
 
 : ${TOPDIR:=$RPM_BUILD_ROOT}
 FIND_MO=1
 FIND_MAN=
 FIND_GNOME=
+FIND_KDE=
 APPEND=
 OUTPUT=
 NAME=
@@ -74,6 +76,10 @@ while :; do
 			;;
 		--with-gnome)
 			FIND_GNOME=1
+			shift
+			;;
+		--with-kde)
+			FIND_KDE=1
 			shift
 			;;
 		--append)
@@ -168,6 +174,21 @@ s:%lang(C) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 	fi
 
+	if [ -n "$FIND_KDE" ]; then
+		find $TOPDIR -type d |sed '
+s:'"$TOPDIR"'::
+s:\(.*/share/doc/HTML/\)\([^/_]\+\)\(/'"$NAME"'\):%lang(\2) %dir \1\2\3:
+s:^\([^%].*\)::
+s:%lang(en) ::
+	        ' |grep -v '^$' >> "$OUTFILE" ||:
+
+    find "$TOPDIR" -type f -o -type l |sed '
+s:'"$TOPDIR"'::
+s:\(.*/share/doc/HTML/\)\([^/_]\+\)\(/'"$NAME"'/.*\):%lang(\2) \1\2\3:
+s:^\([^%].*\)::
+s:%lang(en) ::
+		' |grep -v '^$' >> "$OUTFILE" ||:
+	fi
 }
 
 for NAME in "$@"; do
