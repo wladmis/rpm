@@ -5,6 +5,8 @@
 
 #include "system.h"
 
+#include <signal.h>
+
 #include "psm.h"
 #include "rpmmacro.h"
 #include "rpmurl.h"
@@ -999,6 +1001,9 @@ static int runScript(PSM_t psm, Header h,
 		perror( "rpm_close_all" );
 		_exit( -1 );
 	}
+
+	/* executed scripts exepcts default SIGPIPE handler. */
+        signal (SIGPIPE, SIG_DFL);
 
 	if ((rootDir = ts->rootDir) != NULL)	/* XXX can't happen */
 	switch(urlIsURL(rootDir)) {
