@@ -121,6 +121,7 @@ ListScriptProvs()
 				[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
 			fi
+			return 0
 		elif [ "${f##*/}" = ".provides.sh" ]; then
 			if [ -n "$FIND_SHELL" ]; then
 				local r
@@ -128,8 +129,10 @@ $r"
 				[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
 			fi
+			return 0
 		fi
-	elif [ -z "${t##perl script text*}" -o -z "${f%%*.p[lmh]}" ]; then
+	fi
+	if [ -z "${t##perl script text*}" -o -z "${t##Perl5 module source text}" ] || [ -z "${f%%*.p[lmh]}" -a -z "${t##*text*}" ]; then
 		if [ -n "$FIND_PERL" ]; then
 			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
 $f"
