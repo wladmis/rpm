@@ -59,8 +59,8 @@ sub process_file {
     #  if we need to print it print it now.
     
     if ( m/^\s*\$RPM_Requires\s*=\s*["'](.*)['"]/i) {
-      foreach $_ (spit(/\s+/, $1))
-	print "$_\n";
+	print "$_\n"
+	      foreach split /\s+/, $1;
     }
 
 
@@ -76,10 +76,7 @@ sub process_file {
     (m/source/) || next;
 
     # note we include parethesis and '$' and '\' in the pattern
-
-    if ( 
-	(m!source\s+([\'\"])?([0-9A-Za-z/._\-\\\(\)\$]+)!)
-       ) {	
+    if ( m!source\s+(['"])?([0-9A-Za-z/._\-\\\(\)\$]+)! ) {
       
       my ($module) = $2;
 
