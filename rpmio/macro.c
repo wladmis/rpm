@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <glob.h>
 #define rpmError fprintf
 #define RPMERR_BADSPEC stderr
 #undef	_
@@ -1594,48 +1595,15 @@ rpmLoadMacros(MacroContext mc, int level)
     }
 }
 
-void
-rpmInitMacros(/*@unused@*/ MacroContext mc, const char *macrofiles)
+static void
+rpmInitMacrofile (const char *macrofile)
 {
-    char *m, *mfile, *me;
-
-    if (macrofiles == NULL)
-	return;
-#ifdef	DYING
-    if (mc == NULL) mc = rpmGlobalMacroContext;
-#endif
-
-    for (mfile = m = xstrdup(macrofiles); mfile && *mfile != '\0'; mfile = me) {
-	FD_t fd;
 	char buf[BUFSIZ];
+	FD_t fd = Fopen(macrofile, "r.fpio");
 
-	for (me = mfile; (me = strchr(me, ':')) != NULL; me++) {
-	    if (!(me[1] == '/' && me[2] == '/'))
-		/*@innerbreak@*/ break;
-	}
-
-	if (me && *me == ':')
-	    *me++ = '\0';
-	else
-	    me = mfile + strlen(mfile);
-
-	/* Expand ~/ to $HOME */
-	buf[0] = '\0';
-	if (mfile[0] == '~' && mfile[1] == '/') {
-	    char *home;
-	    if ((home = getenv("HOME")) != NULL) {
-		mfile += 2;
-		strncpy(buf, home, sizeof(buf));
-		strncat(buf, "/", sizeof(buf) - strlen(buf));
-	    }
-	}
-	strncat(buf, mfile, sizeof(buf) - strlen(buf));
-	buf[sizeof(buf)-1] = '\0';
-
-	fd = Fopen(buf, "r.fpio");
 	if (fd == NULL || Ferror(fd)) {
 	    if (fd) (void) Fclose(fd);
-	    continue;
+	    return;
 	}
 
 	/* XXX Assume new fangled macro expansion */
@@ -1657,6 +1625,50 @@ rpmInitMacros(/*@unused@*/ MacroContext mc, const char *macrofiles)
 	    (void) rpmDefineMacro(NULL, n, RMIL_MACROFILES);
 	}
 	(void) Fclose(fd);
+}
+
+static void
+rpmInitMacrofileGlob (const char *macrofile)
+{
+	if (strchr (macrofile, '~') || strchr (macrofile, '*'))
+	{
+		glob_t	gl;
+		memset (&gl, 0, sizeof(gl));
+		if (!glob(macrofile, GLOB_ERR | GLOB_NOESCAPE | GLOB_TILDE | GLOB_TILDE_CHECK, 0, &gl))
+		{
+			unsigned i;
+			for (i = 0; i < gl.gl_pathc; ++i)
+				rpmInitMacrofile (gl.gl_pathv[i]);
+		}
+		globfree (&gl);
+	}
+	else
+		rpmInitMacrofile (macrofile);
+}
+
+void
+rpmInitMacros(/*@unused@*/ MacroContext mc, const char *macrofiles)
+{
+    char *m, *mfile, *me;
+
+    if (macrofiles == NULL)
+	return;
+#ifdef	DYING
+    if (mc == NULL) mc = rpmGlobalMacroContext;
+#endif
+
+    for (mfile = m = xstrdup(macrofiles); mfile && *mfile != '\0'; mfile = me) {
+	for (me = mfile; (me = strchr(me, ':')) != NULL; me++) {
+	    if (!(me[1] == '/' && me[2] == '/'))
+		/*@innerbreak@*/ break;
+	}
+
+	if (me && *me == ':')
+	    *me++ = '\0';
+	else
+	    me = mfile + strlen(mfile);
+
+	rpmInitMacrofileGlob (mfile);
     }
     m = _free(m);
 
