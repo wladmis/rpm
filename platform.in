@@ -556,6 +556,6 @@
 @alt@%optflags_strict	-fstrict-aliasing
 @alt@
 @alt@# flags for compiling kernel
-@alt@%optflags_kernel	-malign-loops=2 -malign-jumps=2 -malign-functions=2 -mpreferred-stack-boundary=2
+@alt@%optflags_kernel	-falign-loops=2 -falign-jumps=2 -falign-functions=2 -mpreferred-stack-boundary=2
 @alt@
 @alt@%optflags_default	%optflags_core %optflags_warnings %{?_enable_debug:%optflags_debug}%{!?_enable_debug:%{optflags_optimization}}
