@@ -486,7 +486,10 @@ fi
 * Thu May 01 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt17
 - rpm2cpio: return proper exit code.
 - Fixed perl provides autodetection (broken in -alt16).
-- %%get_dep(): make valid string even for missing packages.
+- platform.in:
+  + %%get_dep(): make valid string even for missing packages;
+  + changed macros: %%post_service, %%preun_service
+    (due to new info-install package).
 - New group: Sciences/Medicine.
 - Do not package cron and logrotate scripts.
 - Updated package dependencies.
