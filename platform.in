@@ -246,7 +246,7 @@
 @alt@
 @alt@%install_info()	\
 @alt@for f in %*; do	\
-@alt@	if [ "$f" = "${f%/*}" ]; then	\
+@alt@	if [ "$f" = "${f##*/}" ]; then	\
 @alt@		f="%_infodir/$f"	\
 @alt@	fi	\
 @alt@	%__install_info --dir-file="${f%/*}/dir" --info-file="$f"	\
@@ -256,7 +256,7 @@
 @alt@%uninstall_info()	\
 @alt@if [ $1 = 0 ]; then	\
 @alt@	for f in %*; do	\
-@alt@		if [ "$f" = "${f%/*}" ]; then	\
+@alt@		if [ "$f" = "${f##*/}" ]; then	\
 @alt@			f="%_infodir/$f"	\
 @alt@		fi	\
 @alt@		%__install_info --delete --dir-file="${f%/*}/dir" --info-file="$f"	\
