@@ -1,6 +1,18 @@
 #!/bin/sh -e
 # $Id$
 
+verbose=
+Verbose()
+{
+	[ -n "$verbose" ] || return 0
+	echo "${0##*/}: $*" >&2
+}
+
+if [ "$1" = "-v" -o "$1" = "--verbose" ]; then
+	verbose=-v
+	shift
+fi
+
 RPMMACROS=~/.rpmmacros
 
 if [ -e "$RPMMACROS" ]; then
@@ -11,13 +23,13 @@ else
 	RPMTMP="$RPMDIR/tmp"
 fi
 
-mkdir -pv "$RPMDIR"/{BUILD,SOURCES,SPECS,SRPMS,RPMS/noarch} "$RPMTMP"
+mkdir -p $verbose "$RPMDIR"/{BUILD,SOURCES,SPECS,SRPMS,RPMS/noarch} "$RPMTMP"
 
 if [ ! -e "$RPMMACROS" ]; then
 	cat >"$RPMMACROS" <<EOF
 %_topdir $RPMDIR
 %_tmppath $RPMTMP
 EOF
-	echo "Wrote $RPMMACROS:"
-	cat "$RPMMACROS"
+	Verbose "Wrote $RPMMACROS:"
+	[ -z "$verbose" ] || cat "$RPMMACROS" >&2
 fi
