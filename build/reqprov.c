@@ -9,9 +9,10 @@
 #include "debug.h"
 
 typedef enum {
-	DEP_UND = 0, /* uncomparable */
-	DEP_STR = 1, /* stronger or same */
-	DEP_WKR = -1 /* weaker or same */
+	DEP_UN = 0,	/* uncomparable */
+	DEP_ST = 1,	/* stronger */
+	DEP_WK = -1,	/* weaker */
+	DEP_EQ = 2	/* same */
 } dep_compare_t;
 
 static dep_compare_t compare_sense_flags (rpmTag tag, int cmp,
@@ -24,28 +25,28 @@ static dep_compare_t compare_sense_flags (rpmTag tag, int cmp,
 		{
 			case RPMTAG_REQUIREFLAGS:
 				if ((a == 0) && (b != 0))
-					return DEP_WKR;
+					return DEP_WK;
 				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
-					return DEP_STR;
+					return DEP_ST;
 				if (!(b & RPMSENSE_LESS) && (a & RPMSENSE_GREATER))
-					return DEP_WKR;
-				return DEP_UND;
+					return DEP_WK;
+				return DEP_UN;
 			case RPMTAG_PROVIDEFLAGS:
 				if ((a == 0) && (b != 0))
-					return DEP_WKR;
+					return DEP_WK;
 				if (!(b & RPMSENSE_LESS) && (a & RPMSENSE_GREATER))
-					return DEP_STR;
+					return DEP_ST;
 				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
-					return DEP_WKR;
-				return DEP_UND;
+					return DEP_WK;
+				return DEP_UN;
 			default:
 				if ((a == 0) && (b != 0))
-					return DEP_STR;
+					return DEP_ST;
 				if (!(b & RPMSENSE_LESS) && (a & RPMSENSE_GREATER))
-					return DEP_STR;
+					return DEP_ST;
 				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
-					return DEP_WKR;
-				return DEP_UND;
+					return DEP_WK;
+				return DEP_UN;
 		}
 	} else if (cmp > 0)
 	{
@@ -54,11 +55,13 @@ static dep_compare_t compare_sense_flags (rpmTag tag, int cmp,
 	} else /* cmp == 0 */
 	{
 		/* Aevr == Bevr */
+		if (a == b)
+			return DEP_EQ;
 		if ((a & b) == a)
-			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_STR : DEP_WKR;
+			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_ST : DEP_WK;
 		if ((a & b) == b)
-			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_WKR : DEP_STR;
-		return DEP_UND;
+			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_WK : DEP_ST;
+		return DEP_UN;
 	}
 }
 
@@ -66,20 +69,24 @@ static dep_compare_t compare_deps (rpmTag tag,
 	const char *Aevr, rpmsenseFlags Aflags,
 	const char *Bevr, rpmsenseFlags Bflags)
 {
-	dep_compare_t rc = DEP_UND, cmp_rc;
+	dep_compare_t rc = DEP_UN, cmp_rc;
 	rpmsenseFlags Asense, Bsense;
 	int sense;
 	char *aEVR, *bEVR;
 	const char *aE, *aV, *aR, *bE, *bV, *bR;
 
-	/* filter out noise */
-	Aflags &= ~(RPMSENSE_FIND_REQUIRES | RPMSENSE_FIND_PROVIDES | RPMSENSE_MULTILIB);
-	Bflags &= ~(RPMSENSE_FIND_REQUIRES | RPMSENSE_FIND_PROVIDES | RPMSENSE_MULTILIB);
+	/* 1. filter out noise */
+	Aflags &= ~(RPMSENSE_FIND_REQUIRES | RPMSENSE_FIND_PROVIDES);
+	Bflags &= ~(RPMSENSE_FIND_REQUIRES | RPMSENSE_FIND_PROVIDES);
+
+	/* 2. identical? */
+	if (Aflags == Bflags && !strcmp (Aevr, Bevr))
+		return DEP_EQ;
 
 	Asense = Aflags & RPMSENSE_SENSEMASK;
 	Bsense = Bflags & RPMSENSE_SENSEMASK;
 
-	/* 0. sanity checks */
+	/* 3. check for supported tags. */
 	switch (tag) {
 		case RPMTAG_PROVIDEFLAGS:
 		case RPMTAG_OBSOLETEFLAGS:
@@ -88,55 +95,79 @@ static dep_compare_t compare_deps (rpmTag tag,
 			break;
 		default:
 			/* no way to optimize this case. */
-			if (Aflags == Bflags && !strcmp (Aevr, Bevr))
-				return DEP_STR;
-			return DEP_UND;
+			return DEP_UN;
 	}
+
+	/* 4. sanity checks */
 	if (
 	    ((Asense & RPMSENSE_LESS) && (Asense & RPMSENSE_GREATER)) ||
 	    ((Bsense & RPMSENSE_LESS) && (Bsense & RPMSENSE_GREATER)) ||
 	    ((Asense == 0) ^ (Aevr[0] == 0)) ||
 	    ((Bsense == 0) ^ (Bevr[0] == 0))
 	   )
-		return DEP_UND;
+		return DEP_UN;
 
-	/* 1. filter out essentialy differ versions. */
+	/* 5. filter out essentialy differ versions. */
 	if (
 	    ((Asense & RPMSENSE_LESS) && (Bsense & RPMSENSE_GREATER)) ||
 	    ((Bsense & RPMSENSE_LESS) && (Asense & RPMSENSE_GREATER))
 	   )
-		return DEP_UND;
+		return DEP_UN;
 
-	/* 2. filter out essentialy differ flags. */
+	/* 6. filter out essentialy differ flags. */
 	if ((Aflags & ~RPMSENSE_SENSEMASK) != (Bflags & ~RPMSENSE_SENSEMASK))
 	{
 		rpmsenseFlags Areq, Breq;
 
-		/* additional check for REQUIREFLAGS */
+		/* 6a. additional check for REQUIREFLAGS */
 		if (tag != RPMTAG_REQUIREFLAGS)
-			return DEP_UND;
+			return DEP_UN;
 
-		/* 1a. filter out essentialy differ requires. */
+		/* 6b. filter out essentialy differ requires. */
 		if ((Aflags & ~RPMSENSE_SENSEMASK & ~_ALL_REQUIRES_MASK) !=
 		    (Bflags & ~RPMSENSE_SENSEMASK & ~_ALL_REQUIRES_MASK))
-			return DEP_UND;
+			return DEP_UN;
 
 		Areq = Aflags & _ALL_REQUIRES_MASK;
 		Breq = Bflags & _ALL_REQUIRES_MASK;
 
-		/* 1b. Aflags contains Bflags? */
-		if ((Areq & Breq) == Breq)
-			rc = DEP_STR;
+		/* 6c. Aflags is legacy PreReq? */
+		if (isLegacyPreReq (Areq))
+		{
+			if (Breq == 0)
+				rc = DEP_ST;
+			else if ((Breq & RPMSENSE_SCRIPT_PRE) == RPMSENSE_SCRIPT_PRE &&
+			         (Breq & RPMSENSE_SCRIPT_POSTUN) == RPMSENSE_SCRIPT_POSTUN)
+				rc = DEP_WK;
+			else
+				return DEP_UN;
+		}
 
-		/* 1c. Bflags contains Aflags? */
+		/* 6d. Bflags is legacy PreReq? */
+		else if (isLegacyPreReq (Breq))
+		{
+			if (Areq == 0)
+				rc = DEP_WK;
+			else if ((Areq & RPMSENSE_SCRIPT_PRE) == RPMSENSE_SCRIPT_PRE &&
+			         (Areq & RPMSENSE_SCRIPT_POSTUN) == RPMSENSE_SCRIPT_POSTUN)
+				rc = DEP_ST;
+			else
+				return DEP_UN;
+		}
+
+		/* 6e. Aflags contains Bflags? */
+		else if ((Areq & Breq) == Breq)
+			rc = DEP_ST;
+
+		/* 6f. Bflags contains Aflags? */
 		else if ((Areq & Breq) == Areq)
-			rc = DEP_WKR;
+			rc = DEP_WK;
 
 		else
-			return DEP_UND;
+			return DEP_UN;
 	}
 
-	/* 3. compare versions. */
+	/* 7. compare versions. */
 	aEVR = xstrdup(Aevr);
 	parseEVR(aEVR, &aE, &aV, &aR);
 	bEVR = xstrdup(Bevr);
@@ -146,26 +177,29 @@ static dep_compare_t compare_deps (rpmTag tag,
 	aEVR = _free(aEVR);
 	bEVR = _free(bEVR);
 
-	/* 4. detect overlaps. */
+	/* 8. detect overlaps. */
 	cmp_rc = compare_sense_flags (tag, sense, Asense, Bsense);
-	if (cmp_rc == DEP_UND)
-		return DEP_UND;
 
-	if (rc == DEP_UND)
+	/* 9. EVRs with serial are stronger. */
+	if (cmp_rc == DEP_EQ)
 	{
-		if (cmp_rc == DEP_WKR && compare_sense_flags (tag, -sense, Bsense, Asense) == DEP_WKR)
-			/* A <= B && B <= A means A == B */
-			return DEP_STR;
+		if ((aE && *aE) && !(bE && *bE))
+			cmp_rc = DEP_ST;
+		else if ((bE && *bE) && !(aE && *aE))
+			cmp_rc = DEP_WK;
+	}
+
+#if 0
+		fprintf (stderr, "D: compare_sense_flags=%d: tag=%d, sense=%d, Asense=%#x, Bsense=%#x\n",
+			cmp_rc, tag, sense, Asense, Bsense);
+#endif
+
+	if (cmp_rc == DEP_UN || rc == DEP_UN)
 		return cmp_rc;
-	}
 
-	/* 5. compare expected with received. */
-	if (rc != cmp_rc)
-	{
-		dep_compare_t cmp_rc2 = compare_sense_flags (tag, -sense, Bsense, Asense);
-		if (cmp_rc2 != cmp_rc)
-			return DEP_UND;
-	}
+	/* 10. compare expected with received. */
+	if (cmp_rc != rc && cmp_rc != DEP_EQ)
+		return DEP_UN;
 
 	return rc;
 }
@@ -217,7 +251,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	extra = depFlags & _ALL_REQUIRES_MASK;
     }
 
-    depFlags = (depFlags & (RPMSENSE_SENSEMASK | RPMSENSE_MULTILIB)) | extra;
+    depFlags = (depFlags & (RPMSENSE_SENSEMASK)) | extra;
 
     /*@-branchstate@*/
     if (depEVR == NULL)
@@ -225,12 +259,12 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
     /*@=branchstate@*/
     
     /* Check for duplicate dependencies. */
-    if (hge(h, nametag, &dnt, (void **) &names, &len)) {
+    if (hge(h, nametag, &dnt, (void **) &names, &len) && len > 0) {
 	const char ** versions = NULL;
 	rpmTagType dvt = RPM_STRING_ARRAY_TYPE;
 	int *flags = NULL;
 	int *indexes = NULL;
-	int duplicate = 0;
+	int i, duplicate = 0;
 
 	if (flagtag) {
 	    xx = hge(h, versiontag, &dvt, (void **) &versions, NULL);
@@ -239,27 +273,34 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	if (indextag)
 	    xx = hge(h, indextag, NULL, (void **) &indexes, NULL);
 
-	while (len > 0) {
-	    len--;
-	    if (indextag && indexes && indexes[len] != index)
+	for (i = len - 1; i >= 0; --i) {
+	    if (indextag && indexes && indexes[i] != index)
 		continue;
 
-	    if (strcmp(names[len], depName))
+	    if (strcmp(names[i], depName))
 		continue;
 
 	    if (flagtag && flags && versions) {
-	    	dep_compare_t rc = compare_deps (flagtag, versions[len], flags[len], depEVR, depFlags);
+	    	dep_compare_t rc = compare_deps (flagtag, versions[i], flags[i], depEVR, depFlags);
 
 #if 0
-		fprintf (stderr, "DEBUG: name=%s, compare_deps=%d: tag=%d, AEVR=%s, Aflags=%#x, BEVR=%s, Bflags=%#x\n",
-			depName, rc, flagtag, versions[len], flags[len], depEVR, depFlags);
+		fprintf (stderr, "D: name=%s, compare_deps=%d: tag=%d, AEVR=%s, Aflags=%#x, BEVR=%s, Bflags=%#x\n",
+			depName, rc, flagtag, versions[i], flags[i], depEVR, depFlags);
 #endif
 	    	switch (rc)
 		{
-			case DEP_STR:
+			case DEP_EQ:
+				rpmMessage (RPMMESS_DEBUG,
+					"new dep %s already exists, optimized out\n",
+					depName);
 				break;
+			case DEP_ST:
+				rpmMessage (RPMMESS_DEBUG,
+					"new dep %s is weaker, optimized out\n",
+					depName);
+				break;
+			case DEP_WK:
 #ifdef	NOTYET
-			case DEP_WKR:
 				/* swap old and new values */
 				break;
 #endif
@@ -270,10 +311,6 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 
 	    /* This is a duplicate dependency. */
 	    duplicate = 1;
-
-	    if (flagtag && isDependsMULTILIB(depFlags) &&
-		!isDependsMULTILIB(flags[len]))
-		    flags[len] |= RPMSENSE_MULTILIB;
 
 	    break;
 	}
