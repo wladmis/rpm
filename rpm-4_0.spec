@@ -4,7 +4,7 @@
 
 Name: rpm
 Version: %rpm_version
-Release: alt0.11
+Release: alt1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -16,6 +16,7 @@ Release: alt0.11
 %def_with python
 %def_with apidocs
 %def_without db
+%def_without contrib
 
 # XXX enable at your own risk, CDB access to rpmdb isn't cooked yet.
 %define enable_cdb create cdb
@@ -26,10 +27,9 @@ License: GPL
 Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
 
-%define srcname rpm-4_0
 # ftp://ftp.rpm.org/pub/rpm/dist/
 # cvs -d :pserver:anonymous@cvs.rpm.org:/cvs/devel export -r rpm-4_0 rpm
-Source: %srcname.tar.bz2
+Source: %name-%version.tar.bz2
 
 PreReq: lib%name = %version-%release
 PreReq: alt-gpgkeys sh-utils grep perl-base fileutils gawk textutils mktemp shadow-utils
@@ -41,7 +41,7 @@ Requires: glibc-core
 %{?_with_python:BuildPreReq: python-devel = %__python_version}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 
-BuildPreReq: automake >= 1.6.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk
+BuildPreReq: automake >= 1.6.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 BuildConflicts: rpm-devel
 
 # Automatically added by buildreq on Thu Nov 01 2001
@@ -86,6 +86,13 @@ Requires: %get_dep fileutils
 Requires: %get_dep gzip
 Requires: %get_dep tar
 Requires: %get_dep textutils
+Requires: %_bindir/subst
+
+%package build-topdir
+Summary: RPM package installation and build directory tree
+Summary(ru_RU.KOI8-R): Сборочное дерево, используемое для установки SRPM-пакетов и сборки RPM-пакетов
+Group: Development/Other
+PreReq: %name-build = %version-%release
 
 %package contrib
 Summary: Contributed scripts and executable programs which aren't currently used
@@ -134,6 +141,9 @@ programs that will manipulate RPM packages and databases.
 This package contains scripts and executable programs that are used to
 build packages using RPM.
 
+%description build-topdir
+This package contains RPM package installation and build directory tree.
+
 %description contrib
 This package contains extra scripts and executable programs which arent
 currently used.
@@ -157,7 +167,7 @@ programs that will manipulate RPM packages and databases.
 %endif #with python
 
 %prep
-%setup -q -n %srcname
+%setup -q
 
 find -type d -name CVS -print0 |
 	xargs -r0 %__rm -rf --
@@ -388,14 +398,6 @@ fi
 %_mandir/man?/update-alternatives*
 
 %files build
-%attr(0755,root,%name) %dir %_usrsrc/RPM
-%attr(0770,root,%name) %dir %_usrsrc/RPM/BUILD
-%attr(2770,root,%name) %dir %_usrsrc/RPM/SPECS
-%attr(2770,root,%name) %dir %_usrsrc/RPM/SOURCES
-%attr(2775,root,%name) %dir %_usrsrc/RPM/SRPMS
-%attr(0755,root,%name) %dir %_usrsrc/RPM/RPMS
-%attr(2775,root,%name) %dir %_usrsrc/RPM/RPMS/*
-
 %rpmattr %_bindir/gendiff
 %_bindir/rpmbuild
 %_bindir/relative
@@ -426,6 +428,21 @@ fi
 %_mandir/man?/gendiff.*
 %_man8dir/rpmbuild.*
 
+%files build-topdir
+%attr(0755,root,%name) %dir %_usrsrc/RPM
+%attr(0770,root,%name) %dir %_usrsrc/RPM/BUILD
+%attr(2770,root,%name) %dir %_usrsrc/RPM/SPECS
+%attr(2770,root,%name) %dir %_usrsrc/RPM/SOURCES
+%attr(2775,root,%name) %dir %_usrsrc/RPM/SRPMS
+%attr(0755,root,%name) %dir %_usrsrc/RPM/RPMS
+%attr(2775,root,%name) %dir %_usrsrc/RPM/RPMS/*
+
+%if_with python
+%files python
+%_libdir/python*/site-packages/*module.so
+%endif #with python
+
+%if_with contrib
 %files contrib
 %rpmattr %dir %_libdir/%name
 %rpmattr %_libdir/%name/cpanflute*
@@ -443,13 +460,30 @@ fi
 %rpmattr %_libdir/%name/u_pkg.sh
 %rpmattr %_libdir/%name/vpkg-provides.sh
 %rpmattr %_libdir/%name/vpkg-provides2.sh
-
-%if_with python
-%files python
-%_libdir/python*/site-packages/*module.so
-%endif #with python
+%endif #with contrib
 
 %changelog
+* Wed Aug 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt1
+- rpmio: implemented MkdirP.
+- build/pack.c, lib/psm.c: make use of MkdirP for build.
+- rpmpopt:
+  + cloned all rpmq aliases for rpmquery;
+  + added --nowait-lock alias for rpm, rpmq and rpmquery;
+  + added -C alias for rpmbuild.
+- platform:
+  + Changed default value for _strip_method to "none" when "--enable debug" is used.
+- macros:
+  + added %%__subst;
+  + %%___build_pre: do %%__mkdir_p %%_builddir before chdir there.
+- brp-cleanup, brp-compress, brp-strip, compress_files:
+  + Added parameter filtering.
+- rpm-build: requires %_bindir/subst.
+- New group: Graphical desktop/GNUstep.
+- Moved contrib subpackage under with/without logic control and disabled
+  packaging by default.
+- Moved %_srcdir/RPM from rpm-build subpackage to rpm-build-topdir
+  subpackage (for reference; it is no longer needed).
+
 * Mon Aug 12 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt0.11
 - Fixed %%basename builtin macro.
 - Implemented %%homedir builtin macro.
