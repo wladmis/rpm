@@ -419,7 +419,7 @@
 @alt@%_optlevel	2
 @alt@
 @alt@# general optimization flags
-@alt@%optflags_optimization	-O%{_optlevel} -fexpensive-optimizations
+@alt@%optflags_optimization	%{?_enable_debug:-O0} %{!?_enable_debug:-O%{_optlevel} -fexpensive-optimizations}
 @alt@
 @alt@# warning flags
 @alt@%optflags_warnings	-Wall
@@ -446,4 +446,4 @@
 @alt@# flags for compiling kernel
 @alt@%optflags_kernel	-malign-loops=2 -malign-jumps=2 -malign-functions=2 -mpreferred-stack-boundary=2
 @alt@
-@alt@%optflags_default	%optflags_core %optflags_warnings %optflags_optimization
+@alt@%optflags_default	%optflags_core %optflags_warnings %{?_enable_debug:%optflags_debug} %{optflags_optimization}
