@@ -3,6 +3,7 @@
  */
 
 #include "system.h"
+#include <ctype.h> /* This should be done by configure and friends, I guess. */
 
 #include "rpmlib.h"
 
@@ -107,3 +108,112 @@ int rpmvercmp(const char * a, const char * b)
     /* whichever version still has characters left over wins */
     if (!*one) return -1; else return 1;
 }
+
+/* Moved from depends.c, because we use it in other places, too. */
+/**
+ * Split EVR into epoch, version, and release components.
+ * @param evr		[epoch:]version[-release] string
+ * @retval *ep		pointer to epoch
+ * @retval *vp		pointer to version
+ * @retval *rp		pointer to release
+ */
+void parseEVR(char * evr,
+		/*@exposed@*/ /*@out@*/ const char ** ep,
+		/*@exposed@*/ /*@out@*/ const char ** vp,
+		/*@exposed@*/ /*@out@*/ const char ** rp)
+	/*@modifies *ep, *vp, *rp @*/
+{
+    const char *epoch;
+    const char *version;		/* assume only version is present */
+    const char *release;
+    char *s, *se;
+
+    s = evr;
+    while (*s && xisdigit(*s)) s++;	/* s points to epoch terminator */
+    se = strrchr(s, '-');		/* se points to version terminator */
+
+    if (*s == ':') {
+	epoch = evr;
+	*s++ = '\0';
+	version = s;
+	if (*epoch == '\0') epoch = "0";
+    } else {
+	epoch = NULL;	/* XXX disable epoch compare if missing */
+	version = evr;
+    }
+    if (se) {
+	*se++ = '\0';
+	release = se;
+    } else {
+	release = NULL;
+    }
+
+    if (ep) *ep = epoch;
+    if (vp) *vp = version;
+    if (rp) *rp = release;
+}
+
+/* Compare {A,B} [epoch:]version[-release] */
+int 
+rpmEVRcmp(const char * const aE, const char * const aV, const char * const aR,
+	  const char * const aDepend,
+	  const char * const bE, const char * const bV, const char * const bR,
+	  const char * const bDepend)
+{
+    int sense = 0;
+
+    rpmMessage(RPMMESS_DEBUG, "cmp e=%s, v=%s, r=%s\n and e=%s, v=%s, r=%s\n ",
+	       aE, aV, aR, bE, bV, bR);
+
+
+    if (aE && *aE && bE && *bE)
+	sense = rpmvercmp(aE, bE);
+    else if (aE && *aE && atol(aE) > 0) {
+	/* XXX legacy epoch-less requires/conflicts compatibility */
+	rpmMessage(RPMMESS_DEBUG, _("the \"B\" dependency needs an epoch (assuming same as \"A\")\n\tA %s\tB %s\n"),
+		aDepend, bDepend);
+	sense = 0;
+    } else if (bE && *bE && atol(bE) > 0)
+	sense = -1;
+
+    if (sense == 0) {
+	sense = rpmvercmp(aV, bV);
+	if (sense == 0 && aR && *aR && bR && *bR) {
+	    sense = rpmvercmp(aR, bR);
+	}
+    }
+
+    return sense;
+}
+
+int isChangeNameMoreFresh(const char * const head, 
+			  const char * const tail[3]) 
+{
+  int result;
+  const char * evr[3];
+  const char * wordAfterEmail;
+  char * copy;
+
+  rpmMessage(RPMMESS_DEBUG, "test: is '%s' more fresh than e=%s, v=%s, r=%s?\n",
+	     head, tail[0], tail[1], tail[2]);
+  /* find the next to <email> word begin */
+  if ( (wordAfterEmail = strrchr(head, '>')) )
+    ++wordAfterEmail;
+  else
+    wordAfterEmail = head;
+  while ( *wordAfterEmail && isspace(*wordAfterEmail) )
+    ++wordAfterEmail; 
+  /* found. */
+  copy = xstrdup(wordAfterEmail);
+  parseEVR(copy, &evr[0],  &evr[1],  &evr[2]);
+  /* The order of two argument groups is important: 
+     if evr[] (passed as B on the second place) has no epoch, 
+     rpmEVRcmp() assumes the same as in tail[];
+     This fits our needs: the epoch may be omitted in a changelog entry (evr[])
+     but there are no problems in specifying it in the format (tail[]). */
+  result = rpmEVRcmp(tail[0], tail[1], tail[2], "",
+		     evr[0], evr[1], evr[2], "") < 0;
+  _free(copy);
+  return result;
+}
+

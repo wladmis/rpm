@@ -1463,6 +1463,29 @@ int rpmGetRpmlibProvides(/*@null@*/ /*@out@*/ const char *** provNames,
 int rpmvercmp(const char * a, const char * b)
 	/*@*/;
 
+int 
+rpmEVRcmp(const char * const aE, const char * const aV, const char * const aR,
+	  const char * const aDepend,
+	  const char * const bE, const char * const bV, const char * const bR,
+	  const char * const bDepend);
+
+/**
+ * Split EVR into epoch, version, and release components.
+ * @param evr		[epoch:]version[-release] string
+ * @retval *ep		pointer to epoch
+ * @retval *vp		pointer to version
+ * @retval *rp		pointer to release
+ */
+void parseEVR(char * evr,
+		/*@exposed@*/ /*@out@*/ const char ** ep,
+		/*@exposed@*/ /*@out@*/ const char ** vp,
+		     /*@exposed@*/ /*@out@*/ const char ** rp);
+	/*@modifies *ep, *vp, *rp @*/
+
+/* A predicate: */
+int isChangeNameMoreFresh(const char * const head, 
+			  const char * const tail[3]);
+
 /** \ingroup rpmtrans
  * Compare two versioned dependency ranges, looking for overlap.
  * @param AName		1st dependncy name string

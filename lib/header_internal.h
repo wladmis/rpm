@@ -116,7 +116,19 @@ struct sprintfToken {
 	    int numIfTokens;
 	/*@only@*/ /*@null@*/ sprintfToken elseFormat;
 	    int numElseTokens;
-	    struct sprintfTag tag;
+	  struct {
+	    enum { TRIVIAL, StringTAG_String3 } type;
+	    union {
+	      struct sprintfTag tag;
+	      struct {
+		int (*predicate)(const char * head, const char * const tail[3]);
+		/* args */
+		sprintfToken headFormat;
+		int numHeadTokens;
+		const char * tail[3]; 
+	      } tag_str3;
+	    } u;
+	  } test;
 	} cond;
     } u;
 };

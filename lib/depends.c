@@ -479,48 +479,7 @@ static void alMakeIndex(availableList al)
     }
 }
 
-/**
- * Split EVR into epoch, version, and release components.
- * @param evr		[epoch:]version[-release] string
- * @retval *ep		pointer to epoch
- * @retval *vp		pointer to version
- * @retval *rp		pointer to release
- */
-static void parseEVR(char * evr,
-		/*@exposed@*/ /*@out@*/ const char ** ep,
-		/*@exposed@*/ /*@out@*/ const char ** vp,
-		/*@exposed@*/ /*@out@*/ const char ** rp)
-	/*@modifies *ep, *vp, *rp @*/
-{
-    const char *epoch;
-    const char *version;		/* assume only version is present */
-    const char *release;
-    char *s, *se;
-
-    s = evr;
-    while (*s && xisdigit(*s)) s++;	/* s points to epoch terminator */
-    se = strrchr(s, '-');		/* se points to version terminator */
-
-    if (*s == ':') {
-	epoch = evr;
-	*s++ = '\0';
-	version = s;
-	if (*epoch == '\0') epoch = "0";
-    } else {
-	epoch = NULL;	/* XXX disable epoch compare if missing */
-	version = evr;
-    }
-    if (se) {
-	*se++ = '\0';
-	release = se;
-    } else {
-	release = NULL;
-    }
-
-    if (ep) *ep = epoch;
-    if (vp) *vp = version;
-    if (rp) *rp = release;
-}
+/* parseEVR() moved to rpmvercmp.c */
 
 const char *rpmNAME = PACKAGE;
 const char *rpmEVR = VERSION;
@@ -559,25 +518,8 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
     parseEVR(aEVR, &aE, &aV, &aR);
     bEVR = xstrdup(BEVR);
     parseEVR(bEVR, &bE, &bV, &bR);
-
-    /* Compare {A,B} [epoch:]version[-release] */
-    sense = 0;
-    if (aE && *aE && bE && *bE)
-	sense = rpmvercmp(aE, bE);
-    else if (aE && *aE && atol(aE) > 0) {
-	/* XXX legacy epoch-less requires/conflicts compatibility */
-	rpmMessage(RPMMESS_DEBUG, _("the \"B\" dependency needs an epoch (assuming same as \"A\")\n\tA %s\tB %s\n"),
-		aDepend, bDepend);
-	sense = 0;
-    } else if (bE && *bE && atol(bE) > 0)
-	sense = -1;
-
-    if (sense == 0) {
-	sense = rpmvercmp(aV, bV);
-	if (sense == 0 && aR && *aR && bR && *bR) {
-	    sense = rpmvercmp(aR, bR);
-	}
-    }
+    /* rpmEVRcmp() is also shared; the code moved to rpmvercmp.c */
+    sense = rpmEVRcmp(aE, aV, aR, aDepend, bE, bV, bR, bDepend);
     aEVR = _free(aEVR);
     bEVR = _free(bEVR);
 

@@ -16,6 +16,9 @@
 
 #include <header_internal.h>
 
+/* We get parseEVR() from there used in parsing the >-test in conditionals: */
+#include <rpmlib.h>
+
 #include "debug.h"
 
 /*@-redecl@*/	/* FIX: avoid rpmlib.h, need for debugging. */
@@ -79,6 +82,8 @@ static int typeSizes[] =  {
 /*@observer@*/ /*@unchecked@*/
 HV_t hdrVec;	/* forward reference */
 
+/* Already defined in <rpmlib.h> */
+#if 0
 /**
  * Wrapper to free(3), hides const compilation noise, permit NULL, return NULL.
  * @param p		memory to free
@@ -90,6 +95,7 @@ _free(/*@only@*/ /*@null@*/ /*@out@*/ const void * p) /*@modifies *p @*/
     if (p != NULL)	free((void *)p);
     return NULL;
 }
+#endif
 
 /** \ingroup header
  * Reference a header instance.
@@ -2065,6 +2071,23 @@ freeFormat( /*@only@*/ /*@null@*/ sprintfToken format, int num)
 	    format[i].u.cond.elseFormat =
 		freeFormat(format[i].u.cond.elseFormat, 
 			format[i].u.cond.numElseTokens);
+	    switch (format[i].u.cond.test.type) {
+	    case TRIVIAL:
+	      /* the usual old way; format[i].test.u.tag is a struct */
+	      break;
+	    case StringTAG_String3:
+	      /* the added option */
+	      format[i].u.cond.test.u.tag_str3.headFormat =
+		freeFormat(format[i].u.cond.test.u.tag_str3.headFormat, 
+			   format[i].u.cond.test.u.tag_str3.numHeadTokens);
+	      /* We don't need to free the strings; we have not allocated them.
+		 And PTOK_STRING case is analogous and also doesn't free the string. */
+	      break;
+	    default:
+	      /* report an error */
+	      rpmMessage(RPMMESS_WARNING, _("Unknown test type in \%|?:|; perhaps some memory is leaking right now.\n"));
+	      break;
+	    }
 	    /*@switchbreak@*/ break;
 	case PTOK_NONE:
 	case PTOK_TAG:
@@ -2493,19 +2516,67 @@ static int parseExpression(sprintfToken token, char * str,
 
     *endPtr = chptr;
 
-    findTag(str, tags, extensions, &tag, &ext);
+    { /* branching between the trivial old test for the conditional and 
+	 the added test for EVR comparison. */
+      char * str2 = strchr(str,'>');
+      if (str2) {
+	char * endOfParsed = NULL;
+	rpmMessage(RPMMESS_WARNING, _("Parsing non-standard test (>) for \%|?{}:{}|.\n"));
+	*str2 ='\0';
+	++str2; /* str2 is the beginning of the second part: after the > sign. */
 
-    if (tag) {
-	token->u.cond.tag.ext = NULL;
-	token->u.cond.tag.tag = tag->val;
-    } else if (ext) {
-	token->u.cond.tag.ext = ext->u.tagFunction;
-	token->u.cond.tag.extNum = ext - extensions;
-    } else {
-	token->u.cond.tag.ext = NULL;
-	token->u.cond.tag.tag = -1;
+	if ( parseFormat(str, tags, extensions, 
+			 &token->u.cond.test.u.tag_str3.headFormat, 
+			 &token->u.cond.test.u.tag_str3.numHeadTokens, 
+			 &endOfParsed, PARSER_IN_EXPR, errmsg) 
+	     /* this doesn't work, NULL is returned: || ( endOfParsed != str2 ) */ )
+	  {
+	    /*@-observertrans -readonlytrans@*/
+	    if (errmsg 
+		&& ! *errmsg /* *errmsg was set to NULL at the function beginnging */ ) 
+	    *errmsg = _("the left part of >-expr finished before the > sign");
+	    /*@=observertrans =readonlytrans@*/
+	    token->u.cond.ifFormat =
+		freeFormat(token->u.cond.ifFormat, token->u.cond.numIfTokens);
+	    token->u.cond.elseFormat =
+		freeFormat(token->u.cond.elseFormat, token->u.cond.numElseTokens);
+	    return 1;
+	  }
+      
+	token->u.cond.test.type = StringTAG_String3;
+	token->u.cond.test.u.tag_str3.predicate = &isChangeNameMoreFresh;
+
+	parseEVR(str2, 
+		 &token->u.cond.test.u.tag_str3.tail[0],  
+		 &token->u.cond.test.u.tag_str3.tail[1],  
+		 &token->u.cond.test.u.tag_str3.tail[2]);
+	/* We could strdup tail[j], but it seems we don't need this: the rest of similar code
+	   doesn't perform this. And we don't have to free them. */
+	rpmMessage(RPMMESS_DEBUG, "Will cmp with e=%s, v=%s, r=%s\n",
+		 token->u.cond.test.u.tag_str3.tail[0],  
+		 token->u.cond.test.u.tag_str3.tail[1],  
+		 token->u.cond.test.u.tag_str3.tail[2]);
+      }
+      else {
+	struct sprintfTag head;
+	rpmMessage(RPMMESS_DEBUG, _("The usual way of parsing the test part for \%|?:|\n"));
+	findTag(str, tags, extensions, &tag, &ext);
+	if (tag) {
+	  head.ext = NULL;
+	  head.tag = tag->val;
+	} else if (ext) {
+	  head.ext = ext->u.tagFunction;
+	  head.extNum = ext - extensions;
+	} else {
+	  head.ext = NULL;
+	  head.tag = -1;
+	}
+	token->u.cond.test.type = TRIVIAL;
+	token->u.cond.test.u.tag = head;
+      }
+      
     }
-	
+    
     token->type = PTOK_COND;
 
     return 0;
@@ -2774,14 +2845,46 @@ static char * singleSprintf(Header h, sprintfToken token,
 	break;
 
     case PTOK_COND:
-	if (token->u.cond.tag.ext ||
-	    headerIsEntry(h, token->u.cond.tag.tag)) {
+      {
+	int testResult = 0; /* false by default */
+	switch (token->u.cond.test.type) {
+	case TRIVIAL:
+	  testResult = token->u.cond.test.u.tag.ext ||
+	    headerIsEntry(h, token->u.cond.test.u.tag.tag);
+	  break;
+	case StringTAG_String3:
+	  { /* this piece if code is based on headerSprintf() */ 
+	    char * head = NULL; int head_en = 0;
+	    int head_alloced = 0;
+	    head = xstrdup("");
+	    for (i = 0; i < token->u.cond.test.u.tag_str3.numHeadTokens; i++)
+	      /* head_t = -- what do we need the return value for? headerSprintf() discards it. */
+	      singleSprintf(h, token->u.cond.test.u.tag_str3.headFormat + i, 
+			    extensions, extCache,
+			    element, &head, &head_en, &head_alloced);
+	    if (head != NULL && head_en < head_alloced)
+	      head = xrealloc(head, head_en+1);	
+	    testResult = head
+	      && token->u.cond.test.u.tag_str3.predicate(head, token->u.cond.test.u.tag_str3.tail);
+	    /* Do we free all the alloced data heer? */
+	    _free(head);
+	  }
+	  break;
+	default:
+	  /* report an error */
+	  rpmMessage(RPMMESS_WARNING, _("Unknown test type in \%|?:|; assuming false.\n"));
+	  testResult = 0;
+	  break;
+	}
+
+	if (testResult) {
 	    condFormat = token->u.cond.ifFormat;
 	    condNumFormats = token->u.cond.numIfTokens;
 	} else {
 	    condFormat = token->u.cond.elseFormat;
 	    condNumFormats = token->u.cond.numElseTokens;
 	}
+      }
 
 	need = condNumFormats * 20;
 	if (condFormat == NULL || need <= 0) break;

@@ -300,6 +300,28 @@ static /*@only@*/ char * depflagsFormat(int_32 type, const void * data,
 }
 
 /**
+ * @param type		tag type
+ * @param data		tag value
+ * @param formatPrefix
+ * @param padding
+ * @param element	(unused)
+ * @return		formatted string
+ */
+static /*@only@*/ char * nothingFormat(int_32 type, const void * data, 
+	char * formatPrefix, int padding, /*@unused@*/ int element)
+		/*@modifies formatPrefix @*/
+{ /* based on depflagsFormat() code. */
+    char * val;
+    val = xmalloc(2 + padding);
+    strcat(formatPrefix, "s");
+    /*@-formatconst@*/
+    sprintf(val, formatPrefix, "");
+    /*@=formatconst@*/
+
+    return val;
+}
+
+/**
  * @param h		header
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
@@ -736,6 +758,7 @@ const struct headerSprintfExtension_s rpmHeaderFormats[] = {
     { HEADER_EXT_FORMAT, "perms", { permsFormat } },
     { HEADER_EXT_FORMAT, "permissions", { permsFormat } },
     { HEADER_EXT_FORMAT, "triggertype", { triggertypeFormat } },
+    { HEADER_EXT_FORMAT, "nothing", { nothingFormat } },
     { HEADER_EXT_MORE, NULL, { (void *) headerDefaultFormats } }
 } ;
 /*@=type@*/
