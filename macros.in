@@ -652,6 +652,8 @@
 %__spec_build_body	%{___build_body}
 %__spec_build_post	%{___build_post}
 %__spec_build_template	#!%{__spec_build_shell}\
+%{?__ccache_dir:export CCACHE_DIR=%__ccache_dir}\
+%{?__ccache_cc:export CCACHE_CC=%__ccache_cc}\
 %{__spec_build_pre}\
 %{nil}
 
@@ -669,6 +671,8 @@
 %{__os_install_post}\
 %{nil}
 %__spec_install_template	#!%{__spec_install_shell}\
+%{?__ccache_dir:export CCACHE_DIR=%__ccache_dir}\
+%{?__ccache_cc:export CCACHE_CC=%__ccache_cc}\
 %{__spec_install_pre}\
 %{nil}
 
