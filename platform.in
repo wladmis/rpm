@@ -491,7 +491,7 @@
 @alt@%__gcc_version_base %(gcc -dumpversion |cut -d. -f-2)
 @alt@
 @alt@# <BEGIN GLIBC TRICKS
-@alt@%__glibc_version %(rpm -q glibc --queryformat '%%{VERSION}')
+@alt@%__glibc_version %(rpmquery --qf '%%{VERSION}' glibc)
 @alt@%__glibc_version_major %(echo %__glibc_version |cut -d. -f1)
 @alt@%__glibc_version_minor %(	\
 @alt@	maj=`echo %__glibc_version_major`;	\
@@ -505,7 +505,7 @@
 @alt@)
 @alt@# END GLIBC TRICKS>
 @alt@
-@alt@%__python_version	%(%__python -c 'import sys; print sys.version' 2>/dev/null |head -1 |cut -d' ' -f1 |cut -d. -f1,2)
+@alt@%__python_version	%((%__python -c 'import sys; print sys.version' 2>/dev/null || echo unknown) |head -1 |cut -d' ' -f1 |cut -d. -f1,2)
 @alt@
 @alt@# Access components of packager macro.
 @alt@%packagerName	%(echo -E '%packager' |sed -e 's/[[:space:]]*<.*//')
@@ -556,14 +556,14 @@
 @alt@%subst_enable() %{expand:%%{?_enable_%{1}:%%{_enable_%{1}}}} %{expand:%%{?_disable_%{1}:%%{_disable_%{1}}}}
 @alt@
 @alt@# Fetch name/serial/version/release fields.
-@alt@%get_version()	%(rpm -q --qf '%%{VERSION}' %1 2>/dev/null)
-@alt@%get_release()	%(rpm -q --qf '%%{RELEASE}' %1 2>/dev/null)
-@alt@%get_serial()	%(rpm -q --qf '%%{SERIAL}' %1 2>/dev/null)
-@alt@%add_serial()	%(rpm -q --qf '%%|SERIAL?{Serial: %%{SERIAL}}|' %1 2>/dev/null)
-@alt@%get_SVR()	%(rpm -q --qf '%%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
-@alt@%get_NSVR()	%(rpm -q --qf '%%{NAME}-%%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
-@alt@%get_dep()	%(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
-@alt@%rpm_check_field(p:)	%(foo=`rpm -q --qf '%%{%1}' %{-p:%{-p*}} 2>/dev/null`; [ "`expr '$foo' '>' '%2'`" -eq 1 ] && echo -n "$foo" || echo -n "%2")
+@alt@%get_version()	%(rpmquery --qf '%%{VERSION}' %1 2>/dev/null)
+@alt@%get_release()	%(rpmquery --qf '%%{RELEASE}' %1 2>/dev/null)
+@alt@%get_serial()	%(rpmquery --qf '%%{SERIAL}' %1 2>/dev/null)
+@alt@%add_serial()	%(rpmquery --qf '%%|SERIAL?{Serial: %%{SERIAL}}|' %1 2>/dev/null)
+@alt@%get_SVR()	%(rpmquery --qf '%%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
+@alt@%get_NSVR()	%(rpmquery --qf '%%{NAME}-%%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
+@alt@%get_dep()	%(rpmquery --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
+@alt@%rpm_check_field(p:)	%(foo=`rpmquery --qf '%%{%1}' %{-p:%{-p*}} 2>/dev/null`; [ "`expr '$foo' '>' '%2'`" -eq 1 ] && echo -n "$foo" || echo -n "%2")
 @alt@
 @alt@# Define php_version and php_release to version and release no less than specified one via -n option
 @alt@%php_version(n:)	%rpm_check_field -p php VERSION %{-n:%{-n*}}
