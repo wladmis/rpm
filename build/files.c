@@ -997,7 +997,7 @@ static int parseForSimple(/*@unused@*/Spec spec, Package pkg, char * buf,
 
 	    {
 		const char *ddir = rpmExpand("%{?_customdocdir}", NULL);
-		if (ddir) {
+		if (ddir && *ddir) {
 		    custom = 1;
 		} else {
 		    const char *n, *v;
