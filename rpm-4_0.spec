@@ -185,11 +185,6 @@ find -type f \( -name .cvsignore -o -name \*~ -o -name \*.orig \) -print0 |
 	xargs -r0 %__rm -f --
 
 %build
-export ACLOCAL=aclocal-1.6
-export AUTOMAKE=automake-1.6
-export AUTOCONF=autoconf_2.5
-export AUTOHEADER=autoheader_2.5
-
 ./autogen.sh --noconfigure
 export \
 	ac_cv_path_CTAGS=/usr/bin/ctags
@@ -486,6 +481,7 @@ fi
   + Removed some obsolete macros.
   + %%___build_pre: moved to platform;
   + Added warning about misspelled architecture.
+  + Added %%__spec_*_custom_{pre,post} macros.
 - platform:
   + %%___build_pre: moved from macros.
   + Adjusted %%_configure_target macro,
