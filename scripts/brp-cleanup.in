@@ -65,7 +65,7 @@ find .$RPM_CLEANUP_TOPDIR -type d -name CVS -print0 |
 
 if cd ./etc/pam.d >/dev/null 2>&1; then
 	find -type f -mindepth 1 -maxdepth 1 -print0 |
-	xargs -r0 subst -p '
+		xargs -r0 subst -p '
 s,^\(#\?\)auth[[:space:]]\+,\1auth     ,g
 s,^\(#\?\)account[[:space:]]\+,\1account  ,g
 s,^\(#\?\)password[[:space:]]\+,\1password ,g
@@ -74,6 +74,12 @@ s,\([[:space:]]\)/lib/security/\(pam_\),\1\2,g
 s,\([[:space:]]\)required[[:space:]]\+pam_stack.so[[:space:]]\+service=,\1include	,g
 ' --
 fi
+
+for d in /lib /usr/lib /usr/X11R6/lib; do
+	[ -d "$d" ] || continue
+	find "$d" -type f -mindepth 1 -maxdepth 1 -name 'lib*.la' -print0 |
+		xargs -r0 rm -fv --
+done
 
 # All the rest is perl cleanup stuff.
 
