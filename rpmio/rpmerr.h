@@ -117,7 +117,7 @@ typedef enum rpmerrCode_e {
     RPMERR_FREAD	= _em(134), /*!< %s: Fread failed: %s */
     RPMERR_READLEAD	= _em(135), /*!< %s: readLead failed */
     RPMERR_WRITELEAD	= _em(136), /*!< %s: writeLead failed: %s */
-    RPMERR_QUERYINFO	= _nm(137), /*!< */
+    RPMERR_QUERYINFO	= _wm(137), /*!< */
     RPMERR_MANIFEST	= _nm(138), /*!< %s: read manifest failed: %s */
     RPMERR_BADHEADER	= _em(139), /*!< */
     RPMERR_FSEEK	= _em(140), /*!< %s: Fseek failed: %s */
