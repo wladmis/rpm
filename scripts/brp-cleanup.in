@@ -66,13 +66,13 @@ find .$RPM_CLEANUP_TOPDIR -type d -name CVS -print0 |
 if [ -z "$RPM_KEEP_LIBTOOL_FILES" ]; then
 	for d in ./lib ./usr/lib ./usr/X11R6/lib; do
 		[ -d "$d" ] || continue
-		find "$d" -type f -mindepth 1 -maxdepth 1 -name 'lib*.la' -print0 |
+		find "$d" -mindepth 1 -maxdepth 1 -type f -name 'lib*.la' -print0 |
 			xargs -r0 rm -fv --
 	done
 fi
 
 if [ -d ./etc/pam.d ]; then
-	find ./etc/pam.d -type f -mindepth 1 -maxdepth 1 -print0 |
+	find ./etc/pam.d -mindepth 1 -maxdepth 1 -type f -print0 |
 		xargs -r0 subst -p '
 s,^\(#\?\)auth[[:space:]]\+,\1auth     ,g
 s,^\(#\?\)account[[:space:]]\+,\1account  ,g
