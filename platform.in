@@ -415,8 +415,8 @@
 @alt@%_python_compile_clean	1
 @alt@%_fixup_method	binconfig pkgconfig libtool
 @alt@%_strip_method	%{?_enable_debug:none}%{!?_enable_debug:executable shared}
-@alt@%_findreq_default_method	files lib pam perl shell
-@alt@%_findprov_default_method	pam lib perl shell
+@alt@%_findreq_default_method	files lib pam perl python shell
+@alt@%_findprov_default_method	lib pam perl python shell
 @alt@
 @alt@%_cleanup_topdir	%nil
 @alt@%_compress_topdir	%_usr
