@@ -556,7 +556,6 @@ static PyObject * hdrSubscript(hdrObject * s, PyObject * item) {
       case RPMTAG_FILEMD5S:
       case RPMTAG_FILELINKTOS:
       case RPMTAG_FILEFLAGS:
-      case RPMTAG_ROOT:
       case RPMTAG_FILEUSERNAME:
       case RPMTAG_FILEGROUPNAME:
 	forceArray = 1;
