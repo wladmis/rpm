@@ -76,17 +76,17 @@ echo "Verifying and fixing files in $RPM_BUILD_ROOT ($SHOW_METHODS)"
 : ${RPM_FIXUP_TOPDIR:=}
 [ -d "$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR" ] || exit 0
 
-if [ -z "$FIXUP_BINCONFIG" -a -d ./usr/bin ]; then
+if [ -n "$FIXUP_BINCONFIG" -a -d ./usr/bin ]; then
 	find ./usr/bin -maxdepth 1 -type f -name \*-config -print0 |
 		xargs -r0 @RPMCONFIGDIR@/fixup-binconfig
 fi
 
-if [ -z "$FIXUP_PKGCONFIG" -a -d ./usr/lib/pkgconfig ]; then
+if [ -n "$FIXUP_PKGCONFIG" -a -d ./usr/lib/pkgconfig ]; then
 	find ./usr/lib/pkgconfig -maxdepth 1 -type f -name \*.pc -print0 |
 		xargs -r0 @RPMCONFIGDIR@/fixup-pkgconfig
 fi
 
-if [ -z "$FIXUP_BINCONFIG" ]; then
+if [ -n "$FIXUP_LIBTOOL" ]; then
 	find .$RPM_FIXUP_TOPDIR -type f -name \*.la -print0 |
 		xargs -r0 @RPMCONFIGDIR@/fixup-libtool
 fi
