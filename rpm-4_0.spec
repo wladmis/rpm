@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt10
+Release: alt11
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -479,6 +479,15 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Nov 04 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt11
+- Fixed error handling in shell scripts.
+- platform: updated %%optflags_kernel for gcc-3.2.
+- find-requires: added lookup for /etc/cron.*ly.
+- Updates for perl-5.8.0 migration:
+  + platform: added %%_perl_req_method/%%set_perl_req_method macros.
+  + macros: %%___build_pre: export RPM_PERL_REQ_METHOD.
+  + perl.{req,prov}: new version (Alexey Tourbin).
+
 * Mon Oct 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt10
 - New macros:
   %set_{autoconf,automake,libtool}_version.
