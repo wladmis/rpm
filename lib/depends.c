@@ -588,6 +588,8 @@ static int rangeMatchesDepFlags (Header h,
 	if (strcmp(provides[i], reqName))
 	    continue;
 
+	if (!(provideFlags[i] & RPMSENSE_SENSEMASK))
+	    provideFlags[i] |= RPMSENSE_EQUAL;
 	result = rpmRangesOverlap(provides[i], providesEVR[i], provideFlags[i],
 			reqName, reqEVR, reqFlags);
 
@@ -1061,6 +1063,8 @@ alAllSatisfiesDepend(const availableList al,
 
 		proEVR = (p->providesEVR ? p->providesEVR[i] : NULL);
 		proFlags = (p->provideFlags ? p->provideFlags[i] : 0);
+		if ((keyFlags & RPMSENSE_SENSEMASK) && !(proFlags & RPMSENSE_SENSEMASK))
+		    proFlags |= RPMSENSE_EQUAL;
 		rc = rpmRangesOverlap(p->provides[i], proEVR, proFlags,
 				keyName, keyEVR, keyFlags);
 		if (rc)

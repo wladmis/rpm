@@ -518,8 +518,12 @@ fi
 - /usr/lib/librpmbuild-4.0.4.so: package separately.
 - Relocated %_libdir/%name/{rpmrc,macros} to librpm subpackage.
 - Removed c++ from build dependencies.
-- rpmRangesOverlap: changed algorithm so EVRs will be compared
+- lib/depends.c(rpmRangesOverlap):
+  changed algorithm so EVRs will be compared
   if at least one of compared packages has EVR information.
+- lib/depends.c(rangeMatchesDepFlags,alAllSatisfiesDepend):
+  when using rpmRangesOverlap for versioned requires, ensure that
+  provides are also versioned.
 
 * Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt28
 - brp-verify_elf:
