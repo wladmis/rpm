@@ -55,7 +55,7 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 			;;
 		relaxed)
 			VERIFY_ELF_RPATH=relaxed
-			#VERIFY_ELF_TEXTREL=relaxed
+			VERIFY_ELF_TEXTREL=relaxed
 			;;
 		*)
 			Fatal "Unrecognized verify_elf method: $t"
