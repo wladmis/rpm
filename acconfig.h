@@ -114,6 +114,9 @@
 /* Full path to rpmrc configuration file (usually /usr/lib/rpm/rpmrc) */
 #undef LIBRPMRC_FILENAME
 
+/* Full path to vendor rpmrc configuration file (usually /usr/lib/rpm/vendor/rpmrc) */
+#undef VENDORRPMRC_FILENAME
+
 /* Colon separated paths of macro files to read. */
 #undef MACROFILES
 
