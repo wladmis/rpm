@@ -1019,7 +1019,7 @@ static int parseForSimple(/*@unused@*/Spec spec, Package pkg, char * buf,
 		fl->isSpecialDoc = 1;
 	    }
 
-	    appendStringBuf(pkg->specialDoc, "cp -pr ");
+	    appendStringBuf(pkg->specialDoc, "cp -prL ");
 	    appendStringBuf(pkg->specialDoc, specialDocBuf);
 	    appendLineStringBuf(pkg->specialDoc, " \"$DOCDIR\"");
 	    appendLineStringBuf(pkg->specialDoc, "chmod -R go-w \"$DOCDIR\"");
