@@ -979,7 +979,7 @@ grabArgs(MacroBuf mb, const MacroEntry me, const char * se, char lastc)
 	for (c = optind; c < argc; c++) {
 	    sprintf(aname, "%d", (c - optind + 1));
 	    addMacro(mb->mc, aname, NULL, argv[c], mb->depth);
-	    *be++ = ' ';
+	    if (be != b) *be++ = ' '; /* Add space between args */
 	    be = stpcpy(be, argv[c]);
 	}
     }
