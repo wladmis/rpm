@@ -3421,8 +3421,8 @@ int rpmdbRebuild(const char * prefix)
 	newdbpath += strlen(prefix);
     tfn = _free(tfn);
 
-    rpmMessage(RPMMESS_VERBOSE, _("rebuilding database %s\n"),
-	rootdbpath, newrootdbpath);
+    rpmMessage(RPMMESS_VERBOSE, _("rebuilding database %s started\n"),
+	rootdbpath);
 
     rpmMessage(RPMMESS_DEBUG, _("rebuilding database %s into %s\n"),
 	rootdbpath, newrootdbpath);
@@ -3562,6 +3562,8 @@ int rpmdbRebuild(const char * prefix)
 	}
     }
     rc = 0;
+    rpmMessage(RPMMESS_VERBOSE, _("rebuilding database %s finished\n"),
+	rootdbpath);
 
 exit:
     if (removedir && !(rc == 0 && nocleanup)) {

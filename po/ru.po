@@ -3215,8 +3215,13 @@ msgstr "параметер dbpath не установлен"
 
 #: rpmdb/rpmdb.c:3285
 #, c-format
-msgid "rebuilding database %s\n"
-msgstr "перестраивается база данных %s\n"
+msgid "rebuilding database %s started\n"
+msgstr "начинается перестройка базы данных %s\n"
+
+#: rpmdb/rpmdb.c:3285
+#, c-format
+msgid "rebuilding database %s finished\n"
+msgstr "перестройка базы данных %s завершена\n"
 
 #: rpmdb/rpmdb.c:3288
 #, c-format
