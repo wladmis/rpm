@@ -9,8 +9,6 @@ INCLUDES = \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/rpmdb \
 	-I$(top_srcdir)/rpmio \
-	-I$(top_srcdir)/beecrypt \
-	-I$(top_srcdir)/popt \
 	-I/usr/include/python${PYVER} \
 	@INCPATH@
 
@@ -19,8 +17,7 @@ EXTRA_DIST = db-py.c db-py.h hash.h header-py.c header-py.h upgrade.h
 mylibs= \
 	$(top_builddir)/lib/librpm.la \
 	$(top_builddir)/rpmdb/librpmdb.la \
-	$(top_builddir)/rpmio/librpmio.la \
-	$(top_builddir)/popt/libpopt.la
+	$(top_builddir)/rpmio/librpmio.la
 
 LDADD =
 
