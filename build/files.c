@@ -2792,6 +2792,16 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
 	if ( rc ) return rc;
 
+	if (strcmp(n, "glibc-devel-static") {
+	{
+	    const char suffix[] = "-devel-static";
+	    const char *p = strstr (n, suffix);
+
+	    if (p && p[sizeof(suffix)-1] == '\0') {
+		rc = parseRCPOT(spec, pkg, "glibc-devel-static", RPMTAG_REQUIREFLAGS, 0, RPMSENSE_FIND_REQUIRES);
+		if ( rc ) return rc;
+	    }
+	}
     /* XXX This should be added always so that packages look alike.
      * XXX However, there is logic in files.c/depends.c that checks for
      * XXX existence (rather than value) that will need to change as well.
