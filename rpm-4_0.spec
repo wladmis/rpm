@@ -473,9 +473,14 @@ fi
 
 %changelog
 * Mon May 26 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt20
+- find-provides:
+  + ignore symlinks when looking for non-library provides;
+  + ignore symlinks for libraries without soname;
+  + for libraries with soname, ignore all but files named as soname.
 - pam.req: implemented include control directive support.
 - brp-cleanup: PAM configuration policy enforcement.
-
+- Updated README.ALT-ru_RU.KOI8-R.
+  
 * Fri May 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt19
 - Reduced amount of rpm subpackage dependencies.
 - Moved update-alternatives to separate package.
