@@ -91,9 +91,10 @@ Requires: autoconf autoconf-common automake automake-common bison coreutils cpio
 Requires: gcc gettext-tools glibc-devel file kernel-headers libtool m4 make
 Requires: mktemp net-tools procps psmisc sed service sh texinfo which
 Requires: bzip2 >= 1:1.0.2-alt4
-Requires: gzip >= 1.3.3-alt2
+Requires: gzip >= 0:1.3.3-alt2
+Requires: info-install >= 0:4.5-alt2
 Requires: patch >= 2.5
-Requires: tar >= 1.13.22-alt1
+Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
 Requires: /usr/sbin/update-alternatives
 
