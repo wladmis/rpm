@@ -15,7 +15,11 @@ typedef	int int32_t;
 /*@=redef@*/
 #endif
 
+#if DB_VERSION_MAJOR == 4
+#include <db4/db.h>
+#elif DB_VERSION_MAJOR == 3
 #include <db3/db.h>
+#endif
 
 #include "rpmlib.h"
 #include "rpmmacro.h"
