@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt22
+Release: alt22.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -473,6 +473,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Aug 16 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt23
+- autogen.sh:
+  + removed all autotools restrictions.
+- platform.in:
+  + fixed typo in %%_scripts_debug support.
+- find-requires:
+  + updated to support ELF objects with private flags.
+
 * Mon Jul 21 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt22
 - lib/depends.c: fixed "Requires(post,preun)" problem.
 - lib/psm.c: do syslog only when geteuid() == 0.
