@@ -8,6 +8,168 @@
 #include "rpmbuild.h"
 #include "debug.h"
 
+typedef enum {
+	DEP_UND = 0, /* uncomparable */
+	DEP_STR = 1, /* stronger or same */
+	DEP_WKR = -1 /* weaker or same */
+} dep_compare_t;
+
+static dep_compare_t compare_sense_flags (rpmTag tag, int cmp,
+	rpmsenseFlags a, rpmsenseFlags b)
+{
+	if (cmp < 0)
+	{
+		/* Aevr < Bevr */
+		switch (tag)
+		{
+			case RPMTAG_REQUIREFLAGS:
+				if ((a == 0) && (b != 0))
+					return DEP_WKR;
+				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
+					return DEP_STR;
+				if (!(b & RPMSENSE_LESS) && (a & RPMSENSE_GREATER))
+					return DEP_WKR;
+				return DEP_UND;
+			case RPMTAG_PROVIDEFLAGS:
+				if ((a == 0) && (b != 0))
+					return DEP_WKR;
+				if (!(b & RPMSENSE_LESS) && (a & RPMSENSE_GREATER))
+					return DEP_STR;
+				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
+					return DEP_WKR;
+				return DEP_UND;
+			default:
+				if ((a == 0) && (b != 0))
+					return DEP_STR;
+				if (!(b & RPMSENSE_LESS) && (a & RPMSENSE_GREATER))
+					return DEP_STR;
+				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
+					return DEP_WKR;
+				return DEP_UND;
+		}
+	} else if (cmp > 0)
+	{
+		/* Aevr > Bevr */
+		return -compare_sense_flags (tag, -cmp, b, a);
+	} else /* cmp == 0 */
+	{
+		/* Aevr == Bevr */
+		if ((a & b) == a)
+			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_STR : DEP_WKR;
+		if ((a & b) == b)
+			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_WKR : DEP_STR;
+		return DEP_UND;
+	}
+}
+
+static dep_compare_t compare_deps (rpmTag tag,
+	const char *Aevr, rpmsenseFlags Aflags,
+	const char *Bevr, rpmsenseFlags Bflags)
+{
+	dep_compare_t rc = DEP_UND, cmp_rc;
+	rpmsenseFlags Asense, Bsense;
+	int sense;
+	char *aEVR, *bEVR;
+	const char *aE, *aV, *aR, *bE, *bV, *bR;
+
+	/* filter out noise */
+	Aflags &= ~(RPMSENSE_FIND_REQUIRES | RPMSENSE_FIND_PROVIDES | RPMSENSE_MULTILIB);
+	Bflags &= ~(RPMSENSE_FIND_REQUIRES | RPMSENSE_FIND_PROVIDES | RPMSENSE_MULTILIB);
+
+	Asense = Aflags & RPMSENSE_SENSEMASK;
+	Bsense = Bflags & RPMSENSE_SENSEMASK;
+
+	/* 0. sanity checks */
+	switch (tag) {
+		case RPMTAG_PROVIDEFLAGS:
+		case RPMTAG_OBSOLETEFLAGS:
+		case RPMTAG_CONFLICTFLAGS:
+		case RPMTAG_REQUIREFLAGS:
+			break;
+		default:
+			/* no way to optimize this case. */
+			if (Aflags == Bflags && !strcmp (Aevr, Bevr))
+				return DEP_STR;
+			return DEP_UND;
+	}
+	if (
+	    ((Asense & RPMSENSE_LESS) && (Asense & RPMSENSE_GREATER)) ||
+	    ((Bsense & RPMSENSE_LESS) && (Bsense & RPMSENSE_GREATER)) ||
+	    ((Asense == 0) ^ (Aevr[0] == 0)) ||
+	    ((Bsense == 0) ^ (Bevr[0] == 0))
+	   )
+		return DEP_UND;
+
+	/* 1. filter out essentialy differ versions. */
+	if (
+	    ((Asense & RPMSENSE_LESS) && (Bsense & RPMSENSE_GREATER)) ||
+	    ((Bsense & RPMSENSE_LESS) && (Asense & RPMSENSE_GREATER))
+	   )
+		return DEP_UND;
+
+	/* 2. filter out essentialy differ flags. */
+	if ((Aflags & ~RPMSENSE_SENSEMASK) != (Bflags & ~RPMSENSE_SENSEMASK))
+	{
+		rpmsenseFlags Areq, Breq;
+
+		/* additional check for REQUIREFLAGS */
+		if (tag != RPMTAG_REQUIREFLAGS)
+			return DEP_UND;
+
+		/* 1a. filter out essentialy differ requires. */
+		if ((Aflags & ~RPMSENSE_SENSEMASK & ~_ALL_REQUIRES_MASK) !=
+		    (Bflags & ~RPMSENSE_SENSEMASK & ~_ALL_REQUIRES_MASK))
+			return DEP_UND;
+
+		Areq = Aflags & _ALL_REQUIRES_MASK;
+		Breq = Bflags & _ALL_REQUIRES_MASK;
+
+		/* 1b. Aflags contains Bflags? */
+		if ((Areq & Breq) == Breq)
+			rc = DEP_STR;
+
+		/* 1c. Bflags contains Aflags? */
+		else if ((Areq & Breq) == Areq)
+			rc = DEP_WKR;
+
+		else
+			return DEP_UND;
+	}
+
+	/* 3. compare versions. */
+	aEVR = xstrdup(Aevr);
+	parseEVR(aEVR, &aE, &aV, &aR);
+	bEVR = xstrdup(Bevr);
+	parseEVR(bEVR, &bE, &bV, &bR);
+
+	sense = rpmEVRcmp(aE, aV, aR, Aevr, bE, bV, bR, Bevr);
+	aEVR = _free(aEVR);
+	bEVR = _free(bEVR);
+
+	/* 4. detect overlaps. */
+	cmp_rc = compare_sense_flags (tag, sense, Asense, Bsense);
+	if (cmp_rc == DEP_UND)
+		return DEP_UND;
+
+	if (rc == DEP_UND)
+	{
+		if (cmp_rc == DEP_WKR && compare_sense_flags (tag, -sense, Bsense, Asense) == DEP_WKR)
+			/* A <= B && B <= A means A == B */
+			return DEP_STR;
+		return cmp_rc;
+	}
+
+	/* 5. compare expected with received. */
+	if (rc != cmp_rc)
+	{
+		dep_compare_t cmp_rc2 = compare_sense_flags (tag, -sense, Bsense, Asense);
+		if (cmp_rc2 != cmp_rc)
+			return DEP_UND;
+	}
+
+	return rc;
+}
+
 int addReqProv(/*@unused@*/ Spec spec, Header h,
 	       rpmsenseFlags depFlags, const char *depName, const char *depEVR,
 		int index)
@@ -69,7 +231,6 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	int *flags = NULL;
 	int *indexes = NULL;
 	int duplicate = 0;
-	rpmsenseFlags sense_mask = ~(RPMSENSE_FIND_REQUIRES | RPMSENSE_FIND_PROVIDES | RPMSENSE_MULTILIB);
 
 	if (flagtag) {
 	    xx = hge(h, versiontag, &dvt, (void **) &versions, NULL);
@@ -86,24 +247,25 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	    if (strcmp(names[len], depName))
 		continue;
 
-	    if (flagtag && flags) {
-		rpmsenseFlags old_flags = flags[len] & sense_mask;
-		rpmsenseFlags new_flags = depFlags & sense_mask;
-		if (old_flags != new_flags) {
-		    if (new_flags & RPMSENSE_SENSEMASK)
-			continue;
-		    if (nametag != RPMTAG_REQUIRENAME && nametag != RPMTAG_PROVIDENAME)
-			continue;
-		    if ((new_flags & ~RPMSENSE_SENSEMASK) != (old_flags & ~RPMSENSE_SENSEMASK))
-			continue;
-		}
-	    }
+	    if (flagtag && flags && versions) {
+	    	dep_compare_t rc = compare_deps (flagtag, versions[len], flags[len], depEVR, depFlags);
 
-	    if (flagtag && versions) {
-		if (*depEVR && strcmp (versions[len], depEVR))
-		    continue;
-		if (!*depEVR && *versions[len] && (nametag != RPMTAG_REQUIRENAME) && (nametag != RPMTAG_PROVIDENAME))
-		    continue;
+#if 0
+		fprintf (stderr, "DEBUG: name=%s, compare_deps=%d: tag=%d, AEVR=%s, Aflags=%#x, BEVR=%s, Bflags=%#x\n",
+			depName, rc, flagtag, versions[len], flags[len], depEVR, depFlags);
+#endif
+	    	switch (rc)
+		{
+			case DEP_STR:
+				break;
+#ifdef	NOTYET
+			case DEP_WKR:
+				/* swap old and new values */
+				break;
+#endif
+			default:
+				continue;
+		}
 	    }
 
 	    /* This is a duplicate dependency. */
