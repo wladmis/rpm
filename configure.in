@@ -476,7 +476,6 @@ fi
 AC_CHECK_LIB(bz2, BZ2_bzread, [
 	WITH_BZIP2=1
 	LIBS="$LIBS -lbz2"
-	AC_DEFINE(HAVE_BZ2_1_0) ], 
 	AC_DEFINE(HAVE_BZ2_1_0, 1, [Define as 1 if you bzip2 1.0]) ], 
 	AC_CHECK_LIB(bz2, bzread, [
 		WITH_BZIP2=1
