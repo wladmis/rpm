@@ -490,6 +490,7 @@ dnl Red Hat 4.x has not personality
 AC_CHECK_FUNCS(personality)
 
 AM_GNU_GETTEXT([external])
+AM_INTL_SUBDIR
 
 dnl Checks for header files we can live without.
 AC_HEADER_STDC
