@@ -210,6 +210,10 @@ fprintf(stderr, "*** addMacros\n");
 
     rpmMessage(RPMMESS_NORMAL, _("Executing(%s): %s\n"), name, buildCmd);
     if (!(child = fork())) {
+	if ( rpm_close_all() ) {
+		perror( "rpm_close_all" );
+		_exit( -1 );
+	}
 
 	/*@-mods@*/
 	errno = 0;
