@@ -1,0 +1,68 @@
+#!/bin/sh -e
+#
+# verify-elf - verify ELF objects.
+#
+# Copyright (C) 2002  Dmitry V. Levin <ldv@altlinux.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+PROG="${0##*/}"
+
+rc=0
+for f in "$@"; do
+	if [ ! -f "$f" ]; then
+		echo "$PROG: $f: file unavailable" >&2
+		rc=1
+		continue
+	fi
+
+	t="$(/usr/bin/file -b "$f")"
+
+	[ -z "${t//*ELF*}" ] || continue
+
+	info=$(objdump -p "$f") || continue
+	rpath=`echo "$info" |awk '{if ($1=="RPATH") print $2}'`
+
+	if [ -n "$rpath" ]; then
+		for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR; do
+			if echo "$rpath" |fgrep -qs "$p"; then
+				echo "$f: RPATH contains \"$p\": $rpath" >&2
+				rc=1
+				continue 2
+			fi
+		done
+		if [ "$RPM_VERIFY_ELF_METHOD" = relaxed ]; then
+			continue
+		fi
+
+		if echo "$rpath" |fgrep -qs :; then
+			echo "$f: RPATH contains \":\": $rpath" >&2
+			rc=1
+			continue
+		fi
+		if [ "$RPM_VERIFY_ELF_METHOD" = normal ]; then
+			continue
+		fi
+
+		if [ -n "$rpath" ]; then
+			echo "$f: RPATH defined: $rpath" >&2
+			rc=1
+			continue
+		fi
+	fi
+done
+
+exit $rc

@@ -600,6 +600,7 @@
   %{?_cleanup_method:export RPM_CLEANUP_METHOD=\"%_cleanup_method\"}\
   %{?_compress_method:export RPM_COMPRESS_METHOD=\"%_compress_method\"}\
   %{?_strip_method:export RPM_STRIP_METHOD=\"%_strip_method\"}\
+  %{?_verify_elf_method:export RPM_VERIFY_ELF_METHOD=\"%_verify_elf_method\"}\
   %{?_findreq_method:export RPM_FINDREQ_METHOD=\"%_findreq_method\"}\
   %{?_findprov_method:export RPM_FINDPROV_METHOD=\"%_findprov_method\"}\
   %{?_findreq_default_method:export RPM_FINDREQ_DEFAULT_METHOD=\"%_findreq_default_method\"}\
