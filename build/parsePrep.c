@@ -193,8 +193,6 @@ static int checkOwners(const char * urlfn)
 
     urlfn = rpmGetPath("%{_sourcedir}/", sp->source, NULL);
 
-    taropts = ((rpmIsVerbose() && !quietly) ? "-xvvf" : "-xf");
-
 #ifdef AUTOFETCH_NOT	/* XXX don't expect this code to be enabled */
     /* XXX
      * XXX If nosource file doesn't exist, try to fetch from url.
