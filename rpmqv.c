@@ -362,8 +362,10 @@ int main(int argc, const char ** argv)
 
     /* XXX Eliminate query linkage loop */
     specedit = 0;
+#if defined(IAM_RPMQV) || defined(IAM_RPMBT)
     parseSpecVec = parseSpec;
     freeSpecVec = freeSpec;
+#endif /* IAM_RPMQV || IAM_RPMBT */
 
     /* set up the correct locale */
     (void) setlocale(LC_ALL, "" );
@@ -1204,7 +1206,9 @@ exit:
     }
 
     /* keeps memory leak checkers quiet */
+#if defined(IAM_RPMQV) || defined(IAM_RPMBT)
     freeNames();
+#endif /* IAM_RPMQV || IAM_RPMBT */
     freeFilesystems();
     urlFreeCache();
     rpmlogClose();
