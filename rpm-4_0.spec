@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt20.2
+Release: alt21
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -476,13 +476,14 @@ fi
 - platform.in:
   + always define RPM_BUILD_ROOT;
   + define PAM_SO_SUFFIX and PAM_NAME_SUFFIX;
-  + removed "-fexpensive-optimizations" from %optflags_optimization
+  + define RPM_SCRIPTS_DEBUG if %%_scripts_debug is set;
+  + removed "-fexpensive-optimizations" from %%optflags_optimization
     since it's included in -O2 and -Os.
 - find-provides:
-  + enable shell trace mode if $RPM_FINDPROV_DEBUG is set;
+  + enable shell trace mode if $RPM_SCRIPTS_DEBUG is set;
   + fixed "readlink -fv" bug introduced in 4.0.4-alt20.
 - find-requires:
-  + enable shell trace mode if $RPM_FINDREQ_DEBUG is set.
+  + enable shell trace mode if $RPM_SCRIPTS_DEBUG is set.
 - find-package:
   + updated pkg contents index code.
 - pam.prov:
