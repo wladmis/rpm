@@ -1938,7 +1938,8 @@ assert(psm->mi == NULL);
 
     case PSM_CHROOT_IN:
 	/* Change root directory if requested and not already done. */
-	if (ts->rootDir && !ts->chrootDone && !psm->chrootDone) {
+	if (ts->rootDir && !(ts->rootDir[0] == '/' && ts->rootDir[1] == '\0') &&
+	    !ts->chrootDone && !psm->chrootDone) {
 	    static int _loaded = 0;
 
 	    /*
@@ -1952,7 +1953,6 @@ assert(psm->mi == NULL);
 	    }
 
 	    xx = chdir("/");
-	    if (!(ts->rootDir[0] == '/' && ts->rootDir[1] == '\0')) {
 	    /*@-unrecog -superuser @*/
 	    rc = chroot(ts->rootDir);
 	    /*@=unrecog =superuser @*/
@@ -1963,7 +1963,6 @@ assert(psm->mi == NULL);
 	    chroot_prefix = ts->rootDir;
 	    /*@=onlytrans@*/
 #endif
-	    }
 	}
 	break;
     case PSM_CHROOT_OUT:
