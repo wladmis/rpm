@@ -33,7 +33,8 @@ typedef enum rpmBuildFlags_e {
     RPMBUILD_RMSOURCE	= (1 << 7),	/*!< Remove source(s) and patch(s). */
     RPMBUILD_RMBUILD	= (1 << 8),	/*!< Remove build sub-tree. */
     RPMBUILD_STRINGBUF	= (1 << 9),	/*!< only for doScript() */
-    RPMBUILD_RMSPEC	= (1 << 10)	/*!< Remove spec file. */
+    RPMBUILD_RMSPEC	= (1 << 10),	/*!< Remove spec file. */
+    RPMBUILD_PREPROCESS	= (1 << 11)	/*!< Preprocess spec file only. */
 } rpmBuildFlags;
 /*@=typeuse@*/
 
@@ -462,6 +463,7 @@ int processSourceFiles(Spec spec)
  * @param cookie
  * @param anyarch
  * @param force
+ * @param preprocess
  * @return
  */
 int parseSpec(/*@out@*/ Spec * specp, const char * specFile,
@@ -470,7 +472,7 @@ int parseSpec(/*@out@*/ Spec * specp, const char * specFile,
 		int recursing,
 		/*@null@*/ const char * passPhrase,
 		/*@null@*/ char * cookie,
-		int anyarch, int force)
+		int anyarch, int force, int preprocess)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem, internalState @*/
 	/*@modifies *specp,
@@ -486,6 +488,7 @@ int parseSpec(/*@out@*/ Spec * specp, const char * specFile,
  * @param cookie
  * @param anyarch
  * @param force
+ * @param preprocess
  * @return
  */
 /*@-declundef@*/
@@ -495,7 +498,7 @@ extern int (*parseSpecVec) (Spec * specp, const char * specFile,
 		int recursing,
 		/*@null@*/ const char * passPhrase,
 		/*@null@*/ char * cookie,
-		int anyarch, int force)
+		int anyarch, int force, int preprocess)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem, internalState @*/
 	/*@modifies *specp,
