@@ -1,6 +1,7 @@
-#include "system.h"
+#include <unistd.h>
+#include <errno.h>
 
-#ifdef linux
+#ifdef __linux__
 #include <linux/limits.h>
 #endif
 
@@ -12,7 +13,7 @@ int rpm_close_all (void)
 	if (max <= 0)
 		return -1;
 
-#ifdef linux
+#ifdef __linux__
 	if (max < NR_OPEN)
 		max = NR_OPEN;
 #endif
