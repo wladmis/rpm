@@ -147,7 +147,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	    }
 	    if (!(flags[len] & RPMSENSE_SENSEMASK))
 		continue;
-	    if (rpmRangesOverlap (names[len], versions[len], flags[len], depName, depEVR, depFlags)) {
+	    if (rpmRangesOverlap ("", versions[len], flags[len], "", depEVR, depFlags)) {
 		skip = 1;
 		break;
 	    }
