@@ -906,13 +906,13 @@ restart:
 	    case 0:
 		switch (source)
 		{
-		    case RPMQV_WHATPROVIDES:
-			if (retcode) rpmError(RPMERR_QUERYINFO,
-				_("no package provides %s\n"), fn);
-			break;
 		    case RPMQV_PATH:
 			rpmError(RPMERR_QUERYINFO,
 				_("file %s is not owned by any package\n"), fn);
+			break;
+		    default:
+			if (retcode) rpmError(RPMERR_QUERYINFO,
+				_("no package provides %s\n"), fn);
 			break;
 		}
 		break;
