@@ -73,7 +73,7 @@ eval set -- "$TEMP"
 : ${TOPDIR:=$RPM_BUILD_ROOT}
 export STRIP_FORCED=
 export STRIP_FORCED_OPTS=
-export STRIP_AUTOSKIP=
+export STRIP_AUTOSKIP="$RPM_STRIP_AUTOSKIP"
 
 AddForcedOpts()
 {
