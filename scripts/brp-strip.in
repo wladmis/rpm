@@ -230,6 +230,8 @@ StripTree()
 	find "$1" -type f $PERMS -print0 |xargs -r0 @RPMCONFIGDIR@/strip_files
 }
 
+[ -n "$STRIP_AUTOSKIP" ] || STRIP_AUTOSKIP='*/debug/*'
+
 if [ -n "$*" ]; then
 	for d in "$@"; do
 		if [ -d "$d" ]; then
@@ -243,8 +245,6 @@ else
 		echo "$PROG: non-/ TOPDIR expected" >&2
 		exit 1
 	fi
-
-	[ -n "$STRIP_AUTOSKIP" ] || STRIP_AUTOSKIP='*/debug/*'
 
 	StripTree "$TOPDIR"
 fi
