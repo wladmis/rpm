@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt18
+Release: alt19
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -35,7 +35,6 @@ Url: http://www.rpm.org/
 Source: %srcname.tar.bz2
 
 Provides: %_sysconfdir/%name/macros.d
-Provides: /usr/sbin/update-alternatives
 
 PreReq: lib%name = %version-%release
 PreReq: alt-gpgkeys, coreutils, grep, gawk, mktemp
@@ -96,7 +95,6 @@ Requires: info-install >= 0:4.5-alt2
 Requires: patch >= 2.5
 Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
-Requires: /usr/sbin/update-alternatives
 
 %package build-topdir
 Summary: RPM package installation and build directory tree
@@ -265,12 +263,6 @@ bzip2 -9 CHANGES ||:
 %__install -pD -m755 rpminit $RPM_BUILD_ROOT%_bindir/rpminit
 %__install -pD -m644 rpminit.1 $RPM_BUILD_ROOT%_man1dir/rpminit.1
 
-# update-alternatives.
-%__mkdir_p $RPM_BUILD_ROOT{%_sbindir,%_man8dir}
-%__install -p -m755 update-alternatives $RPM_BUILD_ROOT%_sbindir/
-%__install -p -m644 update-alternatives.8 $RPM_BUILD_ROOT%_man8dir/
-%__mkdir_p $RPM_BUILD_ROOT/{etc,var/lib/rpm}/alternatives
-
 # Valid groups.
 %__install -p -m644 GROUPS $RPM_BUILD_ROOT%_libdir/%name/
 
@@ -407,12 +399,6 @@ fi
 %_man8dir/rpm.*
 %_man8dir/rpm2cpio.*
 
-# update-alternatives
-%_sbindir/update-alternatives
-%rpmdirattr %_sysconfdir/alternatives
-%rpmdirattr %_localstatedir/%name/alternatives
-%_mandir/man?/update-alternatives*
-
 %files build
 %config %_sysconfdir/buildreqs/files/ignore.d/*
 %rpmattr %_bindir/gendiff
@@ -482,6 +468,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri May 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt19
+- Moved update-alternatives to separate package.
+- Reduced amount of rpm subpackage dependencies.
+- find-requires: more filename-based autodependencies.
+
 * Tue May 06 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt18
 - rpmio: fixed gzclose error handling.
 
