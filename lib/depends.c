@@ -497,8 +497,8 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 	goto exit;
     }
 
-    /* Same name. If both A and B are an existence test, always overlap. */
-    if (!((AFlags & RPMSENSE_SENSEMASK) || (BFlags & RPMSENSE_SENSEMASK))) {
+    /* Same name. If either A or B is an existence test, always overlap. */
+    if (!((AFlags & RPMSENSE_SENSEMASK) && (BFlags & RPMSENSE_SENSEMASK))) {
 	result = 1;
 	goto exit;
     }
