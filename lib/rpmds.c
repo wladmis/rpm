@@ -1145,8 +1145,11 @@ int rpmdsCompareIndex(rpmds A, int aix, rpmds B, int bix)
 
     AEVR = rpmdsEVRIndex(A, aix);
     BEVR = rpmdsEVRIndex(B, bix);
-    if (!(AEVR && *AEVR && BEVR && *BEVR)) {
-	/* If either EVR is non-existent or empty, always overlap. */
+    if (!AEVR) AEVR = "";
+    if (!BEVR) BEVR = "";
+
+    /* When both EVRs are non-existent or empty, always overlap. */
+    if (!(*AEVR || *BEVR)) {
 	result = 1;
     } else {
 	/* Both AEVR and BEVR exist, compare [epoch:]version[-release]. */
