@@ -26,7 +26,7 @@ file="$1"
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
 # pam_module.so
-sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib/security/\)\?\([^.[:space:]]\+\.so\)[[:space:]].*#\4'$PAM_SO_SUFFIX'#pg' <"$file" |sort -u
+sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib/security/\)\?\([^.[:space:]]\+\.so\)\($\|[[:space:]].*\)#\4'$PAM_SO_SUFFIX'#pg' <"$file" |sort -u
 
 # pam_module.so*
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib/security/\)\?\([^.[:space:]]\+\.so[^[:space:]]\+\).*#\4#pg' <"$file" |sort -u
