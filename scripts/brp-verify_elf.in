@@ -29,29 +29,8 @@ fi
 
 cd "$RPM_BUILD_ROOT"
 
-SHOW_METHODS=
-add_show_methods()
-{
-	if [ -z "$SHOW_METHODS" ]; then
-		SHOW_METHODS="$*"
-	else
-		SHOW_METHODS="$SHOW_METHODS,$*"
-	fi
-}
-
-export VERIFY_ELF_RPATH=
-set_rpath_method()
-{
-	VERIFY_ELF_RPATH="$1"
-	add_show_methods rpath="$1"
-}
-
-export VERIFY_ELF_TEXTREL=
-set_textrel_method()
-{
-	VERIFY_ELF_TEXTREL="$1"
-	add_show_methods textrel="$1"
-}
+export VERIFY_ELF_RPATH=normal
+export VERIFY_ELF_TEXTREL=normal
 
 for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	case "$t" in
@@ -59,28 +38,28 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 			exit 0
 			;;
 		rpath)
-			set_rpath_method normal
+			VERIFY_ELF_RPATH=normal
 			;;
 		rpath=*)
-			set_rpath_method "${t#rpath=}"
+			VERIFY_ELF_RPATH="${t#rpath=}"
 			;;
 		textrel)
-			set_textrel_method normal
+			VERIFY_ELF_TEXTREL=normal
 			;;
 		textrel=*)
-			set_textrel_method "${t#textrel=}"
+			VERIFY_ELF_TEXTREL="${t#textrel=}"
 			;;
 		normal)
-			set_rpath_method normal
-			set_textrel_method normal
+			VERIFY_ELF_RPATH=normal
+			VERIFY_ELF_TEXTREL=normal
 			;;
 		strict)
-			set_rpath_method strict
-			set_textrel_method strict
+			VERIFY_ELF_RPATH=strict
+			VERIFY_ELF_TEXTREL=strict
 			;;
 		relaxed)
-			set_rpath_method relaxed
-			set_textrel_method relaxed
+			VERIFY_ELF_RPATH=relaxed
+			#VERIFY_ELF_TEXTREL=relaxed
 			;;
 		*)
 			echo "Unrecognized verify_elf method: $t"
@@ -95,6 +74,6 @@ done
 : ${RPM_VERIFY_ELF_TOPDIR:=}
 [ -d "$RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR" ] || exit 0
 
-echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR ($SHOW_METHODS)"
+echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (rpath=$VERIFY_ELF_RPATH,textrel=$VERIFY_ELF_TEXTREL)"
 
 find .$RPM_VERIFY_ELF_TOPDIR -type f -print0 |xargs -r0 @RPMCONFIGDIR@/verify-elf
