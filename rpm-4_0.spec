@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt31
+Release: alt32
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -503,6 +503,16 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Jan 29 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt32
+- find-provides: changed output format of extra provides
+  for sonames found in non-default locations
+  (introduced in 4.0.4-alt30).
+- build/reqprov.c(addReqProv):
+  + enhanced duplicates elimination algorithm,
+    it now covers all known optimization cases;
+  + implemented %%_deps_optimization support.
+- Updated README.ALT-ru_RU.KOI8-R.
+
 * Tue Jan 27 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt31
 - build/parseReqs.c(parseRCPOT):
   + tokens must not contain '%<=>' symbols since it is common
