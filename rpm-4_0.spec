@@ -520,7 +520,8 @@ fi
 - platform:
   + %%add_buildrequires(b): new macro;
   + %%set_*_version: use it (#3335);
-  + run scrollkeeper-update quietly (#4485).
+  + run scrollkeeper-update quietly (#4485);
+  + fixed typo in %%add_python_lib_path().
 
 * Mon May 17 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt38
 - Disallow root to install source packages by default.

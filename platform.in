@@ -470,8 +470,9 @@
 @alt@%add_verify_elf_skiplist()	%global _verify_elf_skiplist %_verify_elf_skiplist %*
 @alt@%add_findreq_skiplist()	%global _findreq_skiplist %_findreq_skiplist %*
 @alt@%add_findprov_skiplist()	%global _findprov_skiplist %_findprov_skiplist %*
+@alt@
 @alt@%add_python_req_skip()	%global _python_req_skip %_python_req_skip %*
-@alt@%add_python_lib_path()	%global _python_lib_path %_python_lin_path %*
+@alt@%add_python_lib_path()	%global _python_lib_path %_python_lib_path %*
 @alt@%add_python_compile_exclude() %global _python_compile_exclude %_python_compile_exclude %*
 @alt@%add_python_compile_include() %global _python_compile_include %_python_compile_include %*
 @alt@
