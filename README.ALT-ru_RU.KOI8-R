@@ -1,7 +1,8 @@
                                ALT Linux RPM:
-                     особенности версии rpm-4.0.4-alt26
+                     особенности версии rpm-4.0.4-alt27
 
                      Dmitry V. Levin <ldv@altlinux.org>
+
                                ALT Linux Team
 
                                   Обоснование
@@ -64,20 +65,39 @@ BuildRoot.
           %_x11dir,     %_x11bindir,     %_x11libdir,    %_x11includedir,
           %_x11mandir, %_x11datadir, %_x11fontsdir;
 
+   альтернативы:
+          %_altdir;
+
    лицензии:
           %_licensedir;
 
    меню:
           %_menudir, %_iconsdir, %_miconsdir, %_liconsdir;
 
+   service:
+          %_initdir;
+
+   control:
+          %_controldir;
+
    emacs:
           %_emacslispdir;
+
+   pam:
+          %_pam_modules_dir;
 
    tcl:
           %_tcllibdir, %_tcldatadir;
 
+   kernel:
+          %patches_dir, %kernel_srcdir;
+
+   ruby:
+          %ruby_archdir,         %ruby_libdir,         %ruby_sitearchdir,
+          %ruby_sitelibdir;
+
    другие системные:
-          %_initdir, %_lockdir, %_logdir, %_cachedir, %_spooldir.
+          %_cachedir, %_lockdir, %_logdir, %_spooldir.
 
 Управление опциями компилятора gcc.
 
@@ -104,7 +124,7 @@ BuildRoot.
           debugging options;
 
    %optflags_shared:
-          параметры, применяемые для создания relocatable файлов;
+          параметры, применяемые для порождения корректного кода для DSO;
 
    %optflags_nocpp:
           параметры, отключающие поддержку C++ exceptions и C++ RTTI;
@@ -270,13 +290,17 @@ BuildRoot.
           :  список каталогов, в которых производится поиск ELF-файлов на
           наличие предоставляемых зависимостей;
 
-   %_cleanup,compress,fixup,strip,verify_elf,findreq,findprov_topdir:
+   %_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_topdir:
           точка  начала  поиска  файлов,  обрабатываемых  соответствующим
           методом;
 
-   %_cleanup,compress,fixup,strip,verify_elf,findreq,findprov_skiplist:
+   %_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_skiplist:
           список  шаблонов  файлов, которые будут пропущены при обработке
           соответствующим методом;
+
+   %_unpackaged_files_terminate_build:
+          параметр,   определяющий   влияние   неупакованных   файлов  на
+          результат сборки;
 
    %set_{cleanup,compress,fixup,strip,verify_elf,perl_req}_method:
           изменить значение соответствующего макроса;
@@ -434,6 +458,10 @@ BuildRoot.
           новый   режим   работы   RPM,  при  котором  происходит  только
           подстановка макросов;
 
+   -bM:
+          новый  режим  работы  RPM,  при котором происходит только вывод
+          списка использованных макросов;
+
    -nowait-lock:
           не блокировать процесс, если база данных RPM занята;
 
@@ -538,20 +566,23 @@ BuildRoot.
 Автоматическая проверка ELF-файлов с поддержкой различных стратегий.
 
    Иногда  в  результате  сборки  пакета получаются ELF-файлы, содержащие
-   неверную  и/или недопустимую информацию в некоторых секциях, таких как
-   RPATH.  Поэтому  по  окончании  работы секции %install проверяются все
-   собранные ELF-файлы. Выбор типов файлов определяется значением макроса
-   %_verify_elf_method,   которое   есть  набор  из  следующих  возможных
-   значений:
+   неверную   и/или   недопустимую   информацию   в   некоторых   записях
+   динамической  секции,  таких как RPATH и TEXTREL. Поэтому по окончании
+   работы  секции  %install  проверяются  все  собранные ELF-файлы. Выбор
+   методов  проверки  определяется значением макроса %_verify_elf_method,
+   которое есть набор из следующих возможных значений:
      * none, skip: поиска и проверки не производится;
-     * relaxed:  проверка  только  на  наличие  недопустимых  елементов в
-       RPATH;
-     * normal:  relaxed + проверка на наличие более чем одного элемента в
-       RPATH;
-     * strict: проверка на наличие непустого RPATH.
+     * rpath=relaxed:  проверка  RPATH  только  на  наличие  недопустимых
+       елементов;
+     * rpath=normal:  relaxed  +  проверка  на  наличие  более чем одного
+       элемента в RPATH;
+     * rpath=strict: проверка на наличие непустого RPATH.
+     * textrel=relaxed: предупреждение о наличии записей типа TEXTREL;
+     * textrel=normal,  textrel=strict:  проверка на наличие записей типа
+       TEXTREL;
 
    Значение  по умолчанию для макроса %_verify_elf_method в данный момент
-   равно normal.
+   равно normal, что эквивалентно rpath=normal,textrel=normal.
 
 Автоматическое удаление отладочной информации из ELF-файлов с поддержкой
 различных стратегий выбора файлов, подлежащих обработке.
