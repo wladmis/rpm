@@ -1,7 +1,7 @@
 #!/bin/sh -e
 #
-# find-package
-# Copyright (C) 2002  Dmitry V. Levin <ldv@altlinux.org>
+# $Id$
+# Copyright (C) 2002-2003  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,43 +23,74 @@
 
 FindPackage()
 {
-	local f="$1"
+	local f r rep package
+	f="$1"
 	shift
-	local r rep package
 
 	for r in "$@"; do
 		[ -n "$r" ] || continue
 		if [ -z "${r##/*}" ]; then
-			if ! relative "$r" "$RPM_BUILD_ROOT" |grep -q "^../"; then
+			# Dependence name starts with `/'.
+
+			# Does it start with buildroot?
+			if [ -z "${r##$RPM_BUILD_ROOT*}" ]; then
 				echo "$f: invalid dependence: $r" >&2
 				return 1
 			fi
+
 			rep="$r"
-			if [ -e "$RPM_BUILD_ROOT/$rep" ]; then
+			# Does it belong to buildroot?
+			if [ -e "$RPM_BUILD_ROOT$rep" ]; then
 				continue
 			fi
+
+			# Is it an alternative?
 			if readlink "$rep" |grep -qs '^/etc/alternatives/'; then
 				echo -E "$rep"
-			else
-				if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep"|LC_COLLATE=C sort -u)"; then
+				continue
+			fi
+
+			# Check for pkg contens complete index.
+			if [ -n "$RPM_PKG_CONTENTS_INDEX_ALL" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
+				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_ALL")"
+				if [ -n "$package" ]; then
 					echo -E "$package"
-				else
-					echo -E "$rep"
+					continue
 				fi
 			fi
+
+			# Check package database.
+			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
+				echo -E "$package"
+				continue
+			fi
+
+			# Not found; output raw dependence.
+			echo -E "$rep"
 		else
+			# Check buildroot first.
 			local RPATH
 			RPATH="$(echo "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
 			if [ -n "$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)" ]; then
 				continue
 			fi
+
+			# Check for pkg contens binary index.
+			if [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
+				package="$(awk -v "f=$r" 'BEGIN {r="^/(s?bin|usr/(s?bin|X11R6/bin))/" f} {if (match($1,r)>0) {print $2; exit 0}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
+				if [ -n "$package" ]; then
+					echo -E "$package"
+					continue
+				fi
+			fi
+
+			# Lookup in host system.
 			if ! rep="$(/usr/bin/which -- "$r" 2>/dev/null)"; then
 				continue
 			fi
-			if [ -e "$RPM_BUILD_ROOT/$rep" ]; then
-				continue
-			fi
-			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep"|LC_COLLATE=C sort -u)"; then
+
+			# Check package database.
+			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
 				echo -E "$package"
 			fi
 		fi
