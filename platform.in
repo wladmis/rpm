@@ -524,6 +524,14 @@
 @alt@%def_enable() %{expand:%%{!?_enable_%{1}: %%{!?_disable_%{1}: %%global _enable_%{1} --enable-%{1}}}}
 @alt@%def_disable() %{expand:%%{!?_enable_%{1}: %%{!?_disable_%{1}: %%global _disable_%{1} --disable-%{1}}}}
 @alt@
+@alt@# Set with/without value.
+@alt@%force_with() %{expand:%%global _with_%{1} --with-%{1}}
+@alt@%force_without() %{expand:%%global _without_%{1} --without-%{1}}
+@alt@
+@alt@# Set enable/disable value.
+@alt@%force_enable() %{expand:%%global _enable_%{1} --enable-%{1}}
+@alt@%force_disable() %{expand:%%global _disable_%{1} --disable-%{1}}
+@alt@
 @alt@# Check whether both _with_%{1} and _without_%{1} are defined.
 @alt@%check_def() %{expand:%%{?_with_%{1}: %%{?_without_%{1}: %%{error: both _with_%{1} and _without_%{1} are defined}}}} \
 @alt@	%{expand:%%{?_enable_%{1}: %%{?_disable_%{1}: %%{error: both _enable_%{1} and _disable_%{1} are defined}}}}
