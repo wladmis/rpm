@@ -103,6 +103,14 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	    return RPMERR_BADSPEC;
 	}
 
+	/* Tokens must not contain '%' symbol - it's common error */
+	if (strchr (r, '%')) {
+	    rpmError(RPMERR_BADSPEC,
+		     _("line %d: Dependency tokens must not contain '%%' symbol: %s\n"),
+		     spec->lineNum, spec->line);
+	    return RPMERR_BADSPEC;
+	}
+
 	/* Don't permit file names as args for certain tags */
 	switch (tag) {
 	case RPMTAG_OBSOLETEFLAGS:
@@ -183,6 +191,16 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	} else
 	    version = NULL;
 	/*@=branchstate@*/
+
+	/* Versions must not contain '%' symbol - it's common error */
+	if (version && strchr (version, '%')) {
+	    rpmError(RPMERR_BADSPEC,
+		     _("line %d: Dependency tokens must not contain '%%' symbol: %s\n"),
+		     spec->lineNum, spec->line);
+	    req = _free(req);
+	    version = _free(version);
+	    return RPMERR_BADSPEC;
+	}
 
 	(void) addReqProv(spec, h, flags, req, version, index);
 
