@@ -42,6 +42,7 @@ FIND_FILES=
 FIND_LIBS=
 FIND_PAM=
 FIND_PERL=
+FIND_LIBPERL=
 FIND_SHELL=
 libperl_so=
 
@@ -55,13 +56,20 @@ ParseMethod()
 				FIND_LIBS=
 				FIND_PAM=
 				FIND_PERL=
+				FIND_LIBPERL=
 				FIND_SHELL=
 				;;
 			lib|library)
 				FIND_LIBS=1
 				;;
+			libperl)
+				FIND_LIBPERL=1
+				;;
 			nolib|nolibrary)
 				FIND_LIBS=
+				;;
+			nolibperl)
+				FIND_LIBPERL=
 				;;
 			files)
 				FIND_FILES=1
@@ -77,9 +85,11 @@ ParseMethod()
 				;;
 			perl)
 				FIND_PERL=1
+				FIND_LIBPERL=1
 				;;
 			noperl)
 				FIND_PERL=
+				FIND_LIBPERL=
 				;;
 			sh|shell)
 				FIND_SHELL=1
@@ -92,6 +102,7 @@ ParseMethod()
 				FIND_LIBS=1
 				FIND_PAM=1
 				FIND_PERL=1
+				FIND_LIBPERL=1
 				FIND_SHELL=1
 				;;
 			default|yes|true)
@@ -196,7 +207,7 @@ FindLibReqs()
 			(start_version==1) && (lib_name!="") && ($4!="") {print lib_name "(" $4 ")";}
 			/^$/ {start_shared=0; start_version=0;}
 		'
-		if [ -n "$FIND_PERL" -a -z "$libperl_so" -a -z "${f##*/usr/lib/perl*/*}" ]; then
+		if [ -n "$FIND_LIBPERL" -a -z "$libperl_so" -a -z "${f##*/usr/lib/perl?/*/auto/*.so}" ]; then
 			libperl_so=`perl -MConfig -e 'print "$Config{libperl}\n"'`
 			echo "$libperl_so"
 		fi
