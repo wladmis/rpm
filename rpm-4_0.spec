@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt13
+Release: alt14
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -38,7 +38,7 @@ Provides: %_sysconfdir/%name/macros.d
 Provides: /usr/sbin/update-alternatives
 
 PreReq: lib%name = %version-%release
-PreReq: alt-gpgkeys, sh-utils, grep, perl-base, fileutils, gawk, textutils, mktemp, shadow-utils
+PreReq: alt-gpgkeys, coreutils, grep, perl-base, gawk, mktemp, shadow-utils
 
 # XXX glibc-2.1.92 has incompatible locale changes that affect statically
 # XXX linked binaries like /bin/rpm.
@@ -482,6 +482,13 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Feb 01 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt14
+- rpmio/macro.c: filter out non-alphanumeric macro files (#0001925).
+- perl.req: fixed typo (#0002056).
+- find-lang: added support for gnome omf files.
+- build/build.c: unset all known locale environment variables
+  right before executing %%___build_cmd.
+
 * Mon Dec 30 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt13
 - Fixed skiplists processing.
 - rpminit(1): imported from Owl with ALT adaptions.
