@@ -1,7 +1,7 @@
 #!/bin/sh -e
 #
 # pam.req
-# Copyright (C) 2001  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2001,2003  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +25,14 @@ file="$1"
 
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
+# pam_module.so
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib/security/\)\?\([^[:space:]]\+\).*#\4#pg' <"$file" |sort -u
 
+# libpam(include)
+sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+include[[:space:]].*#libpam(include)#pg' <"$file" |sort -u
+
+# pam(config) via include
+sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+include[[:space:]]\+\(/etc/pam\.d/\)\?\([^[:space:]]\+\).*#pam(\3)#pg' <"$file" |sort -u
+
+# pam(config) via pam_stack
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib/security/\)\?pam_stack\.so[[:space:]]\+service=\([^[:space:]]\+\).*#pam(\4)#pg' <"$file" |sort -u
