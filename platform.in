@@ -98,8 +98,8 @@
 
 %__arch_install_post   @ARCH_INSTALL_POST@
 
-%__os_install_post    \
-    @RPMCONFIGDIR@/brp-%{_vendor} \
+%__os_install_post\
+@RPMCONFIGDIR@/brp-%{_vendor}\
 %{nil}
 
 @redhat@#---------------------------------------------------------------------
