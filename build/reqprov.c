@@ -294,12 +294,12 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		{
 			case DEP_EQ:
 				rpmMessage (RPMMESS_DEBUG,
-					"new dep %s already exists, optimized out\n",
+					"new dep \"%s\" already exists, optimized out\n",
 					depName);
 				break;
 			case DEP_ST:
 				rpmMessage (RPMMESS_DEBUG,
-					"new dep %s is weaker, optimized out\n",
+					"new dep \"%s\" is weaker, optimized out\n",
 					depName);
 				break;
 			case DEP_WK:
@@ -336,7 +336,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 			if (obsolete[i])
 			{
 				rpmMessage (RPMMESS_DEBUG,
-					"old dep %s optimized out\n", names[i]);
+					"old dep \"%s\" optimized out\n", names[i]);
 				continue;
 			}
 
@@ -364,43 +364,51 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	    return 0;
     }
 
-    /* Do not add provided requires. */
-    if ((nametag == RPMTAG_REQUIRENAME) &&
-        (flagtag == RPMTAG_REQUIREFLAGS) &&
-        !(depFlags & _notpre(RPMSENSE_RPMLIB | RPMSENSE_KEYRING | RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN)) &&
-        !isLegacyPreReq(depFlags) &&
-        hge(h, RPMTAG_PROVIDENAME, &dnt, (void **) &names, &len)) {
+	/* Do not add new provided requires. */
+	if ((nametag == RPMTAG_REQUIRENAME) &&
+	    !(depFlags & _notpre (RPMSENSE_RPMLIB | RPMSENSE_KEYRING |
+		                  RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN))
+	    && !isLegacyPreReq (depFlags)
+	    && hge (h, RPMTAG_PROVIDENAME, &dnt, (void **) &names, &len))
+	{
 
-	int skip = 0;
-	int *flags = 0;
-	const char ** versions = 0;
-	rpmTagType dvt = RPM_STRING_ARRAY_TYPE;
+		int     skip = 0;
+		int    *flags = 0;
+		const char **versions = 0;
+		rpmTagType dvt = RPM_STRING_ARRAY_TYPE;
 
-	hge(h, RPMTAG_PROVIDEVERSION, &dvt, (void **) &versions, NULL);
-	hge(h, RPMTAG_PROVIDEFLAGS, NULL, (void **) &flags, NULL);
+		hge (h, RPMTAG_PROVIDEVERSION, &dvt, (void **) &versions, NULL);
+		hge (h, RPMTAG_PROVIDEFLAGS, NULL, (void **) &flags, NULL);
 
-	while (flags && versions && (len > 0)) {
-	    --len;
+		while (flags && versions && (len > 0))
+		{
+			--len;
 
-	    if (strcmp (depName, names[len]))
-		continue;
-	    if (!(depFlags & RPMSENSE_SENSEMASK)) {
-		skip = 1;
-		break;
-	    }
-	    if (!(flags[len] & RPMSENSE_SENSEMASK))
-		continue;
-	    if (rpmRangesOverlap ("", versions[len], flags[len], "", depEVR, depFlags)) {
-		rpmMessage (RPMMESS_DEBUG, "new dep %s already provided, optimized out\n", depName);
-		skip = 1;
-		break;
-	    }
+			if (strcmp (depName, names[len]))
+				continue;
+			if (!(depFlags & RPMSENSE_SENSEMASK))
+			{
+				skip = 1;
+				break;
+			}
+			if (!(flags[len] & RPMSENSE_SENSEMASK))
+				continue;
+			if (rpmRangesOverlap ("", versions[len], flags[len],
+					      "", depEVR, depFlags))
+			{
+				rpmMessage (RPMMESS_DEBUG,
+					    "new dep \"%s\" already provided, optimized out\n",
+					    depName);
+				skip = 1;
+				break;
+			}
+		}
+
+		versions = hfd (versions, dvt);
+		names = hfd (names, dnt);
+		if (skip)
+			return 0;
 	}
-
-	versions = hfd(versions, dvt);
-	names = hfd(names, dnt);
-	if (skip) return 0;
-    }
 
     /* Add this dependency. */
     xx = headerAddOrAppendEntry(h, nametag, RPM_STRING_ARRAY_TYPE, &depName, 1);
