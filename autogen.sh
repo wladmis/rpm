@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 export CFLAGS
 export LDFLAGS
@@ -27,7 +27,7 @@ $AUTOCONF --version |head -1 |grep -qs "$ACV" || { echo "$USAGE"; exit 1; }
 $AUTOMAKE --version |head -1 |grep -qs "$AMV" || { echo "$USAGE"; exit 1; }
 
 gettextize --copy --force --quiet
-mv po/Makevars.template po/Makevars
+cp /usr/share/gettext/intl/Makevars po/
 $LIBTOOLIZE --copy --force
 $ACLOCAL -I m4
 $AUTOHEADER
