@@ -980,8 +980,8 @@ int main(int argc, const char ** argv)
        
 	switch (ba->buildChar) {
 	case 'E':
-	    ba->buildAmount |= RPMBUILD_PREPROCESS;
-	    /*@fallthrough@*/
+	    ba->buildAmount |= RPMBUILD_PREPROCESS | RPMBUILD_PREP;
+	    break;
 	case 'a':
 	    ba->buildAmount |= RPMBUILD_PACKAGESOURCE;
 	    /*@fallthrough@*/
