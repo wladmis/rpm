@@ -44,7 +44,7 @@ PreReq: alt-gpgkeys, coreutils
 # XXX linked binaries like /bin/rpm.
 Requires: glibc-core
 
-BuildPreReq: python
+BuildPreReq: python22
 %{?_with_python:BuildPreReq: python-devel = %__python_version}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 
