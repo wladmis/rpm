@@ -1938,7 +1938,7 @@ assert(psm->mi == NULL);
 
     case PSM_CHROOT_IN:
 	/* Change root directory if requested and not already done. */
-	if (ts->rootDir && !ts->chrootDone && !psm->chrootDone) {
+	if (ts->rootDir && !(ts->rootDir[0] == '/' && ts->rootDir[1] == '\0') && !ts->chrootDone && !psm->chrootDone) {
 	    static int _loaded = 0;
 
 	    /*
