@@ -248,7 +248,7 @@ sub process_file {
 		? map { "-I$ENV{RPM_BUILD_ROOT}$_" } split, @INC
 		: map { "-I$_" } split;
 # deparse
-	open(PIPE, "-|", $^X, "-MO=Deparse", @inc, $fname) || die;
+	open(PIPE, "-|", $^X, "-t", "-MO=Deparse", @inc, "--", $fname) || die;
 	while (<PIPE>) {
 		last if /^__(DATA|END)__/;
 		process_line($_);
