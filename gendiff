@@ -1,24 +1,24 @@
 #!/bin/sh
 
-PROG="${0##*/}"
-
 if [ -z "$1" -o -z "$2" ]; then
-	echo "usage: $PROG <directory> <diff-extension>" >&2
+	echo "usage: ${0##*/} <directory> <diff-extension>" >&2
 	exit 1
 fi
 
-: ${RPM:=/usr/src/RPM}
+if [ -n "$3" ]; then
+	: ${SOURCEDIR:=`rpm --eval %_sourcedir`}
+	>"$SOURCEDIR/$1-$3.patch"
+fi
 
-[ -z "$3" ] || echo >"$RPM/SOURCES/$1-$3.patch"
-
-find "$1" \( -name "*$2" -o -name ".*$2" \) -print |
-while read fin; do
-	fou=`echo "$fin" |sed -e "s/$2\$//"`;
-	[ -r "$fin" ] || fin="/dev/null"
-	[ -r "$fou" ] || fou="/dev/null"
-	if [ -z "$3" ]; then
-		diff -u "$fin" "$fou"
-	else
-		diff -u "$fin" "$fou" |tee -a "$RPM/SOURCES/$1-$3.patch"
-	fi
-done
+find "$1" -mindepth 1 \( -name "*$2" -o -name ".*$2" \) -print |
+	while read fin; do
+		fou=`echo "$fin" |sed -e "s/$2\$//"`
+		[ -r "$fin" ] || fin="/dev/null"
+		[ -r "$fou" ] || fou="/dev/null"
+		if [ -n "$3" ]; then
+			diff -u "$fin" "$fou" |
+				tee -a "$SOURCEDIR/$1-$3.patch"
+		else
+			diff -u "$fin" "$fou"
+		fi
+	done
