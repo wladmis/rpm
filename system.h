@@ -238,6 +238,10 @@ extern int _tolower(int) __THROW	/*@*/;
 #include <err.h>
 #endif
 
+#if HAVE_SYSLOG_H
+#include <syslog.h>
+#endif
+
 #if HAVE_MALLOC_H && !defined(__LCLINT__)
 #include <malloc.h>
 #endif
@@ -320,20 +324,8 @@ extern void muntrace (void)
 #endif	/* defined(__GNUC__) */
 #endif	/* HAVE_MCHECK_H */
 
-/* Retrofit glibc __progname */
-#if defined __GLIBC__ && __GLIBC__ >= 2
-#if __GLIBC_MINOR__ >= 1
-#define	__progname	__assert_program_name
-#endif
 #define	setprogname(pn)
-#else
-#define	__progname	program_name
-#define	setprogname(pn)	\
-  { if ((__progname = strrchr(pn, '/')) != NULL) __progname++; \
-    else __progname = pn;		\
-  }
-#endif
-const char *__progname;
+extern const char *__progname;
 
 #if HAVE_NETDB_H
 #include <netdb.h>
@@ -549,6 +541,7 @@ extern void unsetenv(const char *name);
 #  include <mntent.h>
 #  define our_mntent struct mntent
 #  define our_mntdir mnt_dir
+#  define our_mnttype mnt_type
 # elif HAVE_STRUCT_MNTTAB
 #  include <stdio.h>
 #  include <mnttab.h>
