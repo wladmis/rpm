@@ -478,7 +478,7 @@ fi
 - verify-elf:
   print textrel information even if textrel=relaxed.
 - pam.{prov,req}: better error diagnostics.
-- platform: corrected %%%__python_version definition (#3311).
+- platform: corrected %%__python_version definition (#3311).
 - Fixed Makefiles to correct librpm*-4.0.4.so dependencies.
 - Do not package .la files.
 - brp-cleanup: remove lib*.la files from /lib, /usr/lib, and /usr/X11R6/lib.
