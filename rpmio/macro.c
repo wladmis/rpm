@@ -275,9 +275,16 @@ findEntry(MacroContext mc, const char * name, size_t namelen)
 
 /**
  * fgets(3) analogue that reads \ continuations. Last newline always trimmed.
+ * @param buf		input buffer
+ * @param size		inbut buffer size (bytes)
+ * @param fd		file handle
+ * @param escapes	permit escaped newlines?
+ * @return		buffer, or NULL on end-of-file
  */
-/*@dependent@*/ static char *
-rdcl(char * buf, size_t size, FD_t fd, int escapes)
+/*@-boundswrite@*/
+/*@null@*/
+static char *
+rdcl(/*@returned@*/ char * buf, size_t size, FD_t fd)
 	/*@globals fileSystem @*/
 	/*@modifies buf, fileSystem @*/
 {
@@ -286,24 +293,27 @@ rdcl(char * buf, size_t size, FD_t fd, int escapes)
     size_t nread = 0;
     FILE * f = fdGetFILE(fd);
 
-    *q = '\0';
+    if (size > 0)
+	*q = '\0';
+    else
+	return 0;
+
     if (f != NULL)
     do {
 	/* read next line */
 	if (fgets(q, size, f) == NULL)
 	    break;
-	nb = strlen(q);
+	if (!(nb = strlen(q)))
+	    break;
 	nread += nb;
-	for (q += nb - 1; nb > 0 && iseol(*q); q--)
-	    nb--;
+	for (q += nb - 1; nb > 0 && iseol(*q); --q)
+	    --nb;
 	if (!(nb > 0 && *q == '\\')) {	/* continue? */
 	    *(++q) = '\0';		/* trim trailing \r, \n */
 	    break;
 	}
-	if (escapes) {			/* copy escape too */
-	    q++;
-	    nb++;
-	}
+
+	++q; ++nb;			/* copy escape too */
 	size -= nb;
 	if (*q == '\r')			/* XXX avoid \r madness */
 	    *q = '\n';
@@ -311,6 +321,7 @@ rdcl(char * buf, size_t size, FD_t fd, int escapes)
     } while (size > 0);
     /*@-retalias@*/ return (nread > 0 ? buf : NULL); /*@=retalias@*/
 }
+/*@=boundswrite@*/
 
 /**
  * Return text between pl and matching pr characters.
@@ -1616,7 +1627,7 @@ rpmInitMacrofile (const char *macrofile)
 	max_macro_depth = 16;
 	/*@=mods@*/
 
-	while(rdcl(buf, sizeof(buf), fd, 1) != NULL) {
+	while(rdcl(buf, sizeof(buf), fd) != NULL) {
 	    char c, *n;
 
 	    n = buf;
@@ -2078,7 +2089,7 @@ main(int argc, char *argv[])
     rpmDumpMacroTable(NULL, NULL);
 
     if ((fp = fopen(testfile, "r")) != NULL) {
-	while(rdcl(buf, sizeof(buf), fp, 1)) {
+	while(rdcl(buf, sizeof(buf), fp)) {
 	    x = expandMacros(NULL, NULL, buf, sizeof(buf));
 	    fprintf(stderr, "%d->%s\n", x, buf);
 	    memset(buf, 0, sizeof(buf));
@@ -2086,7 +2097,7 @@ main(int argc, char *argv[])
 	fclose(fp);
     }
 
-    while(rdcl(buf, sizeof(buf), stdin, 1)) {
+    while(rdcl(buf, sizeof(buf), stdin)) {
 	x = expandMacros(NULL, NULL, buf, sizeof(buf));
 	fprintf(stderr, "%d->%s\n <-\n", x, buf);
 	memset(buf, 0, sizeof(buf));
