@@ -24,8 +24,7 @@ lib_LTLIBRARIES = librpmio.la
 librpmio_la_SOURCES = digest.c macro.c rpmio.c rpmlog.c rpmmalloc.c \
 	rpmpgp.c rpmrpc.c strcasecmp.c stubs.c url.c ugid.c
 librpmio_la_LDFLAGS = -release @VERSION@
-librpmio_la_LIBADD = -lbeecrypt
-librpmio_la_DEPENDENCIES = .created
+librpmio_la_LIBADD = @LIBBEECRYPT@
 
 # XXX Add internal libtool dependence
 install-data-local:
