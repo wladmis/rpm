@@ -477,6 +477,12 @@ fi
 
 %changelog
 * Sun Nov 10 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt12
+- lib/query.c: rpmQueryVerify[RPMQV_RPM]: parse file argument
+  (do glob and other expansions) only if glob_query is enabled
+  [and disabled it by default].
+  This change allows widespread constructions like
+  "find -print0 |xargs -r0 rpmquery -p --".
+- find-requires: fixed perl script autodetection (#0001680).
 - macros:
   + Removed some obsolete macros.
   + %%___build_pre: moved to platform;
@@ -487,8 +493,12 @@ fi
   + Adjusted %%_configure_target macro,
     now uses both --build and --host options.
   + Adjusted %%clean_buildroot,
-    now used "%%__chmod -R u+rwX".
+    now uses "%%__chmod -Rf u+rwX".
+  + Reintroduced %%_fixperms macro,
+    now uses "%%__chmod -Rf u+rwX,go-w".
   + Added CCACHE_CXX support.
+- rpmpopt:
+  + Added with/without/enable/disable aliases to rpmq/rpmquery.
 - Fixed permissions on %_libdir/%name in -build subpackage
   (thanks to Ivan Zakharyaschev).
 
