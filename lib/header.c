@@ -9,6 +9,8 @@
 /* network byte order and is converted on the fly to host order. */
 
 #include "system.h"
+#include <langinfo.h>
+#include <iconv.h>
 
 #define	__HEADER_PROTOTYPES__
 
@@ -1351,6 +1353,18 @@ static int copyEntry(const indexEntry entry,
     return rc;
 }
 
+static int locale_match( const char *sample, const char *l_b, const char *l_e, char delim )
+{
+    const char *p = l_b;
+
+    for ( ; p < l_e && *p != delim; ++p )
+	;
+    if ( p < l_e && !strncmp(sample, l_b, (p - l_b)) )
+	return 1;
+
+    return 0;
+}
+
 /**
  * Does locale match entry in header i18n table?
  * 
@@ -1369,70 +1383,70 @@ static int copyEntry(const indexEntry entry,
  * @param le		end of locale to match
  * @return		1 on match, 0 on no match
  */
-static int headerMatchLocale(const char *td, const char *l, const char *le)
+static int headerMatchLocale(const char *td, const char *l, const char *le, int strip_lang)
 	/*@*/
 {
-    const char *fe;
+    switch ( strip_lang )
+    {
+	case 0:
+	    /* First try a complete match. */
+	    if ( strlen(td) == (le-l) && !memcmp(td, l, (le - l)) )
+		return 1;
+	    return 0;
 
+	case 1:
+	    /* Next, try stripping optional dialect and matching. */
+	    return locale_match( td, l, le, '@' );
 
-#if 0
-  { const char *s, *ll, *CC, *EE, *dd;
-    char *lbuf, *t.
+	case 2:
+	    /* Next, try stripping optional codeset and matching. */
+	    return locale_match( td, l, le, '.' );
 
-    /* Copy the buffer and parse out components on the fly. */
-    lbuf = alloca(le - l + 1);
-    for (s = l, ll = t = lbuf; *s; s++, t++) {
-	switch (*s) {
-	case '_':
-	    *t = '\0';
-	    CC = t + 1;
-	    break;
-	case '.':
-	    *t = '\0';
-	    EE = t + 1;
-	    break;
-	case '@':
-	    *t = '\0';
-	    dd = t + 1;
-	    break;
 	default:
-	    *t = *s;
-	    break;
-	}
+	    /* Finally, try stripping optional country code and matching. */
+	    return locale_match( td, l, le, '_' );
     }
+}
 
-    if (ll)	/* ISO language should be lower case */
-	for (t = ll; *t; t++)	*t = tolower(*t);
-    if (CC)	/* ISO country code should be upper case */
-	for (t = CC; *t; t++)	*t = toupper(*t);
+static char *
+convert( char *ed, const char *td, const char *lang )
+{
+	char *saved_ctype = 0, *from_codeset = 0, *to_codeset = 0;
+	char *saved_ctype1, *from_codeset1, *to_codeset1;
+	iconv_t icd;
 
-    /* There are a total of 16 cases to attempt to match. */
-  }
-#endif
+	if (
+		(saved_ctype1 = setlocale( LC_CTYPE, 0 )) &&
+		(saved_ctype = strdup(saved_ctype1)) &&
+		setlocale( LC_CTYPE, lang ) &&
+		(to_codeset1 = nl_langinfo(CODESET)) &&
+		(to_codeset = strdup(to_codeset1)) &&
+		setlocale( LC_CTYPE, td ) &&
+		(from_codeset1 = nl_langinfo(CODESET)) &&
+		(from_codeset = strdup(from_codeset1)) &&
+		strcmp( from_codeset, to_codeset ) &&
+		((icd = iconv_open( to_codeset, from_codeset )) != (iconv_t) -1 )
+	)
+	{
+		size_t insize = strlen( ed );
+		size_t inbufleft = insize, outbufleft = insize;
+		char buf[insize];
+		char *inbuf = ed, *outbuf = buf;
+		if ( !iconv( icd, &inbuf, &inbufleft, &outbuf, &outbufleft ) && !inbufleft && !outbufleft )
+			memcpy( ed, buf, insize );
+		iconv_close( icd );
+	}
 
-    /* First try a complete match. */
-    if (strlen(td) == (le-l) && !strncmp(td, l, (le - l)))
-	return 1;
-
-    /* Next, try stripping optional dialect and matching.  */
-    for (fe = l; fe < le && *fe != '@'; fe++)
-	{};
-    if (fe < le && !strncmp(td, l, (fe - l)))
-	return 1;
-
-    /* Next, try stripping optional codeset and matching.  */
-    for (fe = l; fe < le && *fe != '.'; fe++)
-	{};
-    if (fe < le && !strncmp(td, l, (fe - l)))
-	return 1;
-
-    /* Finally, try stripping optional country code and matching. */
-    for (fe = l; fe < le && *fe != '_'; fe++)
-	{};
-    if (fe < le && !strncmp(td, l, (fe - l)))
-	return 1;
-
-    return 0;
+	if ( saved_ctype )
+	{
+		setlocale( LC_CTYPE, saved_ctype );
+		free( saved_ctype );
+	}
+	if ( from_codeset )
+		free( from_codeset );
+	if ( to_codeset )
+		free( to_codeset );
+	return ed;
 }
 
 /**
@@ -1447,10 +1461,10 @@ headerFindI18NString(Header h, indexEntry entry)
 {
     const char *lang, *l, *le;
     indexEntry table;
+    int strip_lang;
 
     /* XXX Drepper sez' this is the order. */
-    if ((lang = getenv("LANGUAGE")) == NULL &&
-	(lang = getenv("LC_ALL")) == NULL &&
+    if ((lang = getenv("LC_ALL")) == NULL &&
         (lang = getenv("LC_MESSAGES")) == NULL &&
 	(lang = getenv("LANG")) == NULL)
 	    return entry->data;
@@ -1460,30 +1474,31 @@ headerFindI18NString(Header h, indexEntry entry)
 	return entry->data;
     /*@=mods@*/
 
-    for (l = lang; *l != '\0'; l = le) {
-	const char *td;
-	char *ed;
-	int langNum;
+    for (strip_lang = 0; strip_lang < 4; strip_lang++) {
+	for (l = lang; *l; l = le) {
+	    const char *td;
+	    char *ed;
+	    int langNum;
 
-	while (*l && *l == ':')			/* skip leading colons */
-	    l++;
-	if (*l == '\0')
-	    break;
-	for (le = l; *le && *le != ':'; le++)	/* find end of this locale */
-	    {};
+	    while (*l && *l == ':')			/* skip leading colons */
+		l++;
+	    if (*l == '\0')
+		break;
+	    for (le = l; *le && *le != ':'; le++)	/* find end of this locale */
+		;
 
-	/* For each entry in the header ... */
-	for (langNum = 0, td = table->data, ed = entry->data;
-	     langNum < entry->info.count;
-	     langNum++, td += strlen(td) + 1, ed += strlen(ed) + 1) {
+	    /* For each entry in the header ... */
+	    for (langNum = 0, td = table->data, ed = entry->data;
+	        langNum < entry->info.count;
+		langNum++, td += strlen(td) + 1, ed += strlen(ed) + 1) {
 
-		if (headerMatchLocale(td, l, le))
-		    return ed;
-
-	}
+		if (headerMatchLocale(td, l, le, strip_lang))
+		    return convert( ed, td, lang );
+	    }
+	}	
     }
 
-    return entry->data;
+    return gettext(entry->data);
 }
 
 /**
