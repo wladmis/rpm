@@ -574,6 +574,7 @@ int parsePrep(Spec spec)
 	    return rc;
     }
 
+    if (!spec->preprocess_mode) {
     saveLines = splitString(getStringBuf(sb), strlen(getStringBuf(sb)), '\n');
     /*@-usereleased@*/
     for (lines = saveLines; *lines; lines++) {
@@ -595,6 +596,7 @@ int parsePrep(Spec spec)
 
     freeSplitString(saveLines);
     sb = freeStringBuf(sb);
+    }
 
     return nextPart;
 }

@@ -8,6 +8,8 @@
 /*@unchecked@*/
 static int _debug = 0;
 
+extern	char	*_rpm_nosource, *_rpm_nopatch;
+
 #include "rpmio_internal.h"
 #include "rpmbuild.h"
 #include "debug.h"
@@ -282,10 +284,14 @@ retry:
 	s += 3;
         match = parseExpressionBoolean(spec, s);
 	if (match < 0) {
+	  if ( spec->readStack->reading ) {
 	    rpmError(RPMERR_UNMATCHEDIF,
 			_("%s:%d: parseExpressionBoolean returns %d\n"),
 			ofi->fileName, ofi->lineNum, match);
 	    return RPMERR_BADSPEC;
+	  } else {
+	    match = 0;
+	  }
 	}
     } else if (! strncmp("%else", s, sizeof("%else")-1)) {
 	s += 5;
@@ -350,6 +356,16 @@ retry:
 	spec->line[0] = '\0';
     }
 
+    if (spec->preprocess_mode) {
+	char *chomped = xstrdup( spec->line );
+	int len = strlen( chomped );
+
+	if ( '\n' == chomped[len-1] ) 
+	    chomped[len-1] = '\0';
+	puts( chomped );
+	chomped = _free( chomped );
+    }
+
     /*@-compmempass@*/ /* FIX: spec->readStack->next should be dependent */
     return 0;
     /*@=compmempass@*/
@@ -376,7 +392,7 @@ extern int noLang;		/* XXX FIXME: pass as arg */
 /*@todo Skip parse recursion if os is not compatible. @*/
 int parseSpec(Spec *specp, const char *specFile, const char *rootURL,
 		const char *buildRootURL, int recursing, const char *passPhrase,
-		char *cookie, int anyarch, int force)
+		char *cookie, int anyarch, int force, int preprocess)
 {
     rpmParseState parsePart = PART_PREAMBLE;
     int initialPackage = 1;
@@ -399,6 +415,7 @@ int parseSpec(Spec *specp, const char *specFile, const char *rootURL,
     spec->specFile = rpmGetPath(specFile, NULL);
     spec->fileStack = newOpenFileInfo();
     spec->fileStack->fileName = xstrdup(spec->specFile);
+    spec->preprocess_mode = preprocess;
     if (buildRootURL) {
 	const char * buildRoot;
 	(void) urlPath(buildRootURL, &buildRoot);
@@ -507,7 +524,7 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 		spec->BASpecs[index] = NULL;
 		if (parseSpec(&(spec->BASpecs[index]),
 				  specFile, spec->rootURL, buildRootURL, 1,
-				  passPhrase, cookie, anyarch, force))
+				  passPhrase, cookie, anyarch, force, preprocess))
 		{
 			spec->BACount = index;
 			spec = freeSpec(spec);
@@ -608,6 +625,13 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
     os = _free(os);
 #endif
   }
+
+    if ( _rpm_nosource || _rpm_nopatch )
+    {
+	spec->noSource = 1;
+	if ( _rpm_nosource ) parseNoSource( spec, _rpm_nosource, RPMTAG_NOSOURCE );
+	if( _rpm_nopatch ) parseNoSource( spec, _rpm_nopatch, RPMTAG_NOPATCH );
+    }
 
     closeSpec(spec);
     *specp = spec;
