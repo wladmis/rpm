@@ -51,7 +51,7 @@ FindPackage()
 			fi
 
 			# Check for pkg contents complete index.
-			if [ -n "$RPM_PKG_CONTENTS_INDEX_ALL" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
+			if [ -n "$RPM_PKG_CONTENTS_INDEX_ALL" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
 				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_ALL")"
 				if [ -n "$package" ]; then
 					echo -E "$package"
@@ -76,8 +76,8 @@ FindPackage()
 			fi
 
 			# Check for pkg contents binary index.
-			if [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
-				package="$(awk -v "f=$r" 'BEGIN {r="^/(s?bin|usr/(s?bin|X11R6/bin))/" f} {if (match($1,r)>0) {print $2; exit 0}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
+			if [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
+				package="$(awk -v "f=$r" 'BEGIN {r="^(/usr(/X11R6)?)?/s?bin/" f} {if (match($1,r)>0) {print $2; exit 0}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
 				if [ -n "$package" ]; then
 					echo -E "$package"
 					continue
