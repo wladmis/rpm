@@ -96,6 +96,7 @@ System/Kernel and hardware
 System/Libraries
 System/Servers
 System/Servers/ZProducts
+System/X11
 System/XFree86
 Terminals
 Text tools

@@ -3789,6 +3789,9 @@ msgstr "Система/Серверы"
 msgid "System/Servers/ZProducts"
 msgstr "Система/Серверы/ZProducts"
 
+msgid "System/X11"
+msgstr "Система/X11"
+
 msgid "System/XFree86"
 msgstr "Система/XFree86"
 
