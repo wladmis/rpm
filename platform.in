@@ -482,17 +482,17 @@
 @alt@
 @alt@%set_autoconf_version() \
 @alt@%global _autoconf_version %* \
-@alt@%add_buildrequires -b autoconf%__autoconf_version \
+@alt@%add_buildrequires -b autoconf_%_autoconf_version \
 @alt@%nil
 @alt@
 @alt@%set_automake_version() \
 @alt@%global _automake_version %* \
-@alt@%add_buildrequires -b automake%__automake_version \
+@alt@%add_buildrequires -b automake_%_automake_version \
 @alt@%nil
 @alt@
 @alt@%set_libtool_version() \
 @alt@%global _libtool_version %* \
-@alt@%add_buildrequires -b libtool%__libtool_version \
+@alt@%add_buildrequires -b libtool_%_libtool_version \
 @alt@%nil
 @alt@
 @alt@%set_gcc_version() \
