@@ -4,7 +4,7 @@
 
 Name: rpm
 Version: %rpm_version
-Release: alt0.12
+Release: alt1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -30,6 +30,8 @@ Url: http://www.rpm.org/
 # ftp://ftp.rpm.org/pub/rpm/dist/
 # cvs -d :pserver:anonymous@cvs.rpm.org:/cvs/devel export -r rpm-4_0 rpm
 Source: %name-%version.tar.bz2
+
+Provides: %_sysconfdir/%name/macros.d
 
 PreReq: lib%name = %version-%release
 PreReq: alt-gpgkeys sh-utils grep perl-base fileutils gawk textutils mktemp shadow-utils
@@ -223,7 +225,8 @@ make apidocs
 %__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/logrotate.d
 %__install -p -m640 scripts/%name.log $RPM_BUILD_ROOT%_sysconfdir/logrotate.d/%name
 
-%__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/%name
+%__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/%name/macros.d
+touch $RPM_BUILD_ROOT%_sysconfdir/%name/macros
 cat << E_O_F > $RPM_BUILD_ROOT%_sysconfdir/%name/macros.db1
 %%_dbapi		1
 E_O_F
@@ -347,7 +350,9 @@ fi
 %config(noreplace,missingok) %_sysconfdir/logrotate.d/%name
 
 %dir %_sysconfdir/%name
-%config(noreplace,missingok) %_sysconfdir/%name/macros.*
+%dir %_sysconfdir/%name/macros.d
+%config(noreplace,missingok) %_sysconfdir/%name/macros
+%config(noreplace,missingok) %_sysconfdir/%name/macros.??*
 
 %rpmdirattr %_localstatedir/%name
 %rpmdbattr %_localstatedir/%name/Basenames
@@ -463,8 +468,10 @@ fi
 %endif #with contrib
 
 %changelog
-* Wed Aug 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt0.12
-- rpmio: implemented MkdirP.
+* Wed Aug 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt1
+- rpmio:
+  + implemented macrofiles globbing.
+  + implemented MkdirP.
 - build/pack.c, lib/psm.c: make use of MkdirP for build.
 - rpmpopt:
   + cloned all rpmq aliases for rpmquery;
@@ -475,8 +482,11 @@ fi
 - macros:
   + added %%__subst;
   + %%___build_pre: do %%__mkdir_p %%_builddir before chdir there.
+- rpmrc: added %_sysconfdir/%name/macros.d/* to macrofiles search list.
+- find-requires: added /etc/rpm/macros.d dependence autodetection.
 - brp-cleanup, brp-compress, brp-strip, compress_files:
   + Added parameter filtering.
+- rpm: provides %_sysconfdir/%name/macros.d
 - rpm-build: requires %_bindir/subst.
 - New group: Graphical desktop/GNUstep.
 - Moved contrib subpackage under with/without logic control and disabled
