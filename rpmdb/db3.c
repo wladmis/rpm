@@ -664,7 +664,7 @@ static int db3byteswapped(dbiIndex dbi)	/*@*/
     int rc = 0;
 
     if (db != NULL) {
-#if (DB_VERSION_MAJOR == 3 && DB_VERSION_MINOR == 3 && DB_VERSION_PATCH == 11) \
+#if (DB_VERSION_MAJOR == 3 && DB_VERSION_MINOR == 3 && DB_VERSION_PATCH >= 11) \
  || (DB_VERSION_MAJOR == 4)
 	int isswapped = 0;
 	rc = db->get_byteswapped(db, &isswapped);
@@ -894,7 +894,7 @@ static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
 
     DB * db = NULL;
     DB_ENV * dbenv = NULL;
-#if (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR == 1)
+#if (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
     DB_TXN * txnid = NULL;
 #endif
     u_int32_t oflags;
@@ -1246,7 +1246,7 @@ static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
 			? dbfullpath : dbfile;
 #endif
 
-#if (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR == 1)
+#if (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
 		rc = db->open(db, txnid, dbpath, dbsubfile,
 		    dbi->dbi_type, oflags, dbi->dbi_perms);
 #else
@@ -1255,7 +1255,7 @@ static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
 #endif
 
 		if (rc == 0 && dbi->dbi_type == DB_UNKNOWN) {
-#if (DB_VERSION_MAJOR == 3 && DB_VERSION_MINOR == 3 && DB_VERSION_PATCH == 11) \
+#if (DB_VERSION_MAJOR == 3 && DB_VERSION_MINOR == 3 && DB_VERSION_PATCH >= 11) \
  || (DB_VERSION_MAJOR == 4)
 		    DBTYPE dbi_type = DB_UNKNOWN;
 		    xx = db->get_type(db, &dbi_type);
