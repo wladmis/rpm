@@ -3,7 +3,7 @@ of the RPM from ALT Linux Team from the version from MandrakeSoft on which
 this one is based upon:
 
 Features and incompatibilities:
-0. Many bug fixes still missing in public release of rpm-3.0.6.
+0. Many bug fixes still missing in public release of rpm-4.0.4.
 1. Advanced and enhanced macros designed to simplify work of packager, including 
   + add_optflags, remove_optflags, and many others (for easy compilation
     tuning);
