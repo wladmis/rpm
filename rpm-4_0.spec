@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt36
+Release: alt37
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -506,6 +506,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Apr 26 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt37
+- build/parseReqs.c(parseRCPOT): better error reporting (#3883).
+- fixup-libraries: recognize PIE objects.
+- platform: added more python macros, from Andrey Orlov.
+- find-requires, find-provides:
+  + updated hooks for python support, from Andrey Orlov
+    with minor tweaks.
+
 * Mon Mar 01 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt36
 - find-requires, find-provides:
   + Implemented hooks for python support, from Andrey Orlov
