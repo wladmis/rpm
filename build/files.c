@@ -507,6 +507,9 @@ static int parseForAttr(char * buf, FileList fl)
     AttrRec ar = &arbuf, ret_ar;
     specdFlags * specdFlags;
 
+    if ( !buf || !fl )
+	return 0;
+    
     if ((p = strstr(buf, (name = "%attr"))) != NULL) {
 	ret_ar = &(fl->cur_ar);
 	specdFlags = &fl->currentSpecdFlags;
@@ -989,8 +992,8 @@ static int parseForSimple(/*@unused@*/Spec spec, Package pkg, char * buf,
 		appendStringBuf(pkg->specialDoc, "DOCDIR=$RPM_BUILD_ROOT");
 		appendLineStringBuf(pkg->specialDoc, buf);
 		appendLineStringBuf(pkg->specialDoc, "export DOCDIR");
-		appendLineStringBuf(pkg->specialDoc, "rm -rf $DOCDIR");
-		appendLineStringBuf(pkg->specialDoc, MKDIR_P " $DOCDIR");
+		appendLineStringBuf(pkg->specialDoc, "rm -rf \"$DOCDIR\"");
+		appendLineStringBuf(pkg->specialDoc, MKDIR_P " \"$DOCDIR\"");
 
 		/*@-temptrans@*/
 		*fileName = buf;
@@ -1001,7 +1004,9 @@ static int parseForSimple(/*@unused@*/Spec spec, Package pkg, char * buf,
 
 	    appendStringBuf(pkg->specialDoc, "cp -pr ");
 	    appendStringBuf(pkg->specialDoc, specialDocBuf);
-	    appendLineStringBuf(pkg->specialDoc, " $DOCDIR");
+	    appendLineStringBuf(pkg->specialDoc, " \"$DOCDIR\"");
+	    appendLineStringBuf(pkg->specialDoc, "chmod -R go-w \"$DOCDIR\"");
+	    appendLineStringBuf(pkg->specialDoc, "chmod -R a+rX \"$DOCDIR\"");
 	}
     }
 
@@ -1846,6 +1851,7 @@ static int processPackageFiles(Spec spec, Package pkg,
     fl.docDirs[fl.docDirCount++] = xstrdup("/usr/share/doc");
     fl.docDirs[fl.docDirCount++] = xstrdup("/usr/share/man");
     fl.docDirs[fl.docDirCount++] = xstrdup("/usr/share/info");
+    fl.docDirs[fl.docDirCount++] = xstrdup("/usr/lib/perl5/man");
     fl.docDirs[fl.docDirCount++] = rpmGetPath("%{_docdir}", NULL);
     fl.docDirs[fl.docDirCount++] = rpmGetPath("%{_mandir}", NULL);
     fl.docDirs[fl.docDirCount++] = rpmGetPath("%{_infodir}", NULL);
@@ -1856,6 +1862,8 @@ static int processPackageFiles(Spec spec, Package pkg,
 
     s = getStringBuf(pkg->fileList);
     files = splitString(s, strlen(s), '\n');
+
+    parseForAttr(rpmExpand("%_defattr", NULL), &fl);
 
     for (fp = files; *fp != NULL; fp++) {
 	s = *fp;
@@ -1930,7 +1938,8 @@ static int processPackageFiles(Spec spec, Package pkg,
     /* Now process special doc, if there is one */
     if (specialDoc) {
 	if (installSpecialDoc) {
-	    (void) doScript(spec, RPMBUILD_STRINGBUF, "%doc", pkg->specialDoc, test);
+	    int rc = doScript(spec, RPMBUILD_STRINGBUF, "%doc", pkg->specialDoc, test);
+	    if (rc) fl.processingFailed = 1;
 	}
 
 	/* Reset for %doc */
@@ -2202,7 +2211,7 @@ int processSourceFiles(Spec spec)
 
 /**
  */
-static StringBuf getOutputFrom(char * dir, char * argv[],
+static StringBuf getOutputFrom(char * dir, const char * argv[],
 			const char * writePtr, int writeBytesLeft,
 			int failNonZero)
 	/*@globals fileSystem, internalState@*/
@@ -2235,11 +2244,16 @@ static StringBuf getOutputFrom(char * dir, char * argv[],
 	(void) close(toProg[0]);
 	(void) close(fromProg[1]);
 
+	if ( rpm_close_all() ) {
+		perror( "rpm_close_all" );
+		_exit( -1 );
+	}
+
 	if (dir) {
 	    (void) chdir(dir);
 	}
 	
-	(void) execvp(argv[0], argv);
+	(void) execvp(argv[0], (char *const *)argv);
 	/* XXX this error message is probably not seen. */
 	rpmError(RPMERR_EXEC, _("Couldn't exec %s: %s\n"),
 		argv[0], strerror(errno));
