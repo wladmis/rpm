@@ -2629,9 +2629,9 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 		const char *n, *v, *r;
 
 		headerNVR(pkg->header, &n, &v, &r);
-		asprintf (&envp[0], "PACKAGE_NAME=%s", n);
-		asprintf (&envp[1], "PACKAGE_VERSION=%s", n);
-		asprintf (&envp[2], "PACKAGE_RELEASE=%s", n);
+		asprintf (&envp[0], "RPM_SUBPACKAGE_NAME=%s", n);
+		asprintf (&envp[1], "RPM_SUBPACKAGE_VERSION=%s", v);
+		asprintf (&envp[2], "RPM_SUBPACKAGE_RELEASE=%s", r);
 		envp[3] = 0;
 	}
 
