@@ -479,9 +479,10 @@ fi
 
 %changelog
 * Tue Oct 22 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt8
-- lib/header.c: headerFindI18NString: check for LANGUAGE first
+- lib/header.c: headerFindI18NString: check for LANGUAGE first.
 - perl.req: s/perl >= /perl-base >= / (Alexey Tourbin)
-- Migrated to gettext-0.11.
+- Commented out old %%perl_* macros.
+- Migrated to gettext-0.11.5.
 
 * Mon Oct 07 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt7
 - Fixed %%doc (was broken in -alt6).
