@@ -63,11 +63,13 @@ find .$RPM_CLEANUP_TOPDIR -type f \(	\
 find .$RPM_CLEANUP_TOPDIR -type d -name CVS -print0 |
 	xargs -r0 rm -vrf --
 
-for d in ./lib ./usr/lib ./usr/X11R6/lib; do
-	[ -d "$d" ] || continue
-	find "$d" -type f -mindepth 1 -maxdepth 1 -name 'lib*.la' -print0 |
-		xargs -r0 rm -fv --
-done
+if [ -z "$RPM_KEEP_LIBTOOL_FILES" ]; then
+	for d in ./lib ./usr/lib ./usr/X11R6/lib; do
+		[ -d "$d" ] || continue
+		find "$d" -type f -mindepth 1 -maxdepth 1 -name 'lib*.la' -print0 |
+			xargs -r0 rm -fv --
+	done
+fi
 
 if [ -d ./etc/pam.d ]; then
 	find ./etc/pam.d -type f -mindepth 1 -maxdepth 1 -print0 |

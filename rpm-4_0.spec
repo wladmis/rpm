@@ -506,6 +506,7 @@ fi
 %changelog
 * Sun Jan 04 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt29
 - brp-cleanup: fixed possible cleanup misses.
+- brp-cleanup, platform: implemented %%_keep_libtool_files support.
 - verify-elf: verify SUID/SGID ELF objects as well.
 - fixup-libraries: fix SUID/SGID libraries as well.
 - find-lang: implemented --with-kde option (aris@, #2666).
