@@ -2579,6 +2579,9 @@ int rpmdbRebuild(const char * prefix, rpmts ts,
     }
     newrootdbpath = rpmGetPath(prefix, newdbpath, NULL);
 
+    rpmlog(RPMLOG_INFO, "rebuilding database %s started\n",
+	rootdbpath);
+
     rpmlog(RPMLOG_DEBUG, "rebuilding database %s into %s\n",
 	rootdbpath, newrootdbpath);
 
@@ -2663,6 +2666,8 @@ int rpmdbRebuild(const char * prefix, rpmts ts,
 	}
     }
     rc = 0;
+    rpmlog(RPMLOG_INFO, "rebuilding database %s finished\n",
+	rootdbpath);
 
 exit:
     if (removedir && !(rc == 0 && nocleanup)) {
