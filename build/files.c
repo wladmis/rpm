@@ -2814,17 +2814,21 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	rpmMessage(RPMMESS_NORMAL, _("Processing files: %s-%s-%s\n"), n, v, r);
 		   
 	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
-	if ( rc ) return rc;
+	if (rc) return rc;
 
     /* XXX This should be added always so that packages look alike.
      * XXX However, there is logic in files.c/depends.c that checks for
      * XXX existence (rather than value) that will need to change as well.
      */
 	if (headerIsEntry(pkg->header, RPMTAG_MULTILIBS)) {
-	    (void) generateDepends(spec, pkg, pkg->cpioList, 1);
-	    (void) generateDepends(spec, pkg, pkg->cpioList, 2);
-	} else
-	    (void) generateDepends(spec, pkg, pkg->cpioList, 0);
+	    rc = generateDepends(spec, pkg, pkg->cpioList, 1);
+	    if (rc) return rc;
+	    rc = generateDepends(spec, pkg, pkg->cpioList, 2);
+	    if (rc) return rc;
+	} else {
+	    rc = generateDepends(spec, pkg, pkg->cpioList, 0);
+	    if (rc) return rc;
+	}
 	/*@-noeffect@*/
 	printDeps(pkg->header);
 	/*@=noeffect@*/
