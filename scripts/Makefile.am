@@ -8,7 +8,7 @@ EXTRA_DIST = \
 	compress_files check-files convertrpmrc.sh cross-build \
 	delayed_rebuilddb find-lang find-package find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
-	fixup-binconfig fixup-pkgconfig fixup-libtool \
+	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
 	functions files.req.list \
 	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
@@ -27,7 +27,7 @@ config_SCRIPTS = \
 	compress_files check-files convertrpmrc.sh cross-build \
 	delayed_rebuilddb find-lang find-package find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
-	fixup-binconfig fixup-pkgconfig fixup-libtool \
+	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
 	functions files.req.list \
 	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
