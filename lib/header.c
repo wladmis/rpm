@@ -2688,7 +2688,7 @@ static char * formatValue(sprintfTag tag, Header h,
 
 	if (val) {
 	    need = strlen(val);
-	} else {
+	} else if (strarray && strarray[element]) {
 	    need = strlen(strarray[element]) + tag->pad + 20;
 	    val = xmalloc(need+1);
 	    strcat(buf, "s");
@@ -2709,7 +2709,7 @@ static char * formatValue(sprintfTag tag, Header h,
 
 	if (val) {
 	    need = strlen(val);
-	} else {
+	} else if (data) {
 	    need = strlen(data) + tag->pad + 20;
 	    val = xmalloc(need+1);
 	    strcat(buf, "s");
