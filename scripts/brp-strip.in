@@ -67,7 +67,7 @@ EOF
 	[ -n "$1" ] && exit "$1" || exit
 }
 
-TEMP=`getopt -n "$PROG" -o hpR:sgSN:K:xXvT: -l help,preserve-dates,remove-section:,skip-files:,strip-all,strip-symbol:,keep-symbol:,discard-all,discard-locals,verbose,topdir: -- "$@"` || USAGE
+TEMP=`getopt -n "$PROG" -o hpR:sgSN:K:xXvT: -l help,preserve-dates,remove-section:,skip-files:,strip-all,strip-unneeded,strip-symbol:,keep-symbol:,discard-all,discard-locals,verbose,topdir: -- "$@"` || USAGE
 eval set -- "$TEMP"
 
 : ${RPM_STRIP_SKIPLIST:=}
