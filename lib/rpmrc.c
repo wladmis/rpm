@@ -1041,7 +1041,7 @@ checkCPU (void)
 		return 0;
 	else
 	{
-		char    buffer[1 + getpagesize ()];
+		char    buffer[BUFSIZ];
 
 		memset (buffer, 0, sizeof buffer);
 		read (fd, buffer, sizeof buffer - 1);
