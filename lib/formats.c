@@ -3,8 +3,8 @@
  */
 
 #include "system.h"
-#include <rpmlib.h>
-#include <rpmmacro.h>	/* XXX for %_i18ndomains */
+#include "rpmlib.h"
+#include "rpmmacro.h"	/* XXX for %_i18ndomains */
 #include "rpmpgp.h"
 #include "manifest.h"
 #include "misc.h"

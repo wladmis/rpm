@@ -4,7 +4,7 @@
 
 #include "system.h"
 
-#include <rpmmacro.h>	/* XXX for rpmExpand */
+#include "rpmmacro.h"	/* XXX for rpmExpand */
 
 #include "psm.h"
 

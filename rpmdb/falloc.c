@@ -12,9 +12,9 @@
  */
 
 #include "system.h"
-#include <rpmio_internal.h>
-#include <rpmmessages.h>
-#include <rpmerr.h>
+#include "rpmio_internal.h"
+#include "rpmmessages.h"
+#include "rpmerr.h"
 #include "falloc.h"
 #include "debug.h"
 

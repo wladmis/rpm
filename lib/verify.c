@@ -6,7 +6,7 @@
 #include "system.h"
 
 #include "psm.h"
-#include <rpmcli.h>
+#include "rpmcli.h"
 
 #include "ugid.h"
 #include "misc.h"	/* XXX for uidToUname() and gnameToGid() */

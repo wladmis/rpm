@@ -8,8 +8,8 @@
 /*@unchecked@*/
 static int _debug = 0;
 
-#include <rpmio_internal.h>
-#include <rpmbuild.h>
+#include "rpmio_internal.h"
+#include "rpmbuild.h"
 #include "debug.h"
 
 /*@access FD_t @*/	/* compared with NULL */

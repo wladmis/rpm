@@ -4,7 +4,7 @@
 
 #include "system.h"
 
-#include <rpmcli.h>
+#include "rpmcli.h"
 
 #include "manifest.h"
 #include "misc.h"	/* XXX for rpmGlob() */

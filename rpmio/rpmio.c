@@ -64,7 +64,7 @@ static int inet_aton(const char *cp, struct in_addr *inp)
 #include "dns.h"
 #endif
 
-#include <rpmio_internal.h>
+#include "rpmio_internal.h"
 #undef	fdFileno
 #undef	fdOpen
 #undef	fdRead

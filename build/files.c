@@ -11,8 +11,8 @@
 #include <regex.h>
 #include <signal.h>	/* getOutputFrom() */
 
-#include <rpmio_internal.h>
-#include <rpmbuild.h>
+#include "rpmio_internal.h"
+#include "rpmbuild.h"
 
 #include "buildio.h"
 

@@ -13,8 +13,8 @@
 
 #include "system.h"
 
-#include <rpmbuild.h>
-#include <rpmlib.h>
+#include "rpmbuild.h"
+#include "rpmlib.h"
 
 #include "debug.h"
 

@@ -29,7 +29,7 @@ extern void regfree (/*@only@*/ regex_t *preg)
 /*@=declundef =exportheader @*/
 #endif
 
-#include <rpmcli.h>
+#include "rpmcli.h"
 
 #include "rpmdb.h"
 #include "fprint.h"

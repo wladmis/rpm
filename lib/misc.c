@@ -10,9 +10,9 @@ static int _debug = 0;
 const char * RPMVERSION = VERSION;
 
 #include "rpmio_internal.h"
-#include <rpmlib.h>
-#include <rpmurl.h>
-#include <rpmmacro.h>	/* XXX for rpmGetPath */
+#include "rpmlib.h"
+#include "rpmurl.h"
+#include "rpmmacro.h"	/* XXX for rpmGetPath */
 
 #include "misc.h"
 #include "debug.h"

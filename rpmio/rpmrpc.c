@@ -4,7 +4,7 @@
  */
 
 #include "system.h"
-#include <rpmio_internal.h>
+#include "rpmio_internal.h"
 #include <popt.h>
 #include "ugid.h"
 #include "debug.h"

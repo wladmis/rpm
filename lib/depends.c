@@ -8,8 +8,8 @@
 
 #include "system.h"
 
-#include <rpmlib.h>
-#include <rpmmacro.h>		/* XXX for rpmExpand() */
+#include "rpmlib.h"
+#include "rpmmacro.h"		/* XXX for rpmExpand() */
 
 #include "depends.h"
 #include "rpmdb.h"		/* XXX response cache needs dbiOpen et al. */

@@ -11,8 +11,8 @@
 /*@=incondefs@*/
 #endif
 
-#include <rpmcli.h>
-#include <rpmbuild.h>
+#include "rpmcli.h"
+#include "rpmbuild.h"
 #include "manifest.h"
 #include "debug.h"
 

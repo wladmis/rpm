@@ -9,10 +9,10 @@
 
 #define	_mymemset(_a, _b, _c)
 
-#include <rpmio_internal.h>
-#include <rpmlib.h>
-#include <rpmmacro.h>	/* XXX rpmGenPath */
-#include <rpmurl.h>	/* XXX urlGetPath */
+#include "rpmio_internal.h"
+#include "rpmlib.h"
+#include "rpmmacro.h"	/* XXX rpmGenPath */
+#include "rpmurl.h"	/* XXX urlGetPath */
 
 #include "falloc.h"
 #include "misc.h"

@@ -17,8 +17,8 @@ typedef	int int32_t;
 
 #include <db3/db.h>
 
-#include <rpmlib.h>
-#include <rpmmacro.h>
+#include "rpmlib.h"
+#include "rpmmacro.h"
 
 #include "rpmdb.h"
 #include "debug.h"

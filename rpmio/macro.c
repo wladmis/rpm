@@ -42,13 +42,13 @@ typedef	FILE * FD_t;
 
 #else
 
-#include <rpmio_internal.h>
-#include <rpmmessages.h>
-#include <rpmerr.h>
+#include "rpmio_internal.h"
+#include "rpmmessages.h"
+#include "rpmerr.h"
 
 #endif
 
-#include <rpmmacro.h>
+#include "rpmmacro.h"
 
 #include "debug.h"
 

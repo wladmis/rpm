@@ -6,8 +6,8 @@
 #include "system.h"
 
 #include "psm.h"
-#include <rpmmacro.h>
-#include <rpmurl.h>
+#include "rpmmacro.h"
+#include "rpmurl.h"
 
 #include "depends.h"
 

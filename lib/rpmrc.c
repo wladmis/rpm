@@ -13,8 +13,8 @@
 #define __power_pc() 0
 #endif
 
-#include <rpmlib.h>
-#include <rpmmacro.h>
+#include "rpmlib.h"
+#include "rpmmacro.h"
 
 #include "misc.h"
 #include "debug.h"

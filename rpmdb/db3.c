@@ -25,9 +25,9 @@ typedef	int int32_t;
 
 #include <db3/db.h>
 
-#include <rpmlib.h>
-#include <rpmmacro.h>
-#include <rpmurl.h>	/* XXX urlPath proto */
+#include "rpmlib.h"
+#include "rpmmacro.h"
+#include "rpmurl.h"	/* XXX urlPath proto */
 
 #include "rpmdb.h"
 

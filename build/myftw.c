@@ -24,7 +24,7 @@ Cambridge, MA 02139, USA.  */
 
 #include "system.h"
 
-#include <rpmio.h>
+#include "rpmio.h"
 
 #ifndef NAMLEN
 #define NAMLEN(a) strlen((a)->d_name)

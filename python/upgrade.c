@@ -11,7 +11,7 @@
 #include <glob.h>	/* XXX rpmio.h */
 #include <dirent.h>	/* XXX rpmio.h */
 
-#include <rpmlib.h>
+#include "rpmlib.h"
 
 #include "hash.h"
 #include "upgrade.h"

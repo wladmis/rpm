@@ -4,8 +4,8 @@
 
 #include "system.h"
 
-#include <rpmdb.h>
-#include <rpmmacro.h>	/* XXX for rpmCleanPath */
+#include "rpmdb.h"
+#include "rpmmacro.h"	/* XXX for rpmCleanPath */
 
 #include "fprint.h"
 #include "debug.h"

@@ -1,8 +1,8 @@
 #include "system.h"
 
-#include <rpmlib.h>
-#include <rpmmacro.h>
-#include <rpmurl.h>
+#include "rpmlib.h"
+#include "rpmmacro.h"
+#include "rpmurl.h"
 
 #include "depends.h"
 

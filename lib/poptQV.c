@@ -5,8 +5,8 @@
 
 #include "system.h"
 
-#include <rpmcli.h>
-#include <rpmbuild.h>
+#include "rpmcli.h"
+#include "rpmbuild.h"
 
 #include "debug.h"
 

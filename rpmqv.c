@@ -10,8 +10,8 @@
 #define	IAM_RPMK
 #endif
 
-#include <rpmcli.h>
-#include <rpmbuild.h>
+#include "rpmcli.h"
+#include "rpmbuild.h"
 
 #define	POPT_NODEPS		1025
 #define	POPT_FORCE		1026
