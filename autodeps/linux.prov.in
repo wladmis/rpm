@@ -217,7 +217,7 @@ FindLibProvs()
 
 				# Output soname.
 				printf %s\\n "$soname"
-				[ -z "$nondefdir" ] || printf "$nondefdir(%s)\\n" "$soname"
+				[ -z "$nondefdir" ] || printf "$nondefdir/%s\\n" "$soname"
 
 				# Output version definitions.
 	    			printf %s\\n "$dump" | awk "-vsoname=$soname" "-vnondefdir=$nondefdir" '
@@ -226,7 +226,7 @@ FindLibProvs()
 					/^[0-9]/ && (start==1) && ($4!="") && ($4!=soname) {
 						printf("%s(%s)\n",soname,$4)
 						if (nondefdir!="")
-							printf("%s(%s(%s))\n",nondefdir,soname,$4)
+							printf("%s/%s(%s)\n",nondefdir,soname,$4)
 					}
 					/^$/ {start=0;}
 				' || return 1
