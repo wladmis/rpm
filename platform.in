@@ -197,7 +197,7 @@
 @alt@	export RPM_PACKAGE_NAME=\"%name\"\
 @alt@	export RPM_PACKAGE_VERSION=\"%version\"\
 @alt@	export RPM_PACKAGE_RELEASE=\"%release\"\
-@alt@	%{?buildroot:export RPM_BUILD_ROOT=\"%{u2p:%buildroot}\"}\
+@alt@	export RPM_BUILD_ROOT=\"%{u2p:%buildroot}\"\
 @alt@	%{?_cleanup_method:export RPM_CLEANUP_METHOD=\"%_cleanup_method\"}\
 @alt@	%{?_compress_method:export RPM_COMPRESS_METHOD=\"%_compress_method\"}\
 @alt@	%{?_fixup_method:export RPM_FIXUP_METHOD=\"%_fixup_method\"}\
@@ -248,7 +248,9 @@
 @alt@	%{?_libtool_version:export LIBTOOL_VERSION=\"%_libtool_version\"}\
 @alt@	%{?_gcc_version:export GCC_VERSION=\"%_gcc_version\"}\
 @alt@	\
-@alt@	export MAKEFLAGS=\"--print-directory\"\
+@alt@	export PAM_SO_SUFFIX=\"%{_pam_so_suffix}\"\
+@alt@	\
+@alt@	export MAKEFLAGS=\"-w PAM_SO_SUFFIX=%_pam_so_suffix\"\
 @alt@	\
 @alt@	%{verbose:set -x}%{!verbose:exec > /dev/null}\
 @alt@	umask 022\
