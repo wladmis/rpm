@@ -400,6 +400,46 @@
 @alt@%packagerName	%(echo -E '%packager' |sed -e 's/[[:space:]]*<.*//')
 @alt@%packagerAddress	%(echo -E '%packager' |sed -e 's/.*<\\\([^<>]\\+@[^<>]\\+\\\)>.*/\\1/')
 @alt@
+@alt@#
+@alt@# With/without/enable/disable logic.
+@alt@#
+@alt@
+@alt@# Set with/without default value.
+@alt@%def_with() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _with_%{1} --with-%{1}}}}
+@alt@%def_without() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _without_%{1} --without-%{1}}}}
+@alt@
+@alt@# Set enable/disable default value.
+@alt@%def_enable() %{expand:%%{!?_enable_%{1}: %%{!?_disable_%{1}: %%global _enable_%{1} --enable-%{1}}}}
+@alt@%def_disable() %{expand:%%{!?_enable_%{1}: %%{!?_disable_%{1}: %%global _disable_%{1} --disable-%{1}}}}
+@alt@
+@alt@# Check whether both _with_%{1} and _without_%{1} are defined.
+@alt@%check_def() %{expand:%%{?_with_%{1}: %%{?_without_%{1}: %%{error: both _with_%{1} and _without_%{1} are defined}}}} \
+@alt@	%{expand:%%{?_enable_%{1}: %%{?_disable_%{1}: %%{error: both _enable_%{1} and _disable_%{1} are defined}}}}
+@alt@
+@alt@# Check for defined/undefined.
+@alt@%defined() %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
+@alt@%undefined() %{expand:%%{?%{1}:0}%%{!?%{1}:1}}
+@alt@
+@alt@# ifdef/ifndef.
+@alt@%ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
+@alt@%ifndef() %if %{expand:%%{?%{1}:0}%%{!?%{1}:1}}
+@alt@
+@alt@# Check for with/without.
+@alt@%with() %{expand:%%{?_with_%{1}:1}%%{!?_with_%{1}:0}}
+@alt@%without() %{expand:%%{?_without_%{1}:1}%%{!?_without_%{1}:0}}
+@alt@
+@alt@# if_with/if_without.
+@alt@%if_with() %if %{expand:%%{?_with_%{1}:1}%%{!?_with_%{1}:0}}
+@alt@%if_without() %if %{expand:%%{?_without_%{1}:1}%%{!?_without_%{1}:0}}
+@alt@
+@alt@# Check for enabled/disabled.
+@alt@%enabled() %{expand:%%{?_enable_%{1}:1}%%{!?_enable_%{1}:0}}
+@alt@%disabled() %{expand:%%{?_disable_%{1}:1}%%{!?_disable_%{1}:0}}
+@alt@
+@alt@# if_enabled/if_disabled.
+@alt@%if_enabled() %if %{expand:%%{?_enable_%{1}:1}%%{!?_enable_%{1}:0}}
+@alt@%if_disabled() %if %{expand:%%{?_disable_%{1}:1}%%{!?_disable_%{1}:0}}
+@alt@
 @alt@# Fetch name/serial/version/release fields.
 @alt@%get_version()	%(rpm -q --qf '%%{VERSION}' %1 2>/dev/null)
 @alt@%get_release()	%(rpm -q --qf '%%{RELEASE}' %1 2>/dev/null)
