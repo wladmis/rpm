@@ -482,7 +482,9 @@ fi
 - Fixed Makefiles to correct librpm*-4.0.4.so dependencies.
 - Do not package .la files.
 - brp-cleanup: remove lib*.la files from /lib, /usr/lib, and /usr/X11R6/lib.
-- brp-fix-perms, fixup-libraries: strip executable bit from non-executable libraries.
+- brp-fix-perms, fixup-libraries:
+  + strip executable bit from non-executable libraries;
+  + ensure that file objects in /usr/ are user-writable.
 - rpmbuild --rebuild/--recompile: implemented support for new macros:
   %%_rpmbuild_clean and %%_rpmbuild_packagesource.
 - Updated README.ALT-ru_RU.KOI8-R.

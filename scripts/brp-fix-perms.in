@@ -33,7 +33,7 @@ done
 # Following objects should not be group/world writable.
 for d in usr/*; do
 	[ "$d" = "usr/src" -o -L "$d" -o ! -d "$d" ] ||
-		chmod -R go-w "$d"
+		chmod -R u+w,go-w "$d"
 done
 
 # Following files should not be group/world readable.
