@@ -213,25 +213,19 @@ fi
 
 while IFS= read -r f; do
 	if [ -n "$FIND_FILES" ]; then
-		if [ -z "${f%%$RPM_BUILD_ROOT/etc/xinetd.d/*}" ]; then
-			[ -z "$FOUND_REQS" ] && FOUND_REQS="xinetd" || FOUND_REQS="$FOUND_REQS
-xinetd"
-		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/logrotate.d/*}" ]; then
-			[ -z "$FOUND_REQS" ] && FOUND_REQS="logrotate" || FOUND_REQS="$FOUND_REQS
-logrotate"
-		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/cron.d/*}" ]; then
-			[ -z "$FOUND_REQS" ] && FOUND_REQS="vixie-cron" || FOUND_REQS="$FOUND_REQS
-vixie-cron"
-		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/chroot.d/*}" ]; then
-			[ -z "$FOUND_REQS" ] && FOUND_REQS="chrooted" || FOUND_REQS="$FOUND_REQS
-chrooted"
-		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/security/console.apps/*}" ]; then
-			[ -z "$FOUND_REQS" ] && FOUND_REQS="consolehelper" || FOUND_REQS="$FOUND_REQS
-consolehelper"
-		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/rpm/macros.d/*}" ]; then
-			[ -z "$FOUND_REQS" ] && FOUND_REQS="/etc/rpm/macros.d" || FOUND_REQS="$FOUND_REQS
-/etc/rpm/macros.d"
-		fi
+		for p in \
+			/etc/chroot.d \
+			/etc/cron.d \
+			/etc/logrotate.d \
+			/etc/rpm/macros.d \
+			/etc/security/console.apps \
+			/etc/xinetd.d \
+		; do
+			if [ -z "${f%%$RPM_BUILD_ROOT$p/*}" ]; then
+				[ -z "$FOUND_REQS" ] && FOUND_REQS="$p" || FOUND_REQS="$FOUND_REQS
+$p"
+			fi
+		done
 	fi
 	t="$(file -b "$f")"
 	if [ -z "${t##* text*}" ]; then
