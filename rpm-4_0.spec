@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt9
+Release: alt10
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -478,6 +478,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Oct 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt10
+- New macros:
+  %set_{autoconf,automake,libtool}_version.
+
 * Fri Oct 25 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt9
 - find-requires: added libperl/nolibperl options.
 - New group: System/Servers/ZProducts.

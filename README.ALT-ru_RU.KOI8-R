@@ -1,5 +1,5 @@
                                ALT Linux RPM:
-                     особенности версии rpm-4.0.4-alt5
+                     особенности версии rpm-4.0.4-alt10
 
                      Dmitry V. Levin <ldv@altlinux.org>
                                ALT Linux Team
@@ -123,6 +123,19 @@ BuildRoot.
 
    По умолчанию, стандартный набор %opflags состоит из ``%optflags_core
    %optflags_warnings %optflags_optimization''.
+
+Выбор версии используемых GNU Autotools.
+
+   %set_autoconf_version:
+          выбор версии autoconf из множества установленных в системе;
+
+   %set_automake_version:
+          выбор версии automake из множества установленных в системе;
+
+   %set_libtool_version:
+          выбор версии libtool из множества установленных в системе.
+
+   По умолчанию используется версия default.
 
 Макросы-надстройки над утилитой make.
 

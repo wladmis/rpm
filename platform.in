@@ -408,6 +408,10 @@
 @alt@%add_findreq_skiplist()	%global _findreq_skiplist %_findreq_skiplist %*
 @alt@%add_findprov_skiplist()	%global _findprov_skiplist %_findprov_skiplist %*
 @alt@
+@alt@%set_autoconf_version()	%global _autoconf_version %*
+@alt@%set_automake_version()	%global _automake_version %*
+@alt@%set_libtool_version()	%global _libtool_version %*
+@alt@
 @alt@%strip_executable	RPM_STRIP_METHOD=executable @RPMCONFIGDIR@/brp-strip
 @alt@%strip_relocatable	RPM_STRIP_METHOD=relocatable @RPMCONFIGDIR@/brp-strip
 @alt@%strip_shared	RPM_STRIP_METHOD=shared @RPMCONFIGDIR@/brp-strip

@@ -635,6 +635,12 @@
   unset CCACHE_CC CCACHE_DIR ||:\
   %{?__ccache_cc:export CCACHE_CC=\"%__ccache_cc\"}\
   %{?__ccache_dir:export CCACHE_DIR=\"%__ccache_dir\"}\
+  \
+  unset AUTOCONF_VERSION AUTOMAKE_VERSION LIBTOOL_VERSION ||:\
+  %{?_autoconf_version:export AUTOCONF_VERSION=\"%_autoconf_version\"}\
+  %{?_automake_version:export AUTOMAKE_VERSION=\"%_automake_version\"}\
+  %{?_libtool_version:export LIBTOOL_VERSION=\"%_libtool_version\"}\
+  \
   %{verbose:set -x}%{!verbose:exec > /dev/null}\
   umask 022\
   %__mkdir_p %{u2p:%_builddir}\
