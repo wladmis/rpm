@@ -14,9 +14,7 @@ INCLUDES = -I. \
 noinst_HEADERS = db-py.h hash.h header-py.c header-py.h upgrade.h
 
 mylibs= \
-	$(top_builddir)/lib/librpm.la \
-	$(top_builddir)/rpmdb/librpmdb.la \
-	$(top_builddir)/rpmio/librpmio.la
+	$(top_builddir)/lib/librpm.la
 
 LDADD =
 

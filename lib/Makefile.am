@@ -24,7 +24,7 @@ mylibpaths = \
 	-L$(top_builddir)/rpmdb/.libs \
 	-L$(top_builddir)/rpmio/.libs
 
-mylibs = -lrpm -lrpmdb -lrpmio @LIBS@ @LIBINTL@ @LIBMISC@
+mylibs = -lrpm -lrpmdb -lrpmio @LIBS@ @LIBINTL@
 LIBS =
 
 lib_LTLIBRARIES = librpm.la
@@ -37,12 +37,8 @@ librpm_la_SOURCES = \
 	signature.c stringbuf.c tagName.c tagtable.c transaction.c \
 	verify.c
 librpm_la_LDFLAGS = -release @VERSION@
-
-# XXX Add internal libtool dependence
-install-data-local:
-	@cd $(DESTDIR)/$(libdir) && \
-	sed -e "s|^dependency_libs='|& -lrpmdb -lrpmio|" < librpm.la > .librpm.la && \
-	mv .librpm.la librpm.la
+librpm_la_LIBADD = $(top_builddir)/rpmdb/librpmdb.la $(top_builddir)/rpmio/librpmio.la @LIBPOPT@
+librpm_la_DEPENDENCIES = $(top_builddir)/rpmdb/librpmdb.la $(top_builddir)/rpmio/librpmio.la
 
 tagtable.c: rpmlib.h 
 	@echo '#include "system.h"' > tagtable.c

@@ -6,8 +6,7 @@ EXTRA_DIST = tdigest.c tficl.c tkey.c trpmio.c
 
 EXTRA_PROGRAMS = tdigest tkey tring trpmio dumpasn1
 
-INCLUDES = -I. \
-	@INCPATH@
+INCLUDES = -I. @INCPATH@
 
 pkgincdir = $(pkgincludedir)
 pkginc_HEADERS = \
@@ -19,30 +18,24 @@ lib_LTLIBRARIES = librpmio.la
 librpmio_la_SOURCES = digest.c macro.c rpmio.c rpmlog.c rpmmalloc.c \
 	rpmpgp.c rpmrpc.c strcasecmp.c stubs.c url.c ugid.c
 librpmio_la_LDFLAGS = -release @VERSION@
-librpmio_la_LIBADD = @LIBBEECRYPT@
-
-# XXX Add internal libtool dependence
-install-data-local:
-	@cd $(DESTDIR)/$(libdir) && \
-	sed -e 's,^\(dependency_libs=.*\) -lrt,\1,g;s,^\(dependency_libs=.*\) -lpthread,\1,g' < librpmio.la > .librpmio.la && \
-	mv .librpmio.la librpmio.la
+librpmio_la_LIBADD = @LIBBEECRYPT@ @LIBBZ2@ @LIBZ@
 
 clean-local:
 	rm -f *.o
 
 tdigest_SOURCES = tdigest.c
-tdigest_LDADD = librpmio.la -lpopt
+tdigest_LDADD = librpmio.la @LIBPOPT@
 
 trpmio_SOURCES = trpmio.c
-trpmio_LDADD = librpmio.la -lpopt
+trpmio_LDADD = librpmio.la @LIBPOPT@
 
 tkey_SOURCES = tkey.c
 tkey_LDFLAGS = -all-static
-tkey_LDADD = librpmio.la -lpopt
+tkey_LDADD = librpmio.la @LIBPOPT@
 
 tring_SOURCES = tring.c
 tring_LDFLAGS = -all-static
-tring_LDADD = librpmio.la -lpopt
+tring_LDADD = librpmio.la @LIBPOPT@
 
 dumpasn1_SOURCES = dumpasn1.c
 

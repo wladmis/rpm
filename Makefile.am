@@ -28,7 +28,7 @@ myLDADD = \
 	$(top_builddir)/lib/librpm.la \
 	$(top_builddir)/rpmdb/librpmdb.la \
 	$(top_builddir)/rpmio/librpmio.la \
-	@LIBBEECRYPT@ @LIBINTL@ @LIBMISC@
+	@LIBINTL@
 
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
 rpmbin_PROGRAMS = rpm
@@ -89,7 +89,7 @@ rpmq.o:	rpmqv.c
 
 rpm2cpio_SOURCES =	rpm2cpio.c
 rpm2cpio_LDFLAGS =	$(myLDFLAGS)
-rpm2cpio_LDADD =	$(myLDADD) @LIBMISC@
+rpm2cpio_LDADD =	$(myLDADD)
 
 $(PROGRAMS): 		$(myLDADD) @WITH_APIDOCS_TARGET@
 

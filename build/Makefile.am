@@ -21,12 +21,8 @@ librpmbuild_la_SOURCES = \
 	parseFiles.c parsePreamble.c parsePrep.c parseReqs.c parseScript.c \
 	parseSpec.c poptBT.c reqprov.c spec.c
 librpmbuild_la_LDFLAGS = -release @VERSION@
-
-# XXX Add internal libtool dependence
-install-data-local:
-	@cd $(DESTDIR)/$(libdir) && \
-	sed -e "s|^dependency_libs='|& -lrpm|" < librpmbuild.la > .librpmbuild.la && \
-	mv .librpmbuild.la librpmbuild.la
+librpmbuild_la_LIBADD = $(top_builddir)/lib/librpm.la
+librpmbuild_la_DEPENDENCIES = $(top_builddir)/lib/librpm.la
 
 .PHONY:	sources
 sources:
