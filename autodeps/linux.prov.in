@@ -37,6 +37,7 @@ real_buildroot=$(readlink -fv "$RPM_BUILD_ROOT") || exit 1
 FIND_LIBS=
 FIND_PAM=
 FIND_PERL=
+FIND_PYTHON=
 FIND_SHELL=
 
 ParseMethod()
@@ -48,6 +49,7 @@ ParseMethod()
 				FIND_LIBS=
 				FIND_PAM=
 				FIND_PERL=
+				FIND_PYTHON=
 				FIND_SHELL=
 				;;
 			lib)
@@ -68,6 +70,12 @@ ParseMethod()
 			noperl)
 				FIND_PERL=
 				;;
+			python)
+				FIND_PYTHON=1
+				;;
+			nopython)
+				FIND_PYTHON=
+				;;
 			sh|shell)
 				FIND_SHELL=1
 				;;
@@ -78,6 +86,7 @@ ParseMethod()
 				FIND_LIBS=1
 				FIND_PAM=1
 				FIND_PERL=1
+				FIND_PYTHON=1
 				FIND_SHELL=1
 				;;
 			default|yes|true)
@@ -92,7 +101,7 @@ ParseMethod()
 }
 ParseMethod $RPM_FINDPROV_METHOD
 
-if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" -a -z "$FIND_SHELL" ]; then
+if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" -a -z "$FIND_PYTHON" -a -z "$FIND_SHELL" ]; then
 	# Nothing to do
 	cat >/dev/null 2>&1
 	exit 0
@@ -111,6 +120,7 @@ esac
 
 FOUND_PROVS=
 LIST_PERL=
+LIST_PYTHON=
 
 ListScriptProvs()
 {
@@ -152,14 +162,29 @@ $r"
 $f"
 		fi
 	fi
+
+	if [ -z "${f%%*.py}" -o -z "${f%%*.pyo}" -o -z "${f%%*.pyc}" ]; then
+		if [ -n "$FIND_PYTHON" ]; then
+			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
+$f"
+		fi
+	fi
 }
 
 FindPerlProvs()
 {
-	[ -n "$LIST_PERL" ] || return 0
-
+	[ -n "$FIND_PERL" -a -n "$LIST_PERL" ] || return 0
 	local r
 	r="$(printf %s\\n "$LIST_PERL" |@RPMCONFIGDIR@/perl.prov)" || return 1
+	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+$r"
+}
+
+FindPythonProvs()
+{
+	[ -n "$FIND_PYTHON" -a -n "$LIST_PYTHON" ] || return 0
+	local r
+	r="$(printf %s\\n "$LIST_PYTHON" |@RPMCONFIGDIR@/python.prov.py)" || return 1
 	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
 }
@@ -268,6 +293,8 @@ while IFS= read -r f; do
 			r="$(FindLibProvs "$f")"
 			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
+			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
+$f"
 		fi
 	else
 		echo "Not found: $f" >&2
@@ -276,6 +303,9 @@ done
 
 # Find provides in listed perl scripts, if any
 FindPerlProvs
+
+# Find provides in listed python scripts and shared libraries, if any
+FindPythonProvs
 
 # Finally sort and print them.
 printf %s "$FOUND_PROVS" |LC_COLLATE=C sort -u
