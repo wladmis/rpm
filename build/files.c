@@ -2792,8 +2792,7 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
 	if ( rc ) return rc;
 
-	if (strcmp(n, "glibc-devel-static") {
-	{
+	if (strcmp(n, "glibc-devel-static")) {
 	    const char suffix[] = "-devel-static";
 	    const char *p = strstr (n, suffix);
 
