@@ -413,7 +413,7 @@ static int addDefault(defaultEntry * table, int * tableLen, char * line,
     return 0;
 }
 
-static /*@null@*/ const canonEntry lookupInCanonTable(const char * name,
+static /*@null@*/ canonEntry lookupInCanonTable(const char * name,
 		const canonEntry table, int tableLen)
 	/*@*/
 {
@@ -1042,7 +1042,7 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 	    strcpy(un.machine, "mipsel");
 #	elif defined(__MIPSEB__) || defined(__MIPSEB) || defined(_MIPSEB)
 	   /* big endian */
-		strcpy(un.machine, "mipseb");
+		strcpy(un.machine, "mips");
 #	endif
 
 #	if defined(__hpux) && defined(_SC_CPU_VERSION)
@@ -1413,7 +1413,7 @@ void rpmGetOsInfo(const char ** name, int * num)
     getMachineInfo(OS, name, num);
 }
 
-void rpmRebuildTargetVars(const char ** target, const char ** canontarget)
+static void rpmRebuildTargetVars(const char ** target, const char ** canontarget)
 {
 
     char *ca = NULL, *co = NULL, *ct = NULL;
