@@ -29,6 +29,8 @@ FIND_REQ="/bin/sh --rpm-requires"
 $FIND_REQ </dev/null >/dev/null 2>&1
 
 file="$1"
+fname="${file##$RPM_BUILD_ROOT}"
+dname="${fname%/*}"
 extra=
 
 if ! reqs="$($FIND_REQ "$file" 2>/dev/null)"; then
@@ -52,7 +54,14 @@ FindReqs()
 			alias|keyword|function|builtin)
 				continue ;;
 		esac
-		FindPackage "$file" "$r"
+		if ! grep -qs "^$r\$" "$RPM_BUILD_ROOT/$dname/.provides.sh"; then
+			local f
+			if f=`grep -qs "^$r\$" "/$dname/.provides.sh"`; then
+				echo -E "$dname($r)"
+			else
+				FindPackage "$file" "$r"
+			fi
+		fi
 	done
 }
 

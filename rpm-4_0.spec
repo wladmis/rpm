@@ -483,8 +483,8 @@ fi
 
 %changelog
 * Thu Apr 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt16
-- Fixed segfault on "rpmquery --qf '%{FILENAMES}' ncurses" command.
-- Implemented shell functions provides autodetection.
+- Fixed segfault on "rpmquery --qf '%{FILENAMES}' basesystem" command.
+- Implemented shell functions requires/provides autodetection.
 - Do not build API docs by default.
 
 * Tue Apr 22 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt15
