@@ -21,7 +21,144 @@
 
 PROG="${0##*/}"
 
+WORKDIR="$(mktemp -dt "$PROG.XXXXXXXXXX")"
+TMPFILE="$WORKDIR/tmp"
+f_saved="$WORKDIR/sav"
+f_new="$WORKDIR/new"
+
+exit_handler()
+{
+	RETVAL=$?
+	trap '' EXIT
+	rm -rf -- "$WORKDIR"
+	exit $RETVAL
+}
+
+trap exit_handler SIGHUP SIGINT SIGTERM SIGQUIT SIGPIPE EXIT
+
 : ${RPM_FIXUP_SKIPLIST:=}
+
+fix()
+{
+	local fname
+	fname="${f#$RPM_BUILD_ROOT}"
+	fname="${fname#.}"
+
+	# fetch parameters
+
+	local includedir=
+	local libdir=
+	local prefix=
+	local exec_prefix=
+	sed -ne "s/^\(\([a-z_A-Z]*\)\(prefix\|dir\|path\)\)=\(.*\)\$/local \1=\4/pg" "$f" >"$TMPFILE"
+
+	# source parameters
+
+	[ ! -s "$TMPFILE" ] || . "$TMPFILE"
+
+	local saved_val=
+	local old_val=
+	local new_val=
+
+	while [ "$prefix" != "$saved_val" ]; do
+		saved_val="$prefix"
+		prefix="${prefix//\/\///}"
+	done
+
+	while [ "$exec_prefix" != "$saved_val" ]; do
+		saved_val="$exec_prefix"
+		exec_prefix="${exec_prefix//\/\///}"
+	done
+
+	while [ "$includedir" != "$saved_val" ]; do
+		saved_val="$includedir"
+		includedir="${includedir//\/\///}"
+	done
+
+	saved_val=
+	while [ "$libdir" != "$saved_val" ]; do
+		saved_val="$libdir"
+		libdir="${libdir//\/\///}"
+	done
+
+	# fix cflags
+
+	cat "$f" >"$f_new"
+
+	>"$f_saved"
+	while ! cmp -s "$f_new" "$f_saved"; do
+		cat "$f_new" >"$f_saved"
+		subst 's,\(^\|[="'\'']\| \+\)-I/usr\(/local\)\?/include\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+	done
+
+	if [ "$includedir" = /usr/include ]; then
+		>"$f_saved"
+		while ! cmp -s "$f_new" "$f_saved"; do
+			cat "$f_new" >"$f_saved"
+			subst 's,\(^\|-I\|[="'\'']\| \+\)\${includedir}\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+		done
+	fi
+
+	if [ "$exec_prefix" = /usr ]; then
+		>"$f_saved"
+		while ! cmp -s "$f_new" "$f_saved"; do
+			cat "$f_new" >"$f_saved"
+			subst 's,\(^\|-I\|[="'\'']\| \+\)\${exec_prefix}/include\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+		done
+	fi
+
+	if [ "$prefix" = /usr ]; then
+		>"$f_saved"
+		while ! cmp -s "$f_new" "$f_saved"; do
+			cat "$f_new" >"$f_saved"
+			subst 's,\(^\|-I\|[="'\'']\| \+\)\${prefix}/include\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+		done
+	fi
+
+	if ! cmp -s "$f_new" "$f"; then
+		diff -u "$f" "$f_new" >&2 ||:
+		cat "$f_new" >"$f"
+	fi
+
+	# fix libs
+
+	cat "$f" >"$f_new"
+
+	>"$f_saved"
+	while ! cmp -s "$f_new" "$f_saved"; do
+		cat "$f_new" >"$f_saved"
+		subst 's@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)/usr\(/local\)\?/lib\($\|["'\'']\| \+\)@\1\4@g' -- "$f_new"
+	done
+
+	if [ "$libdir" = /usr/lib ]; then
+		>"$f_saved"
+		while ! cmp -s "$f_new" "$f_saved"; do
+			cat "$f_new" >"$f_saved"
+			subst 's@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\${libdir}\($\|["'\'']\| \+\)@\1\3@g' -- "$f_new"
+		done
+	fi
+
+	if [ "$exec_prefix" = /usr ]; then
+		>"$f_saved"
+		while ! cmp -s "$f_new" "$f_saved"; do
+			cat "$f_new" >"$f_saved"
+			subst 's@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\${exec_prefix}/lib\($\|["'\'']\| \+\)@\1\3@g' -- "$f_new"
+		done
+	fi
+
+	if [ "$prefix" = /usr ]; then
+		>"$f_saved"
+		while ! cmp -s "$f_new" "$f_saved"; do
+			cat "$f_new" >"$f_saved"
+			subst 's@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\${prefix}/lib\($\|["'\'']\| \+\)@\1\3@g' -- "$f_new"
+		done
+	fi
+
+	if ! cmp -s "$f_new" "$f"; then
+		diff -u "$f" "$f_new" >&2 ||:
+		cat "$f_new" >"$f"
+	fi
+}
 
 rc=0
 for f in "$@"; do
@@ -39,7 +176,11 @@ for f in "$@"; do
 		done
 	fi
 
-	#
+	t="$(/usr/bin/file -b "$f")"
+
+	[ -z "${t##Bourne* shell script text*}" ] || continue
+
+	fix
 done
 
 exit $rc
