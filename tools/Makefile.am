@@ -17,7 +17,7 @@ EXTRA_PROGRAMS = rpminject rpmsort
 #myLDFLAGS= -L$(top_builddir)/build -L$(top_builddir)/lib \
 #	-L$(top_builddir)/rpmio
 
-myLDADD = \
+LDADD = \
 	$(top_builddir)/build/librpmbuild.la \
 	$(top_builddir)/lib/librpm.la \
 	$(top_builddir)/rpmdb/librpmdb.la \
@@ -32,16 +32,17 @@ pkgbin_PROGRAMS = javadeps filesize relative pdeath_execute
 
 rpmsort_SOURCES = rpmsort.c
 rpmsort_LDFLAGS = @LDFLAGS_STATIC@
-rpmsort_LDADD =	$(myLDADD)
 
 javadeps_SOURCES = javadeps.c
-javadeps_LDADD = $(myLDADD)
 
 filesize_SOURCES = filesize.c
+filesize_LDADD =
 
 relative_SOURCES = relative.c
+relative_LDADD =
 
 pdeath_execute_SOURCES = pdeath_execute.c
+pdeath_execute_LDADD =
 
 $(PROGRAMS): $(LDADD)
 
@@ -49,5 +50,5 @@ gnash.o: gnash.c
 	$(COMPILE) -o $@ -c gnash.c
 
 gnash: gnash.o
-	$(LINK) -all-static -o $@ gnash.o $(myLDADD)
+	$(LINK) -all-static -o $@ gnash.o $(LDADD)
 
