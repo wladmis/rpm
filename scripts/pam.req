@@ -32,7 +32,7 @@ sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|requir
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+include[[:space:]].*#libpam(include)#pg' <"$file" |sort -u
 
 # pam(config) via include
-sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+include[[:space:]]\+\(/etc/pam\.d/\)\?\([^[:space:]]\+\).*#pam(\3)#pg' <"$file" |sort -u
+sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+include[[:space:]]\+\(/etc/pam\.d/\)\?\([^[:space:]]\+\).*#pam'$PAM_NAME_SUFFIX'(\3)#pg' <"$file" |sort -u
 
 # pam(config) via pam_stack
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib/security/\)\?pam_stack\.so[[:space:]]\+service=\([^[:space:]]\+\).*#pam(\4)#pg' <"$file" |sort -u

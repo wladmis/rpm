@@ -25,4 +25,4 @@ file="$1"
 
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
-echo "pam(${file##*/})"
+echo "pam$PAM_NAME_SUFFIX(${file##*/})"
