@@ -141,7 +141,7 @@ sub process_file {
 
       # statement requires a particular version of Perl
 
-      print "perl >= " . package_version($2, '%.5f') . "\n";
+      print "perl-base >= " . package_version($2, '%.5f') . "\n";
       next;
     }
     elsif (m/^\s*require[\s(]+([_A-Za-z][\w:']*)/) {
