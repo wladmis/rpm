@@ -3690,28 +3690,31 @@ msgid "Publishing"
 msgstr "Издательство"
 
 msgid "Sciences/Astronomy"
-msgstr "Наука/Астрономия"
+msgstr "Науки/Астрономия"
 
 msgid "Sciences/Biology"
-msgstr "Наука/Биология"
+msgstr "Науки/Биология"
 
 msgid "Sciences/Chemistry"
-msgstr "Наука/Химия"
+msgstr "Науки/Химия"
 
 msgid "Sciences/Computer science"
-msgstr "Наука/Компьютерные науки"
+msgstr "Науки/Компьютерные науки"
 
 msgid "Sciences/Geosciences"
-msgstr "Наука/Науки о земле"
+msgstr "Науки/Науки о земле"
 
 msgid "Sciences/Mathematics"
-msgstr "Наука/Математика"
+msgstr "Науки/Математика"
+
+msgid "Sciences/Medicine"
+msgstr "Науки/Медицина"
 
 msgid "Sciences/Other"
-msgstr "Наука/Прочее"
+msgstr "Науки/Прочее"
 
 msgid "Sciences/Physics"
-msgstr "Наука/Физика"
+msgstr "Науки/Физика"
 
 msgid "Security/Antivirus"
 msgstr "Безопасность/Антивирус"
