@@ -48,7 +48,7 @@ BuildPreReq: automake >= 1.6.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindi
 BuildConflicts: rpm-devel
 
 # Automatically added by buildreq on Thu Nov 01 2001
-BuildRequires: bison bzlib-devel-static cpio gcc-c++ gettext-devel gnupg libbeecrypt-devel-static libdb4-devel-static libpopt-devel-static libstdc++-devel openssh-clients zlib-devel-static
+BuildRequires: bison bzlib-devel-static cpio gcc-c++ gettext-tools gnupg libbeecrypt-devel-static libdb4-devel-static libpopt-devel-static libstdc++-devel openssh-clients zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -84,7 +84,7 @@ Obsoletes: spec-helper
 Conflicts: patch < 2.5
 PreReq: shadow-utils
 PreReq: %name = %version-%release
-Requires: autoconf automake bison cpio gcc gettext glibc-devel file kernel-headers
+Requires: autoconf automake bison cpio gcc gettext-tools glibc-devel file kernel-headers
 Requires: libtool m4 make mktemp net-tools patch procps psmisc sed sh texinfo which
 Requires: bzip2 >= 1:1.0.2-alt4
 Requires: fileutils >= 4.1.11-alt4
@@ -185,7 +185,7 @@ export AUTOMAKE=automake-1.6
 export AUTOCONF=autoconf_2.5
 export AUTOHEADER=autoheader_2.5
 
-gettextize --copy --force
+echo |gettextize --copy --force
 ./autogen.sh --noconfigure
 export \
 	ac_cv_path_CTAGS=/usr/bin/ctags
