@@ -802,6 +802,35 @@ exit:
 }
 /*@=moduncon@*/
 
+static inline int parseYesNo( const char *s )
+{
+    if (!s ||
+        !strcasecmp(s, "no") ||
+        !strcasecmp(s, "false") ||
+        !strcasecmp(s, "off") ||
+        !strcmp(s, "0")) {
+        return 0;
+    }
+
+    return 1;
+}
+
+static	int	do_wait_for_lock( void )
+{
+	const char *str = rpmExpand( "%{_wait_for_lock}", NULL );
+	int lock = ( str && *str != '%' ) ? parseYesNo( str ) : 1;
+	str  =_free( str );
+
+	if ( lock )
+	{
+		struct timespec	t = { 0, 100000000 };
+		nanosleep( &t, 0 );
+		return 1;
+	}
+	else
+		return 0;
+}
+
 static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem @*/
@@ -1216,12 +1245,15 @@ static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
 				? F_WRLCK : F_RDLCK;
 		    l.l_pid = 0;
 
+		    for (;;) {
 		    rc = fcntl(fdno, F_SETLK, (void *) &l);
 		    if (rc) {
 			/* Warning only if using CDB locking. */
 			rc = ((dbi->dbi_use_dbenv &&
 				(dbi->dbi_eflags & DB_INIT_CDB))
 			    ? 0 : 1);
+			if ( rc && (EACCES == errno || EAGAIN == errno || EDEADLK == errno || EINTR == errno || ENOLCK == errno) && do_wait_for_lock() )
+			    continue;
 			rpmError( (rc ? RPMERR_FLOCK : RPMWARN_FLOCK),
 				_("cannot get %s lock on %s/%s\n"),
 				((dbi->dbi_mode & (O_RDWR|O_WRONLY))
@@ -1231,6 +1263,8 @@ static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
 			rpmMessage(RPMMESS_DEBUG,
 				_("locked   db index       %s/%s\n"),
 				dbhome, dbfile);
+		    }
+		    break;
 		    }
 		}
 	    }

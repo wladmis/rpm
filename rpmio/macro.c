@@ -1299,14 +1299,14 @@ expandMacro(MacroBuf mb)
 	if (STREQ("echo", f, fn) ||
 	    STREQ("warn", f, fn) ||
 	    STREQ("error", f, fn)) {
-		int waserror = 0;
-		if (STREQ("error", f, fn))
-			waserror = 1;
+		int waserror = STREQ("error", f, fn) ? RPMERR_BADSPEC : 0;
 		if (g < ge)
 			doOutput(mb, waserror, g, gn);
 		else
 			doOutput(mb, waserror, f, fn);
 		s = se;
+		if ( waserror )
+			return waserror;
 		continue;
 	}
 
@@ -1440,7 +1440,7 @@ expandMacro(MacroBuf mb)
     *mb->t = '\0';
     mb->s = s;
     mb->depth--;
-    if (rc != 0 || mb->expand_trace)
+    if (rc > 0 || mb->expand_trace)
 	printExpansion(mb, t, mb->t);
     return rc;
 }
@@ -1694,8 +1694,6 @@ int isCompressed(const char * file, rpmCompressedMagic * compressed)
     if (rc >= 0)
 	return rc;
 
-    rc = 0;
-
     if ((magic[0] == 'B') && (magic[1] == 'Z')) {
 	*compressed = COMPRESSED_BZIP2;
     } else if ((magic[0] == 0120) && (magic[1] == 0113) &&
@@ -1710,7 +1708,7 @@ int isCompressed(const char * file, rpmCompressedMagic * compressed)
 	*compressed = COMPRESSED_OTHER;
     }
 
-    return rc;
+    return 0;
 }
 
 /* =============================================================== */

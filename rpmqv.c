@@ -324,11 +324,10 @@ int main(int argc, const char ** argv)
 #endif
     setprogname(argv[0]);	/* Retrofit glibc __progname */
 
-    /* XXX glibc churn sanity */
-    if (__progname == NULL) {
-	if ((__progname = strrchr(argv[0], '/')) != NULL) __progname++;
-	else __progname = argv[0];
-    }
+#if HAVE_SYSLOG_H
+    /* Initialize logger. */
+    openlog( __progname, 0, LOG_USER );
+#endif
 
     /* Set the major mode based on argv[0] */
     /*@-nullpass@*/
@@ -606,6 +605,9 @@ int main(int argc, const char ** argv)
     }
 
 #ifdef	IAM_RPMBT
+    if ( !(geteuid() || rpmExpandNumeric( "%_allow_root_build" )) )
+	argerror( _("current site policy disallows root to build packages") );
+
     switch (ba->buildMode) {
     case 'b':	bigMode = MODE_BUILD;		break;
     case 't':	bigMode = MODE_TARBUILD;	break;
@@ -624,7 +626,7 @@ int main(int argc, const char ** argv)
 	argerror("--buildroot may only be used during package builds");
     }
 #endif	/* IAM_RPMBT */
-    
+
 #ifdef	IAM_RPMDB
   if (bigMode == MODE_UNKNOWN || (bigMode & MODES_DB)) {
     if (da->init) {
@@ -899,8 +901,15 @@ int main(int argc, const char ** argv)
 	    (void) close(p[1]);
 	    (void) dup2(p[0], STDIN_FILENO);
 	    (void) close(p[0]);
+
+	    if ( rpm_close_all() ) {
+		perror( "rpm_close_all" );
+		_exit( -1 );
+	    }
+
 	    (void) execl("/bin/sh", "/bin/sh", "-c", pipeOutput, NULL);
 	    fprintf(stderr, _("exec failed\n"));
+	    exit( EXIT_FAILURE );
 	}
 
 	(void) close(p[0]);
@@ -968,22 +977,24 @@ int main(int argc, const char ** argv)
 	    rpmIncreaseVerbosity();
        
 	switch (ba->buildChar) {
+	case 'E':
+	    ba->buildAmount |= RPMBUILD_PREPROCESS;
+	    /*@fallthrough@*/
 	case 'a':
 	    ba->buildAmount |= RPMBUILD_PACKAGESOURCE;
 	    /*@fallthrough@*/
 	case 'b':
 	    ba->buildAmount |= RPMBUILD_PACKAGEBINARY;
 	    ba->buildAmount |= RPMBUILD_CLEAN;
+	    if (ba->shortCircuit) break;
 	    /*@fallthrough@*/
 	case 'i':
 	    ba->buildAmount |= RPMBUILD_INSTALL;
-	    if ((ba->buildChar == 'i') && ba->shortCircuit)
-		break;
+	    if (ba->shortCircuit) break;
 	    /*@fallthrough@*/
 	case 'c':
 	    ba->buildAmount |= RPMBUILD_BUILD;
-	    if ((ba->buildChar == 'c') && ba->shortCircuit)
-		break;
+	    if (ba->shortCircuit) break;
 	    /*@fallthrough@*/
 	case 'p':
 	    ba->buildAmount |= RPMBUILD_PREP;
