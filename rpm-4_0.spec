@@ -1,8 +1,10 @@
 # $Id$
 
+%define rpm_name rpm
 %define rpm_version 4.0.4
+%define srcname %rpm_name-4_0-%rpm_version
 
-Name: rpm
+Name: %rpm_name
 Version: %rpm_version
 Release: alt8
 
@@ -29,8 +31,8 @@ Url: http://www.rpm.org/
 
 # 1. ftp://ftp.rpm.org/pub/rpm/dist/
 # 2. cvs -d :pserver:anonymous@cvs.rpm.org:/cvs/devel export -r rpm-4_0 rpm
-# 3. ...
-Source: %name-%version.tar.bz2
+# 3. ALT Linux CVS
+Source: %srcname.tar.bz2
 
 Provides: %_sysconfdir/%name/macros.d
 
@@ -172,7 +174,7 @@ programs that will manipulate RPM packages and databases.
 %endif #with python
 
 %prep
-%setup -q
+%setup -q -n %srcname
 
 find -type d -name CVS -print0 |
 	xargs -r0 %__rm -rf --
