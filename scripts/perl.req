@@ -38,8 +38,12 @@
 # build time.
 
 # by Ken Estes Mail.com kestes@staff.mail.com
+# modified by Mikhail Zabaluev <mookid@mu.ru>
 
-if ("@ARGV") {
+require File::Spec;
+
+
+if (@ARGV) {
   foreach (@ARGV) {
     process_file($_);
   }
@@ -54,15 +58,37 @@ if ("@ARGV") {
 }
 
 
+# obtain the list of library directories. If not provided, use @INC
+
+if (exists $ENV{RPM_PERL_LIB_PATH}) {
+  @perl_inc = split(/[:,\s]+/, $ENV{RPM_PERL_LIB_PATH});
+}
+else {
+  @perl_inc = grep { m|^/| } @INC;
+}
+
+# add installation mirrors to the library search list
+
+my $buildroot = $ENV{RPM_BUILD_ROOT};
+push @perl_inc, map { "${buildroot}$_" } @perl_inc;
+
+
 foreach $module (sort keys %require) {
+
+  # search for the file to be installed in the system or in this same package
+
+  my $found = 0;
+  for (@perl_inc) {
+    if (-e "$_/$module") {
+      $found = 1;
+      last;
+    }
+  }
+  next unless $found;
+
   if (length($require{$module}) == 0) {
     print "perl($module)\n";
   } else {
-
-    # I am not using rpm3.0 so I do not want spaces arround my
-    # operators. Also I will need to change the processing of the
-    # $RPM_* vairable when I upgrage.
-
     print "perl($module) >= $require{$module}\n";
   }
 }
@@ -74,9 +100,12 @@ exit 0;
 sub process_file {
   
   my ($file) = @_;
-  chomp $file;
-  
-  open(FILE, "<$file") || return;
+  chomp($file);
+
+  return if $file eq '';
+
+  open(FILE, "<$file")||
+    die("$0: Could not open file: '$file' : $!\n");
   
   while (<FILE>) {
     
@@ -86,11 +115,7 @@ sub process_file {
     # properly belongs in the over/back section) but people do not
     # read the perldoc.
 
-    if ( (m/^=(head1|head2|pod|item)/) .. (m/^=(cut)/) ) {
-      next;
-    }
-
-    if ( (m/^=(over)/) .. (m/^=(back)/) ) {
+    if ((m/^=(head[12]|pod|over|item|for|begin)/) .. (m/^=(cut)/)) {
       next;
     }
     
@@ -104,121 +129,112 @@ sub process_file {
     #  if we need to print it print it now.
     
     if ( m/^\s*\$RPM_Requires\s*=\s*["'](.*)['"]/i) {
-      foreach $_ (spit(/\s+/, $1)) {
+      foreach (split(/\s+/, $1)) {
 	print "$_\n";
       }
+      next;
     }
 
-    if ( 
+    my ($module, $version) = ();
 
-# ouch could be in a eval, perhaps we do not want these since we catch
-# an exception they must not be required
+    if (m/^\s*(require|use)\s+(v?\d[.\d_]*)/) {
 
-#   eval { require Term::ReadLine } or die $@;
-#   eval "require Term::Rendezvous;" or die $@;
-#   eval { require Carp } if defined $^S; # If error/warning during compilation,
+      # statement requires a particular version of Perl
 
+      print "perl >= " . package_version($2, '%.5f') . "\n";
+      next;
+    }
+    elsif (m/^\s*require[\s(]+([_A-Za-z][\w:']*)/) {
 
-	(m/^(\s*)         # we hope the inclusion starts the line
-	 (require|use)\s+(?!\{)     # do not want 'do {' loops
-	 # quotes around name are always legal
-	 [\'\"]?([^\;\ \'\"\t]*)[\'\"]?[\t\;\ ]
-	 # the syntax for 'use' allows version requirements
-	 \s*([.0-9]*)
-	 /x)
-       ) {
-      my ($whitespace, $statement, $module, $version) = ($1, $2, $3,$4);
+      # require Module::Name
 
-      # we only consider require statements that are flush against
-      # the left edge. any other require statements give too many
-      # false positives, as they are usually inside of an if statement
-      # as a fallback module or a rarely used option
+      $module = module_filename($1);
+    }
+    elsif (m/^\s*use\s+([_A-Za-z][\w:']*)(\s+(v?[._\d]+))?/) {
 
-      ($whitespace ne "" && $statement eq "require") && next;
+      # use Module::Name [VERSION]
+
+      $module = module_filename($1);
+      if (defined($2)) {
+	$version = package_version($3);
+      }
+    }
+    elsif (m/^\s*(do|require)[\s(]*(['"])([^'"\s\\]+)\2[\s)]*;/) {
+
+      # invocation of a file by its name
+
+      $module = $3;
 
       # if there is some interpolation of variables just skip this
       # dependency, we do not want
       #        do "$ENV{LOGDIR}/$rcfile";
-   
-      ($module =~ m/\$/) && next;
 
-      # skip if the phrase was "use of" -- shows up in gimp-perl, et al
-      next if $module eq 'of';
+      next if $2 eq '"' && $module =~ /\$/;
 
-      # if the module ends in a comma we probaly caught some
-      # documentation of the form 'check stuff,\n do stuff, clean
-      # stuff.' there are several of these in the perl distribution
+      $module = File::Spec->canonpath($module);
 
-      ($module  =~ m/[,>]$/) && next;
+      if (File::Spec->file_name_is_absolute) {
 
-      # if the module name starts in a dot it is not a module name.
-      # Is this necessary?  Please give me an example if you turn this
-      # back on.
+	# references to absolute filenames are reported explicitly
 
-      #      ($module =~ m/^\./) && next;
-
-      # if the module ends with .pm strip it to leave only basename.
-      # starts with /, which means its an absolute path to a file
-      if ($module =~ m(^/)) {
-        print "$module\n";
-        next;
+	print "$module\n";
+	next;
       }
 
-      # sometimes people do use POSIX qw(foo), or use POSIX(qw(foo)) etc
-      # we can strip qw.*$, as well as (.*$:
-      $module =~ s/qw.*$//;
-      $module =~ s/\(*$//;
+      # unsure what to do with paths that lead to parent directories
 
-      $module =~ s/\.pm$//;
+      next if $module =~ /(^|\/)\.\.\//;
 
-      # some perl programmers write 'require URI/URL;' when 
-      # they mean 'require URI::URL;'
+      # otherwise, continue with $module set
 
-      $module =~ s/\//::/;
-
-      # trim off trailing parenthesis if any.  Sometimes people pass
-      # the module an empty list.
-
-      $module =~ s/\(\s*\)$//;
-
-      if ( $module =~ m/^[0-9._]+$/ ) {
-      # if module is a number then both require and use interpret that
-      # to mean that a particular version of perl is specified
-
-      if ($module =~ /5.00/) {
-        print "perl >= 0:$module\n";
-        next;
-      }
-      else {
-        print "perl >= 1:$module\n";
-        next;
-      }
-
-      };
-
-      # ph files do not use the package name inside the file.
-      # perlmodlib  documentation says:
-      
-      #       the .ph files made by h2ph will probably end up as
-      #       extension modules made by h2xs.
-      
-      # so do not expend much effort on these.
-
-
-      # there is no easy way to find out if a file named systeminfo.ph
-      # will be included with the name sys/systeminfo.ph so only use the
-      # basename of *.ph files
-
-      ($module  =~ m/\.ph$/) && next;
-
-      $require{$module}=$version;
-      $line{$module}=$_;
     }
-    
+    elsif (m/^\s*([_A-Za-z][\w:']*)\s*->\s*require_version\s*\(\s*(v?[._\d]+)\s*\)/
+ 	   || m/^\s*require_version\s+([_A-Za-z][\w:']*)\s+(v?[._\d]+)/) {
+      $module = module_filename($1);
+      $version = package_version($2);
+    }
+
+    if (defined($module)) {
+      $require{$module} = $version
+	unless defined($require{$module}) && $require{$module} >= $version;
+    }
   }
 
-  close(FILE) ||
+  close(FILE)||
     die("$0: Could not close file: '$file' : $!\n");
   
   return ; 
+}
+
+
+# module_filename($name) -
+# converts module name to relative file path
+
+sub module_filename {
+  my $name = shift;
+  $name =~ s{::|'}{/}g;
+  return $name . '.pm'; 	#'
+}
+
+
+# package_version($version[, $oldformat]) -
+# converts Perl version constant to RPM package version.
+# New style 'vN.N.N' numbers are converted to epoch 1 versions,
+# whereas old-style floating point versions are given epoch 0 and
+# optionally formatted by sprintf() using supplied format.
+# Parameters:
+#   $version - version number in 'vN.N.N' or 'N.NNN_NN' format
+#   $oldformat - format specifier for sprintf() used to format old-style
+#       floating-point version number
+
+sub package_version {
+  my $version = shift;
+  if ($version =~ s/^v// || $version =~ /\.[\d_]+\./) {
+    return "1:$version";
+  }
+  else {
+    my $format = shift;
+    $format = '%s' unless defined $format;
+    return '0:' . sprintf($format, $version);
+  }
 }
