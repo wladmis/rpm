@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt35
+Release: alt36
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -506,6 +506,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Mar 01 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt36
+- find-requires, find-provides:
+  + Implemented hooks for python support, from Andrey Orlov
+    with minor tweaks.
+
 * Sun Feb 29 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt35
 - Backported db-4.1 support (#3464).
 - Implemented db-4.2 support.
