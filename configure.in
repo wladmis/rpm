@@ -493,13 +493,6 @@ dnl Red Hat 4.x has not personality
 AC_CHECK_FUNCS(personality)
 
 AM_GNU_GETTEXT([external])
-dnl TVM:
-dnl horrible *temporary* hack to make sure that if we found gettext() in
-dnl -lintl that we add -lintl *back* to $LIBS.
-dnl
-if test X$gt_cv_func_gettext_libintl = Xyes ; then
-    LIBS="-lintl $LIBS"
-fi
 
 dnl Checks for header files we can live without.
 AC_HEADER_STDC
@@ -1100,7 +1093,7 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	scripts/Makefile scripts/shell.req scripts/compress_files
 	scripts/brp-alt scripts/brp-compress scripts/brp-fixup scripts/brp-strip scripts/brp-verify_elf
 	tests/Makefile tests/rpmrc tests/macros tests/hello-test/Makefile
-	misc/Makefile po/Makefile.in intl/Makefile
+	misc/Makefile po/Makefile.in
 	doc/Makefile doc/manual/Makefile
 	doc/ja/Makefile doc/pl/Makefile doc/ru/Makefile doc/sk/Makefile
 	python/Makefile ],
