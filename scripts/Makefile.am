@@ -10,6 +10,7 @@ EXTRA_DIST = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool \
 	get_magic.pl getpo.sh http.req \
+	files.req.list \
 	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
 	rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shell.req shell.prov sql.prov sql.req strip_files tcl.req trpm u_pkg.sh \
@@ -28,6 +29,7 @@ config_SCRIPTS = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool \
 	get_magic.pl getpo.sh http.req \
+	files.req.list \
 	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
 	rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shell.req shell.prov sql.prov sql.req strip_files tcl.req trpm u_pkg.sh \
