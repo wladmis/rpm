@@ -586,33 +586,40 @@
 %___build_args		-e
 %___build_cmd		%{?_sudo:%{_sudo} }%{?_remsh:%{_remsh} %{_remhost} }%{?_remsudo:%{_remsudo} }%{?_remchroot:%{_remchroot} %{_remroot} }%{___build_shell} %{___build_args}
 %___build_pre	\
-  export RPM_SOURCE_DIR=\"%{u2p:%{_sourcedir}}\"\
-  export RPM_BUILD_DIR=\"%{u2p:%{_builddir}}\"\
-  export RPM_OPT_FLAGS=\"%{optflags}\"\
-  export RPM_ARCH=\"%{_arch}\"\
-  export RPM_OS=\"%{_os}\"\
-  export RPM_DOC_DIR=\"%{_docdir}\"\
-  export RPM_PACKAGE_NAME=\"%{name}\"\
-  export RPM_PACKAGE_VERSION=\"%{version}\"\
-  export RPM_PACKAGE_RELEASE=\"%{release}\"\
-  %{?buildroot:export RPM_BUILD_ROOT=\"%{u2p:%{buildroot}}\"}\
-  %{?_compress_method:export RPM_COMPRESS_METHOD=\"%{_compress_method}\"}\
-  %{?_strip_method:export RPM_STRIP_METHOD=\"%{_strip_method}\"}\
-  %{?_findreq_method:export RPM_FINDREQ_METHOD=\"%{_findreq_method}\"}\
-  %{?_findprov_method:export RPM_FINDPROV_METHOD=\"%{_findprov_method}\"}\
-  %{?_findreq_default_method:export RPM_FINDREQ_DEFAULT_METHOD=\"%{_findreq_default_method}\"}\
-  %{?_findprov_default_method:export RPM_FINDPROV_DEFAULT_METHOD=\"%{_findprov_default_method}\"}\
-  %{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%{_perl_lib_path}\"}\
-  %{?__python:export RPM_PYTHON=\"%{__python}\"}\
+  export RPM_SOURCE_DIR=\"%{u2p:%_sourcedir}\"\
+  export RPM_BUILD_DIR=\"%{u2p:%_builddir}\"\
+  export RPM_OPT_FLAGS=\"%optflags\"\
+  export RPM_ARCH=\"%_arch\"\
+  export RPM_OS=\"%_os\"\
+  export RPM_DOC_DIR=\"%_docdir\"\
+  export RPM_PACKAGE_NAME=\"%name\"\
+  export RPM_PACKAGE_VERSION=\"%version\"\
+  export RPM_PACKAGE_RELEASE=\"%release\"\
+  %{?buildroot:export RPM_BUILD_ROOT=\"%{u2p:%buildroot}\"}\
+  %{?_compress_method:export RPM_COMPRESS_METHOD=\"%_compress_method\"}\
+  %{?_strip_method:export RPM_STRIP_METHOD=\"%_strip_method\"}\
+  %{?_findreq_method:export RPM_FINDREQ_METHOD=\"%_findreq_method\"}\
+  %{?_findprov_method:export RPM_FINDPROV_METHOD=\"%_findprov_method\"}\
+  %{?_findreq_default_method:export RPM_FINDREQ_DEFAULT_METHOD=\"%_findreq_default_method\"}\
+  %{?_findprov_default_method:export RPM_FINDPROV_DEFAULT_METHOD=\"%_findprov_default_method\"}\
+  %{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%_perl_lib_path\"}\
+  %{?__python:export RPM_PYTHON=\"%__python\"}\
   \
   unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
-  %{?_build_lang:export LANG=\"%{_build_lang}\"\
-  export LANGUAGE=\"%{_build_lang}\"\
-  export LC_ALL=\"%{_build_lang}\"}\
+  %{?_build_lang:export LANG=\"%_build_lang\"\
+  export LANGUAGE=\"%_build_lang\"\
+  export LC_ALL=\"%_build_lang\"}\
   \
+  unset DISPLAY XAUTHORITY ||:\
+  %{?_build_display:export DISPLAY=\"%_build_display\"}\
+  %{?_build_xauthority:export XAUTHORITY=\"%_build_xauthority\"}\
+  \
+  unset CCACHE_CC CCACHE_DIR ||:\
+  %{?__ccache_cc:export CCACHE_CC=\"%__ccache_cc\"}\
+  %{?__ccache_dir:export CCACHE_DIR=\"%__ccache_dir\"}\
   %{verbose:set -x}%{!verbose:exec > /dev/null}\
   umask 022\
-  cd %{u2p:%{_builddir}}\
+  cd %{u2p:%_builddir}\
 
 
 #%___build_body		%{nil}
@@ -652,8 +659,6 @@
 %__spec_build_body	%{___build_body}
 %__spec_build_post	%{___build_post}
 %__spec_build_template	#!%{__spec_build_shell}\
-%{?__ccache_dir:export CCACHE_DIR=%__ccache_dir}\
-%{?__ccache_cc:export CCACHE_CC=%__ccache_cc}\
 %{__spec_build_pre}\
 %{nil}
 
@@ -671,8 +676,6 @@
 %{__os_install_post}\
 %{nil}
 %__spec_install_template	#!%{__spec_install_shell}\
-%{?__ccache_dir:export CCACHE_DIR=%__ccache_dir}\
-%{?__ccache_cc:export CCACHE_CC=%__ccache_cc}\
 %{__spec_install_pre}\
 %{nil}
 
