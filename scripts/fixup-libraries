@@ -35,7 +35,13 @@ for file in "$@"; do
 			text=`printf %s "$section_header" |sed -ne 's/^ *\[ *[0-9]\+\] \.text \+PROGBITS \+0*\([0-9a-f]\+\) \+.*/\1/p'`
 			[ -n "$text" ] || continue
 
-			[ "$entry" != "$text" ] || chmod -v u+w,a-x,ug-s "$file"
+			[ "$entry" = "$text" ] || continue
+
+			if readelf -s "$file" |fgrep -wqs __preinit_array_end; then
+				continue
+			fi
+
+			chmod -v u+w,a-x,ug-s "$file"
 			;;
 	esac
 done
