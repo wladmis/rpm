@@ -38,7 +38,7 @@ Provides: %_sysconfdir/%name/macros.d
 Provides: /usr/sbin/update-alternatives
 
 PreReq: lib%name = %version-%release
-PreReq: alt-gpgkeys, coreutils, grep, perl-base, gawk, mktemp, shadow-utils
+PreReq: alt-gpgkeys, coreutils, grep, gawk, mktemp
 
 # XXX glibc-2.1.92 has incompatible locale changes that affect statically
 # XXX linked binaries like /bin/rpm.
@@ -294,7 +294,6 @@ popd
 	%__sed -e "s|^$RPM_BUILD_ROOT|%attr(-,root,%name) |g" >>%name.lang
 
 %pre
-/usr/sbin/groupadd -r -f %name
 if [ -f %_localstatedir/%name/Packages -a -f %_localstatedir/%name/packages.rpm ]; then
     echo "
 You have both
