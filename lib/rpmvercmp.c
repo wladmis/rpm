@@ -3,7 +3,6 @@
  */
 
 #include "system.h"
-#include <ctype.h> /* This should be done by configure and friends, I guess. */
 
 #include "rpmlib.h"
 
@@ -201,7 +200,7 @@ int isChangeNameMoreFresh(const char * const head,
     ++wordAfterEmail;
   else
     wordAfterEmail = head;
-  while ( *wordAfterEmail && isspace(*wordAfterEmail) )
+  while ( *wordAfterEmail && xisspace(*wordAfterEmail) )
     ++wordAfterEmail; 
   /* found. */
   copy = xstrdup(wordAfterEmail);
