@@ -504,6 +504,7 @@ fi
 
 %changelog
 * Sun Feb 22 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt33.1
+- find_lang: implemented support for symlinks in /usr/share/locale/.
 - platform: added force_* macros suggested by Alexey Morozov.
 - headerFindI18NString: do not translate empty strings.
 - expandMacro: handle single % properly.
