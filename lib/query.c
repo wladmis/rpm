@@ -532,26 +532,17 @@ void rpmDisplayQueryTags(FILE * fp)
     }
 }
 
-int showMatches(QVA_t qva, rpmdbMatchIterator mi, QVF_t showPackage, const char *arg)
+int showMatches(QVA_t qva, rpmdbMatchIterator mi, QVF_t showPackage)
 {
     Header h;
     int ec = 0;
 
     while ((h = rpmdbNextIterator(mi)) != NULL) {
 	int rc;
-	if (arg)
-	{
-	    char *xarg = xstrdup (arg);
-	    headerAddEntry(h, RPMTAG_ARG, RPM_STRING_TYPE, xarg, 1);
-	}
-
 	/*@-nullpass@*/
 	if ((rc = showPackage(qva, rpmdbGetIteratorRpmDB(mi), h)) != 0)
 	    ec = rc;
 	/*@=nullpass@*/
-
-	if (arg)
-	    headerRemoveEntry(h, RPMTAG_ARG);
     }
     mi = rpmdbFreeIterator(mi);
     return ec;
@@ -740,7 +731,7 @@ restart:
 		/*@loopbreak@*/ break;
 	    }
 	    if (!retcode)
-		retcode = showMatches(qva, mi, showPackage, 0);
+		retcode = showMatches(qva, mi, showPackage);
 	}
 	break;
 
@@ -751,7 +742,7 @@ restart:
 		_("group %s does not contain any packages\n"), arg);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
 	break;
 
@@ -761,7 +752,7 @@ restart:
 	    rpmError(RPMERR_QUERYINFO, _("no package triggers %s\n"), arg);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
 	break;
 
@@ -786,7 +777,7 @@ restart:
 			"pkgid", arg);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
     }	break;
 
@@ -804,7 +795,7 @@ restart:
 			"hdrid", arg);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
 	break;
 
@@ -829,7 +820,7 @@ restart:
 			"fileid", arg);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
     }	break;
 
@@ -858,7 +849,7 @@ restart:
 			"tid", arg);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
     }	break;
 
@@ -868,7 +859,7 @@ restart:
 	    rpmError(RPMERR_QUERYINFO, _("no package requires %s\n"), arg);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
 	break;
 
@@ -879,7 +870,7 @@ restart:
 		rpmError(RPMERR_QUERYINFO, _("no package provides %s\n"), arg);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
 	if (arg[0] != '/')
 	    break;
@@ -919,7 +910,7 @@ restart:
 			if (retcode) rpmError(RPMERR_QUERYINFO,
 				_("no package provides %s\n"), fn);
 			break;
-		    default:
+		    case RPMQV_PATH:
 			rpmError(RPMERR_QUERYINFO,
 				_("file %s is not owned by any package\n"), fn);
 			break;
@@ -929,7 +920,7 @@ restart:
 	    if (RPMQV_PATH == source)
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, fn);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
 	fn = _free(fn);
     }	break;
@@ -960,7 +951,7 @@ restart:
 		_("record %u could not be read\n"), recOffset);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
     }	break;
 
@@ -971,7 +962,7 @@ restart:
 	    rpmError(RPMERR_QUERYINFO, _("package %s is not installed\n"), arg);
 	    retcode = 1;
 	} else {
-	    retcode = showMatches(qva, mi, showPackage, 0);
+	    retcode = showMatches(qva, mi, showPackage);
 	}
 	break;
     }

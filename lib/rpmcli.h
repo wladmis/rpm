@@ -147,11 +147,10 @@ typedef	int (*QVF_t) (QVA_t qva, rpmdb db, Header h)
  * @param qva		parsed query/verify options
  * @param mi		rpm database iterator
  * @param showPackage	query/verify display routine
- * @param arg		argument for query/verify display routine
  * @return		result of last non-zero showPackage() return
  */
 int showMatches(QVA_t qva, /*@only@*/ /*@null@*/ rpmdbMatchIterator mi,
-		QVF_t showPackage, const char *arg)
+		QVF_t showPackage)
 	/*@modifies mi @*/;
 
 /** \ingroup rpmcli

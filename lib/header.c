@@ -2027,7 +2027,6 @@ int headerModifyEntry(Header h, int_32 tag, int_32 type,
 static char escapedChar(const char ch)	/*@*/
 {
     switch (ch) {
-    case '0': 	return '\0';
     case 'a': 	return '\a';
     case 'b': 	return '\b';
     case 'f': 	return '\f';
