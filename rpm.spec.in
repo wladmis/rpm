@@ -355,9 +355,10 @@ fi
 %attr(0644, @RPMUSER@, @RPMGROUP@)	%{__prefix}/lib/rpm/rpmpopt*
 %attr(0644, @RPMUSER@, @RPMGROUP@)	%{__prefix}/lib/rpm/rpmrc
 
-%ifarch i386 i486 i586 i686 athlon
+%ifarch i386 i486 i586 i686 athlon pentium4
 %attr(-, @RPMUSER@, @RPMGROUP@)		%{__prefix}/lib/rpm/i[3456]86*
 %attr(-, @RPMUSER@, @RPMGROUP@)		%{__prefix}/lib/rpm/athlon*
+%attr(-, @RPMUSER@, @RPMGROUP@)		%{__prefix}/lib/rpm/pentium4*
 %endif
 %ifarch alpha alphaev5 alphaev56 alphapca56 alphaev6 alphaev67
 %attr(-, @RPMUSER@, @RPMGROUP@)		%{__prefix}/lib/rpm/alpha*

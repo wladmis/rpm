@@ -467,13 +467,13 @@ static void setVarDefault(int var, const char * macroname, const char * val,
     addMacro(NULL, macroname, NULL, body, RMIL_DEFAULT);
 }
 
-static void setVar( const char *macroname, const char *body )
+static void setVar(const char *macroname, const char *body)
 	/*@globals rpmGlobalMacroContext,
 		internalState @*/
 	/*@modifies internalState @*/
 {
-	if ( macroname && body )
-		addMacro( NULL, macroname, NULL, body, RMIL_DEFAULT );
+	if (macroname && body)
+		addMacro (NULL, macroname, NULL, body, RMIL_DEFAULT);
 }
 
 /*@observer@*/ /*@unchecked@*/
@@ -499,33 +499,34 @@ static void rpmSetDefaults(void)
 		internalState @*/
 	/*@modifies internalState @*/
 {
-	if ( defaultsInitialized )
+	if (defaultsInitialized)
 		return;
 	else
 	{
-		setVar( "_usr", "/usr" );
-		setVar( "_var", "/var" );
-		setVar( "_preScriptEnvironment", prescriptenviron );
+		setVar ("_usr", "/usr");
+		setVar ("_var", "/var");
+		setVar ("_preScriptEnvironment", prescriptenviron);
 
-		setVar( "_topdir", "%{_usr}/src/RPM" );
-		setVar( "_tmppath", "%{_var}/tmp" );
-		setVar( "_dbpath", "%{_var}/lib/rpm" );
-		setVar( "_defaultdocdir", "%{_usr}/share/doc" );
+		setVar ("_topdir", "%{_usr}/src/RPM");
+		setVar ("_tmppath", "%{_var}/tmp");
+		setVar ("_dbpath", "%{_var}/lib/rpm");
+		setVar ("_defaultdocdir", "%{_usr}/share/doc");
 
-		setVar( "_rpmfilename", "%%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" );
+		setVar ("_rpmfilename",
+			"%%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm");
 
-		setVar( "_signature", "none" );
-		setVar( "_buildshell", "/bin/sh" );
+		setVar ("_signature", "none");
+		setVar ("_buildshell", "/bin/sh");
 
-		setVar( "_topsrcdir", "%{_topdir}" );
-		setVar( "_builddir", "%{_topdir}/BUILD" );
-		setVar( "_rpmdir", "%{_topdir}/RPMS" );
-		setVar( "_srcrpmdir", "%{_topdir}/SRPMS" );
-		setVar( "_sourcedir", "%{_topsrcdir}/SOURCES" );
-		setVar( "_specdir", "%{_topsrcdir}/SPECS" );
+		setVar ("_topsrcdir", "%{_topdir}");
+		setVar ("_builddir", "%{_topdir}/BUILD");
+		setVar ("_rpmdir", "%{_topdir}/RPMS");
+		setVar ("_srcrpmdir", "%{_topdir}/SRPMS");
+		setVar ("_sourcedir", "%{_topsrcdir}/SOURCES");
+		setVar ("_specdir", "%{_topsrcdir}/SPECS");
 
-		setVarDefault( RPMVAR_OPTFLAGS,	"optflags", "-O2", NULL );
- 
+		setVarDefault (RPMVAR_OPTFLAGS, "optflags", "-O2", NULL);
+
 		defaultsInitialized = 1;
 	}
 }
@@ -1031,29 +1032,37 @@ static void mfspr_ill(int notused)
 }
 #endif
 
-static const char *checkAMD( void )
+static const char *
+checkCPU (void)
 {
-	int	fd = open( "/proc/cpuinfo", O_RDONLY );
-	if ( !fd )
+	int     fd = open ("/proc/cpuinfo", O_RDONLY);
+
+	if (!fd)
 		return 0;
 	else
 	{
-		char	buffer[ 1 + getpagesize() ];
+		char    buffer[1 + getpagesize ()];
 
-		memset( buffer, 0, sizeof buffer );
-		read( fd, buffer, sizeof buffer - 1 );
-		close( fd );
+		memset (buffer, 0, sizeof buffer);
+		read (fd, buffer, sizeof buffer - 1);
+		close (fd);
 
-		if ( !strstr( buffer, "AMD" ) )
+		if (strstr (buffer, "AMD"))
+		{
+			if (strstr (buffer, "Athlon")
+			    || strstr (buffer, "Duron"))
+				return "athlon";
+
+			if (strstr (buffer, "K6"))
+				return "k6";
+		} else if (strstr (buffer, "Intel"))
+		{
+			if (strstr (buffer, "Pentium(R) 4")
+			    || strstr (buffer, "Intel(R) Xeon(TM)")
+			    || strstr (buffer, "Intel(R) XEON(TM)"))
+				return "pentium4";
+		} else
 			return 0;
-
-		if ( strstr( buffer, "Athlon" ) || strstr( buffer, "Duron" ) )
-			return "athlon";
-
-		if ( strstr( buffer, "K6" ) )
-			return "k6";
-
-		return 0;
 	}
 }
 
@@ -1288,11 +1297,12 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 	}
 #endif
 
-	if ( !strcmp( un.machine, "i586" ) || !strcmp( un.machine, "i686" ) )
+	if (!strcmp (un.machine, "i586") || !strcmp (un.machine, "i686"))
 	{
-		const char *amd = checkAMD();
-		if ( amd )
-			strcpy( un.machine, amd );
+		const char *cpu = checkCPU ();
+
+		if (cpu)
+			strcpy (un.machine, cpu);
 	}
 
 #	endif

@@ -17,6 +17,7 @@ optflags: i586 %optflags_default -march=i586 -mcpu=i686
 optflags: i686 %optflags_default -march=i686
 optflags: k6 %optflags_default -march=k6
 optflags: athlon %optflags_default -march=athlon
+optflags: pentium4 %optflags_default -march=pentium4
 optflags: ia64 %optflags_default
 
 # XXX Please note that -mieee has been added in rpm-3.0.5.
@@ -67,6 +68,7 @@ optflags: s390x -O2
 #############################################################
 # Canonical arch names and numbers
 
+arch_canon:	pentium4:	pentium4	1
 arch_canon:	athlon:	athlon	1
 arch_canon:	i686:	i686	1
 arch_canon:	k6:	k6	1
@@ -164,6 +166,7 @@ buildarchtranslate: osfmach3_i386: i386
 
 buildarchtranslate: ia64: ia64
 
+buildarchtranslate: pentium4: pentium4
 buildarchtranslate: athlon: athlon
 buildarchtranslate: i686: i686
 buildarchtranslate: k6: k6
@@ -210,6 +213,7 @@ arch_compat: alphaev56: alphaev5
 arch_compat: alphaev5: alpha
 arch_compat: alpha: axp noarch
 
+arch_compat: pentium4: i686
 arch_compat: athlon: i686 k6
 arch_compat: i686: i586
 arch_compat: k6: i586
@@ -297,6 +301,7 @@ os_compat: bsdi4.0: bsdi
 
 buildarch_compat: ia64: noarch
 
+buildarch_compat: pentium4: i686
 buildarch_compat: athlon: i686 k6
 buildarch_compat: i686: i586
 buildarch_compat: k6: i586

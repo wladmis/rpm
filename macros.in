@@ -812,7 +812,7 @@
 #   rpm can use regular expressions against target platforms in macro
 #   conditionals.
 #
-%intel	i386 i486 i586 i686 i786 i886 i986
+%intel	i386 i486 i586 i686 i786 i886 i986 pentium4
 %amd	k6 athlon
 %ix86	%intel %amd
 
