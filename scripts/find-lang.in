@@ -60,7 +60,7 @@ EOF
 
 print_version()
 {
-	local revision=`printf %s "$Revision$" |sed -ne 's/^\$Revision: \+\([^ ]\+\).*/\1/p'` ||:
+	local revision=`printf %s '$Revision$' |sed -ne 's/^\$Revision: \+\([^ ]\+\).*/\1/p'` ||:
 	cat <<EOF
 find-lang version $revision
 
