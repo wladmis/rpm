@@ -36,7 +36,7 @@
 # ---- configure and makeinstall.
 #
 %_configure_script	./configure
-%_configure_target	%{_target_platform}
+%_configure_target	--build=%{_target_platform}
 %_configure_gettext	--without-included-gettext
 %configure \
   CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
