@@ -176,6 +176,7 @@ export STRIP_EXECUTABLE=
 export STRIP_RELOCATABLE=
 export STRIP_SHARED=
 export STRIP_STATIC=
+export STRIP_AUTOSKIP=
 for t in `echo "$RPM_STRIP_METHOD" |tr , ' '`; do
 	case "$t" in
 		no|none|off|false)
@@ -235,6 +236,8 @@ else
 		echo "$PROG: non-/ TOPDIR expected" >&2
 		exit 1
 	fi
+
+	[ -n "$STRIP_AUTOSKIP" ] || STRIP_AUTOSKIP=debug
 
 	StripTree "$TOPDIR"
 fi
