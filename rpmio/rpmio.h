@@ -320,6 +320,13 @@ int Mkdir(const char * path, mode_t mode)
 	/*@modifies errno, fileSystem @*/;
 
 /**
+ * mkdir -p.
+ */
+int MkdirP(const char * path, mode_t mode)
+	/*@globals errno, fileSystem @*/
+	/*@modifies errno, fileSystem @*/;
+
+/**
  * chdir(2) clone.
  */
 int Chdir(const char * path)

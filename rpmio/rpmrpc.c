@@ -65,6 +65,97 @@ static int ftpUnlink(const char * path)
 }
 
 /* =============================================================== */
+static int
+make_path (const char *apath, mode_t mode)
+{
+	struct stat st;
+
+	if (stat (apath, &st))
+	{
+		char *path = (char *) alloca (strlen (apath) + 1);
+		char *slash;
+
+		strcpy (path, apath);
+		slash = path = rpmCleanPath (path);
+
+		while (*slash == '/')
+			slash++;
+
+		while ((slash = strchr (slash, '/')))
+		{
+			char c = *slash;
+
+			*slash = '\0';
+			if (mkdir (path, mode) < 0)
+			{
+				int saved_errno = errno;
+
+				if (stat (path, &st))
+				{
+					errno = saved_errno;
+					return -1;
+				}
+
+				if (!S_ISDIR (st.st_mode))
+				{
+					errno = ENOTDIR;
+					return -1;
+				}
+			}
+			*(slash++) = c;
+		}
+
+		if (mkdir (path, mode) < 0)
+		{
+			int saved_errno = errno;
+
+			if (stat (path, &st))
+			{
+				errno = saved_errno;
+				return -1;
+			}
+
+			if (!S_ISDIR (st.st_mode))
+			{
+				errno = ENOTDIR;
+				return -1;
+			}
+		}
+
+		return 0;
+	} else
+	{
+		if (!S_ISDIR (st.st_mode))
+		{
+			errno = ENOTDIR;
+			return -1;
+		}
+
+		return 0;
+	}
+}
+
+int MkdirP (const char * path, mode_t mode)
+{
+    const char * lpath;
+    int ut = urlPath(path, &lpath);
+
+    switch (ut) {
+    case URL_IS_FTP:
+    case URL_IS_HTTP:
+	return Mkdir(path, mode);
+    case URL_IS_PATH:
+	path = lpath;
+	/*@fallthrough@*/
+    case URL_IS_UNKNOWN:
+	break;
+    case URL_IS_DASH:
+    default:
+	return Mkdir (path, mode);
+    }
+    return make_path(path, mode);
+}
+
 /* XXX rebuilddb.c: analogues to mkdir(2)/rmdir(2). */
 int Mkdir (const char * path, mode_t mode)
 {
