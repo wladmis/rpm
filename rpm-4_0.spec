@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt26
+Release: alt26.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -19,6 +19,7 @@ Release: alt26
 %def_without apidocs
 %def_without db
 %def_without contrib
+%def_without build_topdir
 
 # XXX enable at your own risk, CDB access to rpmdb isn't cooked yet.
 %define enable_cdb create cdb
@@ -272,7 +273,7 @@ bzip2 -9 CHANGES ||:
 %__install -p -m644 GROUPS $RPM_BUILD_ROOT%_libdir/%name/
 
 # buildreq ignore rules.
-install -pD -m644 rpm-build.buildreq $RPM_BUILD_ROOT%_sysconfdir/buildreqs/files/ignore.d/rpm-build
+%__install -pD -m644 rpm-build.buildreq $RPM_BUILD_ROOT%_sysconfdir/buildreqs/files/ignore.d/rpm-build
 
 chmod a+x scripts/find-lang
 # Manpages have been moved to their own packages.
@@ -435,6 +436,7 @@ fi
 %_mandir/man?/gendiff.*
 %_man8dir/rpmbuild.*
 
+%if_with build_topdir
 %files build-topdir
 %attr(0755,root,%name) %dir %_usrsrc/RPM
 %attr(0770,root,%name) %dir %_usrsrc/RPM/BUILD
@@ -443,6 +445,7 @@ fi
 %attr(2775,root,%name) %dir %_usrsrc/RPM/SRPMS
 %attr(0755,root,%name) %dir %_usrsrc/RPM/RPMS
 %attr(2775,root,%name) %dir %_usrsrc/RPM/RPMS/*
+%endif #with build_topdir
 
 %if_with python
 %files python
@@ -470,6 +473,12 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri Nov 07 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt26.1
+- Do not package build-topdir subpackage by default.
+- verify_elf: implemented TEXTREL checking.
+- README.ALT-ru_RU.KOI8-R: document it.
+- helper shell scripts: use printf instead of echo where appropriate.
+
 * Sat Sep 27 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt26
 - gendiff: cleanup (#2558).
 - build/files.c: fixed RPMTAG_SIZE calculation (#2634).
