@@ -2029,14 +2029,20 @@ fprintf(stderr, "*** PSM_RDB_LOAD: header #%u not found\n", fi->record);
 	if (fi->h != NULL)	/* XXX can't happen */
 	rc = rpmdbAdd(ts->rpmdb, ts->id, fi->h);
 #if HAVE_SYSLOG_H
-	syslog( LOG_NOTICE, "%s-%u:%s-%s installed\n", fi->name, (-1 == fi->epoch) ? 0 : fi->epoch, fi->version, fi->release);
+	if (!geteuid())
+		syslog (LOG_NOTICE, "%s-%u:%s-%s installed\n",
+			fi->name, (-1 == fi->epoch) ? 0 : fi->epoch,
+			fi->version, fi->release);
 #endif
 	break;
     case PSM_RPMDB_REMOVE:
 	if (ts->transFlags & RPMTRANS_FLAG_TEST)	break;
 	rc = rpmdbRemove(ts->rpmdb, ts->id, fi->record);
 #if HAVE_SYSLOG_H
-	syslog( LOG_NOTICE, "%s-%u:%s-%s removed\n", fi->name, (-1 == fi->epoch) ? 0 : fi->epoch, fi->version, fi->release);
+	if (!geteuid())
+		syslog (LOG_NOTICE, "%s-%u:%s-%s removed\n",
+			fi->name, (-1 == fi->epoch) ? 0 : fi->epoch,
+			fi->version, fi->release);
 #endif
 	break;
 
