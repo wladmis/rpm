@@ -2246,7 +2246,7 @@ int processSourceFiles(Spec spec)
 
 /**
  */
-static StringBuf getOutputFrom(char * dir, const char * argv[], const char *envp[],
+static StringBuf getOutputFrom(char * dir, const char * argv[], char *envp[],
 			const char * writePtr, int writeBytesLeft,
 			int failNonZero)
 	/*@globals fileSystem, internalState@*/
@@ -2271,7 +2271,7 @@ static StringBuf getOutputFrom(char * dir, const char * argv[], const char *envp
     
     if (!(progPID = fork())) {
 	while (*envp)
-	    putenv ((char *)*(envp++));
+	    putenv (*(envp++));
 
 	(void) close(toProg[1]);
 	(void) close(fromProg[0]);
@@ -2537,7 +2537,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	FD_t	fd, xfd;
 	int argc = 0;
 	const char **argv = 0;
-	const char *envp[4];
+	char *envp[4];
 	FILE *fp = 0;
 	char *runBody = 0;
 
@@ -2637,7 +2637,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 
 	rpmMessage(RPMMESS_NORMAL, _("Executing(%s): %s\n"), dm->msg, runCmd);
 
-	readBuf = getOutputFrom(NULL, argv,
+	readBuf = getOutputFrom(NULL, argv, envp,
 			getStringBuf(writeBuf), writeBytes, failnonzero);
 
 	/* Free expanded args */
