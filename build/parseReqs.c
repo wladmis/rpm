@@ -99,7 +99,7 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	if (!(xisalnum(r[0]) || r[0] == '_' || r[0] == '/')) {
 	    rpmError(RPMERR_BADSPEC,
 		     _("line %d: Dependency tokens must begin with alpha-numeric, '_' or '/': %s\n"),
-		     spec->lineNum, spec->line);
+		     spec->lineNum, (spec->fileStack ? spec->line : field));
 	    return RPMERR_BADSPEC;
 	}
 
@@ -110,7 +110,7 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	case RPMTAG_BUILDCONFLICTS:
 	    if (r[0] == '/') {
 		rpmError(RPMERR_BADSPEC,_("line %d: File name not permitted: %s\n"),
-			 spec->lineNum, spec->line);
+			 spec->lineNum, (spec->fileStack ? spec->line : field));
 		return RPMERR_BADSPEC;
 	    }
 	    /*@switchbreak@*/ break;
@@ -128,7 +128,7 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	if (strpbrk (req, "%<=>")) {
 	    rpmError(RPMERR_BADSPEC,
 		     _("line %d: Dependency tokens must not contain '%%<=>' symbols: %s\n"),
-		     spec->lineNum, spec->line);
+		     spec->lineNum, (spec->fileStack ? spec->line : field));
 	    return RPMERR_BADSPEC;
 	}
 
@@ -150,7 +150,7 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	    if (r[0] == '/') {
 		rpmError(RPMERR_BADSPEC,
 			 _("line %d: Versioned file name not permitted: %s\n"),
-			 spec->lineNum, spec->line);
+			 spec->lineNum, (spec->fileStack ? spec->line : field));
 		return RPMERR_BADSPEC;
 	    }
 
@@ -181,7 +181,7 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	if (flags & RPMSENSE_SENSEMASK) {
 	    if (*v == '\0' || ve == v) {
 		rpmError(RPMERR_BADSPEC, _("line %d: Version required: %s\n"),
-			spec->lineNum, spec->line);
+			spec->lineNum, (spec->fileStack ? spec->line : field));
 		return RPMERR_BADSPEC;
 	    }
 	    version = xmalloc((ve-v) + 1);
@@ -196,7 +196,7 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	if (version && strpbrk (version, "%<=>")) {
 	    rpmError(RPMERR_BADSPEC,
 		     _("line %d: Dependency tokens must not contain '%%<=>' symbols: %s\n"),
-		     spec->lineNum, spec->line);
+		     spec->lineNum, (spec->fileStack ? spec->line : field));
 	    req = _free(req);
 	    version = _free(version);
 	    return RPMERR_BADSPEC;
