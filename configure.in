@@ -795,7 +795,7 @@ AC_ARG_WITH(python, [  --with-python           build rpm python bindings ])
 WITH_PYTHON_VERSION=
 if test "$withval" = yes -o "$withval" = auto; then
   WITH_PYTHON_VERSION=$(python -c 'import sys; print sys.version' |head -1 |cut -d' ' -f1 |cut -d. -f1,2)
-elif test "$withval" != no; then
+else
   WITH_PYTHON_VERSION=$withval
 fi
 
