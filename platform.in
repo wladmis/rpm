@@ -401,7 +401,9 @@
 @alt@%get_release()	%(rpm -q --qf '%%{RELEASE}' %1 2>/dev/null)
 @alt@%get_serial()	%(rpm -q --qf '%%{SERIAL}' %1 2>/dev/null)
 @alt@%add_serial()	%(rpm -q --qf '%%|SERIAL?{Serial: %%{SERIAL}}|' %1 2>/dev/null)
+@alt@%get_SVR()	%(rpm -q --qf '%%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
 @alt@%get_NSVR()	%(rpm -q --qf '%%{NAME}-%%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
+@alt@%get_dep()	%(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
 @alt@## compiler optflags defaults
 @alt@
 @alt@# core flags
