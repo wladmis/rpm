@@ -358,7 +358,6 @@
 @alt@%_compress_method	auto
 @alt@%_verify_elf_method	normal
 @alt@%_strip_method	%{?_enable_debug:none}%{!?_enable_debug:executable shared}
-@alt@%_strip_autoskip	*/debug/*
 @alt@%_findreq_default_method	files lib pam perl shell
 @alt@%_findprov_default_method	pam lib perl
 @alt@
