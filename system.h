@@ -574,4 +574,7 @@ extern void unsetenv(const char *name);
 #ifndef MOUNTED
 #define MOUNTED "/etc/mnttab"
 #endif
+
+extern int rpm_close_all (void);
+
 #endif	/* H_SYSTEM */

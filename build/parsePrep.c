@@ -176,7 +176,6 @@ static int checkOwners(const char * urlfn)
 {
     const char *fn, *urlfn;
     static char buf[BUFSIZ];
-    char *t = NULL;
     struct Source *sp;
     rpmCompressedMagic compressed = COMPRESSED_NOT;
     int urltype;

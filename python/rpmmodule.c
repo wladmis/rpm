@@ -924,6 +924,7 @@ static int closeCallback(FILE * f) {
     return 0; 
 }
 
+#if 0
 /**
  */
 static PyObject * doFopen(PyObject * self, PyObject * args) {
@@ -973,6 +974,7 @@ static PyObject * doFopen(PyObject * self, PyObject * args) {
     
     return PyFile_FromFile (node->f, path, mode, closeCallback);
 }
+#endif
 
 /**
  */

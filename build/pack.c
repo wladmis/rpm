@@ -351,10 +351,12 @@ int readRPM(const char *fileName, Spec *specp, struct rpmlead *lead,
     return 0;
 }
 
+#if 0
 /*@unchecked@*/
 static unsigned char header_magic[8] = {
         0x8e, 0xad, 0xe8, 0x01, 0x00, 0x00, 0x00, 0x00
 };
+#endif
 
 #define	RPMPKGVERSION_MIN	30004
 #define	RPMPKGVERSION_MAX	40003
@@ -391,7 +393,7 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
     const char * sigtarget;
     const char * rpmio_flags = NULL;
     const char * sha1 = NULL;
-    char *s;
+    const char *s;
     char buf[BUFSIZ];
     Header h;
     Header sig = NULL;

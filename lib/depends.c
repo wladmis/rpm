@@ -2,10 +2,6 @@
  * \file lib/depends.c
  */
 
-/*@-exportheadervar@*/
-/*@unused@*/ static int _depends_debug = 0;
-/*@=exportheadervar@*/
-
 #include "system.h"
 
 #include "rpmlib.h"

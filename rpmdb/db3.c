@@ -330,6 +330,7 @@ static int db3c_del(dbiIndex dbi, DBC * dbcursor, u_int32_t flags)
     return rc;
 }
 
+#if 0
 /*@unused@*/ static int db3c_dup(dbiIndex dbi, DBC * dbcursor, DBC ** dbcp,
 		u_int32_t flags)
 	/*@globals fileSystem @*/
@@ -344,6 +345,7 @@ static int db3c_del(dbiIndex dbi, DBC * dbcursor, u_int32_t flags)
     return rc;
     /*@=nullstate @*/
 }
+#endif
 
 static int db3c_get(dbiIndex dbi, DBC * dbcursor,
 		DBT * key, DBT * data, u_int32_t flags)

@@ -9,6 +9,7 @@
 #endif
 
 #include "rpmio_internal.h"
+#include "rpmmacro.h"
 #include <popt.h>
 #include "ugid.h"
 #include "debug.h"

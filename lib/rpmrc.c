@@ -19,6 +19,7 @@
 
 #include "misc.h"
 #include "debug.h"
+#include "rpmio_internal.h"
 
 /*@access FD_t@*/		/* compared with NULL */
 
@@ -982,6 +983,7 @@ static inline int RPMClass(void)
 	return 5;
 }
 
+#if 0
 /* should only be called for model 6 CPU's */
 static int is_athlon(void)
 	/*@*/
@@ -1008,6 +1010,7 @@ static int is_athlon(void)
 
 	return 1;
 }
+#endif
 
 #endif
 

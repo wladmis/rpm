@@ -785,7 +785,7 @@ verifyGPGSignature(const char * datafile, const void * sig, int count,
 	/*@globals rpmGlobalMacroContext, fileSystem @*/
 	/*@modifies *result, rpmGlobalMacroContext, fileSystem @*/
 {
-    char *sigfile = 0;
+    const char *sigfile = 0;
   
     /* Write out the signature */
     {	FD_t sfd;

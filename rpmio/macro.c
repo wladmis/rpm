@@ -3,7 +3,9 @@
  * \file rpmio/macro.c
  */
 
+#if 0
 /*@unused@*/ static int _debug = 0;
+#endif
 
 #include "system.h"
 #include <stdarg.h>
@@ -1630,7 +1632,7 @@ rpmInitMacrofile (const char *macrofile)
 static void
 rpmInitMacrofileGlob (const char *macrofile)
 {
-	int is_local = strchr (macrofile, '~');
+	int is_local = strchr (macrofile, '~') ? 1 : 0;
 
 	if (is_local || strchr (macrofile, '*'))
 	{

@@ -1,26 +1,25 @@
-#include <unistd.h>
-#include <errno.h>
+#include "system.h"
 
 #ifdef __linux__
 #include <linux/limits.h>
 #endif
 
-int rpm_close_all( void )
+int rpm_close_all (void)
 {
 	int fd, max;
 
-	max = sysconf(_SC_OPEN_MAX);
-	if ( max <= 0 )
+	max = sysconf (_SC_OPEN_MAX);
+	if (max <= 0)
 		return -1;
 
 #ifdef __linux__
-	if ( max < NR_OPEN )
+	if (max < NR_OPEN)
 		max = NR_OPEN;
 #endif
 
-	for ( fd = STDERR_FILENO + 1; fd < max; ++fd )
+	for (fd = STDERR_FILENO + 1; fd < max; ++fd)
 	{
-		if ( close(fd) && errno != EBADF )
+		if (close (fd) && errno != EBADF)
 			/*
 			 * Possible errors are:
 			 * EINTR: the close() call was interrupted by a signal;

@@ -622,6 +622,7 @@ static const char * pgpPublicRSA[] = {
     NULL,
 };
 
+#ifdef	NOTYET
 /*@observer@*/ /*@unchecked@*/
 static const char * pgpSecretRSA[] = {
     "    d =",
@@ -630,6 +631,7 @@ static const char * pgpSecretRSA[] = {
     "    u =",
     NULL,
 };
+#endif
 
 /*@observer@*/ /*@unchecked@*/
 static const char * pgpPublicDSA[] = {
@@ -640,11 +642,13 @@ static const char * pgpPublicDSA[] = {
     NULL,
 };
 
+#ifdef	NOTYET
 /*@observer@*/ /*@unchecked@*/
 static const char * pgpSecretDSA[] = {
     "    x =",
     NULL,
 };
+#endif
 
 /*@observer@*/ /*@unchecked@*/
 static const char * pgpPublicELGAMAL[] = {
@@ -654,11 +658,13 @@ static const char * pgpPublicELGAMAL[] = {
     NULL,
 };
 
+#ifdef	NOTYET
 /*@observer@*/ /*@unchecked@*/
 static const char * pgpSecretELGAMAL[] = {
     "    x =",
     NULL,
 };
+#endif
 /*@=varuse =readonlytrans @*/
 
 static const byte * pgpPrtPubkeyParams(byte pubkey_algo,

@@ -63,6 +63,7 @@ marc@redhat.com and ewt@redhat.com.
 #include <ctype.h>
 #include <netinet/in.h>
 */
+#include <ctype.h>
 
 #include <stdarg.h>
 #include "debug.h"
