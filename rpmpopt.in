@@ -185,16 +185,16 @@ rpm	exec -y			rpmv -y
 rpm	exec --verify		rpmv --verify
 
 rpm	alias --with		--define "_with_!#:+       --with-!#:+" \
-	--POPTdesc=$"enable configure <option> for build" \
+	--POPTdesc=$"enable configure <option> for build or query" \
 	--POPTargs=$"<option>"
 rpm	alias --without		--define "_without_!#:+    --without-!#:+" \
-	--POPTdesc=$"disable configure <option> for build" \
+	--POPTdesc=$"disable configure <option> for build or query" \
 	--POPTargs=$"<option>"
 rpm	alias --enable		--define "_enable_!#:+     --enable-!#:+" \
-	--POPTdesc=$"enable configure <option> for build" \
+	--POPTdesc=$"enable configure <option> for build or query" \
 	--POPTargs=$"<option>"
 rpm	alias --disable		--define "_disable_!#:+    --disable-!#:+" \
-	--POPTdesc=$"disable configure <option> for build" \
+	--POPTdesc=$"disable configure <option> for build or query" \
 	--POPTargs=$"<option>"
 
 rpm	alias -C --clean --rmsource --rmspec
@@ -365,6 +365,19 @@ rpmq	alias --last -q --qf '%|INSTALLTIME?{%{INSTALLTIME}}:{000000000}| %{NAME}-%
 rpmq	alias --filesbypkg -q --qf '[%-25{=NAME} %{FILENAMES}\n]' \
 	--POPTdesc=$"list all files from each package"
 
+rpmq	alias --with		--define "_with_!#:+       --with-!#:+" \
+	--POPTdesc=$"enable configure <option> for query" \
+	--POPTargs=$"<option>"
+rpmq	alias --without		--define "_without_!#:+    --without-!#:+" \
+	--POPTdesc=$"disable configure <option> for query" \
+	--POPTargs=$"<option>"
+rpmq	alias --enable		--define "_enable_!#:+     --enable-!#:+" \
+	--POPTdesc=$"enable configure <option> for query" \
+	--POPTargs=$"<option>"
+rpmq	alias --disable		--define "_disable_!#:+    --disable-!#:+" \
+	--POPTdesc=$"disable configure <option> for query" \
+	--POPTargs=$"<option>"
+
 rpmq	alias --vendor --eval %vendor
 rpmq	alias --packager --eval %packager
 rpmq	alias --distribution --eval %distribution
@@ -447,6 +460,19 @@ rpmquery	alias --last -q --qf '%|INSTALLTIME?{%{INSTALLTIME}}:{000000000}| %{NAM
 
 rpmquery	alias --filesbypkg -q --qf '[%-25{=NAME} %{FILENAMES}\n]' \
 	--POPTdesc=$"list all files from each package"
+
+rpmquery	alias --with		--define "_with_!#:+       --with-!#:+" \
+	--POPTdesc=$"enable configure <option> for query" \
+	--POPTargs=$"<option>"
+rpmquery	alias --without		--define "_without_!#:+    --without-!#:+" \
+	--POPTdesc=$"disable configure <option> for query" \
+	--POPTargs=$"<option>"
+rpmquery	alias --enable		--define "_enable_!#:+     --enable-!#:+" \
+	--POPTdesc=$"enable configure <option> for query" \
+	--POPTargs=$"<option>"
+rpmquery	alias --disable		--define "_disable_!#:+    --disable-!#:+" \
+	--POPTdesc=$"disable configure <option> for query" \
+	--POPTargs=$"<option>"
 
 rpmquery	alias --vendor --eval %vendor
 rpmquery	alias --packager --eval %packager
