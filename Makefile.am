@@ -28,7 +28,7 @@ myLDADD = \
 	$(top_builddir)/lib/librpm.la \
 	$(top_builddir)/rpmdb/librpmdb.la \
 	$(top_builddir)/rpmio/librpmio.la \
-	@LIBBEECRYPT@ @INTLLIBS@ @LIBMISC@
+	@LIBBEECRYPT@ @LIBINTL@ @LIBMISC@
 
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
 rpmbin_PROGRAMS = rpm

@@ -24,7 +24,7 @@ mylibpaths = \
 	-L$(top_builddir)/rpmdb/.libs \
 	-L$(top_builddir)/rpmio/.libs
 
-mylibs = -lrpm -lrpmdb -lrpmio @LIBS@ @INTLLIBS@ @LIBMISC@
+mylibs = -lrpm -lrpmdb -lrpmio @LIBS@ @LIBINTL@ @LIBMISC@
 LIBS =
 
 lib_LTLIBRARIES = librpm.la
