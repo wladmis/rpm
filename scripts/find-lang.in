@@ -156,44 +156,41 @@ s:^%lang(man.*) .*::
 		find $TOPDIR -type d |sed '
 s:'"$TOPDIR"'::
 s:\(.*/gnome/help/'"$NAME"'\)$:%dir \1:
-s:\(.*/gnome/help/'"$NAME"'/\)\([^/_]\+\):%dir %lang(\2) \1\2:
+s:\(.*/gnome/help/'"$NAME"'/\)\([a-z][^/_]\+\):%dir %lang(\2) \1\2:
 s:\(.*/share/omf/'"$NAME"'\)$:%dir \1:
 s:^\([^%].*\)::
-s:%lang(C) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 		find "$TOPDIR" -type f |sed '
 s:'"$TOPDIR"'::
-s:\(.*/gnome/help/'"$NAME"'/\)\([^/_]\+\):%lang(\2) \1\2:
-s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(.*\)\(\.omf\)$:%lang(\3) \1\2\3\4:
+s:\(.*/gnome/help/'"$NAME"'/\)\([a-z][^/_]\+\):%lang(\2) \1\2:
+s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\([a-z][^/_]\+\)\(\.omf\)$:%lang(\3) \1\2\3\4:
 s:^\([^%].*\)::
-s:%lang(C) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 		find "$TOPDIR" -type l |sed '
 s:'"$TOPDIR"'::
-s:\(.*/gnome/help/'"$NAME"'/\)\([^/_]\+\):%lang(\2) %attr(-,root,root) \1\2:
-s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(.*\)\(\.omf\)$:%lang(\3) %attr(-,root,root) \1\2\3\4:
+s:\(.*/gnome/help/'"$NAME"'/\)\([a-z][^/_]\+\):%lang(\2) %attr(-,root,root) \1\2:
+s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\([a-z][^/_]\+\)\(\.omf\)$:%lang(\3) %attr(-,root,root) \1\2\3\4:
 s:^\([^%].*\)::
-s:%lang(C) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 	fi
 
 	if [ -n "$FIND_KDE" ]; then
 		find $TOPDIR -type d |sed '
 s:'"$TOPDIR"'::
-s:\(.*/share/doc/HTML/\)\([^/_]\+\)\(/'"$NAME"'\):%lang(\2) %dir \1\2\3:
+s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$NAME"'\):%lang(\2) %dir \1\2\3:
 s:^\([^%].*\)::
 s:%lang(en) ::
 	        ' |grep -v '^$' >> "$OUTFILE" ||:
 
 		find "$TOPDIR" -type f |sed '
 s:'"$TOPDIR"'::
-s:\(.*/share/doc/HTML/\)\([^/_]\+\)\(/'"$NAME"'/.*\):%lang(\2) \1\2\3:
+s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$NAME"'/.*\):%lang(\2) \1\2\3:
 s:^\([^%].*\)::
 s:%lang(en) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 		find "$TOPDIR" -type l |sed '
 s:'"$TOPDIR"'::
-s:\(.*/share/doc/HTML/\)\([^/_]\+\)\(/'"$NAME"'/.*\):%lang(\2) %attr(-,root,root) \1\2\3:
+s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$NAME"'/.*\):%lang(\2) %attr(-,root,root) \1\2\3:
 s:^\([^%].*\)::
 s:%lang(en) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
