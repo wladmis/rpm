@@ -28,13 +28,14 @@ fix_libdir()
 	local f=$1
 	shift
 
-	local libdir=`sed -ne "s/^libdir='\([^']*\)'\$/\1/pg" "$f" |tail -1`
 	local fname="${f#$RPM_BUILD_ROOT}"
+	fname="${fname#.}"
 	local fdir="${fname%/*}"
-	fdir="${fdir#.}"
+
+	local libdir=`sed -ne "s/^libdir='\([^']*\)'\$/\1/pg" "$f" |tail -1`
 	if [ "$fdir" != "$libdir" ]; then
 		subst -p "s,^libdir='$libdir'\$,libdir='$fdir',g" "$f"
-		echo "${fname#.}: libdir: $libdir -->  $fdir" >&2
+		echo "${fname#.}: libdir: '$libdir' --> '$fdir'" >&2
 	fi
 }
 
@@ -43,7 +44,38 @@ fix_dependency_libs()
 	local f=$1
 	shift
 
-	#
+	local fname="${f#$RPM_BUILD_ROOT}"
+	fname="${fname#.}"
+
+	local dependency_libs=`sed -ne "s/^dependency_libs='\([^']*\)'\$/\1/pg" "$f" |tail -1`
+
+	local deps="$dependency_libs"
+
+	old_deps=
+	while [ "$deps" != "$old_deps" ]; do
+		old_deps="$deps"
+		deps="${deps//\/\///}"
+	done
+
+	old_deps=
+	while [ "$deps" != "$old_deps" ]; do
+		old_deps="$deps"
+		deps=`echo "$deps" |sed -e 's,\(^\| \+\)-L/usr\(/local\)\?/lib\($\| \+\),\1\3,g'`
+		deps=`echo "$deps" |sed -e 's,\(^\| \+\)-L\('$RPM_BUILD_ROOT'\|/usr/lib/gcc-lib\)[^ ]*\($\| \+\),\1\3,g'`
+	done
+
+	old_deps=
+	while [ "$deps" != "$old_deps" ]; do
+		old_deps="$deps"
+		deps="${deps//  / }"
+	done
+	deps="${deps## }"
+	deps="${deps%% }"
+
+	if [ "$deps" != "$dependency_libs" ]; then
+		subst -p "s,^dependency_libs='$dependency_libs'\$,dependency_libs='$deps',g" "$f"
+		echo "${fname#.}: dependency_libs: '$dependency_libs' --> '$deps'" >&2
+	fi
 }
 
 rc=0
