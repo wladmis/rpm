@@ -570,7 +570,7 @@ static inline unsigned char nibble(char c)
  */
 int	(*parseSpecVec) (Spec *specp, const char *specFile, const char *rootdir,
 		const char *buildRoot, int recursing, const char *passPhrase,
-		char *cookie, int anyarch, int force) = NULL;
+		char *cookie, int anyarch, int force, int preprocess) = NULL;
 /**
  * @todo Eliminate linkage loop into librpmbuild.a
  */
@@ -691,9 +691,10 @@ restart:
 	char *cookie = NULL;
 	int anyarch = 1;
 	int force = 1;
+	int preprocess = 0;
 
 	rc = parseSpecVec(&spec, arg, "/", buildRoot, recursing, passPhrase,
-		cookie, anyarch, force);
+		cookie, anyarch, force, preprocess);
 	if (rc || spec == NULL) {
 	    rpmError(RPMERR_QUERY,
 	    		_("query of specfile %s failed, can't parse\n"), arg);
@@ -854,16 +855,16 @@ restart:
 	break;
 
     case RPMQV_WHATPROVIDES:
-	if (arg[0] != '/') {
 	    mi = rpmdbInitIterator(rpmdb, RPMTAG_PROVIDENAME, arg, 0);
 	    if (mi == NULL) {
+		if (arg[0] != '/')
 		rpmError(RPMERR_QUERYINFO, _("no package provides %s\n"), arg);
 		retcode = 1;
 	    } else {
 		retcode = showMatches(qva, mi, showPackage);
 	    }
+	if (arg[0] != '/')
 	    break;
-	}
 	/*@fallthrough@*/
     case RPMQV_PATH:
     {   char * fn;
@@ -894,10 +895,20 @@ restart:
 			_("file %s: %s\n"), fn, strerror(myerrno));
 		break;
 	    case 0:
-		rpmError(RPMERR_QUERYINFO,
-			_("file %s is not owned by any package\n"), fn);
+		switch (source)
+		{
+		    case RPMQV_WHATPROVIDES:
+			if (retcode) rpmError(RPMERR_QUERYINFO,
+				_("no package provides %s\n"), fn);
+			break;
+		    case RPMQV_PATH:
+			rpmError(RPMERR_QUERYINFO,
+				_("file %s is not owned by any package\n"), fn);
+			break;
+		}
 		break;
 	    }
+	    if (RPMQV_PATH == source)
 	    retcode = 1;
 	} else {
 	    retcode = showMatches(qva, mi, showPackage);

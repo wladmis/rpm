@@ -37,13 +37,19 @@ int rpmvercmp(const char * a, const char * b)
 	while (*one && !xisalnum(*one)) one++;
 	while (*two && !xisalnum(*two)) two++;
 
+	if ( !*one && !*two )
+		return 0;
+
 	str1 = one;
 	str2 = two;
 
 	/* grab first completely alpha or completely numeric segment */
 	/* leave one and two pointing to the start of the alpha or numeric */
 	/* segment and walk str1 and str2 to end of segment */
+	/* Also take care of the case where the two version segments are */
+	/* different types: one numeric and one alpha */
 	if (xisdigit(*str1)) {
+	    if ( xisalpha(*str2) ) return -1;
 	    while (*str1 && xisdigit(*str1)) str1++;
 	    while (*str2 && xisdigit(*str2)) str2++;
 	    isnum = 1;
@@ -53,17 +59,17 @@ int rpmvercmp(const char * a, const char * b)
 	    isnum = 0;
 	}
 
+	/* Again, take care of the case where the two version segments are */
+	/* different types: one numeric and one alpha */
+	if (one == str1) return -1;
+	if (two == str2) return 1;
+
 	/* save character at the end of the alpha or numeric segment */
 	/* so that they can be restored after the comparison */
 	oldch1 = *str1;
 	*str1 = '\0';
 	oldch2 = *str2;
 	*str2 = '\0';
-
-	/* take care of the case where the two version segments are */
-	/* different types: one numeric, the other alpha (i.e. empty) */
-	if (one == str1) return -1;	/* arbitrary */
-	if (two == str2) return -1;
 
 	if (isnum) {
 	    /* this used to be done by converting the digit segments */

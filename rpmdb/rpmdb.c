@@ -3282,6 +3282,9 @@ int rpmdbRebuild(const char * prefix)
 	newdbpath += strlen(prefix);
     tfn = _free(tfn);
 
+    rpmMessage(RPMMESS_VERBOSE, _("rebuilding database %s\n"),
+	rootdbpath, newrootdbpath);
+
     rpmMessage(RPMMESS_DEBUG, _("rebuilding database %s into %s\n"),
 	rootdbpath, newrootdbpath);
 
@@ -3300,6 +3303,15 @@ int rpmdbRebuild(const char * prefix)
 	goto exit;
     }
     removedir = 1;
+
+    {
+    	struct stat st;
+	if ( !lstat( rootdbpath, &st ) )
+	{
+	    lchown( newrootdbpath, st.st_uid, st.st_gid );
+	    chmod( newrootdbpath, st.st_mode );
+	}
+    }
 
     rpmMessage(RPMMESS_DEBUG, _("opening old database with dbapi %d\n"),
 		_dbapi);
