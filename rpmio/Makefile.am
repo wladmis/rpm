@@ -31,18 +31,18 @@ clean-local:
 	rm -f *.o
 
 tdigest_SOURCES = tdigest.c
-tdigest_LDADD += librpmio.la -lpopt
+tdigest_LDADD = librpmio.la -lpopt
 
 trpmio_SOURCES = trpmio.c
-trpmio_LDADD += librpmio.la -lpopt
+trpmio_LDADD = librpmio.la -lpopt
 
 tkey_SOURCES = tkey.c
 tkey_LDFLAGS = -all-static
-tkey_LDADD += librpmio.la -lpopt
+tkey_LDADD = librpmio.la -lpopt
 
 tring_SOURCES = tring.c
 tring_LDFLAGS = -all-static
-tring_LDADD += librpmio.la -lpopt
+tring_LDADD = librpmio.la -lpopt
 
 dumpasn1_SOURCES = dumpasn1.c
 
