@@ -1,0 +1,67 @@
+#!/bin/sh -e
+#
+# find-package
+# Copyright (C) 2000  Dmitry V. Levin <ldv@fandra.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+# If using normal root, avoid changing anything.
+[ -n "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
+
+FindPackage()
+{
+	local f="$1"
+	shift
+	local r rep package deref
+
+	for r in "$@"; do
+		[ -n "$r" ] || continue
+		if [ -z "${r##/*}" ]; then
+			if ! relative "$r" "$RPM_BUILD_ROOT" |grep -q "^../"; then
+				echo "$f: invalid dependence: $r" >&2
+				return 1
+			fi
+			rep="$r"
+			if [ -e "$RPM_BUILD_ROOT/$rep" ]; then
+				continue
+			fi
+			deref=`LC_TIME=C /bin/ls -l -- "$rep" |/bin/sed -ne 's,^lrwxrwxrwx \+1 .\+ \(/[^ ]\+\) -> /etc/alternatives/.\+$,\1,p'`
+			if [ "$deref" = "$rep" ]; then
+				echo -E "$rep"
+			else
+				if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep"|LC_COLLATE=C sort -u)"; then
+					echo -E "$package"
+				else
+					echo -E "$rep"
+				fi
+			fi
+		else
+			local RPATH="$(echo "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
+			if [ -n "$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)" ]; then
+				continue
+			fi
+			if ! rep="$(/usr/bin/which -- "$r" 2>/dev/null)"; then
+				continue
+			fi
+			if [ -e "$RPM_BUILD_ROOT/$rep" ]; then
+				continue
+			fi
+			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep"|LC_COLLATE=C sort -u)"; then
+				echo -E "$package"
+			fi
+		fi
+	done
+}

@@ -1,0 +1,64 @@
+#!/bin/sh -e
+#
+# brp-cleanup - cleanup buildroot.
+#
+# Copyright (C) 2000, 2001  Dmitry V. Levin <ldv@fandra.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+PROG="${0##*/}"
+
+# If using normal root, avoid changing anything.
+if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
+	echo "$PROG: non-/ \$RPM_BUILD_ROOT expected" >&2
+	exit 1
+fi
+
+cd "$RPM_BUILD_ROOT"
+
+find -type f \(	\
+	-name '#*#'	\
+	-o -name '*~'	\
+	-o -name DEADJOE	\
+	-o -name '*.orig'	\
+	-o -name '*.rej'	\
+	-o -name '*.bak'	\
+	-o -name '.*.orig'	\
+	-o -name '.*.rej'	\
+	-o -name '.*.bak'	\
+	-o -name .SUMS	\
+	-o -name TAGS	\
+	-o -name core	\
+	-o \( -path '*/.deps/*' -a -name '*.P' \)	\
+	\) -print0 |xargs -r0 rm -vf
+
+find -type d -name CVS -print0 |xargs -r0 rm -vrf
+
+cd usr/lib/perl5 &>/dev/null || exit 0
+
+echo "Cleaning in $PWD"
+
+find -type f -name .packlist -print0 |xargs -r0 rm -vf
+
+find -type f -name \*.bs -size 0 -print0 |xargs -r0 rm -vf
+
+f="$(find -type f -name \*.bs)"
+if [ -n "$f" ]; then
+	echo "$PROG: non empty *.bs file(s) found:"
+	echo "$f"
+	echo "$PROG: please contact packager"
+	exit 1
+fi

@@ -1,0 +1,174 @@
+#!/bin/sh -e
+#
+# find-provides - generate list of linux-specific package provides.
+# Inspired by tool with same name from RPM distribution.
+#
+# Copyright (C) 2000  Dmitry V. Levin <ldv@fandra.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+PROG="${0##*/}"
+
+# If using normal root, avoid changing anything.
+if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
+	echo "$PROG: non-/ RPM_BUILD_ROOT expected" >&2
+	exit 1
+fi
+
+FIND_LIBS=
+FIND_PAM=
+FIND_PERL=
+
+ParseMethod()
+{
+	local t
+	for	t in "$@"; do
+		case "${t/%,}" in
+			no|none|off|false)
+				FIND_LIBS=
+				FIND_PAM=
+				FIND_PERL=
+				;;
+			lib)
+				FIND_LIBS=1
+				;;
+			nolib)
+				FIND_LIBS=
+				;;
+			pam)
+				FIND_PAM=1
+				;;
+			nopam)
+				FIND_PAM=
+				;;
+			perl)
+				FIND_PERL=1
+				;;
+			noperl)
+				FIND_PERL=
+				;;
+			all)
+				FIND_LIBS=1
+				FIND_PAM=1
+				FIND_PERL=1
+				;;
+			default|yes|true)
+				ParseMethod $RPM_FINDPROV_DEFAULT_METHOD
+				;;
+			*)
+				echo "Unrecognized find-provides method: $t" >&2
+				exit 1
+				;;
+		esac
+	done
+}
+ParseMethod $RPM_FINDPROV_METHOD
+
+if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" ]; then
+	# Nothing to do
+	cat &>/dev/null
+	exit 0
+fi
+
+ulimit -c 0
+
+case "$LD_PRELOAD" in
+	*libfakeroot*)
+		unset LD_PRELOAD
+		;;
+	*libbuildreq.so*)
+		unset LD_PRELOAD
+		;;
+esac
+
+FOUND_PROVS=
+LIST_PERL=
+
+ListScriptProvs()
+{
+	local f="$1"
+	local t="$2"
+	if [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
+		if [ -n "$FIND_PAM" ]; then
+			local r="$(@RPMCONFIGDIR@/pam.prov "$f")"
+			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+$r"
+		fi
+	elif [ -z "${t##perl script text*}" -o -z "${f%%*.p[lmh]}" ]; then
+		if [ -n "$FIND_PERL" ]; then
+			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
+$f"
+		fi
+	fi
+}
+
+FindPerlProvs()
+{
+	if [ -n "$LIST_PERL" ]; then
+		local r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.prov)"
+		[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+$r"
+	fi
+}
+
+# Note this works for both a.out and ELF executables.
+# It also auto-generates provides for scripts.
+
+FindLibProvs()
+{
+	[ -n "$FIND_LIBS" ] || return 0
+	local f="$1"
+	local d
+	if d="$(objdump -p "$f")"; then
+		local soname="$(echo -E "$d" |awk '/SONAME/ {print $2}')"
+		if [ -n "$soname" ]; then
+			if [ ! -L "$f" ]; then
+				# name
+				echo "$soname"
+
+				# version definitions
+	    		echo -E "$d" | awk "-vsoname=$soname" '
+					BEGIN {START=0;}
+					/^Version definitions:$/ {START=1;}
+					/^[0-9]/ && (START==1) && ($4!=soname) {printf("%s(%s)\n",soname,$4);}
+					/^$/ { START=0; }
+				'
+			fi
+		else
+			echo "${f##*/}"
+		fi
+	fi
+}
+
+while IFS= read -r f; do
+	if t="$(file -bL "$f")"; then
+		if [ -z "${t##* text*}" ]; then
+			ListScriptProvs "$f" "$t"
+		elif [ -z "${t##* shared object*}" ]; then
+			r="$(FindLibProvs "$f")"
+			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+$r"
+		fi
+	else
+		echo "Not found: $f" >&2
+	fi
+done
+
+# Find provides in listed perl scripts, if any
+FindPerlProvs
+
+# Finally sort and print them.
+echo "$FOUND_PROVS" |sort -u

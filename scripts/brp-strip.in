@@ -1,0 +1,240 @@
+#!/bin/sh -e
+#
+# brp-strip - strip ELF binaries.
+# Inspired by brp-strip script from RPM source code.
+#
+# Copyright (C) 2000  Dmitry V. Levin <ldv@fandra.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+PROG="${0##*/}"
+
+USAGE()
+{
+	cat <<EOF
+brp-strip - strip ELF binaries.
+
+brp-strip is free software, covered by the GNU General Public License.
+brp-strip comes with ABSOLUTELY NO WARRANTY, see license for details.
+
+Usage: $PROG [options] [files]
+
+Valid options are:
+-h, --help
+	Show a summary of the options to brp-strip and exit.
+-p, --preserve-dates
+	Preserve modified/access timestamps of stripped files.
+-R <name>, --remove-section=<name>
+	Remove the named section from files. This option may be given more than once.
+-s, --strip-all
+	Remove all symbols.
+-g, -S, --strip-debug
+	Remove all debugging symbols.
+--strip-unneeded
+	Remove all symbols not needed by relocations.
+-N, --strip-symbol <name>
+	Do not copy named symbol.
+-K, --keep-symbol <name>
+	Only copy named symbol.
+-x, --discard-all
+	Remove all non-global symbols.
+-X, --discard-locals
+	Remove any compiler-generated symbols.
+-v, --verbose
+	List all object files modified.
+-T <name>, --topdir=<name>
+	Start file lookup at named directory, \$RPM_BUILD_ROOT by default.
+
+files is list of files or directory trees where files to be stripped.
+By default, all files in TOPDIR, specified by \$RPM_STRIP_METHOD, will be stripped.
+EOF
+
+	[ -n "$1" ] && exit "$1" || exit
+}
+
+TEMP=`getopt -n "$PROG" -o hpR:sgSN:K:xXvT: -l help,preserve-dates,remove-section:,strip-all,strip-symbol:,keep-symbol:,discard-all,discard-locals,verbose,topdir: -- "$@"` || USAGE
+eval set -- "$TEMP"
+
+: ${TOPDIR:=$RPM_BUILD_ROOT}
+export STRIP_FORCED=
+export STRIP_FORCED_OPTS=
+
+AddForcedOpts()
+{
+	if [ -z "$STRIP_FORCED_OPTS" ]; then
+		STRIP_FORCED_OPTS="$*"
+	else
+		STRIP_FORCED_OPTS="$STRIP_FORCED_OPTS $*"
+	fi
+}
+
+while :; do
+	case "$1" in
+		-h|--help)
+			USAGE 0
+			;;
+		-p|--preserve-dates)
+			AddForcedOpts -p
+			shift
+			;;
+		-R|--remove-section)
+			shift
+			AddForcedOpts -R "$1"
+			shift
+			STRIP_FORCED=1
+			;;
+		-s|--strip-all)
+			AddForcedOpts -s
+			shift
+			STRIP_FORCED=1
+			;;
+		-g|-S|--strip-debug)
+			AddForcedOpts -g
+			shift
+			STRIP_FORCED=1
+			;;
+		--strip-unneeded)
+			AddForcedOpts --strip-unneeded
+			shift
+			STRIP_FORCED=1
+			;;
+		-N|--strip-symbol)
+			shift
+			AddForcedOpts -N "$1"
+			shift
+			STRIP_FORCED=1
+			;;
+		-K|--keep-symbol)
+			shift
+			AddForcedOpts -K "$1"
+			shift
+			STRIP_FORCED=1
+			;;
+		-x|--discard-all)
+			AddForcedOpts -x
+			shift
+			STRIP_FORCED=1
+			;;
+		-X|--discard-locals)
+			AddForcedOpts -X
+			shift
+			STRIP_FORCED=1
+			;;
+		-v|--verbose)
+			AddForcedOpts -v
+			shift
+			;;
+		-T|--topdir)
+			shift
+			TOPDIR="$1"
+			shift
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "$PROG: unrecognized option: $1" >&2
+			exit 1
+			;;
+	esac
+done
+
+cd "$TOPDIR"
+cd "$OLDPWD"
+
+TOPDIR="$(echo "$TOPDIR" |sed '
+s:/\(\./\)\+:/:g
+s:/\+:/:g
+s:/$::
+')"
+
+SHOW_METHODS=
+AddShowMethods()
+{
+	if [ -z "$SHOW_METHODS" ]; then
+		SHOW_METHODS="$*"
+	else
+		SHOW_METHODS="$SHOW_METHODS,$*"
+	fi
+}
+
+export STRIP_EXECUTABLE=
+export STRIP_RELOCATABLE=
+export STRIP_SHARED=
+export STRIP_STATIC=
+for	t in $RPM_STRIP_METHOD; do
+	case "${t/%,}" in
+		no|none|off|false)
+			exit 0
+			;;
+		exec*)
+			STRIP_EXECUTABLE=executable
+			AddShowMethods executable
+			;;
+		reloc*)
+			STRIP_RELOCATABLE=relocatable
+			AddShowMethods relocatable
+			;;
+		share*)
+			STRIP_SHARED=shared
+			AddShowMethods shared
+			;;
+		static*)
+			STRIP_STATIC=static
+			AddShowMethods static
+			;;
+		*)
+			echo "Unrecognized strip method: $t"
+			exit 1
+			;;
+	esac
+done
+
+if [ -z "$STRIP_EXECUTABLE" -a -z "$STRIP_RELOCATABLE" -a -z "$STRIP_SHARED" -a -z "$STRIP_STATIC" ]; then
+	# Nothing to do
+	exit 0
+fi
+
+PERMS=
+if [ -z "$STRIP_RELOCATABLE" -a -z "$STRIP_STATIC" ]; then
+	PERMS='-perm +a=x'
+elif [ -z "$STRIP_EXECUTABLE" -a -z "$STRIP_SHARED" ]; then
+	PERMS='-perm +a=r'
+fi
+
+StripTree()
+{
+	echo "Stripping binaries in $1 ($SHOW_METHODS)"
+	find "$1" -type f $PERMS -print0 |xargs -r0 @RPMCONFIGDIR@/strip_files
+}
+
+if [ -n "$*" ]; then
+	for d in "$@"; do
+		if [ -d "$d" ]; then
+			StripTree "$d"
+		else
+			@RPMCONFIGDIR@/strip_files "$d"
+		fi
+	done
+else
+	if [ -z "$TOPDIR" ]; then
+		echo "$PROG: non-/ TOPDIR expected" >&2
+		exit 1
+	fi
+
+	StripTree "$TOPDIR"
+fi

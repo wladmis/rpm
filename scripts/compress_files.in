@@ -1,0 +1,45 @@
+#!/bin/sh -e
+#
+# compress_files - compress files helper.
+# Copyright (C) 2000, 2001  Dmitry V. Levin <ldv@fandra.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the te/bin/rms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+PROG="${0##*/}"
+
+case "$RPM_COMPRESS_METHOD" in
+	no|none|plain)
+		exit 0
+		;;
+esac
+
+for f in "$@"; do
+	case "$RPM_COMPRESS_METHOD" in
+		gz*)
+			/bin/gzip -9nf "$f"
+			;;
+		bz*)
+			/bin/bzip2 -9f "$f"
+			;;
+		*)
+			/bin/bzip2 -9kf "$f"
+			/bin/gzip -9nf "$f"
+			SIZE_BZIP2=`@RPMCONFIGDIR@/filesize "$f.bz2" 512`
+			SIZE_GZIP=`@RPMCONFIGDIR@/filesize "$f.gz" 512`
+			[ "$SIZE_GZIP" -gt "$SIZE_BZIP2" ] && /bin/rm -f "$f.gz" || /bin/rm -f "$f.bz2"
+			;;
+	esac
+done

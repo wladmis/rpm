@@ -1,0 +1,245 @@
+#!/bin/sh -e
+#
+# find-requires - generate list of linux-specific package requires.
+# Inspired by tool with same name from RPM distribution.
+#
+# Copyright (C) 2000  Dmitry V. Levin <ldv@fandra.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+PROG="${0##*/}"
+
+Exit()
+{
+	RETVAL=$?
+	trap '' EXIT
+	cat &>/dev/null
+	exit $RETVAL
+}
+
+trap "Exit " EXIT
+
+# If using normal root, avoid changing anything.
+if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
+	echo "$PROG: non-/ RPM_BUILD_ROOT expected" >&2
+	exit 1
+fi
+
+FIND_FILES=
+FIND_LIBS=
+FIND_PAM=
+FIND_PERL=
+FIND_SHELL=
+
+ParseMethod()
+{
+	local t
+	for t in "$@"; do
+		case "${t/%,}" in
+			no|none|off|false)
+				FIND_FILES=
+				FIND_LIBS=
+				FIND_PAM=
+				FIND_PERL=
+				FIND_SHELL=
+				;;
+			lib|library)
+				FIND_LIBS=1
+				;;
+			nolib|nolibrary)
+				FIND_LIBS=
+				;;
+			files)
+				FIND_FILES=1
+				;;
+			nofiles)
+				FIND_FILES=
+				;;
+			pam)
+				FIND_PAM=1
+				;;
+			nopam)
+				FIND_PAM=
+				;;
+			perl)
+				FIND_PERL=1
+				;;
+			noperl)
+				FIND_PERL=
+				;;
+			sh|shell)
+				FIND_SHELL=1
+				;;
+			nosh|noshell)
+				FIND_SHELL=
+				;;
+			all)
+				FIND_FILES=1
+				FIND_LIBS=1
+				FIND_PAM=1
+				FIND_PERL=1
+				FIND_SHELL=1
+				;;
+			default|yes|true)
+				ParseMethod $RPM_FINDREQ_DEFAULT_METHOD
+				;;
+			*)
+				echo "Unrecognized find-requires method: $t" >&2
+				exit 1
+				;;
+		esac
+	done
+}
+ParseMethod $RPM_FINDREQ_METHOD
+
+FIND_SCRIPT=
+if [ -n "$FIND_SHELL" -o -n "$FIND_PERL" -o -n "$FIND_PAM" ]; then
+	FIND_SCRIPT=1
+fi
+
+if [ -z "$FIND_LIBS" -a -z "$FIND_SCRIPT" -a -z "$FIND_FILES" ]; then
+	# Nothing to do
+	exit
+fi
+
+if [ -n "$*" ]; then
+	# We do not handle arguments yet...
+	exit
+fi
+
+. @RPMCONFIGDIR@/find-package
+
+ulimit -c 0
+
+case "$LD_PRELOAD" in
+	*libfakeroot*)
+		unset LD_PRELOAD
+		;;
+	*libbuildreq.so*)
+		unset LD_PRELOAD
+		;;
+esac
+
+FOUND_REQS=
+LIST_PERL=
+
+ListScriptReqs()
+{
+	[ -n "$FIND_SCRIPT" ] || return 0
+	local f="$1"
+	local t="$2"
+	if [ -x "$f" ]; then
+		local r="$(FindPackage "$f" "$(head -1 "$f" |sed -n 's|^#![ 	]*\(/[^ 	]\+\).*|\1|p')")"
+		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+	fi
+	if [ -z "${t##Bourne* shell script text*}" ]; then
+		if [ -n "$FIND_SHELL" -a -x "$f" ]; then
+			local r="$(@RPMCONFIGDIR@/shell.req "$f")"
+			[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+		fi
+	elif [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
+		if [ -n "$FIND_PAM" ]; then
+			local r="$(@RPMCONFIGDIR@/pam.req "$f")"
+			[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+		fi
+	elif [ -z "${t##perl script text*}" -o -z "${f%%*.p[lmh]}" ]; then
+		if [ -n "$FIND_PERL" ]; then
+			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
+$f"
+		fi
+	fi
+}
+
+FindPerlReqs()
+{
+	if [ -n "$LIST_PERL" ]; then
+		local r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.req)"
+		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+	fi
+}
+
+# Note this works for both a.out and ELF executables.
+# It also auto-generates requirements for scripts.
+
+FindLibReqs()
+{
+	[ -n "$FIND_LIBS" ] || return 0
+	local f="$1"
+	local d
+
+	if d="$(objdump -p "$f")"; then 
+		# Shared library dependencies, glibc version references.
+		echo -E "$d" |awk '
+			BEGIN {start_shared=0; start_version=0; lib_name="";}
+			/^Dynamic Section:$/ {start_shared=1;}
+			/^Version References:$/ {start_version=1;}
+			(start_version==1) && /^ *required from/ {sub(/:/, "", $3);	lib_name=$3;}
+			(start_shared==1) && /^ *NEEDED/ {print $2;}
+			(start_version==1) && (lib_name!="") && ($4!="") && ($4~/^(GLIBC|GCC|BZLIB)_*/) {print lib_name "(" $4 ")";}
+			/^$/ {start_shared=0; start_version=0;}
+		'
+	fi
+}
+
+FindExeReqs()
+{
+	if [ -x "$1" ]; then
+		FindLibReqs "$1"
+	fi
+}
+
+while IFS= read -r f; do
+	if [ -n "$FIND_FILES" ]; then
+		if [ -z "${f%%$RPM_BUILD_ROOT/etc/xinetd.d/*}" ]; then
+			[ -z "$FOUND_REQS" ] && FOUND_REQS="xinetd" || FOUND_REQS="$FOUND_REQS
+xinetd"
+		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/logrotate.d/*}" ]; then
+			[ -z "$FOUND_REQS" ] && FOUND_REQS="logrotate" || FOUND_REQS="$FOUND_REQS
+logrotate"
+		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/cron.d/*}" ]; then
+			[ -z "$FOUND_REQS" ] && FOUND_REQS="vixie-cron" || FOUND_REQS="$FOUND_REQS
+vixie-cron"
+		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/chroot.d/*}" ]; then
+			[ -z "$FOUND_REQS" ] && FOUND_REQS="chrooted" || FOUND_REQS="$FOUND_REQS
+chrooted"
+		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/security/console.apps/*}" ]; then
+			[ -z "$FOUND_REQS" ] && FOUND_REQS="consolehelper" || FOUND_REQS="$FOUND_REQS
+consolehelper"
+		fi
+	fi
+	t="$(file -b "$f")"
+	if [ -z "${t##* text*}" ]; then
+		ListScriptReqs "$f" "$t"
+	elif [ -z "${t##* executable*}" ]; then
+		r="$(FindExeReqs "$f")"
+		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+	elif [ -z "${t##* shared object*}" ]; then
+		r="$(FindLibReqs "$f")"
+		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+	fi
+done
+
+# Find requires in listed perl scripts, if any
+FindPerlReqs
+
+# Finally sort and print them.
+echo "$FOUND_REQS" |sort -u

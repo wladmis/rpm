@@ -1,0 +1,174 @@
+#!/bin/sh -e
+#
+# find-lang - generate list of language specific files.
+# Inspired by tool with same name from W. L. Estes <wlestes@uncg.edu>.
+#
+# Copyright (C) 2000  Dmitry V. Levin <ldv@fandra.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+PROG="${0##*/}"
+
+USAGE()
+{
+	cat <<EOF
+find-lang - generate list of language specific files for inclusion
+            in an rpm spec %files section.
+
+find-lang is free software, covered by the GNU General Public License.
+find-lang comes with ABSOLUTELY NO WARRANTY, see license for details.
+
+Usage: $PROG options PACKAGE_NAME
+
+Valid options are:
+--without-mo        don't find locales files;
+--with-man          find man pages;
+--with-gnome        find GNOME help files;
+--append            don't truncate output file before writing;
+--output=FILENAME   filename where to write output, by default PACKAGE_NAME.lang;
+--topdir=TOPDIR     the top of the tree containing the files to be processed,
+                    by default \$RPM_BUILD_ROOT.
+
+Top directory gets sed'd out of the output list.
+PACKAGE_NAME is usually the %{name} of the package. This should also be
+the basename of the .mo files.
+EOF
+
+	[ -n "$1" ] && exit "$1" || exit
+}
+
+TEMP=`getopt -n "$PROG" -o h -l without-mo,with-man,with-gnome,append,output:,topdir: -- "$@"` || USAGE
+eval set -- "$TEMP"
+
+: ${TOPDIR:=$RPM_BUILD_ROOT}
+FIND_MO=1
+FIND_MAN=
+FIND_GNOME=
+APPEND=
+OUTPUT=
+NAME=
+while :; do
+	case "$1" in
+		--without-mo)
+			FIND_MO=
+			shift
+			;;
+		--with-man)
+			FIND_MAN=1
+			shift
+			;;
+		--with-gnome)
+			FIND_GNOME=1
+			shift
+			;;
+		--append)
+			APPEND=1
+			shift
+			;;
+		--output)
+			shift
+			OUTPUT="$1"
+			shift
+			;;
+		--topdir)
+			shift
+			TOPDIR="$1"
+			shift
+			;;
+		-h|--help)
+			USAGE 0
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "$PROG: unrecognized option: $1" >&2
+			exit 1
+			;;
+	esac
+done
+
+[ -n "$(echo "$@")" ] || USAGE
+
+cd "$TOPDIR"
+cd "$OLDPWD"
+
+TOPDIR="$(echo "$TOPDIR" |sed '
+s:/\(\./\)\+:/:g
+s:/\+:/:g
+s:/$::
+')"
+
+if [ -z "$TOPDIR" ]; then
+	echo "$PROG: non-/ TOPDIR expected" >&2
+	exit 1
+fi
+
+#export FIND_MO FIND_MAN FIND_GNOME APPEND OUTPUT NAME TOPDIR
+
+FindLang()
+{
+	# truncate if required
+	[ -n "$APPEND" ] || :>"$OUTFILE"
+
+	echo '%defattr(644,root,root,755)' >>"$OUTFILE"
+
+	if [ -n "$FIND_MO" ]; then
+		find "$TOPDIR" -type f |sed '
+s:'"$TOPDIR"'::
+s:\(.*/share/locale/\)\([^/_]\+\)\(.*'"$NAME"'\.mo$\):%lang(\2) \1\2\3:
+s:^\([^%].*\)::
+		' |grep -v '^$' >> "$OUTFILE" ||:
+	fi
+
+	if [ -n "$FIND_MAN" ]; then
+		find "$TOPDIR" -type f |sed '
+s:'"$TOPDIR"'::
+s:\(.*/share/man/\)\([^/_]\+\)\(.*'"$NAME"'\..\)\(\.[^/]*\)\?$:%lang(\2) \1\2\3*:
+s:^\([^%].*\)::
+s:^%lang(man.*) .*::
+		' |grep -v '^$' >> "$OUTFILE" ||:
+	fi
+
+	if [ -n "$FIND_GNOME" ]; then
+		find $TOPDIR -type d |sed '
+s:'"$TOPDIR"'::
+s:\(.*/gnome/help/'"$NAME"'$\):%dir \1:
+s:\(.*/gnome/help/'"$NAME"'/\)\([^/_]\+\):%dir %lang(\2) \1\2:
+s:^\([^%].*\)::
+s:%lang(C) ::
+		' |grep -v '^$' >> "$OUTFILE" ||:
+		find "$TOPDIR" -type f |sed '
+s:'"$TOPDIR"'::
+s:\(.*/gnome/help/'"$NAME"'/\)\([^/_]\+\):%lang(\2) \1\2:
+s:^\([^%].*\)::
+s:%lang(C) ::
+		' |grep -v '^$' >> "$OUTFILE" ||:
+	fi
+
+}
+
+for NAME in "$@"; do
+	if [ -n "$OUTPUT" ]; then
+		OUTFILE="$OUTPUT"
+		[ "$NAME" = "$1" ] || APPEND=1
+	else
+		OUTFILE="$NAME.lang"
+	fi
+
+	FindLang
+done
