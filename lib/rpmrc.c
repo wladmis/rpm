@@ -458,50 +458,25 @@ static void setVarDefault(int var, const char * macroname, const char * val,
     addMacro(NULL, macroname, NULL, body, RMIL_DEFAULT);
 }
 
-static void setPathDefault(int var, const char * macroname, const char * subdir)
+static void setVar( const char *macroname, const char *body )
 	/*@globals rpmGlobalMacroContext,
 		internalState @*/
 	/*@modifies internalState @*/
 {
-
-    if (var >= 0) {	/* XXX Dying ... */
-	const char * topdir;
-	char * fn;
-
-	if (rpmGetVar(var)) return;
-
-	topdir = rpmGetPath("%{_topdir}", NULL);
-
-	fn = alloca(strlen(topdir) + strlen(subdir) + 2);
-	strcpy(fn, topdir);
-	if (fn[strlen(topdir) - 1] != '/')
-	    strcat(fn, "/");
-	strcat(fn, subdir);
-
-	rpmSetVar(var, fn);
-	topdir = _free(topdir);
-    }
-
-    if (macroname != NULL) {
-#define	_TOPDIRMACRO	"%{_topdir}/"
-	char *body = alloca(sizeof(_TOPDIRMACRO) + strlen(subdir));
-	strcpy(body, _TOPDIRMACRO);
-	strcat(body, subdir);
-	addMacro(NULL, macroname, NULL, body, RMIL_DEFAULT);
-#undef _TOPDIRMACRO
-    }
+	if ( macroname && body )
+		addMacro( NULL, macroname, NULL, body, RMIL_DEFAULT );
 }
 
 /*@observer@*/ /*@unchecked@*/
 static const char * prescriptenviron = "\n\
 RPM_SOURCE_DIR=\"%{_sourcedir}\"\n\
 RPM_BUILD_DIR=\"%{_builddir}\"\n\
+RPM_DOC_DIR=\"%{_docdir}\"\n\
+export RPM_SOURCE_DIR RPM_BUILD_DIR RPM_DOC_DIR\n\
 RPM_OPT_FLAGS=\"%{optflags}\"\n\
 RPM_ARCH=\"%{_arch}\"\n\
 RPM_OS=\"%{_os}\"\n\
-export RPM_SOURCE_DIR RPM_BUILD_DIR RPM_OPT_FLAGS RPM_ARCH RPM_OS\n\
-RPM_DOC_DIR=\"%{_docdir}\"\n\
-export RPM_DOC_DIR\n\
+export RPM_OPT_FLAGS RPM_ARCH RPM_OS\n\
 RPM_PACKAGE_NAME=\"%{name}\"\n\
 RPM_PACKAGE_VERSION=\"%{version}\"\n\
 RPM_PACKAGE_RELEASE=\"%{release}\"\n\
@@ -510,42 +485,44 @@ export RPM_PACKAGE_NAME RPM_PACKAGE_VERSION RPM_PACKAGE_RELEASE\n\
 export RPM_BUILD_ROOT\n}\
 ";
 
-static void setDefaults(void)
+static void rpmSetDefaults(void)
 	/*@globals rpmGlobalMacroContext,
 		internalState @*/
 	/*@modifies internalState @*/
 {
+	if ( defaultsInitialized )
+		return;
+	else
+	{
+		struct passwd *pw = getpwuid( geteuid() );
 
-    addMacro(NULL, "_usr", NULL, "/usr", RMIL_DEFAULT);
-    addMacro(NULL, "_var", NULL, "/var", RMIL_DEFAULT);
+		setVar( "_usr", "/usr" );
+		setVar( "_var", "/var" );
+		setVar( "_preScriptEnvironment", prescriptenviron );
+		setVar( "_username", pw ? pw->pw_name : 0 );
+		setVar( "_homedir", pw ? pw->pw_dir : 0 );
 
-    addMacro(NULL, "_preScriptEnvironment",NULL, prescriptenviron,RMIL_DEFAULT);
+		setVar( "_topdir", "%{_usr}/src/RPM" );
+		setVar( "_tmppath", "%{_var}/tmp" );
+		setVar( "_dbpath", "%{_var}/lib/rpm" );
+		setVar( "_defaultdocdir", "%{_usr}/share/doc" );
 
-    setVarDefault(-1,			"_topdir",
-		"/usr/src/redhat",	"%{_usr}/src/redhat");
-    setVarDefault(-1,			"_tmppath",
-		"/var/tmp",		"%{_var}/tmp");
-    setVarDefault(-1,			"_dbpath",
-		"/var/lib/rpm",		"%{_var}/lib/rpm");
-    setVarDefault(-1,			"_defaultdocdir",
-		"/usr/doc",		"%{_usr}/doc");
+		setVar( "_rpmfilename", "%%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" );
 
-    setVarDefault(-1,			"_rpmfilename",
-	"%%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm",NULL);
+		setVar( "_signature", "none" );
+		setVar( "_buildshell", "/bin/sh" );
 
-    setVarDefault(RPMVAR_OPTFLAGS,	"optflags",
-		"-O2",			NULL);
-    setVarDefault(-1,			"sigtype",
-		"none",			NULL);
-    setVarDefault(-1,			"_buildshell",
-		"/bin/sh",		NULL);
+		setVar( "_topsrcdir", "%{_topdir}" );
+		setVar( "_builddir", "%{_topdir}/BUILD" );
+		setVar( "_rpmdir", "%{_topdir}/RPMS" );
+		setVar( "_srcrpmdir", "%{_topdir}/SRPMS" );
+		setVar( "_sourcedir", "%{_topsrcdir}/SOURCES" );
+		setVar( "_specdir", "%{_topsrcdir}/SPECS" );
 
-    setPathDefault(-1,			"_builddir",	"BUILD");
-    setPathDefault(-1,			"_rpmdir",	"RPMS");
-    setPathDefault(-1,			"_srcrpmdir",	"SRPMS");
-    setPathDefault(-1,			"_sourcedir",	"SOURCES");
-    setPathDefault(-1,			"_specdir",	"SPECS");
-
+		setVarDefault( RPMVAR_OPTFLAGS,	"optflags", "-O2", NULL );
+ 
+		defaultsInitialized = 1;
+	}
 }
 
 /*@-usedef@*/	/*@ FIX: se usage inconsistent, W2DO? */
@@ -933,6 +910,32 @@ static void mfspr_ill(int notused)
 }
 #endif
 
+static const char *checkAMD( void )
+{
+	int	fd = open( "/proc/cpuinfo", O_RDONLY );
+	if ( !fd )
+		return 0;
+	else
+	{
+		char	buffer[ 1 + getpagesize() ];
+
+		memset( buffer, 0, sizeof buffer );
+		read( fd, buffer, sizeof buffer - 1 );
+		close( fd );
+
+		if ( !strstr( buffer, "AMD" ) )
+			return 0;
+
+		if ( strstr( buffer, "Athlon" ) || strstr( buffer, "Duron" ) )
+			return "athlon";
+
+		if ( strstr( buffer, "K6" ) )
+			return "k6";
+
+		return 0;
+	}
+}
+
 static void defaultMachine(/*@out@*/ const char ** arch,
 		/*@out@*/ const char ** os)
 	/*@globals fileSystem@*/
@@ -1134,6 +1137,7 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 #	endif
 
 #	if defined(__linux__) && defined(__i386__)
+#if 0
 	{
 	    char class = (char) (RPMClass() | '0');
 
@@ -1142,6 +1146,15 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 	    else if (strchr("3456", un.machine[1]) && un.machine[1] != class)
 		un.machine[1] = class;
 	}
+#endif
+
+	if ( !strcmp( un.machine, "i586" ) || !strcmp( un.machine, "i686" ) )
+	{
+		const char *amd = checkAMD();
+		if ( amd )
+			strcpy( un.machine, amd );
+	}
+
 #	endif
 
 #	if defined(__linux__) && defined(__powerpc__)
@@ -1578,10 +1591,7 @@ static int rpmReadRC(/*@null@*/ const char * rcfiles)
     char *myrcfiles, *r, *re;
     int rc;
 
-    if (!defaultsInitialized) {
-	setDefaults();
-	defaultsInitialized = 1;
-    }
+    rpmSetDefaults();
 
     if (rcfiles == NULL)
 	rcfiles = defrcfiles;
