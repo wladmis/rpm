@@ -2726,10 +2726,18 @@ static void printDepMsg(DepMsg_t * dm, int count, const char ** names,
     for (i = 0; i < count; i++, names++, versions++, flags++) {
 	if (hasFlags && !((*flags & dm->mask) ^ dm->xor))
 	    continue;
+	/* workaround for legacy PreReq */
+	if (dm->mask == RPMSENSE_PREREQ && dm->xor == 0 && !isLegacyPreReq (*flags))
+	    continue;
 	if (bingo == 0) {
 	    rpmMessage(RPMMESS_NORMAL, "%s:", (dm->msg ? dm->msg : ""));
 	    bingo = 1;
 	}
+	/* print comma where appropriate */
+	if (bingo > 1)
+	    rpmMessage(RPMMESS_NORMAL, ",");
+	else
+	    bingo = 2;
 	rpmMessage(RPMMESS_NORMAL, " %s", *names);
 
 	if (hasFlags && isDependsMULTILIB(*flags))
