@@ -595,8 +595,7 @@ int _nl_msg_cat_cntr;	/* XXX GNU gettext voodoo */
 static const char * language = "LANGUAGE";
 
 /*@observer@*/ /*@unchecked@*/
-static const char * _macro_i18ndomains =
-		"%{?_i18ndomains:%{_i18ndomains}}";
+static const char *_macro_i18ndomains = "%{?_i18ndomains}";
 
 /**
  * @param h		header
