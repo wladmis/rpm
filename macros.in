@@ -284,6 +284,16 @@
 #
 #%vendor
 
+# Script gets packaged file list on input and buildroot in $RPM_BUILD_ROOT variable.
+# Returns list of unpackaged files, i.e. files in $RPM_BUILD_ROOT not packaged.
+#
+%__check_files         @RPMCONFIGDIR@/check-files
+
+# Should unpackaged files in a buildroot terminate a build?
+#
+# Note: The default value should be 0 for legacy compatibility.
+%_unpackaged_files_terminate_build	0
+
 #==============================================================================
 # ---- Package version macro.
 #	The type of package to produce, for compatibility with legacy

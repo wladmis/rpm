@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt26.1
+Release: alt26.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -415,6 +415,7 @@ fi
 %rpmattr %_libdir/%name/brp-*
 %rpmattr %_libdir/%name/*_files
 %rpmattr %_libdir/%name/mkinstalldirs
+%rpmattr %_libdir/%name/check-files
 %rpmattr %_libdir/%name/convertrpmrc.sh
 %rpmattr %_libdir/%name/rpm2cpio.sh
 %rpmattr %_libdir/%name/filesize
@@ -473,11 +474,12 @@ fi
 %endif #with contrib
 
 %changelog
-* Fri Nov 07 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt26.1
+* Fri Nov 07 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt26.2
 - Do not package build-topdir subpackage by default.
 - verify_elf: implemented TEXTREL checking.
 - README.ALT-ru_RU.KOI8-R: document it.
 - helper shell scripts: use printf instead of echo where appropriate.
+- Backported %%_unpackaged_files_terminate_build support.
 
 * Sat Sep 27 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt26
 - gendiff: cleanup (#2558).

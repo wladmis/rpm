@@ -85,6 +85,10 @@ typedef struct AttrRec_s {
     mode_t	ar_dmode;
 } * AttrRec;
 
+/* List of files */
+static StringBuf check_fileList = NULL;
+static int check_fileListLen = 0;
+
 /**
  */
 /*@unchecked@*/
@@ -1626,6 +1630,13 @@ static int addFile(FileList fl, const char * diskURL,
 	(unsigned)fileMode, fileUname, fileGname, fileURL);
 #endif
 
+    /* This check must be consistent with check-files script. */
+    if (S_ISREG(fileMode) || S_ISLNK(fileMode)) {
+      appendStringBuf(check_fileList, diskURL);
+      appendStringBuf(check_fileList, "\n");
+      check_fileListLen += strlen(diskURL) + 1;
+    }
+
     /* Add to the file list */
     if (fl->fileListRecsUsed == fl->fileListRecsAlloced) {
 	fl->fileListRecsAlloced += 128;
@@ -2800,13 +2811,69 @@ static void printDeps(Header h)
     versions = hfd(versions, dvt);
 }
 
+/**
+ * Check packaged file list against what's in the build root.
+ * @param fileList	packaged file list
+ * @param fileListLen	no. of packaged files
+ * @return		-1 if skipped, 0 on OK, 1 on error
+ */
+static int checkFiles(StringBuf fileList, int fileListLen)
+{
+    StringBuf readBuf = NULL;
+    const char * s;
+    char ** av = NULL;
+    int ac = 0;
+    int rc = 0;
+    char *buf;
+
+    s = rpmExpand("%{?__check_files}", NULL);
+    if (!(s && *s)) {
+	rc = -1;
+	goto exit;
+    }    
+    if (!((rc = poptParseArgvString(s, &ac, (const char ***)&av)) == 0
+    && ac > 0 && av != NULL))
+    {
+	goto exit;
+    }
+
+    rpmMessage(RPMMESS_NORMAL, _("Checking for unpackaged files: %s\n"), s);
+
+    if ((readBuf = getOutputFrom(NULL, av, getStringBuf(fileList), fileListLen, 0))) {
+	static int _unpackaged_files_terminate_build = 0;
+	static int oneshot = 0;
+
+	if (!oneshot) {
+	    _unpackaged_files_terminate_build =
+		rpmExpandNumeric("%{?_unpackaged_files_terminate_build}");
+	    oneshot = 1;
+	}
+
+	buf = getStringBuf(readBuf);
+	if (*buf && (*buf != '\n')) {
+	    rc = (_unpackaged_files_terminate_build) ? 1 : 0;
+	    rpmMessage((rc ? RPMMESS_ERROR : RPMMESS_WARNING),
+		_("Installed (but unpackaged) file(s) found:\n%s"), buf);
+	}
+    }
+
+exit:
+    freeStringBuf(readBuf);
+    s = _free(s);
+    av = _free(av);
+    return rc;
+}
+
 int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 {
     Package pkg;
-    
+    int rc = 0;
+
+    check_fileList = newStringBuf();
+    check_fileListLen = 0;
+
     for (pkg = spec->packages; pkg != NULL; pkg = pkg->next) {
 	const char *n, *v, *r;
-	int rc;
 
 	if (pkg->fileList == NULL)
 	    continue;
@@ -2815,7 +2882,7 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	rpmMessage(RPMMESS_NORMAL, _("Processing files: %s-%s-%s\n"), n, v, r);
 		   
 	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
-	if (rc) return rc;
+	if (rc) break;
 
     /* XXX This should be added always so that packages look alike.
      * XXX However, there is logic in files.c/depends.c that checks for
@@ -2823,17 +2890,28 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
      */
 	if (headerIsEntry(pkg->header, RPMTAG_MULTILIBS)) {
 	    rc = generateDepends(spec, pkg, pkg->cpioList, 1);
-	    if (rc) return rc;
+	    if (rc) break;
 	    rc = generateDepends(spec, pkg, pkg->cpioList, 2);
-	    if (rc) return rc;
+	    if (rc) break;
 	} else {
 	    rc = generateDepends(spec, pkg, pkg->cpioList, 0);
-	    if (rc) return rc;
+	    if (rc) break;
 	}
 	/*@-noeffect@*/
 	printDeps(pkg->header);
 	/*@=noeffect@*/
     }
 
-    return 0;
+    /* Now we have in fileList list of files from all packages.
+     * We pass it to a script which do the work of finding missing
+     * and duplicated files.
+     */
+    
+    if (rc == 0 && checkFiles(check_fileList, check_fileListLen) > 0)
+	rc = 1;
+
+    check_fileListLen = 0;
+    freeStringBuf(check_fileList);
+
+    return rc;
 }
