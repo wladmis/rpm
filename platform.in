@@ -278,7 +278,7 @@
 @alt@fi	\
 @alt@%nil
 @alt@
-@alt@# Manpage directories
+@alt@# Manpage directories.
 @alt@%_man1dir		%_mandir/man1
 @alt@%_man2dir		%_mandir/man2
 @alt@%_man3dir		%_mandir/man3
@@ -289,18 +289,18 @@
 @alt@%_man8dir		%_mandir/man8
 @alt@%_man9dir		%_mandir/man9
 @alt@
-@alt@# Menu directories
+@alt@# Menu directories.
 @alt@%_menudir	%_libdir/menu
 @alt@%_iconsdir	%_datadir/icons
 @alt@%_miconsdir	%_iconsdir/mini
 @alt@%_liconsdir	%_iconsdir/large
 @alt@
-@alt@# Games directories
+@alt@# Games directories.
 @alt@%_gamesdir	games
 @alt@%_gamesbindir	%{_prefix}/%{_gamesdir}
 @alt@%_gamesdatadir	%{_datadir}/%{_gamesdir}
 @alt@
-@alt@# X11 directories
+@alt@# X11 directories.
 @alt@%_x11dir	%{_prefix}/X11R6
 @alt@%_x11bindir	%{_x11dir}/bin
 @alt@%_x11libdir	%{_x11dir}/lib
@@ -309,26 +309,30 @@
 @alt@%_x11datadir	%{_x11dir}/share
 @alt@%_x11fontsdir	%{_x11libdir}/X11/fonts
 @alt@
-@alt@# Initscripts
+@alt@# Initscripts.
 @alt@%_initdir	%{_sysconfdir}/rc.d/init.d
 @alt@
-@alt@# Licenses
+@alt@# Licenses.
 @alt@%_licensedir	%{_datadir}/license
 @alt@
-@alt@# Common lock directory
+@alt@# Common lock directory.
 @alt@%_lockdir	%{_var}/lock
 @alt@
-@alt@# Common log directory
+@alt@# Common log directory.
 @alt@%_logdir	%{_var}/log
 @alt@
-@alt@# Application cache data directory
+@alt@# Application cache data directory.
 @alt@%_cachedir	%{_var}/cache
 @alt@
-@alt@# Application spool data directory
+@alt@# Application spool data directory.
 @alt@%_spooldir	%{_var}/spool
 @alt@
-@alt@# Directory for emacs lisp modules
+@alt@# Directory for emacs lisp modules.
 @alt@%_emacslispdir	%{_datadir}/emacs/site-lisp
+@alt@
+@alt@# TCL directories.
+@alt@%_tcllibdir	%_libdir/tcl
+@alt@%_tcldatadir	%_datadir/tcl
 @alt@
 @alt@# Update Menus.
 @alt@%_update_menus_bin	%_bindir/update-menus
