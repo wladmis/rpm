@@ -2820,6 +2820,7 @@ static void printDeps(Header h)
 static int checkFiles(StringBuf fileList, int fileListLen)
 {
     StringBuf readBuf = NULL;
+    const char	*runCmd = 0;
     const char * s;
     const char ** av = 0;
     int ac = 0;
@@ -2834,8 +2835,11 @@ static int checkFiles(StringBuf fileList, int fileListLen)
 	rc = -1;
 	goto exit;
     }    
-    if (!((rc = poptParseArgvString(s, &ac, (const char ***)&av)) == 0
-    && ac > 0 && av != NULL))
+
+    runCmd = rpmExpand( "%{___build_cmd}", " ", s, 0 );
+
+    if (!((rc = poptParseArgvString(runCmd, &ac, (const char ***)&av)) == 0
+          && ac > 0 && av != NULL))
     {
 	goto exit;
     }
@@ -2867,6 +2871,7 @@ static int checkFiles(StringBuf fileList, int fileListLen)
 
 exit:
     freeStringBuf(readBuf);
+    runCmd = _free(runCmd);
     s = _free(s);
     av = _free(av);
     return rc;
