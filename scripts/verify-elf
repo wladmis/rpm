@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -e -f +B
 #
 # verify-elf - verify ELF objects.
 #
@@ -22,7 +22,6 @@
 PROG="${0##*/}"
 
 : ${RPM_VERIFY_ELF_SKIPLIST:=}
-export RPM_VERIFY_ELF_SKIPLIST
 
 rc=0
 for f in "$@"; do

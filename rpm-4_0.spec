@@ -4,7 +4,7 @@
 
 Name: rpm
 Version: %rpm_version
-Release: alt5
+Release: alt6
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -477,6 +477,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Oct 05 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt6
+- Fixed sliplists processing.
+
 * Fri Oct 04 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt5
 - lib/psm.c: fixed chroot(2) handling (aka "rpmi --dbpath" problem).
 - po/ru.po: translation fix (#0001286).
