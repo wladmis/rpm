@@ -43,11 +43,13 @@ Valid options are:
 	Remove all symbols.
 -g, -S, --strip-debug
 	Remove all debugging symbols.
+--skip-files=<pattern>
+	Skip files matched by specified pattern.
 --strip-unneeded
 	Remove all symbols not needed by relocations.
--N, --strip-symbol <name>
+-N, --strip-symbol=<name>
 	Do not copy named symbol.
--K, --keep-symbol <name>
+-K, --keep-symbol=<name>
 	Only copy named symbol.
 -x, --discard-all
 	Remove all non-global symbols.
@@ -65,12 +67,13 @@ EOF
 	[ -n "$1" ] && exit "$1" || exit
 }
 
-TEMP=`getopt -n "$PROG" -o hpR:sgSN:K:xXvT: -l help,preserve-dates,remove-section:,strip-all,strip-symbol:,keep-symbol:,discard-all,discard-locals,verbose,topdir: -- "$@"` || USAGE
+TEMP=`getopt -n "$PROG" -o hpR:sgSN:K:xXvT: -l help,preserve-dates,remove-section:,skip-files:,strip-all,strip-symbol:,keep-symbol:,discard-all,discard-locals,verbose,topdir: -- "$@"` || USAGE
 eval set -- "$TEMP"
 
 : ${TOPDIR:=$RPM_BUILD_ROOT}
 export STRIP_FORCED=
 export STRIP_FORCED_OPTS=
+export STRIP_AUTOSKIP=
 
 AddForcedOpts()
 {
@@ -95,6 +98,11 @@ while :; do
 			AddForcedOpts -R "$1"
 			shift
 			STRIP_FORCED=1
+			;;
+		--skip-files)
+			shift
+			STRIP_AUTOSKIP="$STRIP_AUTOSKIP $1"
+			shift
 			;;
 		-s|--strip-all)
 			AddForcedOpts -s
@@ -176,7 +184,6 @@ export STRIP_EXECUTABLE=
 export STRIP_RELOCATABLE=
 export STRIP_SHARED=
 export STRIP_STATIC=
-export STRIP_AUTOSKIP=
 for t in `echo "$RPM_STRIP_METHOD" |tr , ' '`; do
 	case "$t" in
 		no|none|off|false)
