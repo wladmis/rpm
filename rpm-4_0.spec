@@ -57,11 +57,11 @@ BuildRequires: bzlib-devel-static cpio gcc-c++ gettext-tools gnupg libbeecrypt-d
 Summary: Shared libraries required for applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Файлы, необходимые для разработки приложений, взаимодействующих с RPM-пакетами
 Group: System/Libraries
-PreReq: %get_dep libbeecrypt
-PreReq: %get_dep libpopt
-PreReq: %get_dep zlib
-PreReq: %get_dep bzlib
-PreReq: %get_dep libdb4.0
+PreReq: zlib >= 1.1.4
+PreReq: bzlib >= 1:1.0.2-alt2
+PreReq: libpopt >= 1:1.7-alt3
+PreReq: libbeecrypt >= 2.2.0-alt1
+PreReq: libdb4.0
 
 %package -n lib%name-devel
 Summary: Development files for applications which will manipulate RPM packages
@@ -485,6 +485,7 @@ fi
 - %%get_dep(): make valid string even for missing packages.
 - New group: Sciences/Medicine.
 - Do not package cron and logrotate scripts.
+- Updated package dependencies.
 
 * Thu Apr 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt16
 - Fixed segfault on "rpmquery --qf '%{FILENAMES}' basesystem" command.
