@@ -18,8 +18,6 @@ INCLUDES = \
 	-I$(top_srcdir)/rpmio \
 	@INCPATH@
 
-LIBS = -lrt -lpthread
-
 myLDFLAGS = # @LDFLAGS_STATIC@
 
 # XXX libtool can/should generate dependent libs.

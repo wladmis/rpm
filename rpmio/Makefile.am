@@ -18,8 +18,6 @@ pkginc_HEADERS = \
 	ugid.h
 noinst_HEADERS = rpmio_internal.h rpmpgp.h
 
-LIBS +=	@WITH_ZLIB_LIB@ -lrt -lpthread
-
 lib_LTLIBRARIES = librpmio.la
 librpmio_la_SOURCES = digest.c macro.c rpmio.c rpmlog.c rpmmalloc.c \
 	rpmpgp.c rpmrpc.c strcasecmp.c stubs.c url.c ugid.c
