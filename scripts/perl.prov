@@ -46,6 +46,7 @@
 
 # by Ken Estes Mail.com kestes@staff.mail.com
 # modified by Mikhail Zabaluev <mookid@mu.ru>
+# modified by Alexey Tourbin <at@turbinal.org>
 
 require v5.6.0;
 
@@ -154,6 +155,10 @@ sub process_file {
 
   my $inpackage = 0;
 
+  my ($package_name, $package_filename);
+  my $module_path = $module_file;
+  $module_path =~ s/(.+?)\/(.+)/$1\//;
+
   while (<FILE>) {
     
     # skip the documentation
@@ -166,6 +171,10 @@ sub process_file {
       next;
     }
     
+    if ( (m/^=(over)/) .. (m/^=(back)/) ) {
+      next;
+    }
+
     # skip the data section
     if (m/^__(DATA|END)__$/) {
       last;
@@ -175,25 +184,43 @@ sub process_file {
     # package name so we browse through all namespaces
 
     if (m/^\s*package\s+([\w:']+)\s*;/) {
-      $inpackage =  (module_filename($1) eq $module_file)? 1 : 0;
-      next;
+
+# AT: 
+# $ grep '^[ \t]*package' /usr/lib/perl5/i386-linux/B/CC.pm
+# /usr/lib/perl5/i386-linux/B/CC.pm:package B::CC;
+# /usr/lib/perl5/i386-linux/B/CC.pm:    package B::Pseudoreg;
+# /usr/lib/perl5/i386-linux/B/CC.pm:    package B::Shadow;
+
+	$package_name = $1;
+	$package_filename = module_filename($package_name);
+	next if $package_filename eq $module_file;
+	if ($module_path && index($package_filename, $module_path) == 0) {
+		$provide{$package_filename} = undef;
+	} else {
+		undef $package_name;
+		undef $package_filename;
+	}
+	next;
     }
 
     # after we found the package name take the first assignment to
     # $VERSION as the version number. Exporter requires that the
     # variable be called VERSION so we are safe.
 
-    if ($inpackage &&
+    if ($package_filename &&
 	s/^([\s(]*)(our\s*)?\$VERSION\s*=/$1\$VERSION =/) {
-      $provide{$module_file} = extract_version($_);
+      $provide{$package_filename} = extract_version($_);
       next;
     }
 
     # also consider version initializations with explicit package specification
 
     if (s/^([\s(]*)(our\s*)?\$([\w:']+)::VERSION\s*=/$1\$VERSION =/) {
-      if (module_filename($3) eq $module_file) {
-	$provide{$module_file} = extract_version($_);
+      my $filename = module_filename($3);
+      if ($filename eq $module_file || 
+        $module_path && index($filename, $module_path) == 0) 
+      {
+	$provide{$filename} = extract_version($_);
       }
       next;
     }

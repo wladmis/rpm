@@ -39,9 +39,56 @@
 
 # by Ken Estes Mail.com kestes@staff.mail.com
 # modified by Mikhail Zabaluev <mookid@mu.ru>
+# modified by Alexey Tourbin <at@turbinal.org>
 
-require File::Spec;
+use 5.005; # qr
+use Getopt::Long;
+use File::Spec;
 
+GetOptions("debug" => \my $debug, "method=s" => \my $method);
+sub debug ($) {
+	my $msg = shift;
+	warn "$msg\n" if $debug;
+}
+if ($debug) {
+	require IO::Handle;
+	STDOUT->autoflush(1);
+	STDERR->autoflush(1);
+	debug "debug mode enabled";
+}
+$method ||= $ENV{RPM_PERL_REQ_METHOD};
+$method =~ s/\s+//g;
+$method eq "strict" || $method eq "normal" || $method eq "relaxed"
+	|| die "$0: strcit, normal, relaxed methods supported\n";
+debug "method = $method";
+
+my @ignore_files = (
+	qr(/usr/share/doc/),
+	qr(/[Dd]emos?/),
+	qr(/examples?/),
+);
+my @ignore_reqs = (
+	qr(^Makefile\b),
+# OS-specific
+	qr(^machine/ansi\b),
+	qr(^sys/systeminfo\b),
+	qr(^vmsish\b),
+	qr(^MacPerl\b),
+	qr(^VMS/),
+	qr(^Win32/),
+	qr(^OS2/),
+	qr(^Mac/),
+	qr(^ExtUtils/XSSymSet\b),
+	qr(^Convert/EBCDIC\b),
+# old names
+	qr(^Digest/Perl/MD5\b),
+	qr(^Pod/PlainText\b),
+# wrong names
+	qr(/\.),
+	qr(\$),
+# MDK: skip if the phrase was "use of" -- shows up in gimp-perl, et al
+	qr(^of$),
+);
 
 if (@ARGV) {
   foreach (@ARGV) {
@@ -57,35 +104,16 @@ if (@ARGV) {
   }
 }
 
-
-# obtain the list of library directories. If not provided, use @INC
-
-if (exists $ENV{RPM_PERL_LIB_PATH}) {
-  @perl_inc = split(/[:,\s]+/, $ENV{RPM_PERL_LIB_PATH});
-}
-else {
-  @perl_inc = grep { m|^/| } @INC;
-}
-
-# add installation mirrors to the library search list
-
-my $buildroot = $ENV{RPM_BUILD_ROOT};
-push @perl_inc, map { "${buildroot}$_" } @perl_inc;
-
-
+MODULE:
 foreach $module (sort keys %require) {
-
-  # search for the file to be installed in the system or in this same package
-
-  my $found = 0;
-  for (@perl_inc) {
-    if (-e "$_/$module") {
-      $found = 1;
-      last;
-    }
+  unless ($method eq "strict") {
+	for my $re (@ignore_reqs) {
+		if ($module =~ $re) {
+			debug "module $module matches $re; skip";
+			next MODULE;
+		}
+	}
   }
-  next unless $found;
-
   if (length($require{$module}) == 0) {
     print "perl($module)\n";
   } else {
@@ -104,6 +132,15 @@ sub process_file {
 
   return if $file eq '';
 
+  unless ($method eq "strict") {
+	foreach my $re (@ignore_files) {
+		if ($file =~ $re) {
+			debug "file: $file matches: $re; skip";
+			return;
+		}
+	}
+  }
+
   open(FILE, "<$file")||
     die("$0: Could not open file: '$file' : $!\n");
   
@@ -119,7 +156,12 @@ sub process_file {
       next;
     }
     
+    if ( (m/^=(over)/) .. (m/^=(back)/) ) {
+      next;
+    }
+    
     # skip the data section
+    # AT: but what about AutoLoader and SelfLoader? (TODO)
     if (m/^__(DATA|END)__$/) {
       last;
     }
@@ -135,69 +177,148 @@ sub process_file {
       next;
     }
 
-    my ($module, $version) = ();
+	chomp;
+	s/#.*//;
+	next unless /\b(use|require|do)\b/; # do not want 'do {' loops
+	next if /\bdo\s*{/; # do not want 'do {' loops
+	next if /^\s*["']/;
+	# print "just use it";
+	if (/^\s*(?:(?!use|require|do|eval|if|unless)[\w:$->]+\s*)+\(/) {
+		debug "skip: $_";
+		next;
+	}
+	if (/^\s*(?:(?!use|require|do|eval|if|unless)[\w:]+\s*)+\(?(['"]).*\1/) {
+		debug "skip: $_";
+		next;
+	}
+	next unless /^(.*?)\b(use|do|require)\s+(['"]?)([.:\w\/]+)\3\s*(.*)/;
+	my ($indent, $statement, $quote, $module, $rest) = ($1, $2, $3, $4, $5);
+	debug "line: $_";
+	next if $module =~ m/\$/;
+	next if $module !~ m/\w/;
 
-    if (m/^\s*(require|use)\s+(v?\d[.\d_]*)/) {
+	# conditional statements
+	if (/\b(if|unless|eval)\b/ && $method eq "relaxed") {
+		debug "file: $file requires: $module (conditional); skip";
+		next;
+	}
 
-      # statement requires a particular version of Perl
+	# indent is somewhat unclear
+	if ($indent =~ /[^\w\s{}();:]/ && $method ne "strict") {
+		debug "file: $file requires: $module (indent unclear); skip";
+		next;
+	}
+		
+	# statement requires a particular version of Perl
+	if ($module =~ m/^v?[0-9._]+$/ && $rest =~ /^;|\s*$/) {
+		print "perl-base >= " . package_version($module, '%.5f') . "\n";
+		next;
+	}
 
-      print "perl-base >= " . package_version($2, '%.5f') . "\n";
-      next;
-    }
-    elsif (m/^\s*require[\s(]+([_A-Za-z][\w:']*)/) {
+	if ($statement eq "require") {
+		if ($indent =~ /^\s+$/ && $method eq "relaxed") {
+			debug "file: $file <require>s: $module (whitespace); skip";
+			next;
+		}
+		if ($indent =~ /\S/ && $method ne "strict") {
+			debug "file: $file <require>s: $module (inside); skip";
+			next;
+		}
+	}
 
-      # require Module::Name
+	if ($statement eq "do") {
+		if ($indent =~ /^\s+$/ && $method eq "relaxed") {
+			debug "file: $file <do>es: $module (whitespace); skip";
+			next;
+		}
+		if ($indent =~ /\S/ && $method ne "strict") {
+			debug "file: $file <do>es: $module (inside); skip";
+			next;
+		}
+	}
 
-      $module = module_filename($1);
-    }
-    elsif (m/^\s*use\s+([_A-Za-z][\w:']*)(\s+(v?[._\d]+))?/) {
+	if ($statement eq "use") {
+		if ($indent =~ /\S/ && $method ne "strict") {
+			debug "file: $file <use>s: $module (inside); skip";
+			next;
+		}
+	}
 
-      # use Module::Name [VERSION]
+	# filename
+	if ($quote && $module =~ /^\w+(\/\w+)*\.p[lmh]$/ && $rest =~ /^$|;/ &&
+		($statement eq "do" || $statement eq "require"))
+	{
+		$require{$module} = undef;
+		debug "\$require{$module} = yes";
+		next;
+	}
 
-      $module = module_filename($1);
-      if (defined($2)) {
-	$version = package_version($3);
-      }
-    }
-    elsif (m/^\s*(do|require)[\s(]*(['"])([^'"\s\\]+)\2[\s)]*;/) {
+	# modules, variables, lists
+	my $m = qr/[:\w]+/;
+	my $v = qr/[\$\%\@]$m/;
+	my $s = qr/(?:[\s\t,]|=>)/;
+	my $ml = qr/^\s*(?:qw)?[\/('"]?\s*($m(?:$s$m)*)/;
+	my $fl = qr/^\s*(?:qw)?[\/('"]?\s*($m(?:$s$m)*)/;
+	my $vl = qr/^\s*(?:qw)?[\/('"]?\s*($v(?:$s$v)*)/;
+	
+	# special pragma (vars, subs)
+	if (($module eq "vars" || $module eq "subs") && $rest =~ $vl) {
+		my $mod = module_filename($module);
+		$require{$mod} = undef;
+		debug "$module: \$requires{$mod} = yes";
+		next;
+	}
 
-      # invocation of a file by its name
+	# special pragma (constant)
+	if ($module eq "constant" && $rest =~ $ml) {
+		my $mod = module_filename($module);
+		$require{$mod} = undef;
+		debug "$module: \$requires{$mod} = yes";
+		next;
+	}
 
-      $module = $3;
+	# special pragma (base, autouse)
+	if (($module eq "base" || $module eq "autouse") && $rest =~ $vl) {
+		my $modules = $1;
+		my @modules = split $s, $modules;
+		foreach my $mod (@modules, $module) {
+			if ($mod =~ /^\w+(::\w+)*$/) {
+				$mod = module_filename($mod);
+				$require{$mod} = undef;
+				debug "$module: \$requires{$mod} = yes";
+			}
+		}
+		next;
+	}
 
-      # if there is some interpolation of variables just skip this
-      # dependency, we do not want
-      #        do "$ENV{LOGDIR}/$rcfile";
+	# special pragma (overload)
+	if ($statement eq "use" && $module eq "overload" && $rest =~ /'|"|=>|,/) {
+		my $mod = module_filename($module);
+		$require{$mod} = undef;
+		debug "\$requires{$mod} = yes";
+		next;
+	}
 
-      next if $2 eq '"' && $module =~ /\$/;
-
-      $module = File::Spec->canonpath($module);
-
-      if (File::Spec->file_name_is_absolute) {
-
-	# references to absolute filenames are reported explicitly
-
-	print "$module\n";
-	next;
-      }
-
-      # unsure what to do with paths that lead to parent directories
-
-      next if $module =~ /(^|\/)\.\.\//;
-
-      # otherwise, continue with $module set
-
-    }
-    elsif (m/^\s*([_A-Za-z][\w:']*)\s*->\s*require_version\s*\(\s*(v?[._\d]+)\s*\)/
- 	   || m/^\s*require_version\s+([_A-Za-z][\w:']*)\s+(v?[._\d]+)/) {
-      $module = module_filename($1);
-      $version = package_version($2);
-    }
-
-    if (defined($module)) {
-      $require{$module} = $version
-	unless defined($require{$module}) && $require{$module} >= $version;
-    }
+	# perl module
+	if ($module && $module =~ /^\w+(::\w+)*$/ &&
+		($rest =~ /^$|^[;}"']|\b(if|unless|eval)\b|\(|^v?\d|qw|$fl/ &&
+		$indent =~ /^\s*$|[^\w\s]\s*$/) &&
+		($statement eq "use" || $statement eq "require")) 
+	{
+		$module = module_filename($module);
+		my ($version) = $rest =~ /^(v?[0-9._]+)\b/;
+		if ($version) {
+			$version = package_version($version);
+			debug "\$require{$module} >= $version";
+			$require{$module} = $version
+				unless $require{$module} && $require{$module} >= $version;
+		} else {
+			$require{$module} = undef;
+			debug "\$require{$module} = yes";
+		}
+		next;
+	}
+	debug "untrapped: $_";
   }
 
   close(FILE)||
