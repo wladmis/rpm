@@ -395,8 +395,8 @@
 @alt@
 @alt@# Synchronize the scrollkeeper database.
 @alt@%_update_scrollkeeper_bin	%_bindir/scrollkeeper-update
-@alt@%update_scrollkeeper	[ -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin ||:
-@alt@%clean_scrollkeeper	[ "$1" = 0 -a -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin ||:
+@alt@%update_scrollkeeper	[ -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin -q ||:
+@alt@%clean_scrollkeeper	[ "$1" = 0 -a -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin -q ||:
 @alt@
 @alt@%_defattr	%%defattr(-,root,root,755)
 @alt@
