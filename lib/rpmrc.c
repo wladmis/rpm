@@ -502,13 +502,9 @@ static void rpmSetDefaults(void)
 		return;
 	else
 	{
-		struct passwd *pw = getpwuid( geteuid() );
-
 		setVar( "_usr", "/usr" );
 		setVar( "_var", "/var" );
 		setVar( "_preScriptEnvironment", prescriptenviron );
-		setVar( "_username", pw ? pw->pw_name : 0 );
-		setVar( "_homedir", pw ? pw->pw_dir : 0 );
 
 		setVar( "_topdir", "%{_usr}/src/RPM" );
 		setVar( "_tmppath", "%{_var}/tmp" );
