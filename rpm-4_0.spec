@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt41
+Release: alt42
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -14,6 +14,7 @@ Release: alt41
 %define def_without() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _without_%{1} --without-%{1}}}}
 %define if_with() %if %{expand:%%{?_with_%{1}:1}%%{!?_with_%{1}:0}}
 %define if_without() %if %{expand:%%{?_without_%{1}:1}%%{!?_without_%{1}:0}}
+%define %_rpmdir %_prefix/lib/%name
 
 %def_with python
 %def_without apidocs
@@ -51,7 +52,7 @@ BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindi
 BuildConflicts: rpm-devel
 
 # Automatically added by buildreq on Mon May 05 2003 and edited manually.
-BuildRequires: bzlib-devel-static glibc-devel-static libbeecrypt-devel-static libdb4.2-devel-static libpopt-devel-static zlib-devel-static
+BuildRequires: bzlib-devel-static glibc-devel-static libbeecrypt-devel-static libdb4.3-devel-static libpopt-devel-static zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -61,7 +62,7 @@ PreReq: zlib >= 1.1.4
 PreReq: bzlib >= 1:1.0.2-alt2
 PreReq: libpopt >= 1:1.7-alt3
 PreReq: libbeecrypt >= 2.2.0-alt1
-PreReq: libdb4.2
+PreReq: libdb4.3
 
 %package -n librpmbuild
 Summary: Shared library required for applications which will build RPM packages
@@ -76,14 +77,14 @@ Group: Development/C
 Provides: %name-devel = %version-%release
 Obsoletes: %name-devel
 Requires: lib%name = %version-%release, librpmbuild = %version-%release
-Requires: bzlib-devel, libbeecrypt-devel, libdb4.2-devel, libpopt-devel, zlib-devel
+Requires: bzlib-devel, libbeecrypt-devel, libdb4.3-devel, libpopt-devel, zlib-devel
 
 %package -n lib%name-devel-static
 Summary: Static libraries for developing statically linked applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Статические библиотеки, необходимые для разработки статических приложений, взаимодействующих с RPM-пакетами
 Group: Development/C
 Requires: lib%name-devel = %version-%release
-Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.2-devel-static, libpopt-devel-static, zlib-devel-static
+Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.3-devel-static, libpopt-devel-static, zlib-devel-static
 
 %package build
 Summary: Scripts and executable programs used to build packages
@@ -292,7 +293,7 @@ bzip2 -9 CHANGES ||:
 %__install -pD -m644 rpminit.1 $RPM_BUILD_ROOT%_man1dir/rpminit.1
 
 # Valid groups.
-%__install -p -m644 GROUPS $RPM_BUILD_ROOT%_libdir/%name/
+%__install -p -m644 GROUPS $RPM_BUILD_ROOT%_rpmdir/
 
 # buildreq ignore rules.
 %__install -pD -m644 rpm-build.buildreq $RPM_BUILD_ROOT%_sysconfdir/buildreqs/files/ignore.d/rpm-build
@@ -302,14 +303,14 @@ chmod a+x scripts/find-lang
 #./scripts/find-lang --with-man %name rpm2cpio --output %name.lang
 RPMCONFIGDIR=./scripts ./scripts/find-lang %name rpm2cpio --output %name.lang
 
-pushd $RPM_BUILD_ROOT%_libdir/%name
+pushd $RPM_BUILD_ROOT%_rpmdir
 	for f in *-alt-%_target_os; do
 		n=`echo "$f" |%__sed -e 's/-alt//'`
 		[ -e "$n" ] || %__ln_s "$f" "$n"
 	done
 popd
 
-/bin/ls -1d $RPM_BUILD_ROOT%_libdir/%name/*-%_target_os |
+/bin/ls -1d $RPM_BUILD_ROOT%_rpmdir/*-%_target_os |
 	%__grep -Fv /brp- |
 	%__sed -e "s|^$RPM_BUILD_ROOT|%attr(-,root,%name) |g" >>%name.lang
 
@@ -328,13 +329,13 @@ fi
 if [ -f %_localstatedir/%name/packages.rpm ]; then
 	%__chgrp %name %_localstatedir/%name/*.rpm
 	# Migrate to db3 database.
-	%_libdir/%name/pdeath_execute $PPID %_libdir/%name/delayed_rebuilddb
+	%_rpmdir/pdeath_execute $PPID %_rpmdir/delayed_rebuilddb
 elif [ -f %_localstatedir/%name/Packages ]; then
 	%__chgrp %name %_localstatedir/%name/[A-Z]*
 	# Undo db1 configuration.
 	%__rm -f %_sysconfdir/%name/macros.db1
 	[ -n "$DURING_INSTALL" -o -n "$BTE_INSTALL" ] ||
-		%_libdir/%name/pdeath_execute $PPID %_libdir/%name/delayed_rebuilddb
+		%_rpmdir/pdeath_execute $PPID %_rpmdir/delayed_rebuilddb
 else
 	# Initialize db3 database.
 	%__rm -f %_sysconfdir/%name/macros.db1
@@ -357,9 +358,9 @@ fi
 %define rpmdbattr %attr(644,root,%name) %verify(not md5 size mtime) %ghost %config(missingok,noreplace)
 
 %files -n lib%name
-%rpmdirattr %_libdir/%name
-%rpmdatattr %_libdir/%name/rpmrc
-%rpmdatattr %_libdir/%name/macros
+%rpmdirattr %_rpmdir
+%rpmdatattr %_rpmdir/rpmrc
+%rpmdatattr %_rpmdir/macros
 %_libdir/librpm-*.so
 %_libdir/librpmdb-*.so
 %_libdir/librpmio-*.so
@@ -421,13 +422,13 @@ fi
 %_bindir/rpmverify
 %_bindir/rpminit
 
-%rpmdirattr %_libdir/%name
-%rpmattr %_libdir/%name/delayed_rebuilddb
-%rpmattr %_libdir/%name/pdeath_execute
-%rpmattr %_libdir/%name/rpm[dikq]
-%_libdir/%name/rpm[euv]
-%rpmdatattr %_libdir/%name/rpmpopt*
-%rpmdatattr %_libdir/%name/GROUPS
+%rpmdirattr %_rpmdir
+%rpmattr %_rpmdir/delayed_rebuilddb
+%rpmattr %_rpmdir/pdeath_execute
+%rpmattr %_rpmdir/rpm[dikq]
+%_rpmdir/rpm[euv]
+%rpmdatattr %_rpmdir/rpmpopt*
+%rpmdatattr %_rpmdir/GROUPS
 %_libdir/rpmpopt
 %_libdir/rpmrc
 
@@ -440,29 +441,29 @@ fi
 %rpmattr %_bindir/gendiff
 %_bindir/rpmbuild
 %_bindir/relative
-%rpmdirattr %_libdir/%name
-%_libdir/%name/rpmt
-%rpmattr %_libdir/%name/rpmb
-%rpmattr %_libdir/%name/filesize
-%rpmattr %_libdir/%name/relative
-%rpmattr %_libdir/%name/functions
-%rpmattr %_libdir/%name/brp-*
-%rpmattr %_libdir/%name/*_files
-%rpmattr %_libdir/%name/check-files
-%rpmattr %_libdir/%name/convertrpmrc.sh
-%rpmattr %_libdir/%name/rpm2cpio.sh
-%rpmattr %_libdir/%name/find-lang
-%rpmattr %_libdir/%name/find-package
-%rpmattr %_libdir/%name/find-provides
-%rpmattr %_libdir/%name/find-requires
-%rpmattr %_libdir/%name/fixup-*
-%rpmattr %_libdir/%name/http.req
-%rpmattr %_libdir/%name/files.*
-%rpmattr %_libdir/%name/pam.*
-%rpmattr %_libdir/%name/shell.*
-%rpmattr %_libdir/%name/sql.*
-%rpmattr %_libdir/%name/verify-elf
-%rpmattr %_libdir/%name/Specfile.pm
+%rpmdirattr %_rpmdir
+%_rpmdir/rpmt
+%rpmattr %_rpmdir/rpmb
+%rpmattr %_rpmdir/filesize
+%rpmattr %_rpmdir/relative
+%rpmattr %_rpmdir/functions
+%rpmattr %_rpmdir/brp-*
+%rpmattr %_rpmdir/*_files
+%rpmattr %_rpmdir/check-files
+%rpmattr %_rpmdir/convertrpmrc.sh
+%rpmattr %_rpmdir/rpm2cpio.sh
+%rpmattr %_rpmdir/find-lang
+%rpmattr %_rpmdir/find-package
+%rpmattr %_rpmdir/find-provides
+%rpmattr %_rpmdir/find-requires
+%rpmattr %_rpmdir/fixup-*
+%rpmattr %_rpmdir/http.req
+%rpmattr %_rpmdir/files.*
+%rpmattr %_rpmdir/pam.*
+%rpmattr %_rpmdir/shell.*
+%rpmattr %_rpmdir/sql.*
+%rpmattr %_rpmdir/verify-elf
+%rpmattr %_rpmdir/Specfile.pm
 
 %_mandir/man?/gendiff.*
 %_man8dir/rpmbuild.*
@@ -488,25 +489,36 @@ fi
 
 %if_with contrib
 %files contrib
-%rpmattr %dir %_libdir/%name
-%rpmattr %_libdir/%name/cpanflute*
-%rpmattr %_libdir/%name/cross-build
-%rpmattr %_libdir/%name/find-prov.pl
-%rpmattr %_libdir/%name/find-provides.perl
-%rpmattr %_libdir/%name/find-req.pl
-%rpmattr %_libdir/%name/find-requires.perl
-%rpmattr %_libdir/%name/get_magic.pl
-%rpmattr %_libdir/%name/getpo.sh
-%rpmattr %_libdir/%name/javadeps
-%rpmattr %_libdir/%name/magic.*
-%rpmattr %_libdir/%name/rpmdiff*
-%rpmattr %_libdir/%name/trpm
-%rpmattr %_libdir/%name/u_pkg.sh
-%rpmattr %_libdir/%name/vpkg-provides.sh
-%rpmattr %_libdir/%name/vpkg-provides2.sh
+%rpmattr %dir %_rpmdir
+%rpmattr %_rpmdir/cpanflute*
+%rpmattr %_rpmdir/cross-build
+%rpmattr %_rpmdir/find-prov.pl
+%rpmattr %_rpmdir/find-provides.perl
+%rpmattr %_rpmdir/find-req.pl
+%rpmattr %_rpmdir/find-requires.perl
+%rpmattr %_rpmdir/get_magic.pl
+%rpmattr %_rpmdir/getpo.sh
+%rpmattr %_rpmdir/javadeps
+%rpmattr %_rpmdir/magic.*
+%rpmattr %_rpmdir/rpmdiff*
+%rpmattr %_rpmdir/trpm
+%rpmattr %_rpmdir/u_pkg.sh
+%rpmattr %_rpmdir/vpkg-provides.sh
+%rpmattr %_rpmdir/vpkg-provides2.sh
 %endif #with contrib
 
 %changelog
+* Thu Feb 10 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt42
+- Backported db-4.3 support.
+- GROUPS: new group: System/X11.
+- platform.in:
+  + updated %%configure.
+  + new macros: %%_x11x11dir, %%_pkgconfigdir.
+  + export RPM_LIB and RPM_LIBDIR variables.
+- pam.req: initial mulitlib support.
+- brp-cleanup: fixed "find -maxdepth" warning.
+- find-lang: made --custom-* options work both as script and script-file.
+
 * Sun Oct 31 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt41
 - brp-bytecompile_python: check that $RPM_PYTHON is executable (#4756).
 - find-lang: changed --with-man mode (#5164).
@@ -630,7 +642,7 @@ fi
   provide symlink for compatibility.
 - /usr/bin/rpm.static: package separately.
 - /usr/lib/librpmbuild-4.0.4.so: package separately.
-- Relocated %_libdir/%name/{rpmrc,macros} to librpm subpackage.
+- Relocated %_rpmdir/{rpmrc,macros} to librpm subpackage.
 - Removed c++ from build dependencies.
 - lib/depends.c(rpmRangesOverlap):
   changed algorithm so EVRs will be compared
@@ -659,9 +671,9 @@ fi
 * Sun Nov 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27
 - helper shell scripts:
   + use printf instead of echo where appropriate;
-  + moved common code to %_libdir/%name/functions.
+  + moved common code to %_rpmdir/functions.
 - Implemented %%_unpackaged_files_terminate_build support.
-- rpm-build: do not package %_libdir/%name/mkinstalldirs.
+- rpm-build: do not package %_rpmdir/mkinstalldirs.
 - Do not package build-topdir subpackage by default.
 - verify_elf: implemented TEXTREL checking.
 - Updated README.ALT-ru_RU.KOI8-R.
@@ -689,7 +701,7 @@ fi
 - tcl.req: fixed perl syntax (at).
 
 * Fri Sep 12 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt24
-- rpm-build: do not package %_libdir/%name/config.* files (#2732).
+- rpm-build: do not package %_rpmdir/config.* files (#2732).
 - build/pack.c: create %%_srcrpmdir (#2353).
 - rpmrc.in:
   + added armv5 arch support (#2801, Sergey Bolshakov).
@@ -837,7 +849,7 @@ fi
   + Added CCACHE_CXX support.
 - rpmpopt:
   + Added with/without/enable/disable aliases to rpmq/rpmquery.
-- Fixed permissions on %_libdir/%name in -build subpackage
+- Fixed permissions on %_rpmdir in -build subpackage
   (thanks to Ivan Zakharyaschev).
 
 * Mon Nov 04 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt11
