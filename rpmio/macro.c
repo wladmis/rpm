@@ -1042,6 +1042,8 @@ doFoo(MacroBuf mb, int negate, const char * f, size_t fn,
     if (STREQ("basename", f, fn)) {
 	if ((b = strrchr(buf, '/')) == NULL)
 	    b = buf;
+	else
+	    ++b;
 #if NOTYET
     /* XXX watchout for conflict with %dir */
     } else if (STREQ("dirname", f, fn)) {
@@ -1109,26 +1111,27 @@ doFoo(MacroBuf mb, int negate, const char * f, size_t fn,
     } else if (STREQ("F", f, fn)) {
 	b = buf + strlen(buf) + 1;
 	sprintf(b, "file%s.file", buf);
-    } else if (STREQ("username", f, fn)) {
-	struct passwd *pw;
-
-	if (buf[0])
-	    pw = getpwnam (buf);
-	else
-	    pw = getpwuid (geteuid());
-
-	buf[0] = '\0';
-	if (pw && pw->pw_name) {
-	    strncat (buf, pw->pw_name, sizeof buf);
-	    b = buf;
-	}
     } else if (STREQ("homedir", f, fn)) {
-	struct passwd *pw;
+	struct passwd *pw = 0;
 
 	if (buf[0])
 	    pw = getpwnam (buf);
 	else
-	    pw = getpwuid (geteuid());
+	{
+	    static struct passwd pw_buf, *result;
+	    static char buffer[BUFSIZ];
+	    static uid_t uid = -1;
+
+	    uid_t new_uid = geteuid();
+	    if (result && (uid == new_uid))
+		pw = result;
+	    else {
+	    	uid = new_uid;
+		result = 0;
+		if ( !getpwuid_r (uid, &pw_buf, buffer, sizeof buffer, &result))
+		    pw = result;
+	    }
+	}
 
 	buf[0] = '\0';
 	if (pw && pw->pw_dir) {
@@ -1363,7 +1366,6 @@ expandMacro(MacroBuf mb)
 	    STREQ("uncompress", f, fn) ||
 	    STREQ("url2path", f, fn) ||
 	    STREQ("u2p", f, fn) ||
-	    STREQ("username", f, fn) ||
 	    STREQ("homedir", f, fn) ||
 	    STREQ("S", f, fn) ||
 	    STREQ("P", f, fn) ||
