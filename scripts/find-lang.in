@@ -168,7 +168,7 @@ s:%lang(C) ::
 		find "$TOPDIR" -type f |sed '
 s:'"$TOPDIR"'::
 s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_]\+\):%lang(\2) \1\2:
-s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/_]\+\)\(\.omf\)$:%lang(\3) \1\2\3\4:
+s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) \1\2\3\4:
 s:^\([^%].*\)::
 s:%lang(en) ::
 s:%lang(C) ::
@@ -176,7 +176,7 @@ s:%lang(C) ::
 		find "$TOPDIR" -type l |sed '
 s:'"$TOPDIR"'::
 s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_]\+\):%lang(\2) %attr(-,root,root) \1\2:
-s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/_]\+\)\(\.omf\)$:%lang(\3) %attr(-,root,root) \1\2\3\4:
+s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) %attr(-,root,root) \1\2\3\4:
 s:^\([^%].*\)::
 s:%lang(en) ::
 s:%lang(C) ::
