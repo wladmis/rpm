@@ -22,6 +22,7 @@
 #
 
 PROG="${0##*/}"
+[ -z "$RPM_SCRIPT_DEBUG" ] || set -x
 
 # If using normal root, avoid changing anything.
 if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
@@ -30,7 +31,7 @@ if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
 fi
 
 # Normalize buildroot.
-RPM_BUILD_ROOT=$(readlink -fv "$RPM_BUILD_ROOT") || exit 1
+real_buildroot=$(readlink -fv "$RPM_BUILD_ROOT") || exit 1
 
 FIND_LIBS=
 FIND_PAM=
@@ -187,7 +188,7 @@ FindLibProvs()
 				if [ -L "$f" ]; then
 					local real realpath
 					realpath=$(readlink -fv "$f") || break
-					real="${realpath#$RPM_BUILD_ROOT}"
+					real="${realpath#$real_buildroot}"
 					# Ignore symlinks leading out of buildroot.
 					[ "$real" != "$realpath" ] || break
 				fi
