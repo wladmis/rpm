@@ -2822,10 +2822,10 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
     StringBuf readBuf = NULL;
     const char	*rootURL = spec->rootURL;
     const char	*runDirURL = NULL;
-    const char	*scriptName = NULL;
-    const char	*runCmd = NULL;
     const char	*runTemplate = NULL;
     const char	*runPost = NULL;
+    const char	*scriptName = NULL;
+    const char	*runCmd = NULL;
     const char	*rootDir;
     const char	*runScript;
     const char	*mTemplate = "%{__spec_install_template}";
@@ -2835,7 +2835,6 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
     const char ** av = 0;
     int ac = 0;
     int rc = 0;
-    char *buf;
 
     if (fileListLen == 0)
         return 0;
@@ -2851,16 +2850,13 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
 	goto exit;
     }
 
-    runTemplate = rpmExpand(mTemplate, NULL);
-    runPost = rpmExpand(mPost, NULL);
-
-    runBody = rpmExpand("%{?__check_files}", NULL);
-    if (!(runBody && *runBody)) {
+    runCmd = rpmExpand("%{?__check_files}", NULL);
+    if (!(runCmd && *runCmd)) {
 	rc = -1;
 	goto exit;
     }    
 
-    rpmMessage(RPMMESS_NORMAL, _("Finding %s (using %s)\n"), _("unpackaged files"), runBody);
+    rpmMessage(RPMMESS_NORMAL, _("Finding %s (using %s)\n"), _("unpackaged files"), runCmd);
 
     if (makeTempFile(rootURL, &scriptName, &fd) || fd == NULL || Ferror(fd)) {
 	rc = RPMERR_SCRIPT;
@@ -2879,14 +2875,18 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
 
     urlPath(scriptName, &runScript);
 
+    runTemplate = rpmExpand(mTemplate, NULL);
     fputs(runTemplate, fp);
+    runTemplate = _free(runTemplate);
     fputc('\n', fp);
 
-    fputs(runBody, fp);
-    runBody = _free(runBody);
+    fputs(runCmd, fp);
+    runCmd = _free(runCmd);
     fputc('\n', fp);
 
+    runPost = rpmExpand(mPost, NULL);
     fputs(runPost, fp);
+    runPost = _free(runPost);
     fputc('\n', fp);
 
     Fclose(xfd);
@@ -2908,6 +2908,7 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
     } else {
 	static int _unpackaged_files_terminate_build = 0;
 	static int oneshot = 0;
+	char *buf;
 
 	if (!oneshot) {
 	    _unpackaged_files_terminate_build =
@@ -2924,14 +2925,11 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
     }
 
 exit:
+    if (scriptName) Unlink(scriptName);
     freeStringBuf(readBuf);
     av = _free(av);
     runCmd = _free(runCmd);
-    if (scriptName) Unlink(scriptName);
     scriptName = _free(scriptName);
-    runBody = _free(runBody);
-    runPost = _free(runPost);
-    runTemplate = _free(runTemplate);
     runDirURL = _free(runDirURL);
     return rc;
 }
