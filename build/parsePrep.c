@@ -70,7 +70,7 @@ static int checkOwners(const char * urlfn)
 		fileSystem@*/
 	/*@modifies rpmGlobalMacroContext, fileSystem @*/
 {
-    const char *fn, *urlfn;
+    const char *fn, *urlfn, *patcher;
     static char buf[BUFSIZ];
     char args[BUFSIZ];
     struct Source *sp;
@@ -124,29 +124,40 @@ static int checkOwners(const char * urlfn)
 	/*@notreached@*/ break;
     }
 
-    if (compressed) {
-	const char *zipper = rpmGetPath(
-	    (compressed == COMPRESSED_BZIP2 ? "%{_bzip2bin}" : "%{_gzipbin}"),
-	    NULL);
+    patcher = rpmGetPath("%{__patch}", NULL);
+    if (compressed != COMPRESSED_NOT) {
+	const char *zipper, *zipper_opts;
+	switch ( compressed )
+	{
+		case COMPRESSED_BZIP2:
+			zipper = "%{_bzip2bin}";
+			zipper_opts = "-dc";
+			break;
+		case COMPRESSED_ZIP:
+			zipper = "%{_unzipbin}";
+			zipper_opts = "-p";
+			break;
+		default:
+			zipper = "%{_gzipbin}";
+			zipper_opts = "-dc";
+			break;
+	}
+	zipper = rpmGetPath( zipper, NULL );
 
-	sprintf(buf,
+	snprintf(buf, sizeof(buf),
 		"echo \"Patch #%d (%s):\"\n"
-		"%s -d < %s | patch -p%d %s -s\n"
-		"STATUS=$?\n"
-		"if [ $STATUS -ne 0 ]; then\n"
-		"  exit $STATUS\n"
-		"fi",
+		"%s %s %s |%s -p%d %s -s\n",
 		c, /*@-unrecog@*/ (const char *) basename(fn), /*@=unrecog@*/
-		zipper,
-		fn, strip, args);
+		zipper, zipper_opts, fn, patcher, strip, args);
 	zipper = _free(zipper);
     } else {
-	sprintf(buf,
+	snprintf(buf, sizeof(buf),
 		"echo \"Patch #%d (%s):\"\n"
-		"patch -p%d %s -s < %s", c, (const char *) basename(fn),
-		strip, args, fn);
+		"%s -p%d %s -s < %s", c, (const char *) basename(fn),
+		patcher, strip, args, fn);
     }
 
+    patcher = _free(patcher);
     urlfn = _free(urlfn);
     return buf;
 }
@@ -165,7 +176,6 @@ static int checkOwners(const char * urlfn)
 {
     const char *fn, *urlfn;
     static char buf[BUFSIZ];
-    char *taropts;
     char *t = NULL;
     struct Source *sp;
     rpmCompressedMagic compressed = COMPRESSED_NOT;
@@ -183,9 +193,7 @@ static int checkOwners(const char * urlfn)
 
     urlfn = rpmGetPath("%{_sourcedir}/", sp->source, NULL);
 
-    /*@-internalglobs@*/ /* FIX: shrug */
     taropts = ((rpmIsVerbose() && !quietly) ? "-xvvf" : "-xf");
-    /*@=internalglobs@*/
 
 #ifdef AUTOFETCH_NOT	/* XXX don't expect this code to be enabled */
     /* XXX
@@ -228,41 +236,47 @@ static int checkOwners(const char * urlfn)
     }
 
     if (compressed != COMPRESSED_NOT) {
-	const char *zipper;
-	int needtar = 1;
+	/*@-internalglobs@*/ /* FIX: shrug */
+	const char *taropts = (rpmIsVerbose() && !quietly) ? "-xvvf -" : "-xf -";
+	/*@=internalglobs@*/
+	const char *zipper, *zipper_opts, *tarprog = "%{__tar}";
 
-	switch (compressed) {
-	case COMPRESSED_NOT:	/* XXX can't happen */
-	case COMPRESSED_OTHER:
-	    t = "%{_gzipbin} -dc";
-	    break;
-	case COMPRESSED_BZIP2:
-	    t = "%{_bzip2bin} -dc";
-	    break;
-	case COMPRESSED_ZIP:
-	    t = "%{_unzipbin}";
-	    needtar = 0;
-	    break;
+	switch ( compressed )
+	{
+		case COMPRESSED_BZIP2:
+			zipper = "%{_bzip2bin}";
+			zipper_opts = "-dc";
+			break;
+		case COMPRESSED_ZIP:
+			zipper = "%{_unzipbin}";
+			zipper_opts = (rpmIsVerbose() && !quietly) ? "-L" : "-Lq";
+			tarprog = NULL;
+			break;
+		default:
+			zipper = "%{_gzipbin}";
+			zipper_opts = "-dc";
+			break;
 	}
-	zipper = rpmGetPath(t, NULL);
-	buf[0] = '\0';
-	t = stpcpy(buf, zipper);
-	zipper = _free(zipper);
-	*t++ = ' ';
-	t = stpcpy(t, fn);
-	if (needtar)
-	    t = stpcpy( stpcpy( stpcpy(t, " | tar "), taropts), " -");
-	t = stpcpy(t,
-		"\n"
-		"STATUS=$?\n"
-		"if [ $STATUS -ne 0 ]; then\n"
-		"  exit $STATUS\n"
-		"fi");
-    } else {
-	buf[0] = '\0';
-	t = stpcpy( stpcpy(buf, "tar "), taropts);
-	*t++ = ' ';
-	t = stpcpy(t, fn);
+	if ( tarprog )
+	    tarprog = rpmGetPath( tarprog, NULL );
+	zipper = rpmGetPath( zipper, NULL );
+	snprintf(buf, sizeof(buf),
+		"echo \"Source #%d (%s):\"\n"
+		"%s %s %s %s%s %s\n",
+		c, /*@-unrecog@*/ (const char *) basename(fn), /*@=unrecog@*/
+		zipper, zipper_opts, fn,
+		(tarprog?"|":""), (tarprog?tarprog:""), (tarprog?taropts:""));
+ 	zipper = _free( zipper );
+ 	tarprog = _free( tarprog );
+     } else {
+	const char *taropts = (rpmIsVerbose() && !quietly) ? "-xvvf" : "-xf";
+	const char *tarprog = rpmGetPath( "%{__tar}", NULL );
+	snprintf( buf, sizeof(buf),
+		"echo \"Source #%d (%s):\"\n"
+		"%s %s %s",
+		c, /*@-unrecog@*/ (const char *) basename(fn), /*@=unrecog@*/
+		tarprog, taropts, fn );
+	tarprog = _free( tarprog );
     }
 
     urlfn = _free(urlfn);
@@ -349,7 +363,7 @@ static int doSetupMacro(Spec spec, char *line)
     } else {
 	const char *name, *version;
 	(void) headerNVR(spec->packages->header, &name, &version, NULL);
-	sprintf(buf, "%s-%s", name, version);
+	snprintf(buf, sizeof(buf), "%s-%s", name, version);
 	spec->buildSubdir = xstrdup(buf);
     }
     addMacro(spec->macros, "buildsubdir", NULL, spec->buildSubdir, RMIL_SPEC);
@@ -362,20 +376,20 @@ static int doSetupMacro(Spec spec, char *line)
 	const char *buildDir;
 
 	(void) urlPath(buildDirURL, &buildDir);
-	sprintf(buf, "cd %s", buildDir);
+	snprintf(buf, sizeof(buf), "cd %s", buildDir);
 	appendLineStringBuf(spec->prep, buf);
 	buildDirURL = _free(buildDirURL);
     }
     
     /* delete any old sources */
     if (!leaveDirs) {
-	sprintf(buf, "rm -rf %s", spec->buildSubdir);
+	snprintf(buf, sizeof(buf), "rm -rf %s", spec->buildSubdir);
 	appendLineStringBuf(spec->prep, buf);
     }
 
     /* if necessary, create and cd into the proper dir */
     if (createDir) {
-	sprintf(buf, MKDIR_P " %s\ncd %s",
+	snprintf(buf, sizeof(buf), MKDIR_P " %s\ncd %s",
 		spec->buildSubdir, spec->buildSubdir);
 	appendLineStringBuf(spec->prep, buf);
     }
@@ -392,7 +406,7 @@ static int doSetupMacro(Spec spec, char *line)
     before = freeStringBuf(before);
 
     if (!createDir) {
-	sprintf(buf, "cd %s", spec->buildSubdir);
+	snprintf(buf, sizeof(buf), "cd %s", spec->buildSubdir);
 	appendLineStringBuf(spec->prep, buf);
     }
 
@@ -451,7 +465,7 @@ static int doPatchMacro(Spec spec, char *line)
 
     if (! strchr(" \t\n", line[6])) {
 	/* %patchN */
-	sprintf(buf, "%%patch -P %s", line + 6);
+	snprintf(buf, sizeof(buf), "%%patch -P %s", line + 6);
     } else {
 	strcpy(buf, line);
     }
