@@ -1478,7 +1478,7 @@ headerFindI18NString(Header h, indexEntry entry)
     indexEntry table;
     int strip_lang;
 
-    if (!entry->data || !entry->data[0])
+    if (!entry->data || !*(const char *)entry->data)
 	    return entry->data;
 
     /* XXX Drepper sez' this is the order. */
