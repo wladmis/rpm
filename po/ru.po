@@ -723,11 +723,11 @@ msgstr "Обрабатываются файлы: %s-%s-%s\n"
 
 #: build/names.c:51
 msgid "getUname: too many uid's\n"
-msgstr "getUname: слишком много uid\n"
+msgstr "getUname: слишком много пользовательских идентификаторов\n"
 
 #: build/names.c:73
 msgid "getUnameS: too many uid's\n"
-msgstr "getUnameS: слишком много uid\n"
+msgstr "getUnameS: слишком много пользовательских идентификаторов\n"
 
 #: build/names.c:95
 msgid "getUidS: too many uid's\n"
@@ -735,11 +735,11 @@ msgstr "getUidS: слишком много пользовательских идентификаторов\n"
 
 #: build/names.c:117
 msgid "getGname: too many gid's\n"
-msgstr "getGname: слишком много gid\n"
+msgstr "getGname: слишком много идентификаторов групп\n"
 
 #: build/names.c:139
 msgid "getGnameS: too many gid's\n"
-msgstr "getGnameS: слишком много gid\n"
+msgstr "getGnameS: слишком много идентификаторов групп\n"
 
 #: build/names.c:161
 msgid "getGidS: too many gid's\n"
@@ -748,12 +748,12 @@ msgstr "getGidS: слишком много идентификаторов групп.\n"
 #: build/names.c:196
 #, c-format
 msgid "Could not canonicalize hostname: %s\n"
-msgstr "Невозможно канонизировать имя компьютера: %s\n"
+msgstr "Не удалось определить каноническое имя компьютера: %s\n"
 
 #: build/pack.c:82
 #, c-format
 msgid "create archive failed on file %s: %s\n"
-msgstr "ошибка создания архива на файле %s: %s\n"
+msgstr "ошибка создания архива при обработке файла %s: %s\n"
 
 #: build/pack.c:85
 #, c-format
