@@ -235,11 +235,15 @@
 @alt@	%{?_python_compile_deep:export RPM_PYTHON_COMPILE_DEEP=\"%_python_compile_deep\"}\
 @alt@	%{?_python_compile_skip_x:export RPM_PYTHON_COMPILE_SKIP_X=\"%_python_compile_skip_x\"}\
 @alt@	%{?_python_compile_clean:export RPM_PYTHON_COMPILE_CLEAN=\"%_python_compile_clean\"}\
+@alt@	%{?_tcl_lib_path:export RPM_TCL_LIB_PATH=\"%_tcl_lib_path\"}\
+@alt@	%{?_tcl_req_method:export RPM_TCL_REQ_METHOD=\"%_tcl_req_method\"}\
+@alt@	%{?_tcl_req_skip:export RPM_TCL_REQ_SKIP=\"%_tcl_req_skip\"}\
 @alt@	%{?_pkg_contents_index_all:export RPM_PKG_CONTENTS_INDEX_ALL=\"%_pkg_contents_index_all\"}\
 @alt@	%{?_pkg_contents_index_bin:export RPM_PKG_CONTENTS_INDEX_BIN=\"%_pkg_contents_index_bin\"}\
 @alt@	%{?_scripts_debug:export RPM_SCRIPTS_DEBUG=\"%_scripts_debug\"}\
 @alt@	%{?_keep_libtool_files:export RPM_KEEP_LIBTOOL_FILES=\"%_keep_libtool_files\"}\
 @alt@	%{?__python:export RPM_PYTHON=\"%__python\"}\
+@alt@	%{?__tclsh:export RPM_TCLSH=\"%__tclsh\"}\
 @alt@	\
 @alt@	unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
 @alt@	%{?_build_lang:export LANG=\"%_build_lang\"\
@@ -415,10 +419,13 @@
 @alt@%_python_compile_deep	20
 @alt@%_python_compile_skip_x	1
 @alt@%_python_compile_clean	1
+@alt@%_tcl_lib_path	""
+@alt@%_tcl_req_method	normal
+@alt@%_tcl_req_skip	""
 @alt@%_fixup_method	binconfig pkgconfig libtool
 @alt@%_strip_method	%{?_enable_debug:none}%{!?_enable_debug:executable shared}
-@alt@%_findreq_default_method	files lib pam perl python shell
-@alt@%_findprov_default_method	lib pam perl python shell
+@alt@%_findreq_default_method	files lib pam perl python tcl shell
+@alt@%_findprov_default_method	lib pam perl python tcl shell
 @alt@
 @alt@%_cleanup_topdir	%nil
 @alt@%_compress_topdir	%_usr
@@ -446,6 +453,7 @@
 @alt@%set_perl_req_method()	%global _perl_req_method %*
 @alt@%set_python_req_method()	%global _python_req_method %1
 @alt@%set_python_compile_method()	%global _python_compile_method %1
+@alt@%set_tcl_req_method()	%global _tcl_req_method %1
 @alt@
 @alt@%set_cleanup_topdir()	%global _cleanup_topdir %*
 @alt@%set_compress_topdir()	%global _compress_topdir %*
@@ -477,6 +485,8 @@
 @alt@%add_python_lib_path()	%global _python_lib_path %_python_lib_path %*
 @alt@%add_python_compile_exclude() %global _python_compile_exclude %_python_compile_exclude %*
 @alt@%add_python_compile_include() %global _python_compile_include %_python_compile_include %*
+@alt@%add_tcl_req_skip()	%global _tcl_req_skip %_tcl_req_skip %*
+@alt@%add_tcl_lib_path()	%global _tcl_lib_path %_tcl_lib_path %*
 @alt@
 @alt@%add_findprov_lib_path()	%global _findprov_lib_path %_findprov_lib_path %*
 @alt@

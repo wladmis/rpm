@@ -48,6 +48,7 @@ FIND_PERL=
 FIND_PYTHON=
 FIND_LIBPERL=
 FIND_SHELL=
+FIND_TCL=
 libperl_so=
 
 ParseMethod()
@@ -63,6 +64,7 @@ ParseMethod()
 				FIND_PYTHON=
 				FIND_LIBPERL=
 				FIND_SHELL=
+				FIND_TCL=
 				;;
 			lib|library)
 				FIND_LIBS=1
@@ -108,6 +110,12 @@ ParseMethod()
 			nosh|noshell)
 				FIND_SHELL=
 				;;
+			tcl)
+				FIND_TCL=1
+				;;
+			notcl)
+				FIND_TCL=
+				;;
 			all)
 				FIND_FILES=1
 				FIND_LIBS=1
@@ -116,6 +124,7 @@ ParseMethod()
 				FIND_PERL=1
 				FIND_LIBPERL=1
 				FIND_SHELL=1
+				FIND_TCL=1
 				;;
 			default|yes|true)
 				ParseMethod $RPM_FINDREQ_DEFAULT_METHOD
@@ -130,7 +139,7 @@ ParseMethod()
 ParseMethod $RPM_FINDREQ_METHOD
 
 FIND_SCRIPT=
-if [ -n "$FIND_SHELL" -o -n "$FIND_PERL" -o -n "$FIND_PAM" ]; then
+if [ -n "$FIND_PAM" -o -n "$FIND_PERL" -o -n "$FIND_SHELL" -o -n "$FIND_TCL" ]; then
 	FIND_SCRIPT=1
 fi
 
@@ -160,6 +169,7 @@ esac
 FOUND_REQS=
 LIST_PERL=
 LIST_PYTHON=
+LIST_TCL=
 
 ListScriptReqs()
 {
@@ -198,6 +208,11 @@ $f"
 			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
 $f"
 		fi
+	elif [ -z "${f%%*.tcl}" ]; then
+		if [ -n "$FIND_TCL" ]; then
+			[ -z "$LIST_TCL" ] && LIST_TCL="$f" || LIST_TCL="$LIST_TCL
+$f"
+		fi
 	fi
 }
 
@@ -218,6 +233,17 @@ FindPythonReqs()
 
 	local r
 	r="$(printf %s\\n "$LIST_PYTHON" |"$RPM_PYTHON" @RPMCONFIGDIR@/python.req.py)" || return 1
+	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+}
+
+FindTclReqs()
+{
+	[ -n "$LIST_TCL" ] || return 0
+	[ -x "$RPM_TCLSH" ] || return 0
+
+	local r
+	r="$(printf %s\\n "$LIST_TCL" |@RPMCONFIGDIR@/tcl.req)" || return 1
 	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 }
@@ -311,6 +337,9 @@ FindPerlReqs
 
 # Find requires in listed python scripts, if any
 FindPythonReqs
+
+# Find requires in listed tcl scripts, if any
+FindTclReqs
 
 # Finally sort and print them.
 printf %s "$FOUND_REQS" |LC_COLLATE=C sort -u

@@ -39,6 +39,7 @@ FIND_PAM=
 FIND_PERL=
 FIND_PYTHON=
 FIND_SHELL=
+FIND_TCL=
 
 ParseMethod()
 {
@@ -51,6 +52,7 @@ ParseMethod()
 				FIND_PERL=
 				FIND_PYTHON=
 				FIND_SHELL=
+				FIND_TCL=
 				;;
 			lib)
 				FIND_LIBS=1
@@ -82,12 +84,19 @@ ParseMethod()
 			nosh|noshell)
 				FIND_SHELL=
 				;;
+			tcl)
+				FIND_TCL=1
+				;;
+			notcl)
+				FIND_TCL=
+				;;
 			all)
 				FIND_LIBS=1
 				FIND_PAM=1
 				FIND_PERL=1
 				FIND_PYTHON=1
 				FIND_SHELL=1
+				FIND_TCL=1
 				;;
 			default|yes|true)
 				ParseMethod $RPM_FINDPROV_DEFAULT_METHOD || return 1
@@ -101,7 +110,7 @@ ParseMethod()
 }
 ParseMethod $RPM_FINDPROV_METHOD
 
-if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" -a -z "$FIND_PYTHON" -a -z "$FIND_SHELL" ]; then
+if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" -a -z "$FIND_PYTHON" -a -z "$FIND_SHELL" -a -z "$FIND_TCL" ]; then
 	# Nothing to do
 	cat >/dev/null 2>&1
 	exit 0
@@ -121,6 +130,7 @@ esac
 FOUND_PROVS=
 LIST_PERL=
 LIST_PYTHON=
+LIST_TCL=
 
 ListScriptProvs()
 {
@@ -169,6 +179,13 @@ $f"
 $f"
 		fi
 	fi
+
+	if [ "${f##*/}" = "pkgIndex.tcl" ]; then
+		if [ -n "$FIND_TCL" ]; then
+			[ -z "$LIST_TCL" ] && LIST_TCL="$f" || LIST_TCL="$LIST_TCL
+$f"
+		fi
+	fi
 }
 
 FindPerlProvs()
@@ -187,6 +204,17 @@ FindPythonProvs()
 
 	local r
 	r="$(printf %s\\n "$LIST_PYTHON" |"$RPM_PYTHON" @RPMCONFIGDIR@/python.prov.py)" || return 1
+	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+$r"
+}
+
+FindTclProvs()
+{
+	[ -n "$FIND_TCL" -a -n "$LIST_TCL" ] || return 0
+	[ -x "$RPM_TCLSH" ] || return 0
+
+	local r
+	r="$(printf %s\\n "$LIST_TCL" |@RPMCONFIGDIR@/tcl.prov)" || return 1
 	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
 }
@@ -312,6 +340,9 @@ FindPerlProvs
 
 # Find provides in listed python scripts and shared libraries, if any
 FindPythonProvs
+
+# Find provides in listed tcl index files, if any
+FindTclProvs
 
 # Finally sort and print them.
 printf %s "$FOUND_PROVS" |LC_COLLATE=C sort -u
