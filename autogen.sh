@@ -5,26 +5,15 @@ export LDFLAGS
 
 : ${LIBTOOLIZE:=libtoolize}
 : ${ACLOCAL:=aclocal}
+: ${AUTOHEADER:=autoheader}
 : ${AUTOMAKE:=automake}
 : ${AUTOCONF:=autoconf}
-: ${AUTOHEADER:=autoheader}
 
-LTV='libtoolize (GNU libtool) 1\.4.*'
-ACV='autoconf (GNU Autoconf) 2\.5[3-9]'
-AMV='automake (GNU automake) 1\.[67]\.[1-9]'
-USAGE="
-This script documents the versions of the tools I'm using to build rpm:
-	libtool-1.4.2
-	autoconf-2.57
-	automake-1.7.6
-Simply edit this script to change the libtool/autoconf/automake versions
-checked if you need to, as rpm should build (and has built) with all
-recent versions of libtool/autoconf/automake.
-"
-
-$LIBTOOLIZE --version |head -1 |grep -qs "$LTV" || { echo "$USAGE"; exit 1; }
-$AUTOCONF --version |head -1 |grep -qs "$ACV" || { echo "$USAGE"; exit 1; }
-$AUTOMAKE --version |head -1 |grep -qs "$AMV" || { echo "$USAGE"; exit 1; }
+$LIBTOOLIZE --version >/dev/null
+$ACLOCAL --version >/dev/null
+$AUTOHEADER --version >/dev/null
+$AUTOMAKE --version >/dev/null
+$AUTOCONF --version >/dev/null
 
 gettextize --copy --force --quiet
 cp /usr/share/gettext/intl/Makevars po/
