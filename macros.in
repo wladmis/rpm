@@ -47,6 +47,7 @@
 %__gzip			@GZIPBIN@
 %__id			@__ID@
 %__install		@__INSTALL@
+%__install_info		@__INSTALL_INFO@
 %__ln_s			@LN_S@
 %__make			@__MAKE@
 %__mkdir		@__MKDIR@
@@ -107,7 +108,7 @@
 #	The location of the rpm database file(s) after "rpm --rebuilddb".
 %_dbpath_rebuild	%{_dbpath}
 
-%_defaultdocdir		%{_usr}/doc
+%_defaultdocdir		%{_datadir}/doc
 
 #
 %__find_provides	@FINDPROVIDES@
@@ -146,15 +147,15 @@
 %_rpmfilename		%{_build_name_fmt}
 
 #	The default signature type.
-%_signature		none
+%_signature		gpg
 
 #	The directory where sources/patches from a source package will be
 #	installed. This is also where sources/patches are found when building.
-%_sourcedir		%{_topdir}/SOURCES
+%_sourcedir		%{_topsrcdir}/SOURCES
 
 #	The directory where the spec file from a source package will be
 #	installed.
-%_specdir		%{_topdir}/SPECS
+%_specdir		%{_topsrcdir}/SPECS
 
 #	The directory where newly built source packages will be written.
 %_srcrpmdir		%{_topdir}/SRPMS
@@ -163,7 +164,10 @@
 %_tmppath		%{_var}/tmp
 
 #	Path to top of build area.
-%_topdir		%{_usrsrc}/redhat
+%_topdir		%{_usrsrc}/RPM
+
+#	Path to top of spec/source/patch area.
+%_topsrcdir		%{_topdir}
 
 #	The path to the unzip executable (legacy, use %{__unzip} instead).
 %_unzipbin		%{__unzip}
@@ -176,7 +180,7 @@
 #	Configurable build root path, same as BuildRoot: in a specfile.
 #	(Note: the configured macro value will override the spec file value).
 #
-#%buildroot
+%buildroot		%{_tmppath}/%{name}-buildroot
 
 #	The sub-directory (relative to %{_builddir}) where sources are compiled.
 #	This macro is set after processing %setup, either explicitly from the
@@ -525,32 +529,32 @@
 #	pilot-link-devel>pilot-link
 #%_dependency_whiteout_6_2		\
 #	egcs-c++>libstdc++
-%_dependency_whiteout_7_0		\
-	pango-gtkbeta-devel>pango-gtkbeta\
-	XFree86>Mesa			\
-	compat-glibc>db2		\
-	compat-glibc>db1		\
-	pam>initscripts			\
-	initscripts>sysklogd
-%_dependency_whiteout_7_1		\
-	arts>kdelibs-sound
-%_dependency_whiteout_7_2		\
-	libgnomeprint15>gnome-print	\
-	nautilus>nautilus-mozilla	\
-	tcl>postgresql-tcl
-
-%_dependency_whiteout			\
-	libtermcap>bash			\
-	modutils>vixie-cron		\
-	ypbind>yp-tools			\
-	ghostscript-fonts>ghostscript	\
-	%{?_dependency_whiteout_7_2}	\
-	%{?_dependency_whiteout_7_1}	\
-	%{?_dependency_whiteout_7_0}	\
-	%{?_dependency_whiteout_6_2}	\
-	%{?_dependency_whiteout_6_1}	\
-	%{?_dependency_whiteout_5_2}	\
-	%{nil}
+#%_dependency_whiteout_7_0		\
+#	pango-gtkbeta-devel>pango-gtkbeta\
+#	XFree86>Mesa			\
+#	compat-glibc>db2		\
+#	compat-glibc>db1		\
+#	pam>initscripts			\
+#	initscripts>sysklogd
+#%_dependency_whiteout_7_1		\
+#	arts>kdelibs-sound
+#%_dependency_whiteout_7_2		\
+#	libgnomeprint15>gnome-print	\
+#	nautilus>nautilus-mozilla	\
+#	tcl>postgresql-tcl
+#
+#%_dependency_whiteout			\
+#	libtermcap>bash			\
+#	modutils>vixie-cron		\
+#	ypbind>yp-tools			\
+#	ghostscript-fonts>ghostscript	\
+#	%{?_dependency_whiteout_7_2}	\
+#	%{?_dependency_whiteout_7_1}	\
+#	%{?_dependency_whiteout_7_0}	\
+#	%{?_dependency_whiteout_6_2}	\
+#	%{?_dependency_whiteout_6_1}	\
+#	%{?_dependency_whiteout_5_2}	\
+#	%{nil}
 
 #==============================================================================
 # ---- per-platform macros.
@@ -582,20 +586,29 @@
 %___build_args		-e
 %___build_cmd		%{?_sudo:%{_sudo} }%{?_remsh:%{_remsh} %{_remhost} }%{?_remsudo:%{_remsudo} }%{?_remchroot:%{_remchroot} %{_remroot} }%{___build_shell} %{___build_args}
 %___build_pre	\
-  RPM_SOURCE_DIR=\"%{u2p:%{_sourcedir}}\"\
-  RPM_BUILD_DIR=\"%{u2p:%{_builddir}}\"\
-  RPM_OPT_FLAGS=\"%{optflags}\"\
-  RPM_ARCH=\"%{_arch}\"\
-  RPM_OS=\"%{_os}\"\
-  export RPM_SOURCE_DIR RPM_BUILD_DIR RPM_OPT_FLAGS RPM_ARCH RPM_OS\
-  RPM_DOC_DIR=\"%{_docdir}\"\
-  export RPM_DOC_DIR\
-  RPM_PACKAGE_NAME=\"%{name}\"\
-  RPM_PACKAGE_VERSION=\"%{version}\"\
-  RPM_PACKAGE_RELEASE=\"%{release}\"\
-  export RPM_PACKAGE_NAME RPM_PACKAGE_VERSION RPM_PACKAGE_RELEASE\
-  %{?buildroot:RPM_BUILD_ROOT=\"%{u2p:%{buildroot}}\"\
-  export RPM_BUILD_ROOT}\
+  export RPM_SOURCE_DIR=\"%{u2p:%{_sourcedir}}\"\
+  export RPM_BUILD_DIR=\"%{u2p:%{_builddir}}\"\
+  export RPM_OPT_FLAGS=\"%{optflags}\"\
+  export RPM_ARCH=\"%{_arch}\"\
+  export RPM_OS=\"%{_os}\"\
+  export RPM_DOC_DIR=\"%{_docdir}\"\
+  export RPM_PACKAGE_NAME=\"%{name}\"\
+  export RPM_PACKAGE_VERSION=\"%{version}\"\
+  export RPM_PACKAGE_RELEASE=\"%{release}\"\
+  %{?buildroot:export RPM_BUILD_ROOT=\"%{u2p:%{buildroot}}\"}\
+  %{?_compress_method:export RPM_COMPRESS_METHOD=\"%{_compress_method}\"}\
+  %{?_strip_method:export RPM_STRIP_METHOD=\"%{_strip_method}\"}\
+  %{?_findreq_method:export RPM_FINDREQ_METHOD=\"%{_findreq_method}\"}\
+  %{?_findprov_method:export RPM_FINDPROV_METHOD=\"%{_findprov_method}\"}\
+  %{?_findreq_default_method:export RPM_FINDREQ_DEFAULT_METHOD=\"%{_findreq_default_method}\"}\
+  %{?_findprov_default_method:export RPM_FINDPROV_DEFAULT_METHOD=\"%{_findprov_default_method}\"}\
+  %{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%{_perl_lib_path}\"}\
+  %{?__python:export RPM_PYTHON=\"%{__python}\"}\
+  \
+  unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
+  %{?_build_lang:export LANG=\"%{_build_lang}\"\
+  export LANGUAGE=\"%{_build_lang}\"\
+  export LC_ALL=\"%{_build_lang}\"}\
   \
   %{verbose:set -x}%{!verbose:exec > /dev/null}\
   umask 022\
@@ -729,17 +742,17 @@
 %_exec_prefix		%{_prefix}
 %_bindir		%{_exec_prefix}/bin
 %_sbindir		%{_exec_prefix}/sbin
-%_libexecdir		%{_exec_prefix}/libexec
+%_libexecdir		%{_exec_prefix}/lib
 %_datadir		%{_prefix}/share
-%_sysconfdir		%{_prefix}/etc
+%_sysconfdir		/etc
 %_sharedstatedir	%{_prefix}/com
-%_localstatedir		%{_prefix}/var
+%_localstatedir		%{_var}/lib
 %_lib			lib
 %_libdir		%{_exec_prefix}/%{_lib}
 %_includedir		%{_prefix}/include
 %_oldincludedir		/usr/include
-%_infodir		%{_prefix}/info
-%_mandir		%{_prefix}/man
+%_infodir		%{_datadir}/info
+%_mandir		%{_datadir}/man
 
 #==============================================================================
 # ---- config.guess platform macros.
@@ -780,6 +793,9 @@
 #  CFLAGS="%{optflags}" ./configure %{_target_platform} --prefix=%{_prefix}
 #
 #------------------------------------------------------------------------------
+%_configure_script	./configure
+%_configure_target	%{?_gnu: --host=%{_host} --target=%{_target_platform}} %{!?_gnu: %{_target_platform}}
+%_configure_gettext	--without-included-gettext
 # This is an improved version of %configure (from PLD team).
 %configure \
   CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
@@ -787,8 +803,7 @@
   FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   %{?__libtoolize:[ -f configure.in ] && %{__libtoolize} --copy --force ;} \
   ./configure \\\
-	%{?_gnu: --host=%{_host} --target=%{_target_platform}} \\\
-	%{!?_gnu: %{_target_platform}} \\\
+	%{_configure_script} %{?_configure_target:%{_configure_target}} \\\
  	--prefix=%{_prefix} \\\
 	--exec-prefix=%{_exec_prefix} \\\
 	--bindir=%{_bindir} \\\
@@ -801,12 +816,14 @@
 	--localstatedir=%{_localstatedir} \\\
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
-	--infodir=%{_infodir}
+	--infodir=%{_infodir} \\\
+	%{?_configure_gettext:%{_configure_gettext}}
 
 #------------------------------------------------------------------------------
 # The make install analogue of %configure:
+%_makeinstall_target	install
 %makeinstall \
-  make \\\
+  %{__make} INSTALL="%__install -p" \\\
 	prefix=%{?buildroot:%{buildroot}}%{_prefix} \\\
 	exec_prefix=%{?buildroot:%{buildroot}}%{_exec_prefix} \\\
 	bindir=%{?buildroot:%{buildroot}}%{_bindir} \\\
@@ -820,7 +837,7 @@
 	sharedstatedir=%{?buildroot:%{buildroot}}%{_sharedstatedir} \\\
 	mandir=%{?buildroot:%{buildroot}}%{_mandir} \\\
 	infodir=%{?buildroot:%{buildroot}}%{_infodir} \\\
-  install
+  %{?_makeinstall_target:%{_makeinstall_target}}
 
 #------------------------------------------------------------------------------
 # The GNUconfigure macro does the following:
@@ -900,9 +917,12 @@ done \
 #	%{perl_sitearch}/Image
 #	%dir %{perl_sitearch}/auto/Image
 #
-%requires_eq()	%(LC_ALL="C" echo '%*' | xargs -r rpm -q --qf 'Requires: %%{name} = %%{epoch}:%%{version}\\n' | sed -e 's/ (none):/ /' -e 's/ 0:/ /' | grep -v "is not")
-%perl_sitearch	%(eval "`perl -V:installsitearch`"; echo $installsitearch)
-%perl_archlib	%(eval "`perl -V:installarchlib`"; echo $installarchlib)
+%requires_eq()	%(LC_ALL="C" echo '%*' | xargs -r rpm -q --qf 'Requires: %%{name} = %%{epoch}:%%{version}\\n' | sed -e 's/ (none):/ /' -e 's/ 0:/ /' | fgrep -v "is not")
+%perl_archlib	%(eval "`perl -V:installarchlib`"; echo "$installarchlib")
+%perl_sitelib	%(eval "`perl -V:installsitelib`"; echo "$installsitelib")
+%perl_sitearch	%(eval "`perl -V:installsitearch`"; echo "$installsitearch")
+%perl_man1dir	%(eval "`perl -V:installman1dir`"; echo "$installman1dir")
+%perl_man3dir	%(eval "`perl -V:installman3dir`"; echo "$installman3dir")
 
 #------------------------------------------------------------------------------
 # arch macro for all Intel i?86 compatibile processors
@@ -910,7 +930,9 @@ done \
 #   rpm can use regular expressions against target platforms in macro
 #   conditionals.
 #
-%ix86   i386 i486 i586 i686 athlon
+%intel	i386 i486 i586 i686 i786 i886 i986
+%amd	k6 athlon
+%ix86	%intel %amd
 
 #------------------------------------------------------------------------
 # Use in %install to generate locale specific file lists. For example,
@@ -921,7 +943,7 @@ done \
 # ...
 # %files -f %{name}.lang
 #
-%find_lang	@RPMCONFIGDIR@/find-lang.sh %{buildroot}
+%find_lang	@RPMCONFIGDIR@/find-lang
 
 # \endverbatim
 #*/
