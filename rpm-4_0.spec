@@ -197,7 +197,8 @@ export \
 	%{?_with_python} %{?_without_python} \
 	%{?_with_apidocs} %{?_without_apidocs} \
 	%{?_with_db} %{?_without_db} \
-	--program-transform-name=
+	--program-transform-name= \
+	--disable-rpath
 
 # fix buggy requires if any
 find scripts -type f -print0 |
