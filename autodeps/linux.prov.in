@@ -160,12 +160,15 @@ FindLibProvs()
 : ${RPM_FINDPROV_SKIPLIST:=}
 
 while IFS= read -r f; do
-	if [ -n "$RPM_FINDPROV_TOPDIR" ] && [ -z "${f%%$RPM_BUILD_ROOT$RPM_FINDPROV_TOPDIR/*}" ]; then
+	fname="${f#$RPM_BUILD_ROOT}"
+	fname="${fname#.}"
+
+	if [ -n "$RPM_FINDPROV_TOPDIR" ] && [ -z "${fname%%$RPM_FINDPROV_TOPDIR/*}" ]; then
 		continue;
 	fi
 	if [ -n "$RPM_FINDPROV_SKIPLIST" ]; then
 		for skip in $RPM_FINDPROV_SKIPLIST; do
-			if [ -z "${f//$skip}" ]; then
+			if [ -z "${fname//$skip}" ]; then
 				continue 2
 			fi
 		done

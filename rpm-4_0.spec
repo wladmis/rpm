@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt12
+Release: alt13
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -120,7 +120,7 @@ the package like its version, a description, etc.
 %description -l ru_RU.KOI8-R
 RPM - это мощный неинтерактивный менеджер пакетов, используемый для сборки,
 установки, инспекции, проверки, обновления и удаления отдельных программных
-пакетов. Каждый такой пакет состоит из набора файлов и информации о пакете,
+пакетов.  Каждый такой пакет состоит из набора файлов и информации о пакете,
 включающей название, версию, описание пакета, и т.д.
 
 %description -n lib%name
@@ -476,6 +476,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Dec 30 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt13
+- Fixed skiplists processing.
+- rpminit(1): imported from Owl with ALT adaptions.
+
 * Sun Nov 10 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt12
 - lib/query.c: rpmQueryVerify[RPMQV_RPM]: parse file argument
   (do glob and other expansions) only if glob_query is enabled

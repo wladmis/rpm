@@ -37,10 +37,6 @@ trap exit_handler SIGHUP SIGINT SIGTERM SIGQUIT SIGPIPE EXIT
 
 fix()
 {
-	local fname
-	fname="${f#$RPM_BUILD_ROOT}"
-	fname="${fname#.}"
-
 	# fetch parameters
 
 	local includedir=
@@ -152,9 +148,12 @@ for f in "$@"; do
 		continue
 	fi
 
+	fname="${f#$RPM_BUILD_ROOT}"
+	fname="${fname#.}"
+
 	if [ -n "$RPM_FIXUP_SKIPLIST" ]; then
 		for skip in $RPM_FIXUP_SKIPLIST; do
-			if [ -z "${f//$skip}" ]; then
+			if [ -z "${fname//$skip}" ]; then
 				continue 2
 			fi
 		done
