@@ -226,7 +226,7 @@
 @alt@	%{?_perl_req_method:export RPM_PERL_REQ_METHOD=\"%_perl_req_method\"}\
 @alt@	%{?_pkg_contents_index_all:export RPM_PKG_CONTENTS_INDEX_ALL=\"%_pkg_contents_index_all\"}\
 @alt@	%{?_pkg_contents_index_bin:export RPM_PKG_CONTENTS_INDEX_BIN=\"%_pkg_contents_index_bin\"}\
-@alt@	%{?_scripts_debug:export $RPM_SCRIPTS_DEBUG=\"%_scripts_debug\"}\
+@alt@	%{?_scripts_debug:export RPM_SCRIPTS_DEBUG=\"%_scripts_debug\"}\
 @alt@	%{?__python:export RPM_PYTHON=\"%__python\"}\
 @alt@	\
 @alt@	unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
