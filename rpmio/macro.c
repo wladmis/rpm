@@ -1630,26 +1630,36 @@ rpmInitMacrofile (const char *macrofile)
 static void
 rpmInitMacrofileGlob (const char *macrofile)
 {
-	if (strchr (macrofile, '~') || strchr (macrofile, '*'))
+	int is_local = strchr (macrofile, '~');
+
+	if (is_local || strchr (macrofile, '*'))
 	{
 		glob_t	gl;
+
 		memset (&gl, 0, sizeof(gl));
 		if (!glob(macrofile, GLOB_ERR | GLOB_NOESCAPE | GLOB_TILDE | GLOB_TILDE_CHECK, 0, &gl))
 		{
-			unsigned i;
+			unsigned int i;
+
 			for (i = 0; i < gl.gl_pathc; ++i)
-			{
-				const char *p = gl.gl_pathv[i];
-
-				if (!*p)
-					continue;
-
-				for (; *p; ++p)
-					if (!xisalnum (*p) && ('_' != *p) && ('-' != *p))
-						break;
-				if (!*p)
+				if (is_local)
 					rpmInitMacrofile (gl.gl_pathv[i]);
-			}
+				else
+				{
+					const char *p = strrchr (gl.gl_pathv[i], '/');
+
+					if (!p)
+						continue;
+
+					if (!*++p)
+						continue;
+
+					for (; *p; ++p)
+						if (!xisalnum (*p) && ('_' != *p) && ('-' != *p))
+							break;
+					if (!*p)
+						rpmInitMacrofile (gl.gl_pathv[i]);
+				}
 		}
 		globfree (&gl);
 	}
