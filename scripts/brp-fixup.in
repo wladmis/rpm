@@ -3,7 +3,7 @@
 # brp-fixup - Misc fixups.
 #
 # $Id$
-# Copyright (C) 2002  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2002,2003  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,13 +20,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-PROG="${0##*/}"
+. @RPMCONFIGDIR@/functions
 
-# If using normal root, avoid changing anything.
-if [ -z "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
-	echo "$PROG: non-/ \$RPM_BUILD_ROOT expected" >&2
-	exit 1
-fi
+ValidateBuildRoot
 
 cd "$RPM_BUILD_ROOT"
 
@@ -61,8 +57,7 @@ for t in `printf %s "$RPM_FIXUP_METHOD" |tr , ' '`; do
 			AddShowMethods libtool
 			;;
 		*)
-			echo "Unrecognized fixup method: $t"
-			exit 1
+			Fatal "Unrecognized fixup method: $t"
 			;;
 	esac
 done
