@@ -285,9 +285,7 @@ typedef enum rpmTag_e {
     RPMTAG_FILEMD5S		= 1035,
     RPMTAG_FILELINKTOS		= 1036,
     RPMTAG_FILEFLAGS		= 1037,
-/*@-enummemuse@*/
-    RPMTAG_ROOT			= 1038, /*!< internal - obsolete */
-/*@=enummemuse@*/
+    RPMTAG_ARG			= 1038,
     RPMTAG_FILEUSERNAME		= 1039,
     RPMTAG_FILEGROUPNAME	= 1040,
 /*@-enummemuse@*/
