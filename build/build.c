@@ -215,6 +215,32 @@ fprintf(stderr, "*** addMacros\n");
 		_exit( -1 );
 	}
 
+	/* Unset all known locale environment variables */
+	{
+		const char *const name[] = {
+			"LANG",
+			"LANGUAGE",
+			"LC_CTYPE",
+			"LC_NUMERIC",
+			"LC_TIME",
+			"LC_COLLATE",
+			"LC_MONETARY",
+			"LC_MESSAGES",
+			"LC_PAPER",
+			"LC_NAME",
+			"LC_ADDRESS",
+			"LC_TELEPHONE",
+			"LC_MEASUREMENT",
+			"LC_IDENTIFICATION",
+			"LC_ALL",
+			0
+		}
+		unsigned i;
+
+		for (i = 0; name[i][0]; ++i)
+			unsetenv (name[i]);
+	}
+
 	/*@-mods@*/
 	errno = 0;
 	/*@=mods@*/
