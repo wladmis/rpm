@@ -522,6 +522,9 @@ fi
   + %%set_*_version: use it (#3335);
   + run scrollkeeper-update quietly (#4485);
   + fixed typo in %%add_python_lib_path().
+- find-provides:
+  + parse unrecognized __init__.py files as python files,
+    patch from Andrey Orlov.
 
 * Mon May 17 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt38
 - Disallow root to install source packages by default.

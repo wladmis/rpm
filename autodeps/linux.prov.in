@@ -297,6 +297,10 @@ while IFS= read -r f; do
 $r"
 			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
 $f"
+		elif [ "${f##*/}" = '__init__.py' ]; then
+			# Zero-length python init files have major sense.
+			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
+$f"
 		fi
 	else
 		echo "Not found: $f" >&2
