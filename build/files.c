@@ -2246,7 +2246,7 @@ int processSourceFiles(Spec spec)
 
 /**
  */
-static StringBuf getOutputFrom(char * dir, const char * argv[],
+static StringBuf getOutputFrom(char * dir, const char * argv[], const char *envp[],
 			const char * writePtr, int writeBytesLeft,
 			int failNonZero)
 	/*@globals fileSystem, internalState@*/
@@ -2270,6 +2270,9 @@ static StringBuf getOutputFrom(char * dir, const char * argv[],
     (void) pipe(fromProg);
     
     if (!(progPID = fork())) {
+	while (*envp)
+	    putenv ((char *)*(envp++));
+
 	(void) close(toProg[1]);
 	(void) close(fromProg[0]);
 	
@@ -2534,6 +2537,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	FD_t	fd, xfd;
 	int argc = 0;
 	const char **argv = 0;
+	const char *envp[4];
 	FILE *fp = 0;
 	char *runBody = 0;
 
@@ -2621,12 +2625,25 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 
 	poptParseArgvString(runCmd, &argc, &argv);
 
+	{
+		const char *n, *v, *r;
+
+		headerNVR(pkg->header, &n, &v, &r);
+		asprintf (&envp[0], "PACKAGE_NAME=%s", n);
+		asprintf (&envp[1], "PACKAGE_VERSION=%s", n);
+		asprintf (&envp[2], "PACKAGE_RELEASE=%s", n);
+		envp[3] = 0;
+	}
+
 	rpmMessage(RPMMESS_NORMAL, _("Executing(%s): %s\n"), dm->msg, runCmd);
 
 	readBuf = getOutputFrom(NULL, argv,
 			getStringBuf(writeBuf), writeBytes, failnonzero);
 
 	/* Free expanded args */
+	envp[0] = _free(envp[0]);
+	envp[1] = _free(envp[1]);
+	envp[2] = _free(envp[2]);
 	argv = _free(argv);
 	runCmd = _free(runCmd);
 
@@ -2792,15 +2809,6 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
 	if ( rc ) return rc;
 
-	if (strcmp(n, "glibc-devel-static")) {
-	    const char suffix[] = "-devel-static";
-	    const char *p = strstr (n, suffix);
-
-	    if (p && p[sizeof(suffix)-1] == '\0') {
-		rc = parseRCPOT(spec, pkg, "glibc-devel-static", RPMTAG_REQUIREFLAGS, 0, RPMSENSE_FIND_REQUIRES);
-		if ( rc ) return rc;
-	    }
-	}
     /* XXX This should be added always so that packages look alike.
      * XXX However, there is logic in files.c/depends.c that checks for
      * XXX existence (rather than value) that will need to change as well.
