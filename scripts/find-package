@@ -1,7 +1,7 @@
 #!/bin/sh -e
 #
 # find-package
-# Copyright (C) 2000  Dmitry V. Levin <ldv@fandra.org>
+# Copyright (C) 2002  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ FindPackage()
 {
 	local f="$1"
 	shift
-	local r rep package deref
+	local r rep package
 
 	for r in "$@"; do
 		[ -n "$r" ] || continue
@@ -38,8 +38,7 @@ FindPackage()
 			if [ -e "$RPM_BUILD_ROOT/$rep" ]; then
 				continue
 			fi
-			deref=`LC_TIME=C /bin/ls -l -- "$rep" |/bin/sed -ne 's,^lrwxrwxrwx \+1 .\+ \(/[^ ]\+\) -> /etc/alternatives/.\+$,\1,p'`
-			if [ "$deref" = "$rep" ]; then
+			if readlink "$rep" |grep -qs '^/etc/alternatives/'; then
 				echo -E "$rep"
 			else
 				if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep"|LC_COLLATE=C sort -u)"; then
@@ -49,7 +48,8 @@ FindPackage()
 				fi
 			fi
 		else
-			local RPATH="$(echo "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
+			local RPATH
+			RPATH="$(echo "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
 			if [ -n "$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)" ]; then
 				continue
 			fi

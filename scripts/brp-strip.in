@@ -237,7 +237,7 @@ fi
 StripTree()
 {
 	echo "Stripping binaries in $1 ($SHOW_METHODS)"
-	find "$1" -type f $PERMS -print0 |xargs -r0 @RPMCONFIGDIR@/strip_files
+	find "$1" -type f $PERMS -print0 |xargs -r0 @RPMCONFIGDIR@/strip_files || return 1
 }
 
 if [ -n "$*" ]; then
