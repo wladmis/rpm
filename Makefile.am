@@ -5,20 +5,17 @@ AUTOMAKE_OPTIONS = 1.4 foreign
 EXTRA_DIST = CHANGES CREDITS Doxyheader GROUPS README.amiga INSTALL \
 	RPM-GPG-KEY RPM-PGP-KEY \
 	autodeps/none autodeps/*.prov autodeps/*.req autogen.sh \
-	config.site db db3/configure gendiff installplatform platform* \
-	Perl-RPM po/*.in po/*.po po/rpm.pot \
+	config.site gendiff installplatform platform* \
+	po/*.in po/*.po po/rpm.pot \
 	rpm.magic rpmpopt-$(VERSION) rpmqv.c rpm.c
 
-SUBDIRS = intl po @WITH_ZLIB_SUBDIR@ @WITH_DB_SUBDIR@ popt beecrypt rpmio rpmdb lib build misc @WITH_PYTHON_SUBDIR@ tools scripts tests doc .
+SUBDIRS = intl po rpmio rpmdb lib build misc @WITH_PYTHON_SUBDIR@ tools scripts tests doc .
 
 INCLUDES = \
 	-I$(top_srcdir)/build \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/rpmdb \
 	-I$(top_srcdir)/rpmio \
-	-I$(top_srcdir)/beecrypt \
-	-I$(top_srcdir)/popt \
-	@WITH_ZLIB_INCLUDE@ \
 	@INCPATH@
 
 LIBS = -lrt -lpthread
@@ -33,8 +30,6 @@ myLDADD = \
 	$(top_builddir)/lib/librpm.la \
 	$(top_builddir)/rpmdb/librpmdb.la \
 	$(top_builddir)/rpmio/librpmio.la \
-	$(top_builddir)/popt/libpopt.la \
-	@WITH_ZLIB_LIB@ \
 	@INTLLIBS@ @LIBMISC@
 
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
@@ -107,20 +102,18 @@ lclint:
 		`make -s sources -C build` \
 		`make -s sources -C lib` \
 		`make -s sources -C rpmdb` \
-		`make -s sources -C rpmio` \
-		`make -s sources -C beecrypt` \
-		`make -s sources -C popt`
+		`make -s sources -C rpmio`
 
 CVSTAG = r$(subst .,-,$(VERSION))
 
-pkgsrcdir = $(prefix)/src/$(RPMCANONVENDOR)
+pkgsrcdir = $(prefix)/src/RPM
 
 install-data-local:
 	@$(mkinstalldirs) $(DESTDIR)$(varprefix)/lib/rpm
 	@rm -f $(DESTDIR)$(libdir)/rpmrc
 	@@LN_S@ rpm/rpmrc $(DESTDIR)$(libdir)/rpmrc
 	@rm -f $(DESTDIR)$(libdir)/rpmpopt
-	@@LN_S@ rpm/rpmpopt $(DESTDIR)$(libdir)/rpmpopt
+	@@LN_S@ rpm/rpmpopt-$(VERSION) $(DESTDIR)$(libdir)/rpmpopt
 	@rm -f $(DESTDIR)$(libdir)/rpm/rpmt
 	@@LN_S@ rpmb $(DESTDIR)$(libdir)/rpm/rpmt
 	@rm -f $(DESTDIR)$(libdir)/rpm/rpme
@@ -137,14 +130,16 @@ install-data-local:
 	@LN_S@ ../lib/rpm/rpmv $(DESTDIR)$(bindir)/rpmverify
 	rm -f $(DESTDIR)$(bindir)/rpmsign
 	@LN_S@ ../lib/rpm/rpmk $(DESTDIR)$(bindir)/rpmsign
-	rm -f $(DESTDIR)$(bindir)/rpmdb ; \
-	@LN_S@ ../lib/rpm/rpmd $(DESTDIR)$(bindir)/rpmdb ; \
+	rm -f $(DESTDIR)$(bindir)/rpmdb
+	@LN_S@ ../lib/rpm/rpmd $(DESTDIR)$(bindir)/rpmdb
 	for bf in e i u ; do \
 	    rm -f $(DESTDIR)$(bindir)/rpm$$bf ; \
 	    @LN_S@ ../lib/rpm/rpm$$bf $(DESTDIR)$(bindir)/rpm$$bf ; \
 	done
-	@for dir in BUILD RPMS SOURCES SPECS SRPMS ; do\
-	    $(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/$$dir;\
+	rm -f $(DESTDIR)$(bindir)/relative
+	@LN_S@ ../lib/rpm/relative $(DESTDIR)$(bindir)/relative
+	@for dir in BUILD RPMS SOURCES SPECS SRPMS ; do \
+	    $(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/$$dir; \
 	done
 	@case "@host_cpu@" in \
 	*86)	$(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/RPMS/i386 ;\
