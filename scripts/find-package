@@ -77,7 +77,7 @@ FindPackage()
 
 			# Check for pkg contents binary index.
 			if [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
-				package="$(awk -v "f=$r" 'BEGIN {r="^(/usr(/X11R6)?)?/s?bin/" f} {if (match($1,r)>0) {print $2; exit 0}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
+				package="$(awk -v "f=$r" 'BEGIN {r="^(/usr(/X11R6)?)?/s?bin/" f "$"} {if (match($1,r)>0) {print $2; exit 0}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
 				if [ -n "$package" ]; then
 					echo -E "$package"
 					continue
