@@ -446,7 +446,9 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
 
     /* Create and add the cookie */
     if (cookie) {
-	sprintf(buf, "%s %d", buildHost(), (int) (*getBuildTime()));
+	if (!headerGetEntry(h, RPMTAG_BUILDHOST, NULL, (void **)&s, NULL))
+	    s = buildHost();
+	sprintf(buf, "%s %d", s, (int) (*getBuildTime()));
 	*cookie = xstrdup(buf);
 	(void) headerAddEntry(h, RPMTAG_COOKIE, RPM_STRING_TYPE, *cookie, 1);
     }
@@ -713,7 +715,8 @@ int packageBinaries(Spec spec)
 	
 	(void) headerAddEntry(pkg->header, RPMTAG_RPMVERSION,
 		       RPM_STRING_TYPE, VERSION, 1);
-	(void) headerAddEntry(pkg->header, RPMTAG_BUILDHOST,
+	if (!headerIsEntry(pkg->header, RPMTAG_BUILDHOST))
+	    (void) headerAddEntry(pkg->header, RPMTAG_BUILDHOST,
 		       RPM_STRING_TYPE, buildHost(), 1);
 	(void) headerAddEntry(pkg->header, RPMTAG_BUILDTIME,
 		       RPM_INT32_TYPE, getBuildTime(), 1);
@@ -794,7 +797,8 @@ int packageSources(Spec spec)
     /* Add some cruft */
     (void) headerAddEntry(spec->sourceHeader, RPMTAG_RPMVERSION,
 		   RPM_STRING_TYPE, VERSION, 1);
-    (void) headerAddEntry(spec->sourceHeader, RPMTAG_BUILDHOST,
+    if (!headerIsEntry(spec->sourceHeader, RPMTAG_BUILDHOST))
+        (void) headerAddEntry(spec->sourceHeader, RPMTAG_BUILDHOST,
 		   RPM_STRING_TYPE, buildHost(), 1);
     (void) headerAddEntry(spec->sourceHeader, RPMTAG_BUILDTIME,
 		   RPM_INT32_TYPE, getBuildTime(), 1);

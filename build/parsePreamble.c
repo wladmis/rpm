@@ -29,6 +29,7 @@ static rpmTag copyTagsDuringParse[] = {
     RPMTAG_CHANGELOGNAME,
     RPMTAG_CHANGELOGTEXT,
     RPMTAG_PREFIXES,
+    RPMTAG_BUILDHOST,
     RPMTAG_RHNPLATFORM,
     0
 };
@@ -321,6 +322,7 @@ static struct optionalTag {
     { RPMTAG_PACKAGER,		"%{packager}" },
     { RPMTAG_DISTRIBUTION,	"%{distribution}" },
     { RPMTAG_DISTURL,		"%{disturl}" },
+    { RPMTAG_BUILDHOST,		"%{buildhost}" },
     { -1, NULL }
 };
 
@@ -530,6 +532,7 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
       case RPMTAG_VENDOR:
       case RPMTAG_LICENSE:
       case RPMTAG_PACKAGER:
+      case RPMTAG_BUILDHOST:
 	if (!*lang)
 	    (void) headerAddEntry(pkg->header, tag, RPM_STRING_TYPE, field, 1);
 	else if (!(noLang && strcmp(lang, RPMBUILD_DEFAULT_LANG)))
@@ -721,6 +724,7 @@ static struct PreambleRec_s preambleList[] = {
     {RPMTAG_LICENSE,		0, 0, "license"},
     {RPMTAG_DISTRIBUTION,	0, 0, "distribution"},
     {RPMTAG_DISTURL,		0, 0, "disturl"},
+    {RPMTAG_BUILDHOST,		0, 0, "buildhost"},
     {RPMTAG_VENDOR,		0, 0, "vendor"},
     {RPMTAG_GROUP,		0, 1, "group"},
     {RPMTAG_PACKAGER,		0, 0, "packager"},
