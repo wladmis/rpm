@@ -1,5 +1,5 @@
                                ALT Linux RPM:
-                     особенности версии rpm-4.0.4-alt4
+                     особенности версии rpm-4.0.4-alt5
 
                      Dmitry V. Levin <ldv@altlinux.org>
                                ALT Linux Team
@@ -226,28 +226,41 @@ BuildRoot.
    %_compress_method:
           метод, используемый при сжатии документации в секции %install;
 
+   %_findprov_default_method:
+          метод, используемый по умолчанию при поиске предоставляемых
+          зависимостей;
+
+   %_findreq_default_method:
+          метод, используемый по умолчанию при поиске требуемых
+          зависимостей;
+
+   %_fixup_method:
+          метод, используемый при исправлении файлов в секции %install;
+
    %_verify_elf_method:
           метод, используемый при проверке ELF-файлов в секции %install;
 
    %_strip_method:
           метод, используемый при обработке ELF-файлов в секции %install;
 
-   %_findreq_default_method:
-          метод, используемый по умолчанию при поиске требуемых
-          зависимостей;
+   %_cleanup,compress,fixup,strip,verify_elf,findreq,findprov_topdir:
+          точка начала поиска файлов, обрабатываемых соответствующим
+          методом;
 
-   %_findprov_default_method:
-          метод, используемый по умолчанию при поиске предоставляемых
-          зависимостей;
+   %_cleanup,compress,fixup,strip,verify_elf,findreq,findprov_skiplist:
+          список шаблонов файлов, которые будут пропущены при обработке
+          соответствующим методом;
 
-   %set_compress_method:
-          изменить значение макроса %_compress_method;
+   %set_{cleanup,compress,fixup,strip,verify_elf}_method:
+          изменить значение соответствующего макроса;
 
-   %set_strip_method:
-          изменить значение макроса %_strip_method;
+   %set_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_{topdi
+          r,skiplist}:
+          изменить значение соответствующего макроса;
 
-   %set_verify_elf_method:
-          изменить значение макроса %_verify_elf_method.
+   %add_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_skipli
+          st:
+          добавить значение в соответствующий список.
 
 Вызов вспомогательных программ.
 
@@ -306,6 +319,10 @@ BuildRoot.
    glibc:
           %__glibc_version, %__glibc_version_major,
           %__glibc_version_minor;
+
+   gcc:
+          %__gcc_version, %__gcc_version_major, %__gcc_version_minor,
+          %__gcc_version_base;
 
    python:
           %__python_version;
@@ -436,6 +453,22 @@ BuildRoot.
    Какой метод будет использован в каждом конкретном случае, зависит от
    значения макроса %_cleanup_method; значение по умолчанию для этого
    макроса - auto.
+
+Автоматический поиск и исправление конфигурационных файлов, используемых прежде
+всего при разработке ПО.
+
+   Поддерживаются следующие типы файлов, подлежащих проверке и
+   исправлению:
+     * none, skip: поиска и проверки не производится;
+     * binconfig: поиск и обработка shell-скриптов по шаблону
+       /usr/bin/*-config;
+     * pkgconfig: поиск и обработка файлов по шаблону
+       /usr/lib/pkgconfig/*.pc;
+     * libtool: поиск и обработка .la-файлов;
+
+   Какой метод будет использован в каждом конкретном случае, зависит от
+   значения макроса %_fixup_method; значение по умолчанию для этого
+   макроса - binconfig pkgconfig libtool.
 
 Автоматическое исправление прав доступа к файлам и каталогам.
 
@@ -598,7 +631,7 @@ Bibliography
           Список рассылки для разработчиков rpm: rpm-list@redhat.com
    3
           Edward C. Bailey ``Maximum RPM'' February 17, 1997. (доступна
-          также online-версия по адресу http://www.rpmdp.org/rpmbook/ и в
+          также online-версия по адресу http://www.rpm.org/max-rpm/ и в
           формате PostScript по адресу
-          http://www.rpm.org/maximum-rpm.ps.gz)
+          http://www.rpm.org/local/maximum-rpm.ps.gz)
      _________________________________________________________________
