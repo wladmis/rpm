@@ -6,10 +6,10 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt16
+Release: alt17
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
-%define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
+%define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
 %define def_with() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _with_%{1} --with-%{1}}}}
 %define def_without() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _without_%{1} --without-%{1}}}}
 %define if_with() %if %{expand:%%{?_with_%{1}:1}%%{!?_with_%{1}:0}}
@@ -51,7 +51,7 @@ BuildPreReq: automake >= 1.6.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindi
 BuildConflicts: rpm-devel
 
 # Automatically added by buildreq on Thu Nov 01 2001
-BuildRequires: bison bzlib-devel-static cpio gcc-c++ gettext-tools gnupg libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static libstdc++-devel openssh-clients zlib-devel-static
+BuildRequires: bzlib-devel-static cpio gcc-c++ gettext-tools gnupg libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static libstdc++-devel openssh-clients zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -84,17 +84,15 @@ Summary: Scripts and executable programs used to build packages
 Summary(ru_RU.KOI8-R): Файлы, необходимые для установки SRPM-пакетов и сборки RPM-пакетов
 Group: Development/Other
 Obsoletes: spec-helper
-Conflicts: patch < 2.5
 PreReq: shadow-utils
 PreReq: %name = %version-%release
-Requires: autoconf autoconf-common automake automake-common bison cpio gcc
-Requires: gettext-tools glibc-devel file kernel-headers libtool m4 make
-Requires: mktemp net-tools patch procps psmisc sed sh texinfo which
+Requires: autoconf autoconf-common automake automake-common bison coreutils cpio
+Requires: gcc gettext-tools glibc-devel file kernel-headers libtool m4 make
+Requires: mktemp net-tools procps psmisc sed service sh texinfo which
 Requires: bzip2 >= 1:1.0.2-alt4
-Requires: fileutils >= 4.1.11-alt4
 Requires: gzip >= 1.3.3-alt2
+Requires: patch >= 2.5
 Requires: tar >= 1.13.22-alt1
-Requires: textutils >= 2.0.17-alt1
 Requires: %_bindir/subst
 Requires: /usr/sbin/update-alternatives
 
@@ -221,11 +219,11 @@ make apidocs
 %__chmod a-w $RPM_BUILD_ROOT%_usrsrc/RPM{,/RPMS/*}
 
 # Save list of packages through cron.
-%__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/cron.daily
-%__install -p -m750 scripts/%name.daily $RPM_BUILD_ROOT%_sysconfdir/cron.daily/%name
-
-%__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/logrotate.d
-%__install -p -m640 scripts/%name.log $RPM_BUILD_ROOT%_sysconfdir/logrotate.d/%name
+#%__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/cron.daily
+#%__install -p -m750 scripts/%name.daily $RPM_BUILD_ROOT%_sysconfdir/cron.daily/%name
+#
+#%__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/logrotate.d
+#%__install -p -m640 scripts/%name.log $RPM_BUILD_ROOT%_sysconfdir/logrotate.d/%name
 
 %__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/%name/macros.d
 touch $RPM_BUILD_ROOT%_sysconfdir/%name/macros
@@ -292,17 +290,16 @@ popd
 	%__sed -e "s|^$RPM_BUILD_ROOT|%attr(-,root,%name) |g" >>%name.lang
 
 %pre
+/usr/sbin/groupadd -r -f %name
 if [ -f %_localstatedir/%name/Packages -a -f %_localstatedir/%name/packages.rpm ]; then
     echo "
 You have both
 	%_localstatedir/%name/packages.rpm	db1 format installed package headers
 	%_localstatedir/%name/Packages		db3 format installed package headers
 Please remove (or at least rename) one of those files, and re-install.
-"
+" >&2
     exit 1
 fi
-/usr/sbin/groupadd -r -f %name &>/dev/null ||:
-#/usr/sbin/useradd -r -g %name -d %_localstatedir/rpm -s /dev/null -n %name &> /dev/null ||:
 
 %post
 if [ -f %_localstatedir/%name/packages.rpm ]; then
@@ -355,8 +352,8 @@ fi
 %_docdir/%name-%rpm_version/manual
 %rpmattr /bin/rpm
 
-%config(noreplace,missingok) %_sysconfdir/cron.daily/%name
-%config(noreplace,missingok) %_sysconfdir/logrotate.d/%name
+#%config(noreplace,missingok) %_sysconfdir/cron.daily/%name
+#%config(noreplace,missingok) %_sysconfdir/logrotate.d/%name
 
 %dir %_sysconfdir/%name
 %dir %_sysconfdir/%name/macros.d
@@ -482,6 +479,13 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu May 01 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt17
+- rpm2cpio: return proper exit code.
+- Fixed perl provides autodetection (broken in -alt16).
+- %%get_dep(): make valid string even for missing packages.
+- New group: Sciences/Medicine.
+- Do not package cron and logrotate scripts.
+
 * Thu Apr 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt16
 - Fixed segfault on "rpmquery --qf '%{FILENAMES}' basesystem" command.
 - Implemented shell functions requires/provides autodetection
