@@ -31,3 +31,9 @@ Fatal()
 	echo "${0##*/}: $*" >&2
 	exit 1
 }
+
+ValidateBuildRoot()
+{
+	[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ] ||
+		Fatal "invalid \$RPM_BUILD_ROOT"
+}
