@@ -944,11 +944,11 @@ done \
 #	%dir %{perl_sitearch}/auto/Image
 #
 %requires_eq()	%(LC_ALL="C" echo '%*' | xargs -r rpm -q --qf 'Requires: %%{name} = %%{epoch}:%%{version}\\n' | sed -e 's/ (none):/ /' -e 's/ 0:/ /' | fgrep -v "is not")
-%perl_archlib	%(eval "`perl -V:installarchlib`"; echo "$installarchlib")
-%perl_sitelib	%(eval "`perl -V:installsitelib`"; echo "$installsitelib")
-%perl_sitearch	%(eval "`perl -V:installsitearch`"; echo "$installsitearch")
-%perl_man1dir	%(eval "`perl -V:installman1dir`"; echo "$installman1dir")
-%perl_man3dir	%(eval "`perl -V:installman3dir`"; echo "$installman3dir")
+#%perl_archlib	%(eval "`perl -V:installarchlib`"; echo "$installarchlib")
+#%perl_sitelib	%(eval "`perl -V:installsitelib`"; echo "$installsitelib")
+#%perl_sitearch	%(eval "`perl -V:installsitearch`"; echo "$installsitearch")
+#%perl_man1dir	%(eval "`perl -V:installman1dir`"; echo "$installman1dir")
+#%perl_man3dir	%(eval "`perl -V:installman3dir`"; echo "$installman3dir")
 
 #------------------------------------------------------------------------------
 # arch macro for all Intel i?86 compatibile processors
