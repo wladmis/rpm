@@ -1,7 +1,7 @@
 #! /usr/bin/perl --
 
-use POSIX; &ENOENT;
-#sub ENOENT { 2; }
+#use POSIX; &ENOENT;
+sub ENOENT { 2; }
 # Sorry about this, but the errno-part of POSIX.pm isn't in perl-*-base
 
 # Global variables:
@@ -25,7 +25,7 @@ use POSIX; &ENOENT;
 #  %priorities       Map from @version-index to priority
 #  %slavepath        Map from (@version-index,slavename) to slave-path
 
-$version="1.8.4"; # This line modified by Makefile
+$version="1.8.3.ALT"; # This line modified by Makefile
 sub usageversion {
     print(STDERR <<END)
 The update-alternatives $version.  Copyright (C) 1995 Ian Jackson.
