@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt27.5
+Release: alt28
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -197,8 +197,7 @@ export \
 	%{?_with_python} %{?_without_python} \
 	%{?_with_apidocs} %{?_without_apidocs} \
 	%{?_with_db} %{?_without_db} \
-	--program-transform-name= \
-	--disable-rpath
+	--program-transform-name=
 
 # fix buggy requires if any
 find scripts -type f -print0 |
@@ -224,7 +223,6 @@ make apidocs
 
 %install
 %make_install DESTDIR="$RPM_BUILD_ROOT" install
-%__chmod a-x $RPM_BUILD_ROOT%_libdir/lib*.so
 %__chmod a-w $RPM_BUILD_ROOT%_usrsrc/RPM{,/RPMS/*}
 
 # Save list of packages through cron.
@@ -474,7 +472,7 @@ fi
 %endif #with contrib
 
 %changelog
-* Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27.6
+* Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt28
 - brp-verify_elf:
   "%%set_verify_elf_method relaxed" now affects textrel as well as rpath.
 - verify-elf:
@@ -487,6 +485,7 @@ fi
 - brp-fix-perms, fixup-libraries: strip executable bit from non-executable libraries.
 - rpmbuild --rebuild/--recompile: implemented support for new macros:
   %%_rpmbuild_clean and %%_rpmbuild_packagesource.
+- Updated README.ALT-ru_RU.KOI8-R.
 
 * Sun Nov 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27
 - helper shell scripts:
