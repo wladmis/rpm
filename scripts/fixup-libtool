@@ -1,0 +1,69 @@
+#!/bin/sh -e
+#
+# fixup-libtool - libtool .la-files fixups.
+#
+# Copyright (C) 2002  Dmitry V. Levin <ldv@altlinux.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+PROG="${0##*/}"
+
+: ${RPM_FIXUP_SKIPLIST:=}
+
+fix_libdir()
+{
+	local f=$1
+	shift
+
+	local libdir=`sed -ne "s/^libdir='\([^']*\)'\$/\1/pg" "$f" |tail -1`
+	local fname="${f#$RPM_BUILD_ROOT}"
+	local fdir="${fname%/*}"
+	if [ "$fdir" != "$libdir" ]; then
+		subst -p "s,^libdir='$libdir'\$,libdir='$fdir',g"
+		echo "$fname: libdir: $libdir -->  $fdir" >&2
+	fi
+}
+
+fix_dependency_libs()
+{
+	local f=$1
+	shift
+
+	#
+}
+
+rc=0
+for f in "$@"; do
+	if [ ! -f "$f" ]; then
+		echo "$PROG: $f: file unavailable" >&2
+		rc=1
+		continue
+	fi
+
+	if [ -n "$RPM_FIXUP_SKIPLIST" ]; then
+		for skip in $RPM_FIXUP_SKIPLIST; do
+			if [ -z "${f//$skip}" ]; then
+				continue 2
+			fi
+		done
+	fi
+
+	fix_libdir "$f"
+	
+	fix_dependency_libs "$f"
+done
+
+exit $rc

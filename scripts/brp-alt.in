@@ -37,6 +37,9 @@ cd "$RPM_BUILD_ROOT"
 # Fix file permissions.
 @RPMCONFIGDIR@/brp-fix-perms
 
+# Misc fixups.
+@RPMCONFIGDIR@/brp-fixup
+
 # Compress info and man pages.
 @RPMCONFIGDIR@/brp-compress
 

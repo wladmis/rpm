@@ -357,12 +357,14 @@
 @alt@%_cleanup_method	auto
 @alt@%_compress_method	auto
 @alt@%_verify_elf_method	normal
+@alt@%_fixup_method	binconfig pkgconfig libtool
 @alt@%_strip_method	%{?_enable_debug:none}%{!?_enable_debug:executable shared}
 @alt@%_findreq_default_method	files lib pam perl shell
 @alt@%_findprov_default_method	pam lib perl
 @alt@
 @alt@%_cleanup_topdir	%nil
 @alt@%_compress_topdir	%_usr
+@alt@%_fixup_topdir	%nil
 @alt@%_strip_topdir	%nil
 @alt@%_verify_elf_topdir	%nil
 @alt@%_findreq_topdir	%nil
@@ -370,6 +372,7 @@
 @alt@
 @alt@%_cleanup_skiplist	%nil
 @alt@%_compress_skiplist	%nil
+@alt@%_fixup_skiplist	%nil
 @alt@%_strip_skiplist	*/debug/*
 @alt@%_verify_elf_skiplist	%nil
 @alt@%_findreq_skiplist	%_docdir/*
@@ -377,11 +380,13 @@
 @alt@
 @alt@%set_cleanup_method()	%global _cleanup_method %*
 @alt@%set_compress_method()	%global _compress_method %*
+@alt@%set_fixup_method()	%global _fixup_method %*
 @alt@%set_strip_method()	%global _strip_method %*
 @alt@%set_verify_elf_method()	%global _verify_elf_method %*
 @alt@
 @alt@%set_cleanup_topdir()	%global _cleanup_topdir %*
 @alt@%set_compress_topdir()	%global _compress_topdir %*
+@alt@%set_fixup_topdir()	%global _fixup_topdir %*
 @alt@%set_strip_topdir()	%global _strip_topdir %*
 @alt@%set_verify_elf_topdir()	%global _verify_elf_topdir %*
 @alt@%set_findreq_topdir()	%global _findreq_topdir %*
@@ -389,6 +394,7 @@
 @alt@
 @alt@%set_cleanup_skiplist()	%global _cleanup_skiplist %*
 @alt@%set_compress_skiplist()	%global _compress_skiplist %*
+@alt@%set_fixup_skiplist()	%global _fixup_skiplist %*
 @alt@%set_strip_skiplist()	%global _strip_skiplist %*
 @alt@%set_verify_elf_skiplist()	%global _verify_elf_skiplist %*
 @alt@%set_findreq_skiplist()	%global _findreq_skiplist %*
@@ -396,6 +402,7 @@
 @alt@
 @alt@%add_cleanup_skiplist()	%global _cleanup_skiplist %_cleanup_skiplist %*
 @alt@%add_compress_skiplist()	%global _compress_skiplist %_compress_skiplist %*
+@alt@%add_fixup_skiplist()	%global _fixup_skiplist %_fixup_skiplist %*
 @alt@%add_strip_skiplist()	%global _strip_skiplist %_strip_skiplist %*
 @alt@%add_verify_elf_skiplist()	%global _verify_elf_skiplist %_verify_elf_skiplist %*
 @alt@%add_findreq_skiplist()	%global _findreq_skiplist %_findreq_skiplist %*

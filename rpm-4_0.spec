@@ -429,6 +429,7 @@ fi
 %rpmattr %_libdir/%name/find-package
 %rpmattr %_libdir/%name/find-provides
 %rpmattr %_libdir/%name/find-requires
+%rpmattr %_libdir/%name/fixup-*
 %rpmattr %_libdir/%name/http.req
 %rpmattr %_libdir/%name/pam.*
 %rpmattr %_libdir/%name/perl.*
@@ -477,33 +478,39 @@ fi
 
 %changelog
 * Thu Sep 26 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt5
+- New method now gets executed after %%install: fixup.
 - New macros:
   + %%_cleanup_topdir
   + %%_compress_topdir
+  + %%_fixup_topdir
   + %%_strip_topdir
   + %%_verify_elf_topdir
   + %%_findreq_topdir
   + %%_findprov_topdir
   + %%_cleanup_skiplist
   + %%_compress_skiplist
+  + %%_fixup_skiplist
   + %%_strip_skiplist
   + %%_verify_elf_skiplist
   + %%_findreq_skiplist
   + %%_findprov_skiplist
   + %%set_cleanup_topdir()
   + %%set_compress_topdir()
+  + %%set_fixup_topdir()
   + %%set_strip_topdir()
   + %%set_verify_elf_topdir()
   + %%set_findreq_topdir()
   + %%set_findprov_topdir()
   + %%set_cleanup_skiplist()
   + %%set_compress_skiplist()
+  + %%set_fixup_skiplist()
   + %%set_strip_skiplist()
   + %%set_verify_elf_skiplist()
   + %%set_findreq_skiplist()
   + %%set_findprov_skiplist()
   + %%add_cleanup_skiplist()
   + %%add_compress_skiplist()
+  + %%add_fixup_skiplist()
   + %%add_strip_skiplist()
   + %%add_verify_elf_skiplist()
   + %%add_findreq_skiplist()

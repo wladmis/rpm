@@ -1,0 +1,92 @@
+#!/bin/sh -e
+#
+# brp-fixup - Misc fixups.
+#
+# Copyright (C) 2002  Dmitry V. Levin <ldv@altlinux.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+PROG="${0##*/}"
+
+# If using normal root, avoid changing anything.
+if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
+	echo "$PROG: non-/ \$RPM_BUILD_ROOT expected" >&2
+	exit 1
+fi
+
+cd "$RPM_BUILD_ROOT"
+
+SHOW_METHODS=
+AddShowMethods()
+{
+	if [ -z "$SHOW_METHODS" ]; then
+		SHOW_METHODS="$*"
+	else
+		SHOW_METHODS="$SHOW_METHODS,$*"
+	fi
+}
+
+export FIXUP_BINCONFIG=
+export FIXUP_PKGCONFIG=
+export FIXUP_LIBTOOL=
+for t in `echo "$RPM_FIXUP_METHOD" |tr , ' '`; do
+	case "$t" in
+		no|none|off|false|skip)
+			exit 0
+			;;
+		config|binconfig)
+			FIXUP_BINCONFIG=binconfig
+			AddShowMethods binconfig
+			;;
+		pkgconfig)
+			FIXUP_PKGCONFIG=pkgconfig
+			AddShowMethods pkgconfig
+			;;
+		la|libtool)
+			FIXUP_LIBTOOL=libtool
+			AddShowMethods libtool
+			;;
+		*)
+			echo "Unrecognized fixup method: $t"
+			exit 1
+			;;
+	esac
+done
+
+if [ -z "$FIXUP_BINCONFIG" -a -z "$FIXUP_PKGCONFIG" -a -z "$FIXUP_LIBTOOL" ]; then
+	# Nothing to do
+	exit 0
+fi
+
+echo "Verifying and fixing files in $RPM_BUILD_ROOT ($SHOW_METHODS)"
+
+: ${RPM_FIXUP_TOPDIR:=}
+[ -d "$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR" ] || exit 0
+
+if [ -z "$FIXUP_BINCONFIG" -a -d ./usr/bin ]; then
+	find ./usr/bin -maxdepth 1 -type f -name \*-config -print0 |
+		xargs -r0 @RPMCONFIGDIR@/fixup-binconfig
+fi
+
+if [ -z "$FIXUP_PKGCONFIG" -a -d ./usr/lib/pkgconfig ]; then
+	find ./usr/lib/pkgconfig -maxdepth 1 -type f -name \*.pc -print0 |
+		xargs -r0 @RPMCONFIGDIR@/fixup-pkgconfig
+fi
+
+if [ -z "$FIXUP_BINCONFIG" ]; then
+	find .$RPM_FIXUP_TOPDIR -type f -name \*.la -print0 |
+		xargs -r0 @RPMCONFIGDIR@/fixup-libtool
+fi

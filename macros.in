@@ -599,6 +599,7 @@
   %{?buildroot:export RPM_BUILD_ROOT=\"%{u2p:%buildroot}\"}\
   %{?_cleanup_method:export RPM_CLEANUP_METHOD=\"%_cleanup_method\"}\
   %{?_compress_method:export RPM_COMPRESS_METHOD=\"%_compress_method\"}\
+  %{?_fixup_method:export RPM_FIXUP_METHOD=\"%_fixup_method\"}\
   %{?_strip_method:export RPM_STRIP_METHOD=\"%_strip_method\"}\
   %{?_verify_elf_method:export RPM_VERIFY_ELF_METHOD=\"%_verify_elf_method\"}\
   %{?_findreq_method:export RPM_FINDREQ_METHOD=\"%_findreq_method\"}\
@@ -607,12 +608,14 @@
   %{?_findprov_default_method:export RPM_FINDPROV_DEFAULT_METHOD=\"%_findprov_default_method\"}\
   %{?_cleanup_topdir:export RPM_CLEANUP_TOPDIR=\"%_cleanup_topdir\"}\
   %{?_compress_topdir:export RPM_COMPRESS_TOPDIR=\"%_compress_topdir\"}\
+  %{?_fixup_topdir:export RPM_FIXUP_TOPDIR=\"%_fixup_topdir\"}\
   %{?_strip_topdir:export RPM_STRIP_TOPDIR=\"%_strip_topdir\"}\
   %{?_verify_elf_topdir:export RPM_VERIFY_ELF_TOPDIR=\"%_verify_elf_topdir\"}\
   %{?_findreq_topdir:export RPM_FINDREQ_TOPDIR=\"%_findreq_topdir\"}\
   %{?_findprov_topdir:export RPM_FINDPROV_TOPDIR=\"%_findprov_topdir\"}\
   %{?_cleanup_skiplist:export RPM_CLEANUP_SKIPLIST=\"%_cleanup_skiplist\"}\
   %{?_compress_skiplist:export RPM_COMPRESS_SKIPLIST=\"%_compress_skiplist\"}\
+  %{?_fixup_skiplist:export RPM_FIXUP_SKIPLIST=\"%_fixup_skiplist\"}\
   %{?_strip_skiplist:export RPM_STRIP_SKIPLIST=\"%_strip_skiplist\"}\
   %{?_verify_elf_skiplist:export RPM_VERIFY_ELF_SKIPLIST=\"%_verify_elf_skiplist\"}\
   %{?_findreq_skiplist:export RPM_FINDREQ_SKIPLIST=\"%_findreq_skiplist\"}\
