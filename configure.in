@@ -491,6 +491,9 @@ AC_SUBST(WITH_BZIP2)
 
 AC_CHECK_LIB(popt, poptGetContext, [LIBS="$LIBS -lpopt"])
 
+AC_CHECK_LIB(beecrypt, hashFunctionContextInit, [LIBBEECRYPT="-lbeecrypt"])
+AC_SUBST(LIBBEECRYPT)
+
 dnl Red Hat 4.x has not personality
 AC_CHECK_FUNCS(personality)
 
@@ -526,7 +529,7 @@ AC_CHECK_HEADERS(machine/types.h)
 AC_CHECK_HEADERS(mntent.h sys/mnttab.h sys/systemcfg.h)
 AC_CHECK_HEADERS(sys/mount.h sys/mntctl.h sys/param.h sys/vmount.h)
 AC_CHECK_HEADERS(bzlib.h libio.h zlib.h)
-AC_CHECK_HEADERS(err.h mcheck.h)
+AC_CHECK_HEADERS(err.h mcheck.h syslog.h)
 
 dnl popt w float/double needs.
 AC_CHECK_HEADERS(float.h)
@@ -1042,42 +1045,6 @@ build_os_major=`echo "${build_os}" | sed 's/\..*$//'`
 build_os_noversion=`echo "${build_os}" | sed 's/[0-9]*\..*$//'`
 changequote([, ])
 
-rm -f ./find-provides
-if test -f ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.prov ; then
-	echo "using ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.prov for automatic provides generation"
-    ln -s ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.prov ./find-provides
-elif test -f ${srcdir}/autodeps/${build_os_exact}.prov ; then
-	echo "using ${srcdir}/autodeps/${build_os_exact}.prov for automatic provides generation"
-    ln -s ${srcdir}/autodeps/${build_os_exact}.prov ./find-provides
-elif test -f ${srcdir}/autodeps/${build_os_major}.prov ; then
-	echo "using ${srcdir}/autodeps/${build_os_major}.prov for automatic provides generation"
-    ln -s ${srcdir}/autodeps/${build_os_major}.prov ./find-provides
-elif test -f ${srcdir}/autodeps/${build_os_noversion}.prov ; then
-	echo "using ${srcdir}/autodeps/${build_os_noversion}.prov for automatic provides generation"
-    ln -s ${srcdir}/autodeps/${build_os_noversion}.prov ./find-provides
-else
-    echo "*** no default provides information is available for ${build_os_noversion}"
-    ln -s ${srcdir}/autodeps/none ./find-provides
-fi
-
-rm -f ./find-requires
-if test -f ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.req ; then
-	echo "using ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.req for automatic requires generation"
-    ln -s ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.req ./find-requires
-elif test -f ${srcdir}/autodeps/${build_os_exact}.req ; then
-	echo "using ${srcdir}/autodeps/${build_os_exact}.req for automatic requires generation"
-    ln -s ${srcdir}/autodeps/${build_os_exact}.req ./find-requires
-elif test -f ${srcdir}/autodeps/${build_os_major}.req ; then
-	echo "using ${srcdir}/autodeps/${build_os_major}.req for automatic requires generation"
-    ln -s ${srcdir}/autodeps/${build_os_major}.req ./find-requires
-elif test -f ${srcdir}/autodeps/${build_os_noversion}.req ; then
-	echo "using ${srcdir}/autodeps/${build_os_noversion}.req for automatic requires generation"
-    ln -s ${srcdir}/autodeps/${build_os_noversion}.req ./find-requires
-else
-    echo "*** no default requires information is available for ${build_os_noversion}"
-    ln -s ${srcdir}/autodeps/none ./find-requires
-fi
-
 dnl Determine the canonical arch-vendor-os for the build machine
 case "${build_cpu}" in
 *86)		RPMCANONARCH=i386 ;;
@@ -1100,11 +1067,12 @@ mint)		RPMCANONARCH=m68kmint ;;
 esac
 RPMCANONVENDOR="$build_vendor"
 case "${build_vendor}" in
-unknown|pc|ibm|redhat|pld|mandrake|conectiva)
+unknown|pc|ibm|redhat|pld|mandrake|conectiva|alt)
 	test -f /etc/redhat-release &&		RPMCANONVENDOR=redhat
 	test -f /etc/pld-release &&		RPMCANONVENDOR=pld
 	test -f /etc/mandrake-release &&	RPMCANONVENDOR=mandrake
 	test -f /etc/conectiva-release &&	RPMCANONVENDOR=conectiva
+	test -f /etc/altlinux-release &&	RPMCANONVENDOR=alt
 	;;
 esac
 RPMCANONOS="$build_os_noversion"
@@ -1173,18 +1141,52 @@ dnl XXX this causes popt to depend on zlib et al
 dnl # XXX Propagate -lucb to popt ...
 dnl export LIBS INCPATH CONFIG_SITE
 
-AC_CONFIG_SUBDIRS(popt beecrypt zlib $WITH_DB_SUBDIR)
-
 AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	rpmio/Makefile rpmdb/Makefile lib/Makefile build/Makefile
-	scripts/Makefile scripts/brp-redhat tools/Makefile
+	autodeps/linux.prov autodeps/linux.req tools/Makefile
+	scripts/Makefile scripts/shell.req scripts/compress_files
+	scripts/brp-alt scripts/brp-compress scripts/brp-strip
 	tests/Makefile tests/rpmrc tests/macros tests/hello-test/Makefile
 	misc/Makefile po/Makefile.in intl/Makefile
 	doc/Makefile doc/manual/Makefile
 	doc/ja/Makefile doc/pl/Makefile doc/ru/Makefile doc/sk/Makefile
 	python/Makefile ],
-  [	echo timestamp > popt/stamp-h.in
-	echo timestamp > beecrypt/stamp-h.in
-	echo timestamp > stamp-h.in
+  [	echo timestamp > stamp-h.in
   ]
 )
+
+rm -f ./find-provides
+if test -f ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.prov ; then
+	echo "using ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.prov for automatic provides generation"
+    ln -s ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.prov ./find-provides
+elif test -f ${srcdir}/autodeps/${build_os_exact}.prov ; then
+	echo "using ${srcdir}/autodeps/${build_os_exact}.prov for automatic provides generation"
+    ln -s ${srcdir}/autodeps/${build_os_exact}.prov ./find-provides
+elif test -f ${srcdir}/autodeps/${build_os_major}.prov ; then
+	echo "using ${srcdir}/autodeps/${build_os_major}.prov for automatic provides generation"
+    ln -s ${srcdir}/autodeps/${build_os_major}.prov ./find-provides
+elif test -f ${srcdir}/autodeps/${build_os_noversion}.prov ; then
+	echo "using ${srcdir}/autodeps/${build_os_noversion}.prov for automatic provides generation"
+    ln -s ${srcdir}/autodeps/${build_os_noversion}.prov ./find-provides
+else
+    echo "*** no default provides information is available for ${build_os_noversion}"
+    ln -s ${srcdir}/autodeps/none ./find-provides
+fi
+
+rm -f ./find-requires
+if test -f ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.req ; then
+	echo "using ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.req for automatic requires generation"
+    ln -s ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.req ./find-requires
+elif test -f ${srcdir}/autodeps/${build_os_exact}.req ; then
+	echo "using ${srcdir}/autodeps/${build_os_exact}.req for automatic requires generation"
+    ln -s ${srcdir}/autodeps/${build_os_exact}.req ./find-requires
+elif test -f ${srcdir}/autodeps/${build_os_major}.req ; then
+	echo "using ${srcdir}/autodeps/${build_os_major}.req for automatic requires generation"
+    ln -s ${srcdir}/autodeps/${build_os_major}.req ./find-requires
+elif test -f ${srcdir}/autodeps/${build_os_noversion}.req ; then
+	echo "using ${srcdir}/autodeps/${build_os_noversion}.req for automatic requires generation"
+    ln -s ${srcdir}/autodeps/${build_os_noversion}.req ./find-requires
+else
+    echo "*** no default requires information is available for ${build_os_noversion}"
+    ln -s ${srcdir}/autodeps/none ./find-requires
+fi
