@@ -620,6 +620,7 @@
   %{?__ccache_dir:export CCACHE_DIR=\"%__ccache_dir\"}\
   %{verbose:set -x}%{!verbose:exec > /dev/null}\
   umask 022\
+  %__mkdir_p %{u2p:%_builddir}\
   cd %{u2p:%_builddir}\
 
 
