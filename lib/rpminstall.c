@@ -421,7 +421,7 @@ restart:
 	    {
 		rpmError(RPMMESS_ERROR,
 			 _("%s: current site policy disallows root to install source packages\n"),
-			 eiu->fnp);
+			 fileName);
 		eiu->numFailed++; *eiu->fnp = NULL;
 		continue;
 	    }
