@@ -25,6 +25,19 @@ file="$1"
 
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
+if [ -n "$PAM_SO_SUFFIX" -a -z "${PAM_SO_SUFFIX##%*}" ]; then
+	echo "error: PAM_SO_SUFFIX=$PAM_SO_SUFFIX" >&2
+	exit 1
+fi
+
+if [ -n "$PAM_NAME_SUFFIX" -a -z "${PAM_NAME_SUFFIX##%*}" ]; then
+	echo "error: PAM_NAME_SUFFIX=$PAM_NAME_SUFFIX" >&2
+	exit 1
+fi
+
+# hack for "buildreq -bi".
+[ -f /usr/lib/libpam.so ] ||:
+
 # pam_module.so
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib/security/\)\?\([^.[:space:]]\+\.so\)\($\|[[:space:]].*\)#\4'$PAM_SO_SUFFIX'#pg' <"$file" |sort -u
 
