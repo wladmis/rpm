@@ -68,11 +68,11 @@
 #==============================================================================
 # ---- Build system path macros.
 #
-%__ar			@AR@
-%__as			@AS@
-%__cc			@CC@
-%__cpp			@CPP@
-%__cxx			@CXX@
+%__ar			ar
+%__as			as
+%__cc			gcc
+%__cpp			gcc -E
+%__cxx			g++
 %__ld			@__LD@
 %__nm			@__NM@
 %__objcopy		@__OBJCOPY@
