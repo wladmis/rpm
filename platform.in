@@ -192,6 +192,68 @@
 @alt@%distribution	ALT Linux
 @alt@%vendor	ALT Linux Team
 @alt@
+@alt@%___build_pre	\
+@alt@	export RPM_SOURCE_DIR=\"%{u2p:%_sourcedir}\"\
+@alt@	export RPM_BUILD_DIR=\"%{u2p:%_builddir}\"\
+@alt@	export RPM_OPT_FLAGS=\"%optflags\"\
+@alt@	export RPM_ARCH=\"%_arch\"\
+@alt@	export RPM_OS=\"%_os\"\
+@alt@	export RPM_DOC_DIR=\"%_docdir\"\
+@alt@	export RPM_PACKAGE_NAME=\"%name\"\
+@alt@	export RPM_PACKAGE_VERSION=\"%version\"\
+@alt@	export RPM_PACKAGE_RELEASE=\"%release\"\
+@alt@	%{?buildroot:export RPM_BUILD_ROOT=\"%{u2p:%buildroot}\"}\
+@alt@	%{?_cleanup_method:export RPM_CLEANUP_METHOD=\"%_cleanup_method\"}\
+@alt@	%{?_compress_method:export RPM_COMPRESS_METHOD=\"%_compress_method\"}\
+@alt@	%{?_fixup_method:export RPM_FIXUP_METHOD=\"%_fixup_method\"}\
+@alt@	%{?_strip_method:export RPM_STRIP_METHOD=\"%_strip_method\"}\
+@alt@	%{?_verify_elf_method:export RPM_VERIFY_ELF_METHOD=\"%_verify_elf_method\"}\
+@alt@	%{?_findreq_method:export RPM_FINDREQ_METHOD=\"%_findreq_method\"}\
+@alt@	%{?_findprov_method:export RPM_FINDPROV_METHOD=\"%_findprov_method\"}\
+@alt@	%{?_findreq_default_method:export RPM_FINDREQ_DEFAULT_METHOD=\"%_findreq_default_method\"}\
+@alt@	%{?_findprov_default_method:export RPM_FINDPROV_DEFAULT_METHOD=\"%_findprov_default_method\"}\
+@alt@	%{?_cleanup_topdir:export RPM_CLEANUP_TOPDIR=\"%_cleanup_topdir\"}\
+@alt@	%{?_compress_topdir:export RPM_COMPRESS_TOPDIR=\"%_compress_topdir\"}\
+@alt@	%{?_fixup_topdir:export RPM_FIXUP_TOPDIR=\"%_fixup_topdir\"}\
+@alt@	%{?_strip_topdir:export RPM_STRIP_TOPDIR=\"%_strip_topdir\"}\
+@alt@	%{?_verify_elf_topdir:export RPM_VERIFY_ELF_TOPDIR=\"%_verify_elf_topdir\"}\
+@alt@	%{?_findreq_topdir:export RPM_FINDREQ_TOPDIR=\"%_findreq_topdir\"}\
+@alt@	%{?_findprov_topdir:export RPM_FINDPROV_TOPDIR=\"%_findprov_topdir\"}\
+@alt@	%{?_cleanup_skiplist:export RPM_CLEANUP_SKIPLIST=\"%_cleanup_skiplist\"}\
+@alt@	%{?_compress_skiplist:export RPM_COMPRESS_SKIPLIST=\"%_compress_skiplist\"}\
+@alt@	%{?_fixup_skiplist:export RPM_FIXUP_SKIPLIST=\"%_fixup_skiplist\"}\
+@alt@	%{?_strip_skiplist:export RPM_STRIP_SKIPLIST=\"%_strip_skiplist\"}\
+@alt@	%{?_verify_elf_skiplist:export RPM_VERIFY_ELF_SKIPLIST=\"%_verify_elf_skiplist\"}\
+@alt@	%{?_findreq_skiplist:export RPM_FINDREQ_SKIPLIST=\"%_findreq_skiplist\"}\
+@alt@	%{?_findprov_skiplist:export RPM_FINDPROV_SKIPLIST=\"%_findprov_skiplist\"}\
+@alt@	%{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%_perl_lib_path\"}\
+@alt@	%{?_perl_req_method:export RPM_PERL_REQ_METHOD=\"%_perl_req_method\"}\
+@alt@	%{?__python:export RPM_PYTHON=\"%__python\"}\
+@alt@	\
+@alt@	unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
+@alt@	%{?_build_lang:export LANG=\"%_build_lang\"\
+@alt@	export LANGUAGE=\"%_build_lang\"\
+@alt@	export LC_ALL=\"%_build_lang\"}\
+@alt@	\
+@alt@	unset DISPLAY XAUTHORITY ||:\
+@alt@	%{?_build_display:export DISPLAY=\"%_build_display\"}\
+@alt@	%{?_build_xauthority:export XAUTHORITY=\"%_build_xauthority\"}\
+@alt@	\
+@alt@	unset CCACHE_CC CCACHE_DIR ||:\
+@alt@	%{?__ccache_cc:export CCACHE_CC=\"%__ccache_cc\"}\
+@alt@	%{?__ccache_dir:export CCACHE_DIR=\"%__ccache_dir\"}\
+@alt@	\
+@alt@	unset AUTOCONF_VERSION AUTOMAKE_VERSION LIBTOOL_VERSION ||:\
+@alt@	%{?_autoconf_version:export AUTOCONF_VERSION=\"%_autoconf_version\"}\
+@alt@	%{?_automake_version:export AUTOMAKE_VERSION=\"%_automake_version\"}\
+@alt@	%{?_libtool_version:export LIBTOOL_VERSION=\"%_libtool_version\"}\
+@alt@	\
+@alt@	%{verbose:set -x}%{!verbose:exec > /dev/null}\
+@alt@	umask 022\
+@alt@	%__mkdir_p %{u2p:%_builddir}\
+@alt@	cd %{u2p:%_builddir}\
+@alt@%nil
+@alt@
 @alt@%__spec_autodep_shell	%{___build_shell}
 @alt@%__spec_autodep_args	%{___build_args}
 @alt@%__spec_autodep_cmd	%{___build_cmd}
@@ -216,7 +278,7 @@
 @alt@
 @alt@%prefix	%_prefix
 @alt@
-@alt@%clean_buildroot	%{?buildroot:%([ -n "$(echo %buildroot |tr -d /.)" ] && echo "%__chmod -R u+w %buildroot 2>/dev/null ||:; %__rm -rf %buildroot")}
+@alt@%clean_buildroot	%{?buildroot:%([ -n "$(echo %buildroot |tr -d /.)" ] && echo "%__chmod -R u+rwX -- %buildroot 2>/dev/null ||:; %__rm -rf -- %buildroot")}
 @alt@
 @alt@%remove_optflags(a:f:t:p:w:W:d:g:O:A:C:D:E:H:i:M:n:P:U:u:l:s:X:B:I:L:b:V:m:x:c:S:E:o:v:)	\
 @alt@%global optflags %(opt="%optflags"; for f in %{**}; do opt="$(echo "$opt"|sed -e "s/ $f//g;s/$f //g")"; done; echo "$opt")
