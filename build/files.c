@@ -2832,6 +2832,7 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
     const char	*mPost = "%{__spec_install_post}";
     urlinfo	u = NULL;
     FD_t	fd, xfd;
+    FILE *fp = 0;
     const char ** av = 0;
     int ac = 0;
     int rc = 0;
