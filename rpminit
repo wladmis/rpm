@@ -1,0 +1,23 @@
+#!/bin/sh -e
+# $Id$
+
+RPMMACROS=~/.rpmmacros
+
+if [ -e "$RPMMACROS" ]; then
+	RPMDIR=`rpm --eval %_topdir`
+	RPMTMP=`rpm --eval %_tmppath`
+else
+	RPMDIR=~/RPM
+	RPMTMP="$RPMDIR/tmp"
+fi
+
+mkdir -pv "$RPMDIR"/{BUILD,SOURCES,SPECS,SRPMS,RPMS/noarch} "$RPMTMP"
+
+if [ ! -e "$RPMMACROS" ]; then
+	cat >"$RPMMACROS" <<EOF
+%_topdir $RPMDIR
+%_tmppath $RPMTMP
+EOF
+	echo "Wrote $RPMMACROS:"
+	cat "$RPMMACROS"
+fi
