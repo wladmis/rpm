@@ -214,9 +214,10 @@ $r"
 FindPythonReqs()
 {
 	[ -n "$LIST_PYTHON" ] || return 0
+	[ -x "$RPM_PYTHON" ] || return 0
 
 	local r
-	r="$(printf %s\\n "$LIST_PYTHON" |@RPMCONFIGDIR@/python.req.py)" || return 1
+	r="$(printf %s\\n "$LIST_PYTHON" |"$RPM_PYTHON" @RPMCONFIGDIR@/python.req.py)" || return 1
 	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 }

@@ -183,8 +183,10 @@ $r"
 FindPythonProvs()
 {
 	[ -n "$FIND_PYTHON" -a -n "$LIST_PYTHON" ] || return 0
+	[ -x "$RPM_PYTHON" ] || return 0
+
 	local r
-	r="$(printf %s\\n "$LIST_PYTHON" |@RPMCONFIGDIR@/python.prov.py)" || return 1
+	r="$(printf %s\\n "$LIST_PYTHON" |"$RPM_PYTHON" @RPMCONFIGDIR@/python.prov.py)" || return 1
 	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
 }
