@@ -569,7 +569,7 @@ static int markReplacedFiles(PSM_t psm)
 
 /**
  * Create directory if it does not exist, make sure path is writable.
- * @note This will only create last component of directory path.
+ * @note This will try to create all necessary components of directory path.
  * @param dpath		directory path
  * @param dname		directory use
  * @return		rpmRC return code
@@ -591,7 +591,7 @@ static rpmRC chkdir (const char * dpath, const char * dname)
 	    /*@fallthrough@*/
 	case URL_IS_FTP:
 	case URL_IS_HTTP:
-	    rc = Mkdir(dpath, 0755);
+	    rc = MkdirP(dpath, 0755);
 	    break;
 	case URL_IS_DASH:
 	    break;

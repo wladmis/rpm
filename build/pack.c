@@ -754,7 +754,7 @@ int packageBinaries(Spec spec)
 		if (Stat(dn, &st) < 0) {
 		    switch(errno) {
 		    case  ENOENT:
-			if (Mkdir(dn, 0755) == 0)
+			if (MkdirP(dn, 0755) == 0)
 			    /*@switchbreak@*/ break;
 			/*@fallthrough@*/
 		    default:
