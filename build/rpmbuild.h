@@ -34,7 +34,8 @@ typedef enum rpmBuildFlags_e {
     RPMBUILD_RMBUILD	= (1 << 8),	/*!< Remove build sub-tree. */
     RPMBUILD_STRINGBUF	= (1 << 9),	/*!< only for doScript() */
     RPMBUILD_RMSPEC	= (1 << 10),	/*!< Remove spec file. */
-    RPMBUILD_PREPROCESS	= (1 << 11)	/*!< Preprocess spec file only. */
+    RPMBUILD_PREPROCESS	= (1 << 11),	/*!< Preprocess spec file only. */
+    RPMBUILD_MACROREQS	= (1 << 12)	/*!< Dump used macro names only. */
 } rpmBuildFlags;
 /*@=typeuse@*/
 

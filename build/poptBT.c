@@ -35,6 +35,7 @@ struct rpmBuildArguments_s         rpmBTArgs;
 #define	POPT_BI			0x6269
 #define	POPT_BL			0x626c
 #define	POPT_BE			0x6245
+#define	POPT_BM			0x624D
 #define	POPT_BP			0x6270
 #define	POPT_BS			0x6273
 #define	POPT_TA			0x7461
@@ -93,6 +94,7 @@ static void buildArgCallback( /*@unused@*/ poptContext con,
     case POPT_BI:
     case POPT_BL:
     case POPT_BE:
+    case POPT_BM:
     case POPT_BP:
     case POPT_BS:
     case POPT_TA:
@@ -150,6 +152,9 @@ struct poptOption rpmBuildPoptTable[] = {
 
  { "bE", 0, POPT_ARGFLAG_ONEDASH, 0, POPT_BE,
 	N_("preprocess (show macro expansion) <specfile>"),
+	N_("<specfile>") },
+ { "bM", 0, POPT_ARGFLAG_ONEDASH, 0, POPT_BM,
+	N_("dump used macro names <specfile>"),
 	N_("<specfile>") },
  { "bp", 0, POPT_ARGFLAG_ONEDASH, 0, POPT_BP,
 	N_("build through %prep (unpack sources and apply patches) from <specfile>"),

@@ -977,10 +977,13 @@ int main(int argc, const char ** argv)
       { const char * pkg;
         while (!rpmIsVerbose())
 	    rpmIncreaseVerbosity();
-       
+
 	switch (ba->buildChar) {
 	case 'E':
 	    ba->buildAmount |= RPMBUILD_PREPROCESS | RPMBUILD_PREP;
+	    break;
+	case 'M':
+	    ba->buildAmount |= RPMBUILD_MACROREQS | RPMBUILD_PREP;
 	    break;
 	case 'a':
 	    ba->buildAmount |= RPMBUILD_PACKAGESOURCE;
@@ -1001,7 +1004,6 @@ int main(int argc, const char ** argv)
 	case 'p':
 	    ba->buildAmount |= RPMBUILD_PREP;
 	    break;
-	    
 	case 'l':
 	    ba->buildAmount |= RPMBUILD_FILECHECK;
 	    break;

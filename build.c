@@ -274,8 +274,20 @@ static int buildForTarget(const char * arg, BTA_t ba,
     }
 #undef	_anyarch
 
+    if (ba->buildAmount & RPMBUILD_MACROREQS) {
+	int i;
+	for (i = 0; i < spec->macros->firstFree; ++i) {
+	    MacroEntry me = spec->macros->macroTable[i];
+
+	    if (me && me->used > 0)
+		printf("%3d %s\n", me->level, me->name);
+	}
+	/* we're done */
+	goto exit;
+    }
+
     if (ba->buildAmount & RPMBUILD_PREPROCESS) /* we're done */
-        goto exit;
+	goto exit;
 
     /* Assemble source header from parsed components */
     initSourceHeader(spec);
