@@ -7,8 +7,6 @@ INCLUDES = \
 	-I$(top_srcdir)/build \
 	-I$(top_srcdir)/rpmdb \
 	-I$(top_srcdir)/rpmio \
-	-I$(top_srcdir)/beecrypt \
-	-I$(top_srcdir)/popt \
 	@INCPATH@
 
 EXTRA_DIST = getdate.y
@@ -25,15 +23,14 @@ noinst_HEADERS = \
 mylibpaths = \
 	-L$(top_builddir)/lib/.libs \
 	-L$(top_builddir)/rpmdb/.libs \
-	-L$(top_builddir)/rpmio/.libs \
-	-L$(top_builddir)/popt/.libs
+	-L$(top_builddir)/rpmio/.libs
 
-mylibs = -lrpm -lrpmdb -lrpmio -lpopt @LIBS@ @INTLLIBS@ @LIBMISC@
+mylibs = -lrpm -lrpmdb -lrpmio @LIBS@ @INTLLIBS@ @LIBMISC@
 LIBS =
 
 lib_LTLIBRARIES = librpm.la
 librpm_la_SOURCES = \
-	cpio.c depends.c formats.c fs.c fsm.c getdate.c \
+	closeall.c cpio.c depends.c formats.c fs.c fsm.c getdate.c \
 	header.c header_internal.c \
 	manifest.c misc.c package.c \
 	problems.c poptI.c poptK.c poptQV.c psm.c query.c \
