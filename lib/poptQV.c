@@ -110,6 +110,8 @@ struct poptOption rpmQVSourcePoptTable[] = {
  { "whatenhances", '\0', 0, 0, POPT_WHATENHANCES,
 	N_("query/verify the package(s) which enhances a dependency"), "CAPABILITY" },
 
+ { "glob", '\0', POPT_BIT_CLR|POPT_ARGFLAG_DOC_HIDDEN, &giFlags, RPMGI_NOGLOB,
+	N_("glob arguments"), NULL},
  { "noglob", '\0', POPT_BIT_SET|POPT_ARGFLAG_DOC_HIDDEN, &giFlags, RPMGI_NOGLOB,
 	N_("do not glob arguments"), NULL},
  { "nomanifest", '\0', POPT_BIT_SET, &giFlags, RPMGI_NOMANIFEST,

@@ -20,7 +20,7 @@
 #define MANIFEST_RECURSIONS 1000 /* Max. number of allowed manifest recursions */
 
 RPM_GNUC_INTERNAL
-rpmgiFlags giFlags = RPMGI_NONE;
+rpmgiFlags giFlags = RPMGI_NOGLOB;
 
 /** \ingroup rpmgi
  */
