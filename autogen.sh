@@ -11,7 +11,7 @@ export LDFLAGS
 
 LTV='libtoolize (GNU libtool) 1\.4.*'
 ACV='autoconf (GNU Autoconf) 2\.5[3-9]'
-AMV='automake (GNU automake) 1\.6\.[1-9]'
+AMV='automake (GNU automake) 1\.[67]\.[1-9]'
 USAGE="
 This script documents the versions of the tools I'm using to build rpm:
 	libtool-1.4.2
