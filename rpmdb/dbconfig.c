@@ -15,9 +15,9 @@ typedef	int int32_t;
 /*@=redef@*/
 #endif
 
-#if DB_VERSION_MAJOR == 4
+#if defined(HAVE_DB4_DB_H)
 #include <db4/db.h>
-#elif DB_VERSION_MAJOR == 3
+#elif defined(HAVE_DB3_DB_H)
 #include <db3/db.h>
 #endif
 
