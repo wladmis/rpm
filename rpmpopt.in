@@ -197,7 +197,7 @@ rpm	alias --disable		--define "_disable_!#:+    --disable-!#:+" \
 	--POPTdesc=$"disable configure <option> for build or query" \
 	--POPTargs=$"<option>"
 
-rpm	alias -C --clean --rmsource --rmspec
+rpm	alias -C --clean --rmsource --rmspec --nodeps
 rpm	alias --vendor --eval %vendor
 rpm	alias --packager --eval %packager
 rpm	alias --distribution --eval %distribution
@@ -223,7 +223,7 @@ rpmb	alias --enable		--define "_enable_!#:+     --enable-!#:+" \
 rpmb	alias --disable		--define "_disable_!#:+    --disable-!#:+" \
 	--POPTdesc=$"disable configure <option> for build" \
 	--POPTargs=$"<option>"
-rpmb	alias -C --clean --rmsource --rmspec
+rpmb	alias -C --clean --rmsource --rmspec --nodeps
 #==============================================================================
 rpmbuild	alias --dbpath		--define '_dbpath !#:+' \
 	--POPTdesc=$"use <dir> as the directory for the database" \
@@ -245,7 +245,7 @@ rpmbuild alias --enable		--define "_enable_!#:+   --enable-!#:+" \
 rpmbuild alias --disable	--define "_disable_!#:+  --disable-!#:+" \
 	--POPTdesc=$"disable configure <option> for build" \
 	--POPTargs=$"<option>"
-rpmbuild	alias -C --clean --rmsource --rmspec
+rpmbuild	alias -C --clean --rmsource --rmspec --nodeps
 #==============================================================================
 rpmd	alias --dbpath		--define '_dbpath !#:+' \
 	--POPTdesc=$"use <dir> as the directory for the database" \
