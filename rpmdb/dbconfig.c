@@ -27,6 +27,10 @@ typedef	int int32_t;
 #include "rpmdb.h"
 #include "debug.h"
 
+#if !defined(DB_CLIENT)        /* XXX db-4.2.42 retrofit */
+#define        DB_CLIENT       DB_RPCCLIENT
+#endif
+
 /*@access rpmdb@*/
 /*@access dbiIndex@*/
 /*@access dbiIndexSet@*/
