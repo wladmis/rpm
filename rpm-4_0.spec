@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt30
+Release: alt31
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -503,6 +503,17 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Jan 27 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt31
+- build/parseReqs.c(parseRCPOT):
+  + tokens must not contain '%<=>' symbols since it is common
+    packaging error.
+- build/reqprov.c(compare_deps):
+  + fixes in duplicates detection algorithm introduced in
+    previous release.
+- build/reqprov.c(addReqProv):
+  + enhanced duplicates elimination algorithm;
+    it should cover most optimization cases.
+
 * Sun Jan 25 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt30
 - Reviewed all shell helpers for unneeded pattern
   substitutions (#2743).
