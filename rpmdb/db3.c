@@ -829,10 +829,12 @@ static int db3close(/*@only@*/ dbiIndex dbi, /*@unused@*/ unsigned int flags)
 			(dbhome ? dbhome : ""),
 			(dbfile ? dbfile : tagName(dbi->dbi_rpmtag)));
 
+#if (DB_VERSION_MAJOR <= 3) || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR <= 1)
 		xx = db->close(db, 0);
 		xx = cvtdberr(dbi, "db->close", xx, _debug);
-		db = NULL;
 		if (rc == 0 && xx) rc = xx;
+#endif
+		db = NULL;
 
 		dbf = _free(dbf);
 	}
