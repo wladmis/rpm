@@ -412,14 +412,14 @@ fi
 %rpmdirattr %_libdir/%name
 %_libdir/%name/rpmt
 %rpmattr %_libdir/%name/rpmb
+%rpmattr %_libdir/%name/filesize
+%rpmattr %_libdir/%name/relative
+%rpmattr %_libdir/%name/functions
 %rpmattr %_libdir/%name/brp-*
 %rpmattr %_libdir/%name/*_files
-%rpmattr %_libdir/%name/mkinstalldirs
 %rpmattr %_libdir/%name/check-files
 %rpmattr %_libdir/%name/convertrpmrc.sh
 %rpmattr %_libdir/%name/rpm2cpio.sh
-%rpmattr %_libdir/%name/filesize
-%rpmattr %_libdir/%name/relative
 %rpmattr %_libdir/%name/find-lang
 %rpmattr %_libdir/%name/find-package
 %rpmattr %_libdir/%name/find-provides
@@ -477,6 +477,7 @@ fi
 * Sun Nov 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt26.3
 - helper shell scripts: use printf instead of echo where appropriate.
 - Implemented %%_unpackaged_files_terminate_build support.
+- rpm-build: do not package %_libdir/%name/mkinstalldirs.
 - Do not package build-topdir subpackage by default.
 - verify_elf: implemented TEXTREL checking.
 - Updated README.ALT-ru_RU.KOI8-R.
