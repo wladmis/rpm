@@ -507,7 +507,9 @@ fi
 
 %changelog
 * Sun Feb 29 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt35
-- Backported db-4.x support (#3464).
+- Backported db-4.1 support (#3464).
+- Implemented db-4.2 support.
+- rpmdb: enhanced rebuilding database messages.
 
 * Fri Feb 27 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt34
 - find_lang: implemented support for symlinks in /usr/share/locale/.
