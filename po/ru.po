@@ -2601,6 +2601,11 @@ msgstr " ... как %s\n"
 msgid "skipping %s - transfer failed - %s\n"
 msgstr "%s пропускается - ошибка передачи - %s\n"
 
+#: lib/rpminstall.c:423
+#, c-format
+msgid "%s: current site policy disallows root to install source packages\n"
+msgstr "%s: установка пакетов с исходным кодом запрещена для привилегированного пользователя\n"
+
 #: lib/rpminstall.c:441
 #, c-format
 msgid "cannot open Packages database in %s\n"

@@ -417,6 +417,14 @@ restart:
 	if (eiu->isSource &&
 		(eiu->rpmrc == RPMRC_OK || eiu->rpmrc == RPMRC_BADSIZE))
 	{
+	    if (!(geteuid() || rpmExpandNumeric("%_allow_root_build")))
+	    {
+		rpmError(RPMMESS_ERROR,
+			 _("%s: current site policy disallows root to install source packages\n"),
+			 eiu->fnp);
+		eiu->numFailed++; *eiu->fnp = NULL;
+		continue;
+	    }
 	    rpmMessage(RPMMESS_DEBUG, "\tadded source package [%d]\n",
 		eiu->numSRPMS);
 	    eiu->sourceURL = xrealloc(eiu->sourceURL,
