@@ -44,7 +44,7 @@ PreReq: alt-gpgkeys, coreutils
 # XXX linked binaries like /bin/rpm.
 Requires: glibc-core
 
-BuildPreReq: python
+BuildPreReq: python22
 %{?_with_python:BuildPreReq: python-devel = %__python_version}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 
@@ -516,7 +516,6 @@ fi
 - /usr/bin/rpm.static: package separately.
 - /usr/lib/librpmbuild-4.0.4.so: package separately.
 - Relocated %_libdir/%name/{rpmrc,macros} to librpm subpackage.
-- Build with current python again.
 
 * Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt28
 - brp-verify_elf:
