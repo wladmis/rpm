@@ -1,9 +1,7 @@
 #!/bin/sh -e
 #
-# Check for unpackaged files.
-#
 # $Id$
-# Copyright (C) 2003  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2001,2003  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,27 +18,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-# If using normal root, avoid changing anything.
-[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
 
-cd "$RPM_BUILD_ROOT"
+file="$1"
 
-WORKDIR=
-exit_handler()
-{
-	local rc=$?
-	trap - EXIT
-	[ -z "$WORKDIR" ] || rm -rf -- "$WORKDIR"
-	exit $rc
-}
+head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
-trap exit_handler SIGHUP SIGINT SIGQUIT SIGTERM EXIT
+if [ -n "$PAM_NAME_SUFFIX" -a -z "${PAM_NAME_SUFFIX##%*}" ]; then
+	Fatal "invalid PAM_NAME_SUFFIX=$PAM_NAME_SUFFIX"
+fi
 
-WORKDIR="$(mktemp -dt check-files.XXXXXXXXXX)"
-
-export LC_ALL=C
-
-sort >"$WORKDIR/packaged"
-find "$RPM_BUILD_ROOT" \( -type f -o -type l \) |sort >"$WORKDIR/disk"
-
-join -v1 "$WORKDIR/disk" "$WORKDIR/packaged" |sed -e "s#^$RPM_BUILD_ROOT#    #g"
+echo "pam$PAM_NAME_SUFFIX(${file##*/})"

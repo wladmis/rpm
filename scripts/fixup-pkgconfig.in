@@ -3,7 +3,7 @@
 # fixup-pkgconfig - /usr/lib/pkgconfig/*.pc fixups.
 #
 # $Id$
-# Copyright (C) 2002  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2002,2003  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-PROG="${0##*/}"
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
 
 TMPFILE="$(mktemp -t "$PROG.XXXXXXXXXX")"
 
@@ -98,7 +99,7 @@ fix()
 
 	if [ "$new_val" != "$old_val" ]; then
 		subst -p "s|^Cflags: .*|Cflags: $new_val|g" -- "$f" || return 1
-		echo "$fname: Cflags: '$old_val' --> '$new_val'" >&2
+		echo "$fname: Cflags: '$old_val' --> '$new_val'"
 	fi
 
 	# fix libs
@@ -137,14 +138,14 @@ fix()
 
 	if [ "$new_val" != "$old_val" ]; then
 		subst -p "s|^Libs: .*|Libs: $new_val|g" -- "$f" || return 1
-		echo "$fname: Libs: '$old_val' --> '$new_val'" >&2
+		echo "$fname: Libs: '$old_val' --> '$new_val'"
 	fi
 }
 
 rc=0
 for f in "$@"; do
 	if [ ! -f "$f" ]; then
-		echo "$PROG: $f: file unavailable" >&2
+		Info "$f: file unavailable"
 		rc=1
 		continue
 	fi

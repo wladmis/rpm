@@ -20,14 +20,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-PROG="${0##*/}"
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
 
 : ${RPM_FIXUP_SKIPLIST:=}
 
 rc=0
 for f in "$@"; do
 	if [ ! -f "$f" ]; then
-		echo "$PROG: $f: file unavailable" >&2
+		Info "$f: file unavailable"
 		rc=1
 		continue
 	fi
@@ -50,7 +51,7 @@ for f in "$@"; do
 
 	if [ "$new_val" != "$old_val" ]; then
 		subst -p "s,^libdir='[^']*'\$,libdir='$new_val',g" "$f"
-		echo "${fname#.}: libdir: '$old_val' --> '$new_val'" >&2
+		echo "${fname#.}: libdir: '$old_val' --> '$new_val'"
 	fi
 	
 	# fix dependency_libs
@@ -81,7 +82,7 @@ for f in "$@"; do
 
 	if [ "$new_val" != "$old_val" ]; then
 		subst -p "s,^dependency_libs='[^']*'\$,dependency_libs='$new_val',g" "$f"
-		echo "${fname#.}: dependency_libs: '$old_val' --> '$new_val'" >&2
+		echo "${fname#.}: dependency_libs: '$old_val' --> '$new_val'"
 	fi
 done
 

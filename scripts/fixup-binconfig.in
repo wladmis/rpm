@@ -20,7 +20,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-PROG="${0##*/}"
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
 
 WORKDIR="$(mktemp -dt "$PROG.XXXXXXXXXX")"
 TMPFILE="$WORKDIR/tmp"
@@ -117,8 +118,8 @@ fix()
 	fi
 
 	if ! cmp -s "$f_new" "$f"; then
-		echo "$fname:" >&2
-		diff "$f" "$f_new" >&2 ||:
+		echo "$fname:"
+		diff "$f" "$f_new" ||:
 		cat "$f_new" >"$f" || return 1
 	fi
 
@@ -162,8 +163,8 @@ fix()
 	fi
 
 	if ! cmp -s "$f_new" "$f"; then
-		echo "$fname:" >&2
-		diff "$f" "$f_new" >&2 ||:
+		echo "$fname:"
+		diff "$f" "$f_new" ||:
 		cat "$f_new" >"$f" || return 1
 	fi
 }
@@ -171,7 +172,7 @@ fix()
 rc=0
 for f in "$@"; do
 	if [ ! -f "$f" ]; then
-		echo "$PROG: $f: file unavailable" >&2
+		Info "$f: file unavailable"
 		rc=1
 		continue
 	fi

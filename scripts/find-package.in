@@ -18,8 +18,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-# If using normal root, avoid changing anything.
-[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
 
 FindPackage()
 {
@@ -34,7 +34,7 @@ FindPackage()
 
 			# Does it start with buildroot?
 			if [ -z "${r##$RPM_BUILD_ROOT*}" ]; then
-				echo "$f: invalid dependence: $r" >&2
+				Info "$f: invalid dependence: $r"
 				return 1
 			fi
 

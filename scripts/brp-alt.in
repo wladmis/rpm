@@ -22,7 +22,6 @@
 #
 
 . @RPMCONFIGDIR@/functions
-
 ValidateBuildRoot
 
 cd "$RPM_BUILD_ROOT"

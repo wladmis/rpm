@@ -18,21 +18,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-# If using normal root, avoid changing anything.
-[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
 
 file="$1"
 
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
 if [ -n "$PAM_SO_SUFFIX" -a -z "${PAM_SO_SUFFIX##%*}" ]; then
-	echo "error: PAM_SO_SUFFIX=$PAM_SO_SUFFIX" >&2
-	exit 1
+	Fatal "invalid PAM_SO_SUFFIX=$PAM_SO_SUFFIX"
 fi
 
 if [ -n "$PAM_NAME_SUFFIX" -a -z "${PAM_NAME_SUFFIX##%*}" ]; then
-	echo "error: PAM_NAME_SUFFIX=$PAM_NAME_SUFFIX" >&2
-	exit 1
+	Fatal "invalid PAM_NAME_SUFFIX=$PAM_NAME_SUFFIX"
 fi
 
 # hack for "buildreq -bi".
