@@ -278,7 +278,7 @@ bzip2 -9 CHANGES ||:
 chmod a+x scripts/find-lang
 # Manpages have been moved to their own packages.
 #./scripts/find-lang --with-man %name rpm2cpio --output %name.lang
-./scripts/find-lang %name rpm2cpio --output %name.lang
+RPMCONFIGDIR=./scripts ./scripts/find-lang %name rpm2cpio --output %name.lang
 
 pushd $RPM_BUILD_ROOT%_libdir/%name
 	for f in *-alt-%_target_os; do
