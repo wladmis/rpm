@@ -2289,7 +2289,7 @@ static StringBuf getOutputFrom(char * dir, const char * argv[], char *envp[],
     (void) pipe(fromProg);
     
     if (!(progPID = fork())) {
-	while (*envp)
+	while (envp && *envp)
 	    putenv (*(envp++));
 
 	(void) close(toProg[1]);
@@ -2839,7 +2839,12 @@ static int checkFiles(StringBuf fileList, int fileListLen)
 
     rpmMessage(RPMMESS_NORMAL, _("Checking for unpackaged files: %s\n"), s);
 
-    if ((readBuf = getOutputFrom(NULL, av, getStringBuf(fileList), fileListLen, 0))) {
+    readBuf = getOutputFrom(NULL, av, 0, getStringBuf(fileList), fileListLen, 1);
+    if (!readBuf) {
+	rc = RPMERR_EXEC;
+	rpmError(rc, _("Failed to check unpackaged files\n"));
+	goto exit;
+    } else {
 	static int _unpackaged_files_terminate_build = 0;
 	static int oneshot = 0;
 
