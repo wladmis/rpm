@@ -1329,8 +1329,6 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 			       &(flp->flags), 1);
 
     }
-    (void) headerAddEntry(h, RPMTAG_SIZE, RPM_INT32_TYPE,
-		   &(fl->totalFileSize), 1);
 
     /* XXX This should be added always so that packages look alike.
      * XXX However, there is logic in files.c/depends.c that checks for
@@ -1442,6 +1440,10 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 	    fi->actions[i] = FA_SKIP;
 	    continue;
 	}
+
+	if (S_ISREG(flp->fl_mode))
+	    fl->totalFileSize += flp->fl_size;
+
 	fi->actions[i] = FA_COPYOUT;
 	fi->fuids[i] = getUidS(flp->uname);
 	fi->fgids[i] = getGidS(flp->gname);
@@ -1462,6 +1464,8 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 	fi = _free(fi);
     /*@=branchstate@*/
   }
+    (void) headerAddEntry(h, RPMTAG_SIZE, RPM_INT32_TYPE,
+		   &(fl->totalFileSize), 1);
 }
 
 /**
@@ -1690,9 +1694,6 @@ static int addFile(FileList fl, const char * diskURL,
 	    }
 	} else
 	    i = fl->fileListRecsUsed;
-
-	if (S_ISREG(flp->fl_mode) && i >= fl->fileListRecsUsed)
-	    fl->totalFileSize += flp->fl_size;
     }
 
     fl->fileListRecsUsed++;
