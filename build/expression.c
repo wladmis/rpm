@@ -181,7 +181,7 @@ static const char *prToken(int val)
 /**
  * @param state		expression parser state
  */
-static int rdToken(ParseState state)
+static int rdToken(ParseState state, int warn)
 	/*@globals rpmGlobalMacroContext @*/
 	/*@modifies state->nextToken, state->p, state->tokenValue,
 		rpmGlobalMacroContext @*/
@@ -303,6 +303,7 @@ static int rdToken(ParseState state)
       v = valueMakeString( rpmExpand(temp, NULL) );
 
     } else {
+      if (warn)
       rpmError(RPMERR_BADSPEC, _("parse error in expression\n"));
       return -1;
     }
@@ -338,7 +339,7 @@ static Value doPrimary(ParseState state)
   /*@-branchstate@*/
   switch (state->nextToken) {
   case TOK_OPEN_P:
-    if (rdToken(state))
+    if (rdToken(state, 1))
       return NULL;
     v = doLogical(state);
     if (state->nextToken != TOK_CLOSE_P) {
@@ -350,7 +351,7 @@ static Value doPrimary(ParseState state)
   case TOK_INTEGER:
   case TOK_STRING:
     v = state->tokenValue;
-    if (rdToken(state))
+    if (rdToken(state, 1))
       return NULL;
     break;
 
@@ -358,13 +359,13 @@ static Value doPrimary(ParseState state)
     const char *name = state->tokenValue->data.s;
 
     v = valueMakeString( rpmExpand(name, NULL) );
-    if (rdToken(state))
+    if (rdToken(state, 1))
       return NULL;
     break;
   }
 
   case TOK_MINUS:
-    if (rdToken(state))
+    if (rdToken(state, 1))
       return NULL;
 
     v = doPrimary(state);
@@ -380,7 +381,7 @@ static Value doPrimary(ParseState state)
     break;
 
   case TOK_NOT:
-    if (rdToken(state))
+    if (rdToken(state, 1))
       return NULL;
 
     v = doPrimary(state);
@@ -425,7 +426,7 @@ static Value doMultiplyDivide(ParseState state)
 	 || state->nextToken == TOK_DIVIDE) {
     int op = state->nextToken;
 
-    if (rdToken(state))
+    if (rdToken(state, 1))
       return NULL;
 
     if (v2) valueFree(v2);
@@ -478,7 +479,7 @@ static Value doAddSubtract(ParseState state)
   while (state->nextToken == TOK_ADD || state->nextToken == TOK_MINUS) {
     int op = state->nextToken;
 
-    if (rdToken(state))
+    if (rdToken(state, 1))
       return NULL;
 
     if (v2) valueFree(v2);
@@ -541,7 +542,7 @@ static Value doRelational(ParseState state)
   while (state->nextToken >= TOK_EQ && state->nextToken <= TOK_GE) {
     int op = state->nextToken;
 
-    if (rdToken(state))
+    if (rdToken(state, 1))
       return NULL;
 
     if (v2) valueFree(v2);
@@ -638,7 +639,7 @@ static Value doLogical(ParseState state)
 	 || state->nextToken == TOK_LOGICAL_OR) {
     int op = state->nextToken;
 
-    if (rdToken(state))
+    if (rdToken(state, 1))
       return NULL;
 
     if (v2) valueFree(v2);
@@ -684,7 +685,7 @@ int parseExpressionBoolean(Spec spec, const char *expr)
   state.spec = spec;
   state.nextToken = 0;
   state.tokenValue = NULL;
-  (void) rdToken(&state);
+  (void) rdToken(&state, spec->readStack->reading);
 
   /* Parse the expression. */
   v = doLogical(&state);
@@ -731,7 +732,7 @@ char * parseExpressionString(Spec spec, const char *expr)
   state.spec = spec;
   state.nextToken = 0;
   state.tokenValue = NULL;
-  (void) rdToken(&state);
+  (void) rdToken(&state, 1);
 
   /* Parse the expression. */
   v = doLogical(&state);
