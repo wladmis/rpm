@@ -37,7 +37,7 @@ Source: %srcname.tar.bz2
 Provides: %_sysconfdir/%name/macros.d
 
 PreReq: lib%name = %version-%release
-PreReq: alt-gpgkeys, coreutils, grep, gawk, mktemp
+PreReq: alt-gpgkeys, coreutils
 
 # XXX glibc-2.1.92 has incompatible locale changes that affect statically
 # XXX linked binaries like /bin/rpm.
@@ -51,7 +51,7 @@ BuildPreReq: automake >= 1.6.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindi
 BuildConflicts: rpm-devel
 
 # Automatically added by buildreq on Mon May 05 2003
-BuildRequires: bzlib-devel-static cpio gcc-c++ glibc-devel-static gnupg libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static unzip zlib-devel-static
+BuildRequires: bzlib-devel-static cpio gcc-c++ glibc-devel-static libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -88,10 +88,11 @@ PreReq: shadow-utils
 PreReq: %name = %version-%release
 Requires: autoconf autoconf-common automake automake-common bison coreutils cpio
 Requires: gcc gettext-tools glibc-devel file kernel-headers libtool m4 make
-Requires: mktemp net-tools procps psmisc sed service sh texinfo which
+Requires: net-tools procps psmisc sed service sh texinfo which
 Requires: bzip2 >= 1:1.0.2-alt4
 Requires: gzip >= 0:1.3.3-alt2
 Requires: info-install >= 0:4.5-alt2
+Requires: mktemp >= 1:1.3.1
 Requires: patch >= 2.5
 Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
@@ -186,6 +187,8 @@ find -type f \( -name .cvsignore -o -name \*~ -o -name \*.orig \) -print0 |
 ./autogen.sh --noconfigure
 export \
 	ac_cv_path_CTAGS=/usr/bin/ctags \
+	ac_cv_path_UNZIPBIN=/usr/bin/unzip \
+	ac_cv_path___GPG=/usr/bin/gpg \
 	ac_cv_path___SSH=/usr/bin/ssh \
 	#
 %configure \
