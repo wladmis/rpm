@@ -2901,6 +2901,8 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
 	goto exit;
     }
 
+    rpmMessage(RPMMESS_NORMAL, _("Executing(%s): %s\n"), _("check-files"), runCmd);
+
     readBuf = getOutputFrom(NULL, av, 0, getStringBuf(fileList), fileListLen, 1);
     if (!readBuf) {
 	rc = RPMERR_EXEC;
