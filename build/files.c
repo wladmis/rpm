@@ -2840,7 +2840,7 @@ static int checkFiles(StringBuf fileList, int fileListLen)
 	goto exit;
     }
 
-    rpmMessage(RPMMESS_NORMAL, _("Checking for unpackaged files: %s\n"), s);
+    rpmMessage(RPMMESS_NORMAL, _("Checking for unpackaged files (using %s):\n"), s);
 
     readBuf = getOutputFrom(NULL, av, 0, getStringBuf(fileList), fileListLen, 1);
     if (!readBuf) {
