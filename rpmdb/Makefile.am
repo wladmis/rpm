@@ -7,8 +7,6 @@ INCLUDES = \
 	-I$(top_srcdir)/build \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/rpmio \
-	-I$(top_srcdir)/beecrypt \
-	-I$(top_srcdir)/popt \
 	@INCPATH@
 
 EXTRA_DIST = db3.c db1.c falloc.c
@@ -19,10 +17,9 @@ noinst_HEADERS = falloc.h fprint.h rpmhash.h
 
 mylibpaths = \
 	-L$(top_builddir)/lib/.libs \
-	-L$(top_builddir)/rpmio/.libs \
-	-L$(top_builddir)/popt/.libs
+	-L$(top_builddir)/rpmio/.libs
 
-mylibs = -lrpm -lrpmio -lpopt @LIBS@ @INTLLIBS@ @LIBMISC@
+mylibs = -lrpm -lrpmio @LIBS@ @INTLLIBS@ @LIBMISC@
 LIBS =
 
 DB3LOBJS = $(shell cat $(top_builddir)/$(WITH_DB_SUBDIR)/db3lobjs)

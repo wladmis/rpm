@@ -10,9 +10,6 @@ INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/build \
 	-I$(top_srcdir)/lib \
-	-I$(top_srcdir)/beecrypt \
-	-I$(top_srcdir)/popt \
-	@WITH_ZLIB_INCLUDE@ \
 	@INCPATH@
 
 pkgincdir = $(pkgincludedir)
@@ -23,46 +20,35 @@ noinst_HEADERS = rpmio_internal.h rpmpgp.h
 
 LIBS +=	@WITH_ZLIB_LIB@ -lrt -lpthread
 
-BEECRYPTLOBJS = $(shell cat $(top_builddir)/beecrypt/listobjs)
-
 lib_LTLIBRARIES = librpmio.la
 librpmio_la_SOURCES = digest.c macro.c rpmio.c rpmlog.c rpmmalloc.c \
 	rpmpgp.c rpmrpc.c strcasecmp.c stubs.c url.c ugid.c
 librpmio_la_LDFLAGS = -release @VERSION@
-librpmio_la_LIBADD = $(BEECRYPTLOBJS)
+librpmio_la_LIBADD = -lbeecrypt
 librpmio_la_DEPENDENCIES = .created
 
 # XXX Add internal libtool dependence
 install-data-local:
 	@cd $(DESTDIR)/$(libdir) && \
-	sed -e "s|^dependency_libs='|& -lpopt|" < librpmio.la > .librpmio.la && \
+	sed -e "s|^dependency_libs='|& -lpopt -lbeecrypt|" < librpmio.la > .librpmio.la && \
 	mv .librpmio.la librpmio.la
 
-$(top_builddir)/beecrypt/listobjs:
-	make -C $(top_builddir)/beecrypt listobjs
-
-.created: $(top_builddir)/beecrypt/listobjs
-	for lo in $(BEECRYPTLOBJS); do \
-	  [ -f $$lo ] || $(LN_S) $(top_builddir)/beecrypt/$$lo $$lo ; \
-	done
-	touch $@
-
 clean-local:
-	rm -f $(BEECRYPTLOBJS) *.o .created
+	rm -f *.o
 
 tdigest_SOURCES = tdigest.c
-tdigest_LDADD += librpmio.la $(top_builddir)/popt/libpopt.la
+tdigest_LDADD += librpmio.la -lpopt
 
 trpmio_SOURCES = trpmio.c
-trpmio_LDADD += librpmio.la $(top_builddir)/popt/libpopt.la
+trpmio_LDADD += librpmio.la -lpopt
 
 tkey_SOURCES = tkey.c
 tkey_LDFLAGS = -all-static
-tkey_LDADD += librpmio.la $(top_builddir)/popt/libpopt.la
+tkey_LDADD += librpmio.la -lpopt
 
 tring_SOURCES = tring.c
 tring_LDFLAGS = -all-static
-tring_LDADD += librpmio.la $(top_builddir)/popt/libpopt.la
+tring_LDADD += librpmio.la -lpopt
 
 dumpasn1_SOURCES = dumpasn1.c
 
