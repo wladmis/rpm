@@ -1353,16 +1353,18 @@ static int copyEntry(const indexEntry entry,
     return rc;
 }
 
-static int locale_match( const char *sample, const char *l_b, const char *l_e, char delim )
+static int
+locale_match (const char *sample, const char *l_b, const char *l_e,
+	      char delim)
 {
-    const char *p = l_b;
+	const char *p = l_b;
 
-    for ( ; p < l_e && *p != delim; ++p )
-	;
-    if ( p < l_e && !strncmp(sample, l_b, (p - l_b)) )
-	return 1;
+	for (; p < l_e && *p != delim; ++p)
+		;
+	if (p < l_e && !strncmp (sample, l_b, (p - l_b)))
+		return 1;
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -1383,69 +1385,68 @@ static int locale_match( const char *sample, const char *l_b, const char *l_e, c
  * @param le		end of locale to match
  * @return		1 on match, 0 on no match
  */
-static int headerMatchLocale(const char *td, const char *l, const char *le, int strip_lang)
-	/*@*/
+static int
+headerMatchLocale (const char *td, const char *l, const char *le,
+		   int strip_lang)
+	/*@ */
 {
-    switch ( strip_lang )
-    {
-	case 0:
-	    /* First try a complete match. */
-	    if ( strlen(td) == (le-l) && !memcmp(td, l, (le - l)) )
-		return 1;
-	    return 0;
+	switch (strip_lang)
+	{
+		case 0:
+			/* First try a complete match. */
+			if (strlen (td) == (le - l)
+			    && !memcmp (td, l, (le - l)))
+				return 1;
+			return 0;
 
-	case 1:
-	    /* Next, try stripping optional dialect and matching. */
-	    return locale_match( td, l, le, '@' );
+		case 1:
+			/* Next, try stripping optional dialect and matching. */
+			return locale_match (td, l, le, '@');
 
-	case 2:
-	    /* Next, try stripping optional codeset and matching. */
-	    return locale_match( td, l, le, '.' );
+		case 2:
+			/* Next, try stripping optional codeset and matching. */
+			return locale_match (td, l, le, '.');
 
-	default:
-	    /* Finally, try stripping optional country code and matching. */
-	    return locale_match( td, l, le, '_' );
-    }
+		default:
+			/* Finally, try stripping optional country code and matching. */
+			return locale_match (td, l, le, '_');
+	}
 }
 
 static char *
-convert( char *ed, const char *td, const char *lang )
+convert (char *ed, const char *td, const char *lang)
 {
-	char *saved_ctype = 0, *from_codeset = 0, *to_codeset = 0;
-	char *saved_ctype1, *from_codeset1, *to_codeset1;
+	char   *saved_ctype = 0, *from_codeset = 0, *to_codeset = 0;
+	char   *saved_ctype1, *from_codeset1, *to_codeset1;
 	iconv_t icd;
 
-	if (
-		(saved_ctype1 = setlocale( LC_CTYPE, 0 )) &&
-		(saved_ctype = strdup(saved_ctype1)) &&
-		setlocale( LC_CTYPE, lang ) &&
-		(to_codeset1 = nl_langinfo(CODESET)) &&
-		(to_codeset = strdup(to_codeset1)) &&
-		setlocale( LC_CTYPE, td ) &&
-		(from_codeset1 = nl_langinfo(CODESET)) &&
-		(from_codeset = strdup(from_codeset1)) &&
-		strcmp( from_codeset, to_codeset ) &&
-		((icd = iconv_open( to_codeset, from_codeset )) != (iconv_t) -1 )
-	)
+	if ((saved_ctype1 = setlocale (LC_CTYPE, 0)) &&
+	    (saved_ctype = strdup (saved_ctype1)) &&
+	    setlocale (LC_CTYPE, lang) &&
+	    (to_codeset1 = nl_langinfo (CODESET)) &&
+	    (to_codeset = strdup (to_codeset1)) &&
+	    setlocale (LC_CTYPE, td) &&
+	    (from_codeset1 = nl_langinfo (CODESET)) &&
+	    (from_codeset = strdup (from_codeset1)) &&
+	    strcmp (from_codeset, to_codeset) &&
+	    ((icd = iconv_open (to_codeset, from_codeset)) != (iconv_t) - 1))
 	{
-		size_t insize = strlen( ed );
-		size_t inbufleft = insize, outbufleft = insize;
-		char buf[insize];
-		char *inbuf = ed, *outbuf = buf;
-		if ( !iconv( icd, &inbuf, &inbufleft, &outbuf, &outbufleft ) && !inbufleft && !outbufleft )
-			memcpy( ed, buf, insize );
-		iconv_close( icd );
+		size_t  insize = strlen (ed);
+		size_t  inbufleft = insize, outbufleft = insize;
+		char    buf[insize];
+		char   *inbuf = ed, *outbuf = buf;
+
+		if (!iconv (icd, &inbuf, &inbufleft, &outbuf, &outbufleft)
+		    && !inbufleft && !outbufleft)
+			memcpy (ed, buf, insize);
+		iconv_close (icd);
 	}
 
-	if ( saved_ctype )
-	{
-		setlocale( LC_CTYPE, saved_ctype );
-		free( saved_ctype );
-	}
-	if ( from_codeset )
-		free( from_codeset );
-	if ( to_codeset )
-		free( to_codeset );
+	if (saved_ctype)
+		setlocale (LC_CTYPE, saved_ctype);
+	from_codeset = _free (from_codeset);
+	to_codeset = _free (to_codeset);
+	saved_ctype = _free (saved_ctype);
 	return ed;
 }
 
