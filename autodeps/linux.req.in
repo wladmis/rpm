@@ -45,6 +45,7 @@ FIND_FILES=
 FIND_LIBS=
 FIND_PAM=
 FIND_PERL=
+FIND_PYTHON=
 FIND_LIBPERL=
 FIND_SHELL=
 libperl_so=
@@ -59,6 +60,7 @@ ParseMethod()
 				FIND_LIBS=
 				FIND_PAM=
 				FIND_PERL=
+				FIND_PYTHON=
 				FIND_LIBPERL=
 				FIND_SHELL=
 				;;
@@ -94,6 +96,12 @@ ParseMethod()
 				FIND_PERL=
 				FIND_LIBPERL=
 				;;
+			python)
+				FIND_PYTHON=1
+				;;
+			nopython)
+				FIND_PYTHON=
+				;;
 			sh|shell)
 				FIND_SHELL=1
 				;;
@@ -104,6 +112,7 @@ ParseMethod()
 				FIND_FILES=1
 				FIND_LIBS=1
 				FIND_PAM=1
+				FIND_PYTHON=1
 				FIND_PERL=1
 				FIND_LIBPERL=1
 				FIND_SHELL=1
@@ -150,6 +159,7 @@ esac
 
 FOUND_REQS=
 LIST_PERL=
+LIST_PYTHON=
 
 ListScriptReqs()
 {
@@ -183,6 +193,11 @@ $r"
 			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
 $f"
 		fi
+	elif [ -z "${f%%*.py}" ]; then
+		if [ -n "$FIND_PYTHON" ]; then
+			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
+$f"
+		fi
 	fi
 }
 
@@ -192,6 +207,16 @@ FindPerlReqs()
 
 	local r
 	r="$(printf %s\\n "$LIST_PERL" |@RPMCONFIGDIR@/perl.req)" || return 1
+	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+}
+
+FindPythonReqs()
+{
+	[ -n "$LIST_PYTHON" ] || return 0
+
+	local r
+	r="$(printf %s\\n "$LIST_PYTHON" |@RPMCONFIGDIR@/python.req.py)" || return 1
 	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 }
@@ -280,6 +305,9 @@ done
 
 # Find requires in listed perl scripts, if any
 FindPerlReqs
+
+# Find requires in listed python scripts, if any
+FindPythonReqs
 
 # Finally sort and print them.
 printf %s "$FOUND_REQS" |LC_COLLATE=C sort -u
