@@ -481,6 +481,7 @@ fi
 - platform.in: added macros for find-provides library
   search path manipulations.
 - perl.{req,prov}: new version from perl maintainer.
+- brp-strip: removed perms-based lookup optimization.
 
 * Tue May 06 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt18
 - rpmio: fixed gzclose error handling.
