@@ -46,7 +46,7 @@
 
 # by Ken Estes Mail.com kestes@staff.mail.com
 # modified by Mikhail Zabaluev <mookid@mu.ru>
-# modified by Alexey Tourbin <at@turbinal.org>
+# modified by Alexey Tourbin <at@altlinux.org>
 
 require v5.6.0;
 
@@ -155,10 +155,6 @@ sub process_file {
 
   my $inpackage = 0;
 
-  my ($package_name, $package_filename);
-  my $module_path = $module_file;
-  $module_path =~ s/(.+?)\/(.+)/$1\//;
-
   while (<FILE>) {
     
     # skip the documentation
@@ -167,11 +163,7 @@ sub process_file {
     # properly belongs in the over/back section) but people do not
     # read the perldoc.
 
-    if ((m/^=(head[12]|pod|over|item|for|begin)/) .. (m/^=(cut)/)) {
-      next;
-    }
-    
-    if ( (m/^=(over)/) .. (m/^=(back)/) ) {
+    if ((m/^=\w/) .. (m/^=cut/)) {
       next;
     }
 
@@ -184,22 +176,7 @@ sub process_file {
     # package name so we browse through all namespaces
 
     if (m/^\s*package\s+([\w:']+)\s*;/) {
-
-# AT: 
-# $ grep '^[ \t]*package' /usr/lib/perl5/i386-linux/B/CC.pm
-# /usr/lib/perl5/i386-linux/B/CC.pm:package B::CC;
-# /usr/lib/perl5/i386-linux/B/CC.pm:    package B::Pseudoreg;
-# /usr/lib/perl5/i386-linux/B/CC.pm:    package B::Shadow;
-
-	$package_name = $1;
-	$package_filename = module_filename($package_name);
-	next if $package_filename eq $module_file;
-	if ($module_path && index($package_filename, $module_path) == 0) {
-		$provide{$package_filename} = undef;
-	} else {
-		undef $package_name;
-		undef $package_filename;
-	}
+      $inpackage =  (module_filename($1) eq $module_file)? 1 : 0;
 	next;
     }
 
@@ -207,20 +184,19 @@ sub process_file {
     # $VERSION as the version number. Exporter requires that the
     # variable be called VERSION so we are safe.
 
-    if ($package_filename &&
+    if ($inpackage &&
 	s/^([\s(]*)(our\s*)?\$VERSION\s*=/$1\$VERSION =/) {
-      $provide{$package_filename} = extract_version($_);
+ 
+      my $rest = $'; next unless $rest =~ /\d/;
+      $provide{$module_file} = extract_version($_);
       next;
     }
 
     # also consider version initializations with explicit package specification
 
     if (s/^([\s(]*)(our\s*)?\$([\w:']+)::VERSION\s*=/$1\$VERSION =/) {
-      my $filename = module_filename($3);
-      if ($filename eq $module_file || 
-        $module_path && index($filename, $module_path) == 0) 
-      {
-	$provide{$filename} = extract_version($_);
+      if (module_filename($3) eq $module_file) {
+	$provide{$module_file} = extract_version($_);
       }
       next;
     }

@@ -39,7 +39,7 @@
 
 # by Ken Estes Mail.com kestes@staff.mail.com
 # modified by Mikhail Zabaluev <mookid@mu.ru>
-# modified by Alexey Tourbin <at@turbinal.org>
+# modified by Alexey Tourbin <at@altlinux.org>
 
 use 5.005; # qr
 use Getopt::Long;
@@ -74,15 +74,18 @@ my @ignore_reqs = (
 	qr(^sys/systeminfo\b),
 	qr(^vmsish\b),
 	qr(^MacPerl\b),
-	qr(^VMS/),
-	qr(^Win32/),
-	qr(^OS2/),
-	qr(^Mac/),
+	qr(^VMS\b),
+	qr(^Win32\b),
+	qr(^OS2\b),
+	qr(^Mac\b),
 	qr(^ExtUtils/XSSymSet\b),
 	qr(^Convert/EBCDIC\b),
 # old names
 	qr(^Digest/Perl/MD5\b),
 	qr(^Pod/PlainText\b),
+# so commonly used... just a database junk (guaranteed to be in perl-base)
+	qr(^strict\.pm$),
+	qr(^vars\.pm$),
 # wrong names
 	qr(/\.),
 	qr(\$),
@@ -121,8 +124,10 @@ foreach $module (sort keys %require) {
   }
 }
 
-exit 0;
+# nothing special?  but the fact that we were called somehow...
+print "perl-base\n" unless %require;
 
+exit 0;
 
 
 sub process_file {
@@ -152,11 +157,7 @@ sub process_file {
     # properly belongs in the over/back section) but people do not
     # read the perldoc.
 
-    if ((m/^=(head[12]|pod|over|item|for|begin)/) .. (m/^=(cut)/)) {
-      next;
-    }
-    
-    if ( (m/^=(over)/) .. (m/^=(back)/) ) {
+    if ((m/^=\w/) .. (m/^=cut/)) {
       next;
     }
     
