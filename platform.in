@@ -479,26 +479,25 @@
 @alt@%add_findprov_lib_path()	%global _findprov_lib_path %_findprov_lib_path %*
 @alt@
 @alt@%_buildrequires_build %nil
-@alt@%add_buildrequires(b) %{-b:%global _buildrequires_build %_buildrequires_build %*}
 @alt@
 @alt@%set_autoconf_version() \
 @alt@%global _autoconf_version %* \
-@alt@%add_buildrequires -b autoconf_%_autoconf_version \
+@alt@%global _buildrequires_build %_buildrequires_build autoconf_%_autoconf_version \
 @alt@%nil
 @alt@
 @alt@%set_automake_version() \
 @alt@%global _automake_version %* \
-@alt@%add_buildrequires -b automake_%_automake_version \
+@alt@%global _buildrequires_build %_buildrequires_build automake_%_automake_version \
 @alt@%nil
 @alt@
 @alt@%set_libtool_version() \
 @alt@%global _libtool_version %* \
-@alt@%add_buildrequires -b libtool_%_libtool_version \
+@alt@%global _buildrequires_build %_buildrequires_build libtool_%_libtool_version \
 @alt@%nil
 @alt@
 @alt@%set_gcc_version() \
 @alt@%global _gcc_version %* \
-@alt@%add_buildrequires -b gcc%_gcc_version \
+@alt@%global _buildrequires_build %_buildrequires_build gcc%_gcc_version \
 @alt@%nil
 @alt@
 @alt@%strip_executable	RPM_STRIP_METHOD=executable @RPMCONFIGDIR@/brp-strip
