@@ -2,8 +2,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 foreign
 
-INCLUDES = \
-	-I$(top_srcdir) \
+INCLUDES = -I. \
 	-I$(top_srcdir)/build \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/rpmdb \
@@ -18,16 +17,12 @@ EXTRA_PROGRAMS = rpminject rpmsort
 #myLDFLAGS= -L$(top_builddir)/build -L$(top_builddir)/lib \
 #	-L$(top_builddir)/rpmio
 
-myLDADD = \
+LDADD = \
 	$(top_builddir)/build/librpmbuild.la \
 	$(top_builddir)/lib/librpm.la \
 	$(top_builddir)/rpmdb/librpmdb.la \
 	$(top_builddir)/rpmio/librpmio.la \
 	@INTLLIBS@
-
-LIBS =
-#LDFLAGS = $(myLDFLAGS)
-LDADD = $(myLDADD)
 
 noinst_PROGRAMS = \
 	dump dumpdb rpmarchive rpmheader rpmlead rpmsignature
@@ -46,7 +41,7 @@ relative_SOURCES =	relative.c
 
 pdeath_execute_SOURCES =	pdeath_execute.c
 
-$(PROGRAMS): $(myLDADD)
+$(PROGRAMS): $(LDADD)
 
 gnash.o: gnash.c
 	$(COMPILE) -o $@ -c gnash.c

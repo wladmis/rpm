@@ -6,10 +6,7 @@ EXTRA_DIST = tdigest.c tficl.c tkey.c trpmio.c
 
 EXTRA_PROGRAMS = tdigest tkey tring trpmio dumpasn1
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/build \
-	-I$(top_srcdir)/lib \
+INCLUDES = -I. \
 	@INCPATH@
 
 pkgincdir = $(pkgincludedir)

@@ -326,7 +326,7 @@ static /*@only@*/ char * nothingFormat(int_32 type, const void * data,
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int fsnamesTag( /*@unused@*/ Header h, /*@out@*/ int_32 * type,
@@ -355,7 +355,7 @@ static int fsnamesTag( /*@unused@*/ Header h, /*@out@*/ int_32 * type,
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int instprefixTag(Header h, /*@null@*/ /*@out@*/ rpmTagType * type,
@@ -388,7 +388,7 @@ static int instprefixTag(Header h, /*@null@*/ /*@out@*/ rpmTagType * type,
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int fssizesTag(Header h, /*@out@*/ rpmTagType * type,
@@ -442,7 +442,7 @@ static int fssizesTag(Header h, /*@out@*/ rpmTagType * type,
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int triggercondsTag(Header h, /*@out@*/ rpmTagType * type,
@@ -514,7 +514,7 @@ static int triggercondsTag(Header h, /*@out@*/ rpmTagType * type,
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int triggertypeTag(Header h, /*@out@*/ rpmTagType * type,
@@ -567,7 +567,7 @@ static int triggertypeTag(Header h, /*@out@*/ rpmTagType * type,
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int filenamesTag(Header h, /*@out@*/ rpmTagType * type,
@@ -604,7 +604,7 @@ static const char * _macro_i18ndomains =
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int i18nTag(Header h, int_32 tag, /*@out@*/ rpmTagType * type,
@@ -691,7 +691,7 @@ static int i18nTag(Header h, int_32 tag, /*@out@*/ rpmTagType * type,
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int summaryTag(Header h, /*@out@*/ rpmTagType * type,
@@ -708,7 +708,7 @@ static int summaryTag(Header h, /*@out@*/ rpmTagType * type,
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int descriptionTag(Header h, /*@out@*/ rpmTagType * type,
@@ -725,7 +725,7 @@ static int descriptionTag(Header h, /*@out@*/ rpmTagType * type,
  * @retval type		address of tag type
  * @retval data		address of tag value pointer
  * @retval count	address of no. of data items
- * @retval freedata	address of data-was-malloc'ed indicator
+ * @retval freeData	address of data-was-malloc'ed indicator
  * @return		0 on success
  */
 static int groupTag(Header h, /*@out@*/ rpmTagType * type,

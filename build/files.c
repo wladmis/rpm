@@ -301,6 +301,7 @@ VFA_t verifyAttrs[] = {
 /*@=exportlocal =exportheadervar@*/
 
 /**
+ * @param buf
  * @param fl		package file tree walk data
  */
 static int parseForVerify(char * buf, FileList fl)
@@ -395,7 +396,9 @@ static int parseForVerify(char * buf, FileList fl)
 
 /**
  * Parse %dev from file manifest.
+ * @param buf
  * @param fl		package file tree walk data
+ * @return		0 on success
  */
 static int parseForDev(char * buf, FileList fl)
 	/*@modifies buf, fl->processingFailed,
@@ -493,7 +496,9 @@ exit:
 
 /**
  * Parse %attr and %defattr from file manifest.
+ * @param buf
  * @param fl		package file tree walk data
+ * @return		0 on success
  */
 static int parseForAttr(char * buf, FileList fl)
 	/*@modifies buf, fl->processingFailed,
@@ -624,7 +629,10 @@ static int parseForAttr(char * buf, FileList fl)
 }
 
 /**
+ * Parse %config from file manifest.
+ * @param buf
  * @param fl		package file tree walk data
+ * @return		0 on success
  */
 static int parseForConfig(char * buf, FileList fl)
 	/*@modifies buf, fl->processingFailed,
@@ -692,7 +700,10 @@ static int langCmp(const void * ap, const void * bp)	/*@*/
 }
 
 /**
+ * Parse %lang from file manifest.
+ * @param buf
  * @param fl		package file tree walk data
+ * @return		0 on success
  */
 static int parseForLang(char * buf, FileList fl)
 	/*@modifies buf, fl->processingFailed,
@@ -883,7 +894,13 @@ VFA_t virtualFileAttributes[] = {
 /*@=exportlocal =exportheadervar@*/
 
 /**
+ * Parse simple attributes (e.g. %dir) from file manifest.
+ * @param spec
+ * @param pkg
+ * @param buf
  * @param fl		package file tree walk data
+ * @retval fileName
+ * @return		0 on success
  */
 static int parseForSimple(/*@unused@*/Spec spec, Package pkg, char * buf,
 			  FileList fl, /*@out@*/ const char ** fileName)
@@ -1023,7 +1040,11 @@ static int compareFileListRecs(const void * ap, const void * bp)	/*@*/
 }
 
 /**
+ * Test if file is located in a %docdir.
+ * @bug Use of strstr(3) might result in false positives.
  * @param fl		package file tree walk data
+ * @param fileName	file path
+ * @return		1 if doc file, 0 if not
  */
 static int isDoc(FileList fl, const char * fileName)	/*@*/
 {
@@ -1081,9 +1102,13 @@ static int checkHardLinks(FileList fl)
 }
 
 /**
+ * Add file entries to header.
  * @todo Should directories have %doc/%config attributes? (#14531)
  * @todo Remove RPMTAG_OLDFILENAMES, add dirname/basename instead.
  * @param fl		package file tree walk data
+ * @param cpioList
+ * @param h
+ * @param isSrc
  */
 static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 		TFI_t * cpioList, Header h, int isSrc)
@@ -1448,9 +1473,14 @@ static /*@null@*/ FileListRec freeFileList(/*@only@*/ FileListRec fileList,
 }
 
 /**
+ * Add a file to the package manifest.
  * @param fl		package file tree walk data
+ * @param diskURL	path to file
+ * @param statp		file stat (possibly NULL)
+ * @return		0 on success
  */
-static int addFile(FileList fl, const char * diskURL, struct stat * statp)
+static int addFile(FileList fl, const char * diskURL,
+		/*@null@*/ struct stat * statp)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem@*/
 	/*@modifies *statp, *fl, fl->processingFailed,
@@ -1665,7 +1695,11 @@ static int addFile(FileList fl, const char * diskURL, struct stat * statp)
 }
 
 /**
+ * Add a file to a binary package.
+ * @param pkg
  * @param fl		package file tree walk data
+ * @param fileURL
+ * return		0 on success
  */
 static int processBinaryFile(/*@unused@*/ Package pkg, FileList fl,
 		const char * fileURL)
