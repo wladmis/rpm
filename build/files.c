@@ -2426,7 +2426,6 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
     DepMsg_t *dm;
     int failnonzero = 1;
     int rc = 0;
-    int ac;
     int i;
 
     const char	*rootURL = spec->rootURL;
@@ -2501,7 +2500,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	int argc = 0;
 	const char **argv = 0;
 	FILE *fp = 0;
-	const char *runBody = 0;
+	char *runBody = 0;
 
 	if ( !dm->argv || !dm->argv[0] )
 		continue;
