@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt8
+Release: alt9
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -478,6 +478,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri Oct 25 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt9
+- find-requires: added libperl/nolibperl options.
+- New group: System/Servers/ZProducts.
+
 * Tue Oct 22 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt8
 - lib/header.c: headerFindI18NString: check for LANGUAGE first.
 - perl.req: s/perl >= /perl-base >= / (Alexey Tourbin)
