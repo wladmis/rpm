@@ -103,14 +103,6 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	    return RPMERR_BADSPEC;
 	}
 
-	/* Tokens must not contain '%' symbol - it's common error */
-	if (strchr (r, '%')) {
-	    rpmError(RPMERR_BADSPEC,
-		     _("line %d: Dependency tokens must not contain '%%' symbol: %s\n"),
-		     spec->lineNum, spec->line);
-	    return RPMERR_BADSPEC;
-	}
-
 	/* Don't permit file names as args for certain tags */
 	switch (tag) {
 	case RPMTAG_OBSOLETEFLAGS:
@@ -131,6 +123,14 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	req = xmalloc((re-r) + 1);
 	strncpy(req, r, (re-r));
 	req[re-r] = '\0';
+
+	/* Names must not contain '%<=>' symbols - it's common error */
+	if (strpbrk (req, "%<=>")) {
+	    rpmError(RPMERR_BADSPEC,
+		     _("line %d: Dependency tokens must not contain '%%<=>' symbols: %s\n"),
+		     spec->lineNum, spec->line);
+	    return RPMERR_BADSPEC;
+	}
 
 	/* Parse version */
 	v = re;
@@ -192,10 +192,10 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	    version = NULL;
 	/*@=branchstate@*/
 
-	/* Versions must not contain '%' symbol - it's common error */
-	if (version && strchr (version, '%')) {
+	/* Versions must not contain '%<=>' symbols - it's common error */
+	if (version && strpbrk (version, "%<=>")) {
 	    rpmError(RPMERR_BADSPEC,
-		     _("line %d: Dependency tokens must not contain '%%' symbol: %s\n"),
+		     _("line %d: Dependency tokens must not contain '%%<=>' symbols: %s\n"),
 		     spec->lineNum, spec->line);
 	    req = _free(req);
 	    version = _free(version);
