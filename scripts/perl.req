@@ -1,54 +1,165 @@
 #!/usr/bin/perl
 
-# RPM (and it's source code) is covered under two separate licenses. 
+=head1	NAME
 
-# The entire code base may be distributed under the terms of the GNU
-# General Public License (GPL), which appears immediately below.
-# Alternatively, all of the source code in the lib subdirectory of the
-# RPM source code distribution as well as any code derived from that
-# code may instead be distributed under the GNU Library General Public
-# License (LGPL), at the choice of the distributor. The complete text
-# of the LGPL appears at the bottom of this file.
+perl.req - calculate the requirements for Perl sources
 
-# This alternatively is allowed to enable applications to be linked
-# against the RPM library (commonly called librpm) without forcing
-# such applications to be distributed under the GPL.
+=head1	SYNOPSIS
 
-# Any questions regarding the licensing of RPM should be addressed to
-# Erik Troan <ewt@redhat.com>.
+B<perl.req> --method=normal /path/to/Module.pm
 
-# a simple makedepends like script for perl.
- 
-# To save development time I do not parse the perl grammmar but
-# instead just lex it looking for what I want.  I take special care to
-# ignore comments and pod's.
+echo /path/to/Module.pm | RPM_PERL_REQ_METHOD=normal B<perl.req>
 
-# It would be much better if perl could tell us the dependencies of a
-# given script.
+=head1	DESCRIPTION
 
-# The filenames to scan are either passed on the command line or if
-# that is empty they are passed via stdin.
+This Perl script is intended for automatic detection of modules the given Perl
+code depends on.  It looks for common C<use>, C<require> and C<do> statements
+and extracts module and version requirements for RPM C<Requires:> clause.
 
-# If there are strings in the file which match the pattern
-#     m/^\s*\$RPM_Requires\s*=\s*["'](.*)['"]/i
-# then these are treated as additional names which are required by the
-# file and are printed as well.
+Unlike earlier versions, this script uses B::Deparse (Perl compiler backend,
+see C<perldoc B::Deparse>) to re-format Perl code.  This makes dependency
+extraction more accurate and simple, but this also has some tremendous
+implication: all Perl code should pass C<perl -c> syntax check, since the
+compile stage (see C<perldoc perlcompile>) happens for all the code that gets
+deparsed.  This is a very strong requirement, but as we talk about packaging
+quality, this is considered good.
 
-# I plan to rewrite this in C so that perl is not required by RPM at
-# build time.
+=head2	Invocation
 
-# by Ken Estes Mail.com kestes@staff.mail.com
-# modified by Mikhail Zabaluev <mookid@mu.ru>
-# modified by Alexey Tourbin <at@altlinux.org>
+=head2	Dependencies
 
-use 5.005; # qr
+For old-style perl libraries and C<*.ph> files, depndencies look like this:
+
+	perl(library.pl)
+	perl(header.ph)
+
+And for Perl5 modules like this:
+
+	perl(Some/Module.pm)
+
+The latter differs from the original RedHat RPM style, in which module
+dependencies look like C<perl(Some::Module)>.  The style was changed long ago,
+and I don't know the exact reason why. :)
+
+=head2	Versioning
+
+For old-style floating point versioning, versions look like this:
+
+	0:5.005003
+
+And for new v-string style versioning:
+
+	1:5.8.1
+
+Please note that RPM does not understand "decimal dot" in versions, so
+sometimes you may need to adjust the percision to fit the version in
+C<Provides:> clause.
+
+=head2	Methods
+
+The following three modes or "methods" are supported by this script:
+
+=over
+
+=item	strict
+
+In this mode, C<perl.req> goes straight and tries to extract all the
+dependencies that happen to be in the given perl code, including
+platform-specific dependencies, conditional ones, etc.  This mode is useful for
+debugging, but in some cases it can produce too strong/overkill requirements of
+your package.
+
+=item	normal
+
+This mode is recommended for default use.  It tries to skip the dependencies
+that are too strong by the following criteria:
+
+=over
+
+=item	file list
+
+There's a simple file list in this script by which certain files are
+ignored.  E.g., it will not look in files that match */demos/* or
+*/examples/* shell path.
+
+=item	package list
+
+There's a list of modules to ignore in "normal" mode.  They are mostly
+OS-specific modules like C<Win32::*> or C<VMS::*>.  Modules that are used very
+often (like C<strict.pm>) are also ignored in order not to bloat RPM database.
+
+=item	$^O
+
+Here we also ignore conditional blocks with C<$^O> variable involved (see
+C<perldoc perlvar>).  This kind of code always does some OS-specific trickery
+(well, most of the times).
+
+B<Not implemented yet.>
+
+=item	eval
+
+Statements in C<eval> blocks are also ignored, since this is known to be a
+common technique to check the module availability safely.
+
+=back
+
+=item	relaxed
+
+This mode makes C<perl.req> fail-tolerant and even more relaxed:
+
+=over
+
+=item	conditional dependencies
+
+In "relaxed" mode, conditional dependencies (i.e. C<require> and C<do>
+statements enclosed in conditional block and this having indentation) are
+ignored -- B::Deparse makes it easy!  
+
+=item	fail tolerance
+
+When C<perl.req> cannot deparse the given perl code, it should usually fail.
+In turn, RPM should abort the package build process.  Unfortunatelly it does
+not, which may result in packages with boroken dependencies.  Only the latest
+releases (starting with rpm-4.0.4-alt21) of ALT RPM aborts the build process
+in such cases.
+
+In "relaxed" mode, C<perl.req> will not fail if the deparse fails.  But please
+note that some dependencies will be probably missed.
+
+=back
+
+=back
+
+Since there's no default method, you have to specify the one with C<--method>
+command line argument.  Alternatively, RPM_PERL_REQ_METHOD environement
+variable can be used to set the method.  ALT RPM sets this variable to "normal"
+by default.
+
+=head1	AUTHOR
+
+Alexey Tourbin <at@altlinux.org>,
+based on an earlier version by Ken Estes <kestes@staff.mail.com>,
+with contributions from Mikhail Zabaluev <mhz@altlinux.org>.
+
+=head1	COPYING
+
+This program is intended to be an optional/alternative part of RPM package
+manager.  You can redistribute it and/or modify it under the same terms as RPM
+itself.  As of version 4.x, RPM code base is covered with GPL and
+(alternatively) LGPL licenses.  Any questions regarding the licensing of RPM
+should be addressed to Erik Troan <ewt@redhat.com> and Jeff Johnson <jbj@redhat.com>.
+
+=cut
+
+use 5.8.0;
 use Getopt::Long;
-use File::Spec;
+use strict;
 
 GetOptions("debug" => \my $debug, "method=s" => \my $method);
 sub debug ($) {
 	my $msg = shift;
 	warn "$msg\n" if $debug;
+	1;
 }
 if ($debug) {
 	require IO::Handle;
@@ -57,15 +168,16 @@ if ($debug) {
 	debug "debug mode enabled";
 }
 $method ||= $ENV{RPM_PERL_REQ_METHOD};
-$method =~ s/\s+//g;
-$method eq "strict" || $method eq "normal" || $method eq "relaxed"
-	|| die "$0: strict, normal, relaxed methods supported\n";
+$method =~ s/\s//g;
+$method eq "strict" || $method eq "normal" || $method eq "relaxed" ||
+	die "$0: strict, normal, relaxed methods supported\n";
 debug "method = $method";
 
 my @ignore_files = (
 	qr(/usr/share/doc/),
 	qr(/[Dd]emos?/),
 	qr(/examples?/),
+	qr(\bVMS\b),
 );
 my @ignore_reqs = (
 	qr(^Makefile\b),
@@ -74,289 +186,181 @@ my @ignore_reqs = (
 	qr(^sys/systeminfo\b),
 	qr(^vmsish\b),
 	qr(^MacPerl\b),
-	qr(^VMS\b),
-	qr(^Win32\b),
+	qr(^Win32),
+	qr(\bVMS\b),
 	qr(^OS2\b),
 	qr(^Mac\b),
 	qr(^ExtUtils/XSSymSet\b),
 	qr(^Convert/EBCDIC\b),
 # old names
 	qr(^Digest/Perl/MD5\b),
-	qr(^Pod/PlainText\b),
-# so commonly used... just a database junk (guaranteed to be in perl-base)
-	qr(^strict\.pm$),
-	qr(^vars\.pm$),
+#	qr(^Pod/PlainText\b),
 # wrong names
 	qr(/\.),
 	qr(\$),
-# MDK: skip if the phrase was "use of" -- shows up in gimp-perl, et al
-	qr(^of$),
+# so commonly used... just a database junk (guaranteed to be in perl-base)
+	qr(^strict\.pm$),
+	qr(^vars\.pm$),
+	qr(^Exporter\.pm$),
+	qr(^DynaLoader\.pm$),
+	qr(^AutoLoader\.pm$),
+	qr(^Carp\.pm$),
 );
 
-if (@ARGV) {
-  foreach (@ARGV) {
-    process_file($_);
-  }
-} else {
-  
-  # notice we are passed a list of filenames NOT as common in unix the
-  # contents of the file.
-  
-  foreach (<>) {
-    process_file($_);
-  }
-}
+# list of requires
+my %req;
 
-MODULE:
-foreach $module (sort keys %require) {
-  unless ($method eq "strict") {
-	for my $re (@ignore_reqs) {
-		if ($module =~ $re) {
-			debug "module $module matches $re; skip";
-			next MODULE;
+if ($ENV{RPM_BUILD_ROOT} && open REQ, "$ENV{RPM_BUILD_ROOT}/.perl.req") {
+	while (<REQ>) {
+		while (s/perl\(([\w:]+)\)>=([\dv._]+)//) {
+			$2
+			and $req{package_filename($1)}{package_version($2)}++
+			or  $req{package_filename($1)} ||= undef;
 		}
 	}
-  }
-  if (length($require{$module}) == 0) {
-    print "perl($module)\n";
-  } else {
-    print "perl($module) >= $require{$module}\n";
-  }
+	close REQ;
+	unlink "$ENV{RPM_BUILD_ROOT}/.perl.req";
 }
 
-# nothing special?  but the fact that we were called somehow...
-print "perl-base\n" unless %require;
-
-exit 0;
-
+# begin
+process_file($_) foreach @ARGV ? @ARGV : <>;
 
 sub process_file {
-  
-  my ($file) = @_;
-  chomp($file);
-
-  return if $file eq '';
-
-  unless ($method eq "strict") {
-	foreach my $re (@ignore_files) {
-		if ($file =~ $re) {
-			debug "file: $file matches: $re; skip";
-			return;
-		}
-	}
-  }
-
-  open(FILE, "<$file")||
-    die("$0: Could not open file: '$file' : $!\n");
-  
-  while (<FILE>) {
-    
-    # skip the documentation
-
-    # we should not need to have item in this if statement (it
-    # properly belongs in the over/back section) but people do not
-    # read the perldoc.
-
-    if ((m/^=\w/) .. (m/^=cut/)) {
-      next;
-    }
-    
-    # skip the data section
-    # AT: but what about AutoLoader and SelfLoader? (TODO)
-    if (m/^__(DATA|END)__$/) {
-      last;
-    }
-
-    # Each keyword can appear multiple times.  Don't
-    #  bother with datastructures to store these strings,
-    #  if we need to print it print it now.
-    
-    if ( m/^\s*\$RPM_Requires\s*=\s*["'](.*)['"]/i) {
-      foreach (split(/\s+/, $1)) {
-	print "$_\n";
-      }
-      next;
-    }
-
-	chomp;
-	s/#.*//;
-	next unless /\b(use|require|do)\b/; # do not want 'do {' loops
-	next if /\bdo\s*{/; # do not want 'do {' loops
-	next if /^\s*["']/;
-	# print "just use it";
-	if (/^\s*(?:(?!use|require|do|eval|if|unless)[\w:$->]+\s*)+\(/) {
-		debug "skip: $_";
-		next;
-	}
-	if (/^\s*(?:(?!use|require|do|eval|if|unless)[\w:]+\s*)+\(?(['"]).*\1/) {
-		debug "skip: $_";
-		next;
-	}
-	next unless /^(.*?)\b(use|do|require)\s+(['"]?)([.:\w\/]+)\3\s*(.*)/;
-	my ($indent, $statement, $quote, $module, $rest) = ($1, $2, $3, $4, $5);
-	debug "line: $_";
-	next if $module =~ m/\$/;
-	next if $module !~ m/\w/;
-
-	# conditional statements
-	if (/\b(if|unless|eval)\b/ && $method eq "relaxed") {
-		debug "file: $file requires: $module (conditional); skip";
-		next;
-	}
-
-	# indent is somewhat unclear
-	if ($indent =~ /[^\w\s{}();:]/ && $method ne "strict") {
-		debug "file: $file requires: $module (indent unclear); skip";
-		next;
-	}
-		
-	# statement requires a particular version of Perl
-	if ($module =~ m/^v?[0-9._]+$/ && $rest =~ /^;|\s*$/) {
-		print "perl-base >= " . package_version($module, '%.5f') . "\n";
-		next;
-	}
-
-	if ($statement eq "require") {
-		if ($indent =~ /^\s+$/ && $method eq "relaxed") {
-			debug "file: $file <require>s: $module (whitespace); skip";
-			next;
-		}
-		if ($indent =~ /\S/ && $method ne "strict") {
-			debug "file: $file <require>s: $module (inside); skip";
-			next;
-		}
-	}
-
-	if ($statement eq "do") {
-		if ($indent =~ /^\s+$/ && $method eq "relaxed") {
-			debug "file: $file <do>es: $module (whitespace); skip";
-			next;
-		}
-		if ($indent =~ /\S/ && $method ne "strict") {
-			debug "file: $file <do>es: $module (inside); skip";
-			next;
-		}
-	}
-
-	if ($statement eq "use") {
-		if ($indent =~ /\S/ && $method ne "strict") {
-			debug "file: $file <use>s: $module (inside); skip";
-			next;
-		}
-	}
-
-	# filename
-	if ($quote && $module =~ /^\w+(\/\w+)*\.p[lmh]$/ && $rest =~ /^$|;/ &&
-		($statement eq "do" || $statement eq "require"))
-	{
-		$require{$module} = undef;
-		debug "\$require{$module} = yes";
-		next;
-	}
-
-	# modules, variables, lists
-	my $m = qr/[:\w]+/;
-	my $v = qr/[\$\%\@]$m/;
-	my $s = qr/(?:[\s\t,]|=>)/;
-	my $ml = qr/^\s*(?:qw)?[\/('"]?\s*($m(?:$s$m)*)/;
-	my $fl = qr/^\s*(?:qw)?[\/('"]?\s*($m(?:$s$m)*)/;
-	my $vl = qr/^\s*(?:qw)?[\/('"]?\s*($v(?:$s$v)*)/;
-	
-	# special pragma (vars, subs)
-	if (($module eq "vars" || $module eq "subs") && $rest =~ $vl) {
-		my $mod = module_filename($module);
-		$require{$mod} = undef;
-		debug "$module: \$requires{$mod} = yes";
-		next;
-	}
-
-	# special pragma (constant)
-	if ($module eq "constant" && $rest =~ $ml) {
-		my $mod = module_filename($module);
-		$require{$mod} = undef;
-		debug "$module: \$requires{$mod} = yes";
-		next;
-	}
-
-	# special pragma (base, autouse)
-	if (($module eq "base" || $module eq "autouse") && $rest =~ $vl) {
-		my $modules = $1;
-		my @modules = split $s, $modules;
-		foreach my $mod (@modules, $module) {
-			if ($mod =~ /^\w+(::\w+)*$/) {
-				$mod = module_filename($mod);
-				$require{$mod} = undef;
-				debug "$module: \$requires{$mod} = yes";
+	my $fname = shift;
+	chomp $fname;
+	return unless $fname;
+	if ($method ne "strict") {
+		foreach my $re (@ignore_files) {
+			if ($fname =~ $re) {
+				debug "file: $fname; matches: $re; skip";
+				return;
 			}
 		}
-		next;
 	}
+	debug "processing $fname";
+# skip "syntax OK" messages
+#	use Fcntl;
+#	fcntl(STDERR, F_SETFD, 1) if !$debug && $method eq 'relaxed';
 
-	# special pragma (overload)
-	if ($statement eq "use" && $module eq "overload" && $rest =~ /'|"|=>|,/) {
-		my $mod = module_filename($module);
-		$require{$mod} = undef;
-		debug "\$requires{$mod} = yes";
-		next;
+# fake paths should take precedence
+	local $_ = $ENV{RPM_PERL_LIB_PATH};
+	my @inc = $ENV{RPM_BUILD_ROOT}
+		? map { "-I$ENV{RPM_BUILD_ROOT}$_" } split, @INC
+		: map { "-I$_" } split;
+# deparse
+	open(PIPE, "-|", $^X, "-MO=Deparse", @inc, $fname) || die;
+	while (<PIPE>) {
+		last if /^__(DATA|END)__/;
+		process_line($_);
 	}
+	close(PIPE) or $method ne 'relaxed' and die "$fname: deparse failed.\n";
+}
 
-	# perl module
-	if ($module && $module =~ /^\w+(::\w+)*$/ &&
-		($rest =~ /^$|^[;}"']|\b(if|unless|eval)\b|\(|^v?\d|qw|$fl/ &&
-		$indent =~ /^\s*$|[^\w\s]\s*$/) &&
-		($statement eq "use" || $statement eq "require")) 
-	{
-		$module = module_filename($module);
-		my ($version) = $rest =~ /^(v?[0-9._]+)\b/;
-		if ($version) {
-			$version = package_version($version);
-			debug "\$require{$module} >= $version";
-			$require{$module} = $version
-				unless $require{$module} && $require{$module} >= $version;
+# whether we are in BEGIN block
+my ($begin, $begin_indent);
+# whether we are in eval block
+my ($eval, $eval_indent);
+
+sub process_line {
+	my $line = shift;
+	chomp $line;
+	my $re_mod = qr/\b(?!\d)\w+(?:::(?!\d)\w+)*/;
+	my $re_fna = qr/\w+(?:\/\w+)*\.p[lmh]/;
+	my $re_ver = qr/\bv?[0-9]+(?:\.[0-9]+(?:_[0-9]+)?)*\b/;
+
+	if ($begin && $line =~ /^\Q$begin_indent}/) {
+		debug "exit begin:$.: $line";
+		$begin = 0;
+	} elsif ($eval && $line =~ /^\Q$eval_indent}/) {
+		debug "exit eval:$.: $line";
+		$eval = 0;
+	}
+again:
+	if ($line =~ /^\s*(?:use|require) ($re_ver)/) {
+		$req{"perl-base"}{package_version($1, '%.5f')}++;
+	} elsif ($line =~ /^\s*use ($re_mod) ($re_ver)/) {
+		$req{package_filename($1)}{package_version($2)}++;
+	} elsif ($line =~ /^\s*use ($re_mod)/) {
+		$req{package_filename($1)} ||= undef;
+	} elsif ($line =~ /^\s*(?:require|do) '($re_fna)'/) {
+		if ($eval && $method ne "strict") {
+			debug "skip: $line (eval)";
 		} else {
-			$require{$module} = undef;
-			debug "\$require{$module} = yes";
+			$req{$1} ||= undef;
 		}
-		next;
+	} elsif ($line =~ /^(\s*)require ($re_mod)( if\b| unless\b)?/) {
+		if ($eval && $method ne "strict") {
+			debug "skip: $line (eval)";
+		} elsif ($begin) {
+			$req{package_filename($2)} ||= undef;
+		} elsif ($3 && $method eq "relaxed") {
+			debug "skip: $line (conditional)";
+		} elsif ($1 && $method eq "relaxed") {
+			debug "skip: $line (indent)";
+		} else {
+			$req{package_filename($2)} ||= undef;
+		}
+	} elsif ($line =~ /'?($re_mod)'?->VERSION\(($re_ver)\)/) {
+		exists $req{package_filename($1)} and
+                $req{package_filename($1)}{package_version($2)}++;
 	}
-	debug "untrapped: $_";
-  }
-
-  close(FILE)||
-    die("$0: Could not close file: '$file' : $!\n");
-  
-  return ; 
+	if ($line =~ /^(\s*)sub [\w:]+\b(BEGIN|CHECK|INIT) {$/) {
+		debug "enter begin:$.: $line";
+		$begin = 1; $begin_indent = $1;
+	} elsif ($line =~ /^(\s*)(.*)\beval {$/) {
+		debug "enter eval:$.: $line";
+		$eval = 1; $eval_indent = $1;
+	}
 }
 
-
-# module_filename($name) -
-# converts module name to relative file path
-
-sub module_filename {
-  my $name = shift;
-  $name =~ s{::|'}{/}g;
-  return $name . '.pm'; 	#'
+sub package_filename {
+	my $package = shift;
+	$package =~ s/::/\//g;
+	return $package . '.pm';
 }
-
-
-# package_version($version[, $oldformat]) -
-# converts Perl version constant to RPM package version.
-# New style 'vN.N.N' numbers are converted to epoch 1 versions,
-# whereas old-style floating point versions are given epoch 0 and
-# optionally formatted by sprintf() using supplied format.
-# Parameters:
-#   $version - version number in 'vN.N.N' or 'N.NNN_NN' format
-#   $oldformat - format specifier for sprintf() used to format old-style
-#       floating-point version number
 
 sub package_version {
-  my $version = shift;
-  if ($version =~ s/^v// || $version =~ /\.[\d_]+\./) {
-    return "1:$version";
-  }
-  else {
-    my $format = shift;
-    $format = '%s' unless defined $format;
-    return '0:' . sprintf($format, $version);
-  }
+	my ($version, $fmt) = (@_, '%s');
+	$version =~ s/_//g;
+	if ($version =~ s/^v(?=\d)// || $version =~ /\.\d+\./) {
+		return "1:$version";
+	} else {
+		$version =  sprintf($fmt, $version);
+		return "0:$version";
+	}
 }
+
+# end
+req:
+foreach my $k (keys %req) {
+	if ($method ne "strict") {
+		foreach my $re (@ignore_reqs) {
+			if ($k =~ $re) {
+				debug "req: $k; matches: $re; skip";
+				delete $req{$k};
+				next req;
+			}
+		}
+	}
+	foreach my $v (ref $req{$k} ? keys %{$req{$k}} : undef) {
+		if ($k eq "perl-base") {
+# too old perl?
+			if ($method ne "strict"
+			&& ($v =~ /^0:/ && $' lt "5.006" 
+			|| $v =~ /^1:/ && $' lt "5.6.0")) {
+				delete $req{$k}{$v};
+				%{$req{$k}} && next;
+				delete $req{$k};
+				next req;
+			} else {
+				print "perl-base";
+			}
+		} else {
+			print "perl($k)";
+		}
+		print " >= $v" if $v;
+		print "\n";
+	}
+}
+# nothing special?
+print "perl-base\n" unless %req;

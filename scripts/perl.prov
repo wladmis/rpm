@@ -1,269 +1,119 @@
 #!/usr/bin/perl
 
-# RPM (and it's source code) is covered under two separate licenses.
-
-# The entire code base may be distributed under the terms of the GNU
-# General Public License (GPL), which appears immediately below.
-# Alternatively, all of the source code in the lib subdirectory of the
-# RPM source code distribution as well as any code derived from that
-# code may instead be distributed under the GNU Library General Public
-# License (LGPL), at the choice of the distributor. The complete text
-# of the LGPL appears at the bottom of this file.
-
-# This alternative is allowed to enable applications to be linked
-# against the RPM library (commonly called librpm) without forcing
-# such applications to be distributed under the GPL.
-
-# Any questions regarding the licensing of RPM should be addressed to
-# Erik Troan <ewt@redhat.com>.
-
-# a simple script to print the proper name for perl libraries.
-
-# To save development time I do not parse the perl grammmar but
-# instead just lex it looking for what I want.  I take special care to
-# ignore comments and pod's.
-
-# it would be much better if perl could tell us the proper name of a
-# given script.
-
-# The filenames to scan are either passed on the command line or if
-# that is empty they are passed via stdin.
-
-# If there are lines in the file which match the pattern
-#      (m/^\s*\$VERSION\s*=\s+/)
-# then these are taken to be the version numbers of the modules.
-
-# If there are strings in the file which match the pattern
-#     m/^\s*\$RPM_Provides\s*=\s*["'](.*)['"]/i
-# then these are treated as additional names which are provided by the
-# file and are printed as well.
-
-# The RPM_PERL_LIB_PATH environment variable, if set, must contain the list of
-# absolute paths, separated by colons, spaces or commas. These paths are
-# considered as library paths used to determine relative names of provided
-# perl files. If RPM_PERL_LIB_PATH is not set, paths from @INC Perl variable
-# are used instead.
-
-# by Ken Estes Mail.com kestes@staff.mail.com
-# modified by Mikhail Zabaluev <mookid@mu.ru>
-# modified by Alexey Tourbin <at@altlinux.org>
-
-require v5.6.0;
-
 use Safe;
-
 use strict;
 
-use vars qw(%provide @perl_inc);
+# list of provides
+my %prov;
 
+# fake paths should take precedence
+local $_ = $ENV{RPM_PERL_LIB_PATH};
+my @inc = map { "$ENV{RPM_BUILD_ROOT}$_" } split, @INC;
 
-# obtain the list of library directories. If not provided, use @INC
-
-if (exists $ENV{RPM_PERL_LIB_PATH}) {
-  @perl_inc = split(/[:,\s]+/, $ENV{RPM_PERL_LIB_PATH});
-}
-else {
-  @perl_inc = grep { m|^/| } @INC;
-}
-
-# Sort @perl_inc descending by length to search for longest prefix rapidly.
-
-@perl_inc = sort { length($b) <=> length($a) } @perl_inc;
-
-# Prepend $RPM_BUILD_ROOT to paths.
-
-my $buildroot = $ENV{RPM_BUILD_ROOT};
-@perl_inc = map { "${buildroot}$_" } @perl_inc;
-
-# process files
-
-if (@ARGV) {
-  foreach (@ARGV) {
-    process_file($_);
-  }
-} else {
-
-  # notice we are passed a list of filenames NOT as common in unix the
-  # contents of the file.
-
-  foreach (<>) {
-    process_file($_);
-  }
-}
-
-# print out sorted results
-
-foreach my $module (sort keys %provide) {
-  my $version = $provide{$module};
-  if (length($version) == 0) {
-    print "perl($module)\n";
-  } else {
-    print "perl($module) = $version\n";
-    if ($version =~ /^1:(.*)/) {
-
-      # provide an additional epoch 0 version converted using Perl's rules
-
-      my $fpver = 0;
-      my $ratio = 1;
-      my @series = split(/\./, $1);
-      for (@series) {
-	$fpver += $_ * $ratio;
-	$ratio *= 0.001;
-      }
-      my $fdigits = $#series * 3;
-      printf("perl($module) = 0:%.${fdigits}f\n", $fpver);
-    }
-  }
-}
-
-exit 0;
-
-
+# begin
+process_file($_) foreach @ARGV ? @ARGV : <>;
 
 sub process_file {
+	my $fname = shift;
+	chomp $fname;
+	return unless $fname;
 
-  my ($file) = @_;
-  chomp $file;
+# check if we match any prefix
+# and take the longest...
+	my ($prefix) =	sort { length($b) <=> length($a) }
+			grep { index($fname, $_) == 0 } @inc;
+	return unless $prefix;
+	my $basename = substr $fname, length $prefix;
+	$basename =~ s/^\///;
+	return unless $basename;
 
-  return if $file eq '';
-
-  # find the longest matching prefix among Perl library search directories
-
-  my $prefix = '';
-  foreach (@perl_inc) {
-    if (substr($file, 0, length($_)) eq $_) {
-      $prefix = $_;
-      last;
-    }
-  }
-
-  return if $prefix eq '';
-
-  # get path to the module file without prefix
-
-  my $module_file = substr($file, length($prefix));
-  $module_file =~ s{^/}{};
-
-  $provide{$module_file} = undef;
-
-  return if $module_file !~ /\.pm$/;
-
-  # try to extract version number for this package
-
-  open(FILE, "<$file")||
-    die("$0: Could not open file: '$file' : $!\n");
-
-  my $inpackage = 0;
-
-  while (<FILE>) {
-    
-    # skip the documentation
-
-    # we should not need to have item in this if statement (it
-    # properly belongs in the over/back section) but people do not
-    # read the perldoc.
-
-    if ((m/^=\w/) .. (m/^=cut/)) {
-      next;
-    }
-
-    # skip the data section
-    if (m/^__(DATA|END)__$/) {
-      last;
-    }
-
-    # not everyone puts the package name of the file as the first
-    # package name so we browse through all namespaces
-
-    if (m/^\s*package\s+([\w:']+)\s*;/) {
-      $inpackage =  (module_filename($1) eq $module_file)? 1 : 0;
-	next;
-    }
-
-    # after we found the package name take the first assignment to
-    # $VERSION as the version number. Exporter requires that the
-    # variable be called VERSION so we are safe.
-
-    if ($inpackage &&
-	s/^([\s(]*)(our\s*)?\$VERSION\s*=/$1\$VERSION =/) {
- 
-      my $rest = $'; next unless $rest =~ /\d/;
-      $provide{$module_file} = extract_version($_);
-      next;
-    }
-
-    # also consider version initializations with explicit package specification
-
-    if (s/^([\s(]*)(our\s*)?\$([\w:']+)::VERSION\s*=/$1\$VERSION =/) {
-      if (module_filename($3) eq $module_file) {
-	$provide{$module_file} = extract_version($_);
-      }
-      next;
-    }
-
-    # Each keyword can appear multiple times.  Don't
-    #  bother with datastructures to store these strings,
-    #  if we need to print it print it now.
-	
-    if ( m/^\s*\$RPM_Provides\s*=\s*["'](.*)['"]/i) {
-      foreach (split(/\s+/, $1)) {
-	print "$_\n";
-      }
-    }
-
-  }
-
-  close(FILE)||
-    die("$0: Could not close file: '$file' : $!\n");
-
-  return ;
+# provide *.p[lh]
+	if ($fname =~ /\.p[lh]$/) {
+		$prov{$basename} = undef;
+		return;
+# only *.pm left
+	} elsif ($basename =~ /\.pm$/) {
+		$prov{$basename} = undef;
+	} else {
+		return;
+	}
+# process *.pm
+	my $in_package;
+	my $re_mod = qr/\b(?!\d)\w+(?:::(?!\d)\w+)*/;
+	my $re_ver = qr/\bv?[0-9]+(?:\.[0-9]+(?:_[0-9]+)?)*\b/;
+	open(FILE, '<', $fname) || die;
+	while (<FILE>) {
+		/^=\w/ .. /^=cut/ and next;
+	    	/^__(DATA|END)__$/ and last;
+# look for 'package' declaration that matches filename
+		if (/^\s*package\s+($re_mod)\s*;/) {
+			if ($basename eq package_filename($1)) {
+				$in_package = $1;
+			} else {
+				undef $in_package;
+			}
+# look for $VERSION
+		} elsif ($in_package && m/\$(?:$in_package\::)?VERSION\s*=.*\d/) {
+			$prov{$basename} = extract_version($_);
+			last;
+		}
+	}
+	close FILE;
 }
 
-
-# module_filename($name) -
-# converts module name to relative file path
-
-sub module_filename {
-  my $name = shift;
-  $name =~ s{::|'}{/}g;
-  return $name . '.pm';
+# end
+while (my ($k, $v) = each %prov) {
+	if ($v) {
+		print "perl($k) = $v\n";
+# provide an additional epoch 0 version converted using Perl's rules
+    		print "perl($k) = 0:" . old_version($1) . "\n"
+			if $v =~ /^1:(.+)/;
+	} else {
+		print "perl($k)\n";
+	}
 }
 
+sub old_version {
+	local $_ = shift;
+	my $fpver = 0;
+	my $ratio = 1;
+	my @series = split(/\./, $1);
+	for (@series) {
+		$fpver += $_ * $ratio;
+		$ratio *= 0.001;
+	}
+	my $fdigits = $#series * 3;
+	return sprintf "%.${fdigits}f", $fpver;
+}
 
-# extract_version - 
-# this subroutine tries to evaluate line containing assignment to $VERSION
-# in order to achieve version number
-
+# XXX Mhz code?
 sub extract_version {
+	my $line = shift;
+# Try to evaluate the assignment to get the value of $VERSION.
+# It is usually computed without using data external to the expression,
+# so we would have no problems.
+	
+#	local $SIG{__WARN__} = sub { };
 
-  my $line = shift;
+	my $safe = new Safe;
+	$safe->permit_only(qw(:base_core :base_mem :base_orig entereval
+			grepstart grepwhile mapstart mapwhile));
+	my $version = $safe->reval("$line");
+	return undef if $@ || length($version) == 0;
 
-  # Try to evaluate the assignment to get the value of $VERSION.
-  # It is usually computed without using data external to the expression,
-  # so we would have no problems.
+	if ($version =~ s/^\s*(\d[\d_]*(\.[\d_]*)?|\.[\d_]+)/$1/) {
+# plain old numeric version
+		return '0:' . $version;
+	} else {
+# Supposedly, a new style version evaluated as a string constant.
+# Return an epoch 1 version
+		return sprintf "1:%vd", $version;
+	}
+}
 
-  local $SIG{__WARN__} = sub { };
-
-  my $safe = new Safe;
-  $safe->permit_only(qw(:base_core :base_mem :base_orig entereval
-                        grepstart grepwhile mapstart mapwhile));
-  my $version = $safe->reval("$line; \$VERSION;");
-
-  return undef if $@ || length($version) == 0;
-
-  if ($version =~ s/^\s*(\d[\d_]*(\.[\d_]*)?|\.[\d_]+)/$1/) {
-
-    # plain old numeric version
-
-    return '0:' . $version;
-  }
-  else {
-
-    # Supposedly, a new style version evaluated as a string constant.
-    # Return an epoch 1 version
-
-    return sprintf('1:%vd', $version);
-  }
-
-  return undef;
+# copy-pasted from perl.req
+sub package_filename {
+	my $package = shift;
+	$package =~ s/::/\//g;
+	return $package . '.pm';
 }
