@@ -564,7 +564,7 @@
 @alt@%add_serial()	%(rpm -q --qf '%%|SERIAL?{Serial: %%{SERIAL}}|' %1 2>/dev/null)
 @alt@%get_SVR()	%(rpm -q --qf '%%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
 @alt@%get_NSVR()	%(rpm -q --qf '%%{NAME}-%%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
-@alt@%get_dep()	%(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
+@alt@%get_dep()	%(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
 @alt@%rpm_check_field(p:)	%(foo=`rpm -q --qf '%%{%1}' %{-p:%{-p*}} 2>/dev/null`; [ "`expr '$foo' '>' '%2'`" -eq 1 ] && echo -n "$foo" || echo -n "%2")
 @alt@
 @alt@# Define php_version and php_release to version and release no less than specified one via -n option
