@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt24
+Release: alt25
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -96,6 +96,7 @@ Requires: mktemp >= 1:1.3.1
 Requires: patch >= 2.5
 Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
+Requires: rpm-build-perl
 
 %package build-topdir
 Summary: RPM package installation and build directory tree
@@ -425,7 +426,6 @@ fi
 %rpmattr %_libdir/%name/http.req
 %rpmattr %_libdir/%name/files.*
 %rpmattr %_libdir/%name/pam.*
-%rpmattr %_libdir/%name/perl.*
 %rpmattr %_libdir/%name/shell.*
 %rpmattr %_libdir/%name/sql.*
 %rpmattr %_libdir/%name/tcl.*
@@ -470,6 +470,13 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Sep 22 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt25
+- find-package:
+  + when dependence name starts with `/',
+    look into pkg contents binary index as well;
+  + fixed package database checks.
+- perl.{req,prov}: relocated to separate subpackage.
+
 * Fri Sep 12 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt24
 - rpm-build: do not package %_libdir/%name/config.* files (#2732).
 - build/pack.c: create %%_srcrpmdir (#2353).
