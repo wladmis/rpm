@@ -63,9 +63,11 @@ int main(int argc, char **argv)
 
     rc = ufdCopy(gzdi, fdo);
     rc = (rc <= 0) ? EXIT_FAILURE : EXIT_SUCCESS;
-    Fclose(fdo);
+    if (Fclose(fdo) < 0)
+	rc = EXIT_FAILURE;
 
-    Fclose(gzdi);	/* XXX gzdi == fdi */
+    if (Fclose(gzdi) < 0)	/* XXX gzdi == fdi */
+	rc = EXIT_FAILURE;
 
     return rc;
 }
