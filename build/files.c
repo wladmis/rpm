@@ -2837,6 +2837,7 @@ static int checkFiles(StringBuf fileList, int fileListLen)
     }    
 
     runCmd = rpmExpand( "%{___build_cmd}", " ", s, 0 );
+    s = _free(s);
 
     if (!((rc = poptParseArgvString(runCmd, &ac, (const char ***)&av)) == 0
           && ac > 0 && av != NULL))
@@ -2844,12 +2845,12 @@ static int checkFiles(StringBuf fileList, int fileListLen)
 	goto exit;
     }
 
-    rpmMessage(RPMMESS_NORMAL, _("Checking for unpackaged files (using %s):\n"), s);
+    rpmMessage(RPMMESS_NORMAL, _("Checking for unpackaged files: %s\n"), runCmd);
 
     readBuf = getOutputFrom(NULL, av, 0, getStringBuf(fileList), fileListLen, 1);
     if (!readBuf) {
 	rc = RPMERR_EXEC;
-	rpmError(rc, _("Failed to check unpackaged files\n"));
+	rpmError(rc, _("Failed to check for unpackaged files\n"));
 	goto exit;
     } else {
 	static int _unpackaged_files_terminate_build = 0;
