@@ -946,10 +946,10 @@ int main(int argc, const char ** argv)
 	ba->buildAmount = RPMBUILD_PREP | RPMBUILD_BUILD | RPMBUILD_INSTALL;
 	if (bigMode == MODE_REBUILD) {
 	    ba->buildAmount |= RPMBUILD_PACKAGEBINARY;
-	    ba->buildAmount |= RPMBUILD_RMSOURCE;
-	    ba->buildAmount |= RPMBUILD_RMSPEC;
-	    ba->buildAmount |= RPMBUILD_CLEAN;
-	    ba->buildAmount |= RPMBUILD_RMBUILD;
+	    if (rpmExpandNumeric ("%{?_rpmbuild_clean:%_rpmbuild_clean}%{?!_rpmbuild_clean:1}"))
+		ba->buildAmount |= RPMBUILD_RMSOURCE | RPMBUILD_RMSPEC | RPMBUILD_CLEAN | RPMBUILD_RMBUILD;
+	    if (rpmExpandNumeric ("%_rpmbuild_packagesource") )
+		ba->buildAmount |= RPMBUILD_PACKAGESOURCE;
 	}
 
 	while ((pkg = poptGetArg(optCon))) {
