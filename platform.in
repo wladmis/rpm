@@ -250,15 +250,19 @@
 @alt@	cd %{u2p:%_builddir}\
 @alt@%nil
 @alt@
-@alt@%__spec_install_pre	\
-@alt@%{___build_pre}	\
-@alt@%clean_buildroot	\
+@alt@%__spec_install_pre\
+@alt@%{___build_pre}\
+@alt@%clean_buildroot\
+@alt@%{__spec_install_custom_pre}\
 @alt@%nil
 @alt@
-@alt@%__spec_clean_post	\
-@alt@%clean_buildroot	\
-@alt@%{___build_post}	\
+@alt@%__spec_clean_post\
+@alt@%clean_buildroot\
+@alt@%{___build_post}\
+@alt@%{__spec_clean_custom_post}\
 @alt@%nil
+@alt@
+@alt@%_fixperms	%{__chmod} -Rf u+rwX,go-w
 @alt@
 @alt@%_internal_gpg_path	/usr/lib/alt-gpgkeys
 @alt@
@@ -475,9 +479,10 @@
 @alt@
 @alt@# Alternate build section header for "multi-build" packages.
 @alt@%buildmulti	\
-@alt@%global	__spec_install_pre	%{___build_pre}	\
-@alt@%build	\
-@alt@%clean_buildroot	\
+@alt@%global	__spec_install_pre	%{___build_pre}\
+@alt@%build\
+@alt@%clean_buildroot\
+@alt@%{__spec_install_custom_pre}\
 @alt@%nil
 @alt@
 @alt@# MDK (in)compatibility.
