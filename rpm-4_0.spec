@@ -4,7 +4,7 @@
 
 Name: rpm
 Version: %rpm_version
-Release: alt6
+Release: alt7
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -477,6 +477,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Oct 07 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt7
+- Fixed %%doc (was broken in -alt6).
+
 * Sat Oct 05 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt6
 - Fixed skiplists processing.
 - New macro: %_customdocdir (affects DOCDIR processing).
