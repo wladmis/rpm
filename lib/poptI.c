@@ -13,6 +13,8 @@
 extern time_t get_date(const char * p, void * now);	/* XXX expedient lies */
 /*@=redecl@*/
 
+extern int fancyPercents;
+
 /*@unchecked@*/
 struct rpmInstallArguments_s rpmIArgs;
 
@@ -200,6 +202,9 @@ struct poptOption rpmInstallPoptTable[] = {
  { "percent", '\0', POPT_BIT_SET,
 	&rpmIArgs.installInterfaceFlags, INSTALL_PERCENT,
 	N_("print percentages as package installs"), NULL},
+ { "fancypercent", '\0', 0,
+ 	&fancyPercents, 0,
+	N_("print fancy percentages as package installs"), NULL},
  { "prefix", '\0', POPT_ARG_STRING, &rpmIArgs.prefix, 0,
 	N_("relocate the package to <dir>, if relocatable"),
 	N_("<dir>") },
