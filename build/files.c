@@ -2817,11 +2817,21 @@ static void printDeps(Header h)
  * @param fileListLen	no. of packaged files
  * @return		-1 if skipped, 0 on OK, 1 on error
  */
-static int checkFiles(StringBuf fileList, int fileListLen)
+static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
 {
     StringBuf readBuf = NULL;
-    const char	*runCmd = 0;
-    const char * s;
+    const char	*rootURL = spec->rootURL;
+    const char	*runDirURL = NULL;
+    const char	*scriptName = NULL;
+    const char	*runCmd = NULL;
+    const char	*runTemplate = NULL;
+    const char	*runPost = NULL;
+    const char	*rootDir;
+    const char	*runScript;
+    const char	*mTemplate = "%{__spec_install_template}";
+    const char	*mPost = "%{__spec_install_post}";
+    urlinfo	u = NULL;
+    FD_t	fd, xfd;
     const char ** av = 0;
     int ac = 0;
     int rc = 0;
@@ -2830,22 +2840,65 @@ static int checkFiles(StringBuf fileList, int fileListLen)
     if (fileListLen == 0)
         return 0;
 
-    s = rpmExpand("%{?__check_files}", NULL);
-    if (!(s && *s)) {
+    runDirURL = rpmGenPath(rootURL, "%{_builddir}", "");
+
+    (void) urlPath(rootURL, &rootDir);
+    if ( !*rootDir )
+	rootDir = "/";
+
+    if (runDirURL && runDirURL[0] != '/' && urlSplit(runDirURL, &u) ) {
+	rc = RPMERR_SCRIPT;
+	goto exit;
+    }
+
+    runTemplate = rpmExpand(mTemplate, NULL);
+    runPost = rpmExpand(mPost, NULL);
+
+    runBody = rpmExpand("%{?__check_files}", NULL);
+    if (!(runBody && *runBody)) {
 	rc = -1;
 	goto exit;
     }    
 
-    runCmd = rpmExpand( "%{___build_cmd}", " ", s, 0 );
-    s = _free(s);
+    rpmMessage(RPMMESS_NORMAL, _("Finding %s (using %s)\n"), _("unpackaged files"), runBody);
+
+    if (makeTempFile(rootURL, &scriptName, &fd) || fd == NULL || Ferror(fd)) {
+	rc = RPMERR_SCRIPT;
+	rpmError(RPMERR_SCRIPT, _("Unable to open temp file."));
+	goto exit;
+    }
+
+    if ( !fdGetFp(fd) )
+	xfd = Fdopen(fd, "w.fpio");
+    else
+	xfd = fd;
+    if ( !(fp = fdGetFp(xfd)) ) {
+	rc = RPMERR_SCRIPT;
+	goto exit;
+    }
+
+    urlPath(scriptName, &runScript);
+
+    fputs(runTemplate, fp);
+    fputc('\n', fp);
+
+    fputs(runBody, fp);
+    runBody = _free(runBody);
+    fputc('\n', fp);
+
+    fputs(runPost, fp);
+    fputc('\n', fp);
+
+    Fclose(xfd);
+
+    runCmd = rpmExpand( "%{___build_cmd}", " ", runScript, 0 );
 
     if (!((rc = poptParseArgvString(runCmd, &ac, (const char ***)&av)) == 0
           && ac > 0 && av != NULL))
     {
+	rc = RPMERR_SCRIPT;
 	goto exit;
     }
-
-    rpmMessage(RPMMESS_NORMAL, _("Checking for unpackaged files: %s\n"), runCmd);
 
     readBuf = getOutputFrom(NULL, av, 0, getStringBuf(fileList), fileListLen, 1);
     if (!readBuf) {
@@ -2872,9 +2925,14 @@ static int checkFiles(StringBuf fileList, int fileListLen)
 
 exit:
     freeStringBuf(readBuf);
-    runCmd = _free(runCmd);
-    s = _free(s);
     av = _free(av);
+    runCmd = _free(runCmd);
+    if (scriptName) Unlink(scriptName);
+    scriptName = _free(scriptName);
+    runBody = _free(runBody);
+    runPost = _free(runPost);
+    runTemplate = _free(runTemplate);
+    runDirURL = _free(runDirURL);
     return rc;
 }
 
@@ -2921,7 +2979,7 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
      * and duplicated files.
      */
     
-    if (rc == 0 && checkFiles(check_fileList, check_fileListLen) > 0)
+    if (rc == 0 && checkFiles(spec, check_fileList, check_fileListLen) > 0)
 	rc = 1;
 
     check_fileListLen = 0;
