@@ -24,7 +24,7 @@ LIBS =
 
 lib_LTLIBRARIES = librpmdb.la
 librpmdb_la_SOURCES = $(DBLIBSRCS) \
-	dbconfig.c fprint.c poptDB.c rpmhash.c rpmdb.c
+	dbconfig.c fprint.c merge.c poptDB.c rpmhash.c rpmdb.c
 librpmdb_la_LDFLAGS = -release @VERSION@ @libdb3@
 librpmdb_la_LIBADD = $(DBLIBOBJS)
 librpmdb_la_DEPENDENCIES = $(DBLIBOBJS)
