@@ -39,8 +39,21 @@ DoStrip()
 	strip $opts $STRIP_FORCED_OPTS "$f"
 }
 
+rc=0
 for f in "$@"; do
-	[ -f "$f" ]
+	if [ ! -f "$f" ]; then
+		echo "$PROG: $f: file unavailable" >&2
+		rc=1
+		continue
+	fi
+
+	if [ -n "$STRIP_AUTOSKIP" ]; then
+		for skip in $STRIP_AUTOSKIP; do
+			if [ -z "${f//$skip}" ]; then
+				continue 2
+			fi
+		done
+	fi
 
 	t="$(/usr/bin/file -b "$f")"
 
@@ -72,3 +85,5 @@ for f in "$@"; do
 		continue
 	fi
 done
+
+exit $rc
