@@ -596,6 +596,7 @@
   export RPM_PACKAGE_VERSION=\"%version\"\
   export RPM_PACKAGE_RELEASE=\"%release\"\
   %{?buildroot:export RPM_BUILD_ROOT=\"%{u2p:%buildroot}\"}\
+  %{?_cleanup_method:export RPM_CLEANUP_METHOD=\"%_cleanup_method\"}\
   %{?_compress_method:export RPM_COMPRESS_METHOD=\"%_compress_method\"}\
   %{?_strip_method:export RPM_STRIP_METHOD=\"%_strip_method\"}\
   %{?_findreq_method:export RPM_FINDREQ_METHOD=\"%_findreq_method\"}\
