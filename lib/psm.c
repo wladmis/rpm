@@ -851,6 +851,8 @@ static int runScript(PSM_t psm, Header h,
     FD_t out;
     rpmRC rc = RPMRC_OK;
     const char *n, *v, *r;
+    char arg1_str [sizeof(int)*3+1] = "";
+    char arg2_str [sizeof(int)*3+1] = "";
 
     if (!progArgv && !script)
 	return 0;
@@ -866,6 +868,12 @@ static int runScript(PSM_t psm, Header h,
     }
 
     xx = headerNVR(h, &n, &v, &r);
+
+    if (arg1 >= 0)
+	sprintf(arg1_str, "%d", arg1);
+    if (arg2 >= 0)
+	sprintf(arg2_str, "%d", arg2);
+
     if (hge(h, RPMTAG_INSTPREFIXES, &ipt, (void **) &prefixes, &numPrefixes)) {
 	freePrefixes = 1;
     } else if (hge(h, RPMTAG_INSTALLPREFIX, NULL, (void **) &oldPrefix, NULL)) {
@@ -907,16 +915,10 @@ static int runScript(PSM_t psm, Header h,
 	    argv[argc++] = sn;
 	}
 
-	if (arg1 >= 0) {
-	    char *av = alloca(20);
-	    sprintf(av, "%d", arg1);
-	    argv[argc++] = av;
-	}
-	if (arg2 >= 0) {
-	    char *av = alloca(20);
-	    sprintf(av, "%d", arg2);
-	    argv[argc++] = av;
-	}
+	if (*arg1_str)
+	    argv[argc++] = arg1_str;
+	if (*arg2_str)
+	    argv[argc++] = arg2_str;
     }
 
     argv[argc] = NULL;
@@ -986,12 +988,12 @@ static int runScript(PSM_t psm, Header h,
 	    }
 	}
 
-	{
-		const char *name = 0;
-		headerNVR( h, &name, 0, 0 );
-		if ( name )
-			dosetenv( "RPM_INSTALL_NAME", name, 1 );
-	}
+	dosetenv ("RPM_INSTALL_NAME", n, 1);
+
+	if (*arg1_str)
+	    dosetenv ("RPM_INSTALL_ARG1", arg1_str, 1);
+	if (*arg2_str)
+	    dosetenv ("RPM_INSTALL_ARG2", arg2_str, 1);
 
 	if ( rpm_close_all() ) {
 		perror( "rpm_close_all" );
