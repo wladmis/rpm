@@ -4,7 +4,7 @@
 # The ALT Linux build root policies invoked
 # at the end of the %install scriptlet.
 #
-# Copyright (C) 2000  Dmitry V. Levin <ldv@fandra.org>
+# Copyright (C) 2000  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
