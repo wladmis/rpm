@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt25
+Release: alt26
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -470,6 +470,20 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Sep 27 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt26
+- gendiff: cleanup (#2558).
+- build/files.c: fixed RPMTAG_SIZE calculation (#2634).
+- New group: Graphical desktop/XFce (#3048).
+- platform.in(%%configure):
+  + invoke libtoolize when configure.ac is present (#3049).
+- pam.prov:
+  + validate $PAM_NAME_SUFFIX.
+- pam.req:
+  + validate %PAM_SO_SUFFIX and $PAM_NAME_SUFFIX;
+  + induce "buildreq -bi" to generate dependence on
+    libpam-devel package (#3050).
+- Updated README.ALT-ru_RU.KOI8-R.
+
 * Mon Sep 22 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt25
 - find-package:
   + when dependence name starts with `/',
