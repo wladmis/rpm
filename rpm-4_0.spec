@@ -185,7 +185,6 @@ export AUTOMAKE=automake-1.6
 export AUTOCONF=autoconf_2.5
 export AUTOHEADER=autoheader_2.5
 
-echo |gettextize --copy --force
 ./autogen.sh --noconfigure
 export \
 	ac_cv_path_CTAGS=/usr/bin/ctags

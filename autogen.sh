@@ -26,8 +26,9 @@ $LIBTOOLIZE --version |head -1 |grep -qs "$LTV" || { echo "$USAGE"; exit 1; }
 $AUTOCONF --version |head -1 |grep -qs "$ACV" || { echo "$USAGE"; exit 1; }
 $AUTOMAKE --version |head -1 |grep -qs "$AMV" || { echo "$USAGE"; exit 1; }
 
+echo |gettextize --copy --force
 $LIBTOOLIZE --copy --force
-$ACLOCAL
+$ACLOCAL -I m4
 $AUTOHEADER
 $AUTOMAKE -a -c
 $AUTOCONF
