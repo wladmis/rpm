@@ -3,6 +3,12 @@
 export CFLAGS
 export LDFLAGS
 
+: ${LIBTOOLIZE:=libtoolize}
+: ${ACLOCAL:=aclocal}
+: ${AUTOMAKE:=automake}
+: ${AUTOCONF:=autoconf}
+: ${AUTOHEADER:=autoheader}
+
 LTV="libtoolize (GNU libtool) 1.4"
 ACV="autoconf (GNU Autoconf) 2.53"
 AMV="automake (GNU automake) 1.6.1"
@@ -16,15 +22,15 @@ checked if you need to, as rpm should build (and has built) with all
 recent versions of libtool/autoconf/automake.
 "
 
-[ "`libtoolize --version`" != "$LTV" ] && echo "$USAGE" && exit 1
-[ "`autoconf --version | head -1`" != "$ACV" ] && echo "$USAGE" && exit 1
-[ "`automake --version | head -1 | sed -e 's/1\.4[a-z]/1.4/'`" != "$AMV" ] && echo "$USAGE" && exit 1
+[ "`$LIBTOOLIZE --version`" != "$LTV" ] && echo "$USAGE" && exit 1
+[ "`$AUTOCONF --version | head -1`" != "$ACV" ] && echo "$USAGE" && exit 1
+[ "`$AUTOMAKE --version | head -1 | sed -e 's/1\.4[a-z]/1.4/'`" != "$AMV" ] && echo "$USAGE" && exit 1
 
-libtoolize --copy --force
-aclocal
-autoheader
-automake -a -c
-autoconf
+$LIBTOOLIZE --copy --force
+$ACLOCAL
+$AUTOHEADER
+$AUTOMAKE -a -c
+$AUTOCONF
 
 if [ "$1" = "--noconfigure" ]; then 
     exit 0;
