@@ -3566,6 +3566,9 @@ msgstr "Разработка/Tcl"
 msgid "Editors"
 msgstr "Редакторы"
 
+msgid "Education"
+msgstr "Обучение"
+
 msgid "Emulators"
 msgstr "Эмуляторы"
 
@@ -3583,6 +3586,9 @@ msgstr "Игры/Настольные"
 
 msgid "Games/Cards"
 msgstr "Игры/Карты"
+
+msgid "Games/Educational"
+msgstr "Игры/Обучающие"
 
 msgid "Games/Other"
 msgstr "Игры/Прочее"

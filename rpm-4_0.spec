@@ -487,7 +487,10 @@ fi
   + %%set_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_{topdir,skiplist}();
   + %%add_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_skiplist();
   + %%__gcc_version{,_major,_minor,_patch,_base}.
-- New group: Development/Objective-C.
+- New groups:
+  + Development/Objective-C;
+  + Education;
+  + Games/Educational.
 
 * Mon Sep 09 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt4
 - new brp method: verify_elf.
