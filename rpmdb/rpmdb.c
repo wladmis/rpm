@@ -3397,11 +3397,12 @@ int rpmdbRebuild(const char * prefix)
     tfn = rpmGetPath("%{_dbpath_rebuild}", NULL);
     /*@=nullpass@*/
     if (!(tfn && tfn[0] != '%' && strcmp(tfn, dbpath))) {
-	char pidbuf[20];
+	char *pidbuf;
 	char *t;
-	sprintf(pidbuf, "rebuilddb.%d", (int) getpid());
+	asprintf(&pidbuf, "rebuilddb.%u", getpid());
 	t = xmalloc(strlen(dbpath) + strlen(pidbuf) + 1);
 	(void)stpcpy(stpcpy(t, dbpath), pidbuf);
+	pidbuf = _free(pidbuf);
 	tfn = _free(tfn);
 	tfn = t;
 	nocleanup = 0;
