@@ -301,6 +301,8 @@ $r"
 		r="$(FindLibReqs "$f")"
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
+		[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
+$f"
 	fi
 done
 
