@@ -24,7 +24,7 @@ for file in "$@"; do
 	type=`file -b "$file"` || continue
 	case "$type" in
 		current\ ar\ archive)
-			chmod -v a-x "$file"
+			chmod -v u+w,a-x "$file"
 			;;
 		ELF\ *\ shared\ object,\ *)
 			file_header="$(readelf -h "$file")" || continue
@@ -35,7 +35,7 @@ for file in "$@"; do
 			text=`printf %s "$section_header" |sed -ne 's/^ *\[ *[0-9]\+\] \.text \+PROGBITS \+0*\([0-9a-f]\+\) \+.*/\1/p'`
 			[ -n "$text" ] || continue
 
-			[ "$entry" != "$text" ] || chmod -v a-x "$file"
+			[ "$entry" != "$text" ] || chmod -v u+w,a-x "$file"
 			;;
 	esac
 done
