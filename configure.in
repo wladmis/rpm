@@ -492,7 +492,7 @@ AC_SUBST(LIBBEECRYPT)
 dnl Red Hat 4.x has not personality
 AC_CHECK_FUNCS(personality)
 
-AM_GNU_GETTEXT
+AM_GNU_GETTEXT([external])
 dnl TVM:
 dnl horrible *temporary* hack to make sure that if we found gettext() in
 dnl -lintl that we add -lintl *back* to $LIBS.
