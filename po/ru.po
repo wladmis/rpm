@@ -3602,6 +3602,9 @@ msgstr "Графические оболочки/FVWM-подобные"
 msgid "Graphical desktop/GNOME"
 msgstr "Графические оболочки/GNOME"
 
+msgid "Graphical desktop/GNUstep"
+msgstr "Графические оболочки/GNUstep"
+
 msgid "Graphical desktop/Icewm"
 msgstr "Графические оболочки/Icewm"
 
