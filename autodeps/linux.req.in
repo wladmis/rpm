@@ -190,9 +190,9 @@ FindLibReqs()
 			BEGIN {start_shared=0; start_version=0; lib_name="";}
 			/^Dynamic Section:$/ {start_shared=1;}
 			/^Version References:$/ {start_version=1;}
-			(start_version==1) && /^ *required from/ {sub(/:/, "", $3);	lib_name=$3;}
+			(start_version==1) && /^ *required from/ {sub(/:/, "", $3); lib_name=$3;}
 			(start_shared==1) && /^ *NEEDED/ {print $2;}
-			(start_version==1) && (lib_name!="") && ($4!="") && ($4~/^(GLIBC|GCC|BZLIB)_*/) {print lib_name "(" $4 ")";}
+			(start_version==1) && (lib_name!="") && ($4!="") {print lib_name "(" $4 ")";}
 			/^$/ {start_shared=0; start_version=0;}
 		'
 	fi
