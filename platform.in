@@ -224,6 +224,15 @@
 @alt@	%{?_findprov_lib_path:export RPM_FINDPROV_LIB_PATH=\"%_findprov_lib_path\"}\
 @alt@	%{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%_perl_lib_path\"}\
 @alt@	%{?_perl_req_method:export RPM_PERL_REQ_METHOD=\"%_perl_req_method\"}\
+@alt@	%{?_python_lib_path:export RPM_PYTHON_LIB_PATH=\"%_python_lib_path\"}\
+@alt@	%{?_python_req_method:export RPM_PYTHON_REQ_METHOD=\"%_python_req_method\"}\
+@alt@	%{?_python_req_skip:export RPM_PYTHON_REQ_SKIP=\"%_python_req_skip\"}\
+@alt@	%{?_python_compile_method:export RPM_PYTHON_COMPILE_METHOD=\"%_python_compile_method\"}\
+@alt@	%{?_python_compile_exclude:export RPM_PYTHON_COMPILE_EXCLUDE=\"%_python_compile_exclude\"}\
+@alt@	%{?_python_compile_include:export RPM_PYTHON_COMPILE_INCLUDE=\"%_python_compile_include\"}\
+@alt@	%{?_python_compile_deep:export RPM_PYTHON_COMPILE_DEEP=\"%_python_compile_deep\"}\
+@alt@	%{?_python_compile_skip_x:export RPM_PYTHON_COMPILE_SKIP_X=\"%_python_compile_skip_x\"}\
+@alt@	%{?_python_compile_clean:export RPM_PYTHON_COMPILE_CLEAN=\"%_python_compile_clean\"}\
 @alt@	%{?_pkg_contents_index_all:export RPM_PKG_CONTENTS_INDEX_ALL=\"%_pkg_contents_index_all\"}\
 @alt@	%{?_pkg_contents_index_bin:export RPM_PKG_CONTENTS_INDEX_BIN=\"%_pkg_contents_index_bin\"}\
 @alt@	%{?_scripts_debug:export RPM_SCRIPTS_DEBUG=\"%_scripts_debug\"}\
@@ -395,6 +404,15 @@
 @alt@%_compress_method	auto
 @alt@%_verify_elf_method	normal
 @alt@%_perl_req_method	normal
+@alt@%_python_lib_path	""
+@alt@%_python_req_method	slight
+@alt@%_python_req_skip	""
+@alt@%_python_compile_method	ALL
+@alt@%_python_compile_exclude	/usr/share/doc
+@alt@%_python_compile_include	/usr/lib
+@alt@%_python_compile_deep	20
+@alt@%_python_compile_skip_x	1
+@alt@%_python_compile_clean	1
 @alt@%_fixup_method	binconfig pkgconfig libtool
 @alt@%_strip_method	%{?_enable_debug:none}%{!?_enable_debug:executable shared}
 @alt@%_findreq_default_method	files lib pam perl shell
@@ -424,6 +442,8 @@
 @alt@%set_strip_method()	%global _strip_method %*
 @alt@%set_verify_elf_method()	%global _verify_elf_method %*
 @alt@%set_perl_req_method()	%global _perl_req_method %*
+@alt@%set_python_req_method()	%global _python_req_method %1
+@alt@%set_python_compile_method()	%global _python_compile_method %1
 @alt@
 @alt@%set_cleanup_topdir()	%global _cleanup_topdir %*
 @alt@%set_compress_topdir()	%global _compress_topdir %*
@@ -450,6 +470,10 @@
 @alt@%add_verify_elf_skiplist()	%global _verify_elf_skiplist %_verify_elf_skiplist %*
 @alt@%add_findreq_skiplist()	%global _findreq_skiplist %_findreq_skiplist %*
 @alt@%add_findprov_skiplist()	%global _findprov_skiplist %_findprov_skiplist %*
+@alt@%add_python_req_skip()	%global _python_req_skip %_python_req_skip %*
+@alt@%add_python_lib_path()	%global _python_lib_path %_python_lin_path %*
+@alt@%add_python_compile_exclude() %global _python_compile_exclude %_python_compile_exclude %*
+@alt@%add_python_compile_include() %global _python_compile_include %_python_compile_include %*
 @alt@
 @alt@%add_findprov_lib_path()	%global _findprov_lib_path %_findprov_lib_path %*
 @alt@
@@ -506,7 +530,7 @@
 @alt@)
 @alt@# END GLIBC TRICKS>
 @alt@
-@alt@%__python_version	%((%__python -c 'import sys; print sys.version' 2>/dev/null || echo unknown) |head -1 |cut -d' ' -f1 |cut -d. -f1,2)
+@alt@%__python_version	%(%__python -c 'import sys; print "%u.%u" % sys.version_info[0:2]' 2>/dev/null || echo unknown)
 @alt@
 @alt@# Access components of packager macro.
 @alt@%packagerName	%(echo -E '%packager' |sed -e 's/[[:space:]]*<.*//')
