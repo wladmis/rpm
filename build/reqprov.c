@@ -93,7 +93,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		    if ((old_flags & ~RPMSENSE_SENSEMASK) != (new_flags & ~RPMSENSE_SENSEMASK))
 			continue;
 		    /* flags differ by RPMSENSE_SENSEMASK only */
-		    if ((new_flags & sense_mask & (_ALL_REQUIRES_MASK|RPMSENSE_PREREQ)) ||
+		    if ((new_flags & sense_mask & (_ALL_REQUIRES_MASK | RPMSENSE_PREREQ)) ||
 		        !(new_flags & sense_mask & ~RPMSENSE_SENSEMASK)) {
 			/* some kind of requires */
 			if (new_flags & RPMSENSE_SENSEMASK)
@@ -107,7 +107,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	    if (flagtag && versions) {
 		if (*depEVR && strcmp (versions[len], depEVR))
 		    continue;
-		if (!*depEVR && *versions[len] && (depFlags & ~(sense_mask|_ALL_REQUIRES_MASK|RPMSENSE_PREREQ|RPMSENSE_SENSEMASK)))
+		if (!*depEVR && *versions[len] && (depFlags & ~(sense_mask | _ALL_REQUIRES_MASK | RPMSENSE_PREREQ | RPMSENSE_SENSEMASK)))
 		    continue;
 	    }
 
