@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt34
+Release: alt35
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -51,7 +51,7 @@ BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindi
 BuildConflicts: rpm-devel
 
 # Automatically added by buildreq on Mon May 05 2003 and edited manually.
-BuildRequires: bzlib-devel-static cpio glibc-devel-static libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static zlib-devel-static
+BuildRequires: bzlib-devel-static glibc-devel-static libbeecrypt-devel-static libdb4.2-devel-static libpopt-devel-static zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -61,7 +61,7 @@ PreReq: zlib >= 1.1.4
 PreReq: bzlib >= 1:1.0.2-alt2
 PreReq: libpopt >= 1:1.7-alt3
 PreReq: libbeecrypt >= 2.2.0-alt1
-PreReq: libdb4.0
+PreReq: libdb4.2
 
 %package -n librpmbuild
 Summary: Shared library required for applications which will build RPM packages
@@ -76,14 +76,14 @@ Group: Development/C
 Provides: %name-devel = %version-%release
 Obsoletes: %name-devel
 Requires: lib%name = %version-%release, librpmbuild = %version-%release
-Requires: bzlib-devel, libbeecrypt-devel, libdb4.0-devel, libpopt-devel, zlib-devel
+Requires: bzlib-devel, libbeecrypt-devel, libdb4.2-devel, libpopt-devel, zlib-devel
 
 %package -n lib%name-devel-static
 Summary: Static libraries for developing statically linked applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Статические библиотеки, необходимые для разработки статических приложений, взаимодействующих с RPM-пакетами
 Group: Development/C
 Requires: lib%name-devel = %version-%release
-Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.0-devel-static, libpopt-devel-static, zlib-devel-static
+Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.2-devel-static, libpopt-devel-static, zlib-devel-static
 
 %package build
 Summary: Scripts and executable programs used to build packages
@@ -210,6 +210,7 @@ autoreconf -fisv -I m4
 export \
 	ac_cv_path_CTAGS=/usr/bin/ctags \
 	ac_cv_path_UNZIPBIN=/usr/bin/unzip \
+	ac_cv_path___CPIO=/bin/cpio \
 	ac_cv_path___GPG=/usr/bin/gpg \
 	ac_cv_path___SSH=/usr/bin/ssh \
 	#
@@ -505,6 +506,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Feb 29 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt35
+- Backported db-4.x support (#3464).
+
 * Fri Feb 27 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt34
 - find_lang: implemented support for symlinks in /usr/share/locale/.
 - platform: added force_* macros suggested by Alexey Morozov.
