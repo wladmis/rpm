@@ -21,7 +21,126 @@
 
 PROG="${0##*/}"
 
+TMPFILE="$(mktemp -t "$PROG.XXXXXXXXXX")"
+
+exit_handler()
+{
+	RETVAL=$?
+	trap '' EXIT
+	rm -f -- "$TMPFILE"
+	exit $RETVAL
+}
+
+trap exit_handler SIGHUP SIGINT SIGTERM SIGQUIT SIGPIPE EXIT
+
 : ${RPM_FIXUP_SKIPLIST:=}
+
+fix()
+{
+	local fname
+	fname="${f#$RPM_BUILD_ROOT}"
+	fname="${fname#.}"
+
+	# fetch parameters
+
+	local includedir=
+	local libdir=
+	sed -ne "s/^\([a-z_]\+\)=\([^']*\)\$/local \1=\2/pg" "$f" >"$TMPFILE"
+
+	# source parameters
+
+	[ ! -s "$TMPFILE" ] || . "$TMPFILE"
+
+	local saved_val=
+	local old_val=
+	local new_val=
+
+	while [ "$includedir" != "$saved_val" ]; do
+		saved_val="$includedir"
+		includedir="${includedir//\/\///}"
+	done
+
+	saved_val=
+	while [ "$libdir" != "$saved_val" ]; do
+		saved_val="$libdir"
+		libdir="${libdir//\/\///}"
+	done
+
+	# fix cflags
+
+	old_val=`sed -ne "s/^Cflags: \([^']*\)\$/\1/pg" "$f"`
+	new_val="$old_val"
+
+	saved_val=
+	while [ "$new_val" != "$saved_val" ]; do
+		saved_val="$new_val"
+		new_val="${new_val//\/\///}"
+	done
+
+	saved_val=
+	while [ "$new_val" != "$saved_val" ]; do
+		saved_val="$new_val"
+		new_val=`echo "$new_val" |sed -e 's,\(^\| \+\)-I/usr\(/local\)\?/include\($\| \+\),\1\3,g'`
+	done
+
+	if [ "$includedir" = /usr/include ]; then
+		saved_val=
+		while [ "$new_val" != "$saved_val" ]; do
+			saved_val="$new_val"
+			new_val=`echo "$new_val" |sed -e 's,\(^\| \+\)-I\${includedir}\($\| \+\),\1\2,g'`
+		done
+	fi
+
+	saved_val=
+	while [ "$new_val" != "$saved_val" ]; do
+		saved_val="$new_val"
+		new_val="${new_val//  / }"
+	done
+	new_val="${new_val## }"
+	new_val="${new_val%% }"
+
+	if [ "$new_val" != "$old_val" ]; then
+		subst -p "s,^Cflags: .*,Cflags: $new_val,g" "$f"
+		echo "${fname#.}: Cflags: '$old_val' --> '$new_val'" >&2
+	fi
+
+	# fix libs
+
+	old_val=`sed -ne "s/^Libs: \([^']*\)\$/\1/pg" "$f"`
+	new_val="$old_val"
+
+	saved_val=
+	while [ "$new_val" != "$saved_val" ]; do
+		saved_val="$new_val"
+		new_val="${new_val//\/\///}"
+	done
+
+	saved_val=
+	while [ "$new_val" != "$saved_val" ]; do
+		saved_val="$new_val"
+		new_val=`echo "$new_val" |sed -e 's,\(^\| \+\)-L/usr\(/local\)\?/lib\($\| \+\),\1\3,g'`
+	done
+
+	if [ "$libdir" = /usr/lib ]; then
+		saved_val=
+		while [ "$new_val" != "$saved_val" ]; do
+			saved_val="$new_val"
+			new_val=`echo "$new_val" |sed -e 's,\(^\| \+\)-L\${libdir}\($\| \+\),\1\2,g'`
+		done
+	fi
+	saved_val=
+	while [ "$new_val" != "$saved_val" ]; do
+		saved_val="$new_val"
+		new_val="${new_val//  / }"
+	done
+	new_val="${new_val## }"
+	new_val="${new_val%% }"
+
+	if [ "$new_val" != "$old_val" ]; then
+		subst -p "s,^Libs: .*,Libs: $new_val,g" "$f"
+		echo "${fname#.}: Libs: '$old_val' --> '$new_val'" >&2
+	fi
+}
 
 rc=0
 for f in "$@"; do
@@ -39,7 +158,7 @@ for f in "$@"; do
 		done
 	fi
 
-	#
+	fix
 done
 
 exit $rc
