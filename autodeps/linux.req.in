@@ -173,7 +173,7 @@ $r"
 			[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 		fi
-	elif [ -z "${t##perl script text*}" -o -z "${f%%*.p[lmh]}" ]; then
+	elif [ -z "${t##*perl script text*}" -o -z "${f%%*.p[lmh]}" ]; then
 		if [ -n "$FIND_PERL" ]; then
 			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
 $f"
