@@ -1037,7 +1037,7 @@ checkCPU (void)
 {
 	int     fd = open ("/proc/cpuinfo", O_RDONLY);
 
-	if (!fd)
+	if (fd < 0)
 		return 0;
 	else
 	{
