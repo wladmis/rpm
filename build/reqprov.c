@@ -69,6 +69,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	int *flags = NULL;
 	int *indexes = NULL;
 	int duplicate = 0;
+	rpmsenseFlags sense_mask = ~(RPMSENSE_FIND_REQUIRES | RPMSENSE_FIND_PROVIDES | RPMSENSE_MULTILIB);
 
 	if (flagtag) {
 	    xx = hge(h, versiontag, &dvt, (void **) &versions, NULL);
@@ -79,14 +80,36 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 
 	while (len > 0) {
 	    len--;
+	    if (indextag && indexes && indexes[len] != index)
+		continue;
+
 	    if (strcmp(names[len], depName))
 		continue;
-	    if (flagtag && versions != NULL &&
-		(strcmp(versions[len], depEVR) ||
-	((flags[len] | RPMSENSE_MULTILIB) != (depFlags | RPMSENSE_MULTILIB))))
-		continue;
-	    if (indextag && indexes != NULL && indexes[len] != index)
-		continue;
+
+	    if (flagtag && flags) {
+		rpmsenseFlags old_flags = flags[len] & sense_mask;
+		rpmsenseFlags new_flags = depFlags & sense_mask;
+		if (old_flags != new_flags) {
+		    if ((old_flags & ~RPMSENSE_SENSEMASK) != (new_flags & ~RPMSENSE_SENSEMASK))
+			continue;
+		    /* flags differ by RPMSENSE_SENSEMASK only */
+		    if ((new_flags & sense_mask & (_ALL_REQUIRES_MASK|RPMSENSE_PREREQ)) ||
+		        !(new_flags & sense_mask & ~RPMSENSE_SENSEMASK)) {
+			/* some kind of requires */
+			if (new_flags & RPMSENSE_SENSEMASK)
+			    continue;
+		    }
+		    else
+			continue;
+		}
+	    }
+
+	    if (flagtag && versions) {
+		if (*depEVR && strcmp (versions[len], depEVR))
+		    continue;
+		if (!*depEVR && *versions[len] && (depFlags & ~(sense_mask|_ALL_REQUIRES_MASK|RPMSENSE_PREREQ|RPMSENSE_SENSEMASK)))
+		    continue;
+	    }
 
 	    /* This is a duplicate dependency. */
 	    duplicate = 1;
