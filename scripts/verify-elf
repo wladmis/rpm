@@ -45,7 +45,7 @@ for f in "$@"; do
 
 	t="$(/usr/bin/file -b "$f")"
 
-	[ -z "${t//*ELF*}" ] || continue
+	[ -z "${t##ELF *}" ] || continue
 
 	info=$(objdump -p "$f") || continue
 
