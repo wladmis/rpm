@@ -34,6 +34,7 @@ struct rpmBuildArguments_s         rpmBTArgs;
 #define	POPT_BC			0x6263
 #define	POPT_BI			0x6269
 #define	POPT_BL			0x626c
+#define	POPT_BE			0x6245
 #define	POPT_BP			0x6270
 #define	POPT_BS			0x6273
 #define	POPT_TA			0x7461
@@ -43,6 +44,9 @@ struct rpmBuildArguments_s         rpmBTArgs;
 #define	POPT_TL			0x746c
 #define	POPT_TP			0x7470
 #define	POPT_TS			0x7473
+
+char *_rpm_nosource;
+char *_rpm_nopatch;
 
 /*@-redecl@*/
 /*@unchecked@*/
@@ -88,6 +92,7 @@ static void buildArgCallback( /*@unused@*/ poptContext con,
     case POPT_BC:
     case POPT_BI:
     case POPT_BL:
+    case POPT_BE:
     case POPT_BP:
     case POPT_BS:
     case POPT_TA:
@@ -143,6 +148,9 @@ struct poptOption rpmBuildPoptTable[] = {
 	buildArgCallback, 0, NULL, NULL },
 /*@=type@*/
 
+ { "bE", 0, POPT_ARGFLAG_ONEDASH, 0, POPT_BE,
+	N_("preprocess (show macro expansion) <specfile>"),
+	N_("<specfile>") },
  { "bp", 0, POPT_ARGFLAG_ONEDASH, 0, POPT_BP,
 	N_("build through %prep (unpack sources and apply patches) from <specfile>"),
 	N_("<specfile>") },
@@ -213,6 +221,10 @@ struct poptOption rpmBuildPoptTable[] = {
 	NULL},
  { "nolang", '\0', POPT_ARGFLAG_DOC_HIDDEN, &noLang, POPT_NOLANG,
 	N_("do not accept i18N msgstr's from specfile"), NULL},
+ { "nopatch", '\0', POPT_ARG_STRING, &_rpm_nopatch, 0,
+	N_("do not include specified patches into source rpm file"), NULL},
+ { "nosource", '\0', POPT_ARG_STRING, &_rpm_nosource, 0,
+	N_("do not include specified sources into source rpm file"), NULL},
  { "rmsource", '\0', 0, 0, POPT_RMSOURCE,
 	N_("remove sources when done"), NULL},
  { "rmspec", '\0', 0, 0, POPT_RMSPEC,
