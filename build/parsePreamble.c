@@ -344,6 +344,7 @@ static void fillOutMainPackage(Header h)
     }
 }
 
+#ifdef ENABLE_ICON_TAG
 /**
  */
 static int readIcon(Header h, const char * file)
@@ -404,6 +405,7 @@ exit:
     fn = _free(fn);
     return rc;
 }
+#endif /* ENABLE_ICON_TAG */
 
 spectag stashSt(Spec spec, Header h, int tag, const char * lang)
 {
@@ -629,10 +631,12 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
 	SINGLE_TOKEN_ONLY;
 	if ((rc = addSource(spec, pkg, field, tag)))
 	    return rc;
+#ifdef ENABLE_ICON_TAG
 	if(!spec->preprocess_mode) {
 	    if ((rc = readIcon(pkg->header, field)))
 		return RPMERR_BADSPEC;
 	}
+#endif /* ENABLE_ICON_TAG */
 	break;
       case RPMTAG_NOSOURCE:
       case RPMTAG_NOPATCH:
