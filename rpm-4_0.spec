@@ -4,7 +4,7 @@
 
 Name: rpm
 Version: %rpm_version
-Release: alt1
+Release: alt2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -27,14 +27,15 @@ License: GPL
 Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
 
-# ftp://ftp.rpm.org/pub/rpm/dist/
-# cvs -d :pserver:anonymous@cvs.rpm.org:/cvs/devel export -r rpm-4_0 rpm
+# 1. ftp://ftp.rpm.org/pub/rpm/dist/
+# 2. cvs -d :pserver:anonymous@cvs.rpm.org:/cvs/devel export -r rpm-4_0 rpm
+# 3. ...
 Source: %name-%version.tar.bz2
 
 Provides: %_sysconfdir/%name/macros.d
 
 PreReq: lib%name = %version-%release
-PreReq: alt-gpgkeys sh-utils grep perl-base fileutils gawk textutils mktemp shadow-utils
+PreReq: alt-gpgkeys, sh-utils, grep, perl-base, fileutils, gawk, textutils, mktemp, shadow-utils
 
 # XXX glibc-2.1.92 has incompatible locale changes that affect statically
 # XXX linked binaries like /bin/rpm.
@@ -63,15 +64,17 @@ PreReq: %get_dep libdb4
 Summary: Development files for applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Файлы, необходимые для разработки приложений, взаимодействующих с RPM-пакетами
 Group: Development/C
-PreReq: lib%name = %version-%release, libpopt-devel
 Provides: %name-devel = %version-%release
 Obsoletes: %name-devel
+Requires: lib%name = %version-%release
+Requires: bzlib-devel, libbeecrypt-devel, libdb4-devel, libpopt-devel, zlib-devel
 
 %package -n lib%name-devel-static
 Summary: Static libraries for developing statically linked applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Статические библиотеки, необходимые для разработки статических приложений, взаимодействующих с RPM-пакетами
 Group: Development/C
-PreReq: lib%name-devel = %version-%release
+Requires: lib%name-devel = %version-%release
+Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4-devel-static, libpopt-devel-static, zlib-devel-static
 
 %package build
 Summary: Scripts and executable programs used to build packages
@@ -83,11 +86,11 @@ PreReq: shadow-utils
 PreReq: %name = %version-%release
 Requires: autoconf automake bison cpio gcc gettext glibc-devel file kernel-headers
 Requires: libtool m4 make mktemp net-tools patch procps psmisc sed sh texinfo which
-Requires: %get_dep bzip2
-Requires: %get_dep fileutils
-Requires: %get_dep gzip
-Requires: %get_dep tar
-Requires: %get_dep textutils
+Requires: bzip2 >= 1:1.0.2-alt4
+Requires: fileutils >= 4.1.11-alt4
+Requires: gzip >= 1.3.3-alt2
+Requires: tar >= 1.13.22-alt1
+Requires: textutils >= 2.0.17-alt1
 Requires: %_bindir/subst
 
 %package build-topdir
@@ -195,18 +198,18 @@ export \
 # fix buggy requires if any
 find scripts -type f -print0 |
 	xargs -r0 %__grep -EZl '(/usr/ucb|/usr/local/bin/perl|/usr/local/lib/rpm/bash)' -- |
-	xargs -r0 %__perl -pi -e 's|/usr/ucb|%_bindir|g;s|/usr/local/bin/perl|/usr/bin/perl|g;s|/usr/local/lib/rpm/bash|/bin/sh|g' --
+	xargs -r0 subst 's|/usr/ucb|%_bindir|g;s|/usr/local/bin/perl|/usr/bin/perl|g;s|/usr/local/lib/rpm/bash|/bin/sh|g' --
 find -type f -print0 |
 	xargs -r0 %__grep -FZl /usr/sbin/lsattr -- |
-	xargs -r0 %__perl -pi -e 's|/usr/sbin/lsattr|/usr/bin/lsattr|g' --
+	xargs -r0 subst 's|/usr/sbin/lsattr|/usr/bin/lsattr|g' --
 
 # fix vendor
 find -type f -print0 |
 	xargs -r0 %__grep -FZl '%_host_cpu-pc-%_host_os' -- |
-	xargs -r0 %__perl -pi -e 's/%_host_cpu-pc-%_host_os/%_host_cpu-alt-%_host_os/g' --
+	xargs -r0 subst 's/%_host_cpu-pc-%_host_os/%_host_cpu-alt-%_host_os/g' --
 find -type f -name config.\* -print0 |
 	xargs -r0 %__grep -FZl '=pc' -- |
-	xargs -r0 %__perl -pi -e 's/=pc/=alt/g' --
+	xargs -r0 subst 's/=pc/=alt/g' --
 
 %make_build YACC='bison -y'
 %if_with apidocs
@@ -248,23 +251,23 @@ done
 # Prepare documentation.
 bzip2 -9 CHANGES ||:
 %__mkdir_p $RPM_BUILD_ROOT%_docdir/%name-%rpm_version
-%__install -p -m644 CHANGES* CREDITS README README.ALT RPM-GPG-KEY RPM-PGP-KEY TODO \
-	$RPM_BUILD_ROOT%_docdir/%name-%rpm_version
-%__cp -a doc/manual $RPM_BUILD_ROOT%_docdir/%name-%rpm_version
+%__install -p -m644 CHANGES* CREDITS README README.ALT* RPM-GPG-KEY RPM-PGP-KEY TODO \
+	$RPM_BUILD_ROOT%_docdir/%name-%rpm_version/
+%__cp -a doc/manual $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/
 %__rm -f $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/manual/{Makefile*,buildroot}
 %if_with apidocs
-%__cp -a apidocs/man/man3 $RPM_BUILD_ROOT%_mandir
-%__cp -a apidocs/html $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/apidocs
+%__cp -a apidocs/man/man3 $RPM_BUILD_ROOT%_mandir/
+%__cp -a apidocs/html $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/apidocs/
 %endif #with apidocs
 
 # update-alternatives.
-%__mkdir_p $RPM_BUILD_ROOT{%_sbindir,%_mandir/man8}
-%__install -p -m755 update-alternatives $RPM_BUILD_ROOT%_sbindir
-%__install -p -m644 update-alternatives.8 $RPM_BUILD_ROOT%_mandir/man8
+%__mkdir_p $RPM_BUILD_ROOT{%_sbindir,%_man8dir}
+%__install -p -m755 update-alternatives $RPM_BUILD_ROOT%_sbindir/
+%__install -p -m644 update-alternatives.8 $RPM_BUILD_ROOT%_man8dir/
 %__mkdir_p $RPM_BUILD_ROOT/{etc,var/lib/rpm}/alternatives
 
 # Valid groups.
-%__install -p -m644 GROUPS $RPM_BUILD_ROOT%_libdir/%name
+%__install -p -m644 GROUPS $RPM_BUILD_ROOT%_libdir/%name/
 
 chmod a+x scripts/find-lang
 # Manpages have been moved to their own packages.
@@ -468,6 +471,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Sep 02 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt2
+- Removed README.ALT, added README.ALT-ru_RU.KOI8-R
+  (based on alt-packaging/rpm.spec).
+- Use subst instead of perl for build.
+
 * Wed Aug 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt1
 - rpmio:
   + implemented macrofiles globbing.
