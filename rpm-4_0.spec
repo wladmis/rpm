@@ -4,7 +4,7 @@
 
 Name: rpm
 Version: %rpm_version
-Release: alt1
+Release: alt0.12
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -463,7 +463,7 @@ fi
 %endif #with contrib
 
 %changelog
-* Wed Aug 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt1
+* Wed Aug 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt0.12
 - rpmio: implemented MkdirP.
 - build/pack.c, lib/psm.c: make use of MkdirP for build.
 - rpmpopt:
