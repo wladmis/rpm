@@ -13,9 +13,6 @@ AM_CONFIG_HEADER(config.h)
 
 dnl XXX AM_MAINTAINER_MODE
 
-dnl Set of available languages.
-ALL_LINGUAS="ru"
-
 dnl Checks for programs.
 AC_PROG_CC
 AC_AIX
