@@ -159,7 +159,7 @@ ListScriptReqs()
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 	fi
-	if [ -z "${t##Bourne* shell script text*}" ]; then
+	if [ -z "${t##*Bourne* shell script text*}" ]; then
 		if [ -n "$FIND_SHELL" -a -x "$f" ]; then
 			local r
 			r="$(@RPMCONFIGDIR@/shell.req "$f")" || return 1
