@@ -31,9 +31,10 @@ fix_libdir()
 	local libdir=`sed -ne "s/^libdir='\([^']*\)'\$/\1/pg" "$f" |tail -1`
 	local fname="${f#$RPM_BUILD_ROOT}"
 	local fdir="${fname%/*}"
+	fdir="${fdir#.}"
 	if [ "$fdir" != "$libdir" ]; then
-		subst -p "s,^libdir='$libdir'\$,libdir='$fdir',g"
-		echo "$fname: libdir: $libdir -->  $fdir" >&2
+		subst -p "s,^libdir='$libdir'\$,libdir='$fdir',g" "$f"
+		echo "${fname#.}: libdir: $libdir -->  $fdir" >&2
 	fi
 }
 
