@@ -473,6 +473,9 @@ fi
 %changelog
 * Thu Sep 05 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt3
 - Fixed typo in %%install_info/%%uninstall_info macros (sb).
+- brp-strip:
+  + added --skip-files option;
+  + by default, skip all files matched by '*/debug/*' pattern.
 
 * Mon Sep 02 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt2
 - Removed README.ALT, added README.ALT-ru_RU.KOI8-R
