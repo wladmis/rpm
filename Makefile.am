@@ -23,9 +23,9 @@ myLDFLAGS = # @LDFLAGS_STATIC@
 myLDADD = $(top_builddir)/lib/librpm.la $(top_builddir)/build/librpmbuild.la
 
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
-rpmbin_PROGRAMS = rpm
+rpmbin_PROGRAMS =
 
-bin_PROGRAMS =		rpm2cpio
+bin_PROGRAMS =		rpm rpm.static rpm2cpio
 bin_SCRIPTS =		gendiff
 
 pkglibdir =		@RPMCONFIGDIR@
@@ -40,9 +40,15 @@ rpmpopt-$(VERSION): rpmpopt
 noinst_HEADERS = build.h debug.h system.h
 
 rpm_SOURCES =
-rpm_LDFLAGS =		@LDFLAGS_STATIC@ $(myLDFLAGS)
+rpm_LDFLAGS =		$(myLDFLAGS)
 rpm_LDADD =		rpm.o $(myLDADD)
 rpm.o:	rpmqv.c
+	$(COMPILE) -DIAM_RPMDB -DIAM_RPMEIU -DIAM_RPMK -DIAM_RPMQV -o $@ -c rpmqv.c
+
+rpm.static_SOURCES =
+rpm.static_LDFLAGS =		@LDFLAGS_STATIC@ $(myLDFLAGS)
+rpm.static_LDADD =		rpm.static.o $(myLDADD)
+rpm.static.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMDB -DIAM_RPMEIU -DIAM_RPMK -DIAM_RPMQV -o $@ -c rpmqv.c
 
 #rpm_SOURCES =		rpm.c
@@ -98,6 +104,8 @@ CVSTAG = r$(subst .,-,$(VERSION))
 pkgsrcdir = $(prefix)/src/RPM
 
 install-data-local:
+	@$(mkinstalldirs) $(DESTDIR)$(rpmbindir)
+	@@LN_S@ ..$(bindir)/rpm $(DESTDIR)$(rpmbindir)/
 	@$(mkinstalldirs) $(DESTDIR)$(varprefix)/lib/rpm
 	@rm -f $(DESTDIR)$(libdir)/rpmrc
 	@@LN_S@ rpm/rpmrc $(DESTDIR)$(libdir)/rpmrc
