@@ -986,6 +986,18 @@ static int runScript(PSM_t psm, Header h,
 	    }
 	}
 
+	{
+		const char *name = 0;
+		headerNVR( h, &name, 0, 0 );
+		if ( name )
+			dosetenv( "RPM_INSTALL_NAME", name, 1 );
+	}
+
+	if ( rpm_close_all() ) {
+		perror( "rpm_close_all" );
+		_exit( -1 );
+	}
+
 	if ((rootDir = ts->rootDir) != NULL)	/* XXX can't happen */
 	switch(urlIsURL(rootDir)) {
 	case URL_IS_PATH:
@@ -2013,10 +2025,16 @@ fprintf(stderr, "*** PSM_RDB_LOAD: header #%u not found\n", fi->record);
 	if (ts->transFlags & RPMTRANS_FLAG_TEST)	break;
 	if (fi->h != NULL)	/* XXX can't happen */
 	rc = rpmdbAdd(ts->rpmdb, ts->id, fi->h);
+#if HAVE_SYSLOG_H
+	syslog( LOG_NOTICE, "%s-%u:%s-%s installed\n", fi->name, (-1 == fi->epoch) ? 0 : fi->epoch, fi->version, fi->release);
+#endif
 	break;
     case PSM_RPMDB_REMOVE:
 	if (ts->transFlags & RPMTRANS_FLAG_TEST)	break;
 	rc = rpmdbRemove(ts->rpmdb, ts->id, fi->record);
+#if HAVE_SYSLOG_H
+	syslog( LOG_NOTICE, "%s-%u:%s-%s removed\n", fi->name, (-1 == fi->epoch) ? 0 : fi->epoch, fi->version, fi->release);
+#endif
 	break;
 
     default:

@@ -8,6 +8,9 @@
 #include "rpmmacro.h"	/* XXX for rpmGetPath */
 #include "debug.h"
 
+#define	MNT_DEV_PREFIX	"/mnt/"
+#define	MNT_DEV_PREFIX_LENGTH	(sizeof(MNT_DEV_PREFIX)-1)
+
 /*@-usereleased -onlytrans@*/
 
 struct fsinfo {
@@ -105,7 +108,7 @@ static int getFilesystemList(void)
 		fsnameLength);
 
 	filesystems[i].mntPoint = fsnames[i] = fsn;
-	
+	if (strncmp(mntdir, MNT_DEV_PREFIX, MNT_DEV_PREFIX_LENGTH)) {
 	if (stat(filesystems[i].mntPoint, &sb)) {
 	    rpmError(RPMERR_STAT, _("failed to stat %s: %s\n"), fsnames[i],
 			strerror(errno));
@@ -113,6 +116,8 @@ static int getFilesystemList(void)
 	    freeFilesystems();
 	    return 1;
 	}
+	} else
+		sb.st_dev = 0;
 	
 	filesystems[i].dev = sb.st_dev;
 	filesystems[i].rdonly = rdonly;
@@ -188,6 +193,11 @@ static int getFilesystemList(void)
 	    if (nextMount == mntCount) break;
 	    mntdir = mounts[nextMount++].f_mntonname;
 #	endif
+
+#ifdef	 our_mnttype
+	if ( item.our_mnttype && *item.our_mnttype && !strcmp( "supermount", item.our_mnttype ) )
+		continue;
+#endif
 
 	if (stat(mntdir, &sb)) {
 	    rpmError(RPMERR_STAT, _("failed to stat %s: %s\n"), mntdir,
