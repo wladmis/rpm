@@ -488,6 +488,7 @@ fi
 - find-lang: added support for gnome omf files.
 - build/build.c: unset all known locale environment variables
   right before executing %%___build_cmd.
+- ru.po: minor translation fixes.
 
 * Mon Dec 30 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt13
 - Fixed skiplists processing.
