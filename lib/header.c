@@ -1452,7 +1452,7 @@ headerMatchLocale (const char *td, const char *l, const char *le,
 }
 
 static char *
-convert (char *ed, const char *td, const char *lang)
+convert (char *ed, const char *td)
 {
 	char   *saved_ctype = 0, *from_codeset = 0, *to_codeset = 0;
 	char   *saved_ctype1, *from_codeset1, *to_codeset1, *result = 0;
@@ -1463,7 +1463,6 @@ convert (char *ed, const char *td, const char *lang)
 
 	if ((saved_ctype1 = setlocale (LC_CTYPE, 0)) &&
 	    (saved_ctype = strdup (saved_ctype1)) &&
-	    setlocale (LC_CTYPE, lang) &&
 	    (to_codeset1 = nl_langinfo (CODESET)) &&
 	    (to_codeset = strdup (to_codeset1)) &&
 	    setlocale (LC_CTYPE, td) &&
@@ -1503,49 +1502,52 @@ convert (char *ed, const char *td, const char *lang)
  * @return		matching i18n string (or 1st string if no match)
  */
 /*@dependent@*/ /*@exposed@*/ static char *
-headerFindI18NString(Header h, indexEntry entry)
-	/*@*/
+headerFindI18NString (Header h, indexEntry entry)
 {
-    const char *lang, *l, *le;
-    indexEntry table;
-    int strip_lang;
+	const char *lang, *l, *le;
+	indexEntry table;
+	int     strip_lang;
 
-    if (   !entry->data
-	|| !*(const char *)entry->data
-	|| !(lang = guess_category_value (LC_MESSAGES))
-       )
-	return entry->data;
-    
-    /*@-mods@*/
-    if ((table = findEntry(h, HEADER_I18NTABLE, RPM_STRING_ARRAY_TYPE)) == NULL)
-	return entry->data;
-    /*@=mods@*/
+	if (!entry->data
+	    || !*(const char *) entry->data
+	    || !(lang = guess_category_value (LC_MESSAGES)))
+		return entry->data;
 
-    for (strip_lang = 0; strip_lang < 4; strip_lang++) {
-	for (l = lang; *l; l = le) {
-	    const char *td;
-	    char *ed;
-	    int langNum;
+	/*@-mods@ */
+	if ((table =
+	     findEntry (h, HEADER_I18NTABLE, RPM_STRING_ARRAY_TYPE)) == NULL)
+		return entry->data;
+	/*@=mods@ */
 
-	    while (*l && *l == ':')			/* skip leading colons */
-		l++;
-	    if (*l == '\0')
-		break;
-	    for (le = l; *le && *le != ':'; le++)	/* find end of this locale */
-		;
+	for (strip_lang = 0; strip_lang < 4; strip_lang++)
+	{
+		for (l = lang; *l; l = le)
+		{
+			const char *td;
+			char   *ed;
+			int     langNum;
 
-	    /* For each entry in the header ... */
-	    for (langNum = 0, td = table->data, ed = entry->data;
-	        langNum < entry->info.count;
-		langNum++, td += strlen(td) + 1, ed += strlen(ed) + 1) {
+			while (*l && *l == ':')	/* skip leading colons */
+				l++;
+			if (*l == '\0')
+				break;
+			for (le = l; *le && *le != ':'; le++)	/* find end of this locale */
+				;
 
-		if (headerMatchLocale(td, l, le, strip_lang))
-		    return convert( ed, td, lang );
-	    }
-	}	
-    }
+			/* For each entry in the header ... */
+			for (langNum = 0, td = table->data, ed = entry->data;
+			     langNum < entry->info.count;
+			     langNum++, td += strlen (td) + 1, ed +=
+			     strlen (ed) + 1)
+			{
 
-    return gettext(entry->data);
+				if (headerMatchLocale (td, l, le, strip_lang))
+					return convert (ed, td);
+			}
+		}
+	}
+
+	return gettext (entry->data);
 }
 
 /**
