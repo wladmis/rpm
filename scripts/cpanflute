@@ -10,7 +10,7 @@ my $MainDir = '/tmp/cpan';
 
 # set default options, then get options
 my %options=();
-$options{'email'}=(getpwuid($<))[0] . "\@redhat.com" ;
+$options{'email'}=(getpwuid($<))[0] . "\@altlinux.com" ;
 GetOptions(\%options, "email=s", "n=s", "create") || exit 1;
 
 my $InputFile = $ARGV[0];

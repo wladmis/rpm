@@ -19,7 +19,7 @@ die_usage() unless $fullname;
 
 my $tarball = basename($fullname);
 my $create = $options{create} || '';
-my $email = $options{email} || (getpwuid($<))[0] . '@redhat.com';
+my $email = $options{email} || (getpwuid($<))[0] . '@altlinux.com';
 my $outdir = $options{outdir} || './';
 my $tmpdir = $options{tmpdir} || '/tmp';
 my $noarch = $options{noarch};
