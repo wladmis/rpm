@@ -150,15 +150,25 @@ FindPerlProvs()
 $r"
 }
 
-# Note this works for both a.out and ELF executables.
-# It also auto-generates provides for scripts.
+: ${RPM_FINDPROV_LIB_PATH:=/lib:/usr/lib:/usr/X11R6/lib}
 
+# Note this works for both a.out and ELF executables.
 FindLibProvs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local f d
+	local f dir found d
 	f="$1"
+	dir="${fname%/*}"
+	[ -n "$dir" ] || return 0
+
+	found=
+	for d in $(echo "$RPM_FINDPROV_LIB_PATH" |tr : ' '); do
+		[ "$d" = "$dir" ] || continue
+		found="$d"
+		break
+	done
+	[ -n "$found" ] || return 0
 
 	if d="$(objdump -p "$f")"; then
 		local soname
