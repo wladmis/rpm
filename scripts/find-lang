@@ -3,6 +3,7 @@
 # find-lang - generate list of language specific files.
 # Inspired by tool with same name from W. L. Estes <wlestes@uncg.edu>.
 #
+# $Id$
 # Copyright (C) 2000,2003  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify

@@ -2,6 +2,7 @@
 #
 # fixup-pkgconfig - /usr/lib/pkgconfig/*.pc fixups.
 #
+# $Id$
 # Copyright (C) 2002  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +27,7 @@ TMPFILE="$(mktemp -t "$PROG.XXXXXXXXXX")"
 exit_handler()
 {
 	local rc=$?
-	trap '' EXIT
+	trap - EXIT
 	rm -f -- "$TMPFILE"
 	exit $rc
 }

@@ -2,6 +2,7 @@
 #
 # fixup-binconfig - /usr/bin/*-config fixups.
 #
+# $Id$
 # Copyright (C) 2002  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,7 +30,7 @@ f_new="$WORKDIR/new"
 exit_handler()
 {
 	local rc=$?
-	trap '' EXIT
+	trap - EXIT
 	rm -rf -- "$WORKDIR"
 	exit $rc
 }

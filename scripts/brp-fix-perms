@@ -2,6 +2,7 @@
 #
 # brp-fix-perms - try to fix filesystem permissions.
 #
+# $Id$
 # Copyright (C) 2001,2002  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify

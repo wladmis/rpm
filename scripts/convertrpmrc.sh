@@ -35,7 +35,7 @@ TMP="$(mktemp -t rpmrc.XXXXXXXXXX)" || {
 exit_handler()
 {
 	local rc=$?
-	trap '' EXIT
+	trap - EXIT
 	rm -f -- "$TMP"
 	exit $rc
 }
