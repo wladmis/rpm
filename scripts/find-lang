@@ -118,8 +118,6 @@ if [ -z "$TOPDIR" ]; then
 	exit 1
 fi
 
-#export FIND_MO FIND_MAN FIND_GNOME APPEND OUTPUT NAME TOPDIR
-
 FindLang()
 {
 	# truncate if required
@@ -147,7 +145,7 @@ s:^%lang(man.*) .*::
 	if [ -n "$FIND_GNOME" ]; then
 		find $TOPDIR -type d |sed '
 s:'"$TOPDIR"'::
-s:\(.*/gnome/help/'"$NAME"'$\):%dir \1:
+s:\(.*/gnome/help/'"$NAME"'\)$:%dir \1:
 s:\(.*/gnome/help/'"$NAME"'/\)\([^/_]\+\):%dir %lang(\2) \1\2:
 s:^\([^%].*\)::
 s:%lang(C) ::
@@ -155,6 +153,17 @@ s:%lang(C) ::
 		find "$TOPDIR" -type f |sed '
 s:'"$TOPDIR"'::
 s:\(.*/gnome/help/'"$NAME"'/\)\([^/_]\+\):%lang(\2) \1\2:
+s:^\([^%].*\)::
+s:%lang(C) ::
+		' |grep -v '^$' >> "$OUTFILE" ||:
+		find $TOPDIR -type d |sed '
+s:'"$TOPDIR"'::
+s:\(.*/share/omf/'"$NAME"'\)$:%dir \1:
+s:^\([^%].*\)::
+		' |grep -v '^$' >> "$OUTFILE" ||:
+		find "$TOPDIR" -type f |sed '
+s:'"$TOPDIR"'::
+s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(.*\)\(\.omf\)$:%lang(\3) \1\2\3\4:
 s:^\([^%].*\)::
 s:%lang(C) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
