@@ -1420,7 +1420,8 @@ convert (char *ed, const char *td, const char *lang)
 	char   *saved_ctype1, *from_codeset1, *to_codeset1, *result = 0;
 	iconv_t icd;
 
-	if (!*ed) return ed;
+	if (!*ed)
+		return ed;
 
 	if ((saved_ctype1 = setlocale (LC_CTYPE, 0)) &&
 	    (saved_ctype = strdup (saved_ctype1)) &&
@@ -1438,7 +1439,8 @@ convert (char *ed, const char *td, const char *lang)
 		char    buf[outbufleft];
 		char   *inbuf = ed, *outbuf = buf;
 
-		if (iconv (icd, &inbuf, &inbufleft, &outbuf, &outbufleft) > 0)
+		if (iconv (icd, &inbuf, &inbufleft, &outbuf, &outbufleft) > 0
+		    && strcmp (ed, buf))
 			/* XXX memory leak */
 			result = strdup (buf);
 		iconv_close (icd);
@@ -1450,7 +1452,7 @@ convert (char *ed, const char *td, const char *lang)
 	to_codeset = _free (to_codeset);
 	saved_ctype = _free (saved_ctype);
 
-	return result ?: ed;
+	return result ? : ed;
 }
 
 /**
