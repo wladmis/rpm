@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt20.1
+Release: alt20.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -483,11 +483,16 @@ fi
   + fixed "readlink -fv" bug introduced in 4.0.4-alt20.
 - find-requires:
   + enable shell trace mode if $RPM_FINDREQ_DEBUG is set.
+- find-package:
+  + updated pkg contents index code.
 - pam.prov:
   + honor $PAM_NAME_SUFFIX.
 - pam.req:
   + honor %PAM_SO_SUFFIX and $PAM_NAME_SUFFIX.
 - build/files.c: honor generateDepends() return code.
+- rpminit:
+  + do not be verbose by default;
+  + parse -v/--verbose option.
 
 * Mon May 26 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt20
 - find-provides:
