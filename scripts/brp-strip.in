@@ -21,10 +21,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-PROG="${0##*/}"
+. @RPMCONFIGDIR@/functions
 
-USAGE()
+Usage()
 {
+	[ "$1" = 0 ] || exec >&2
 	cat <<EOF
 brp-strip - strip ELF binaries.
 
@@ -68,7 +69,7 @@ EOF
 	[ -n "$1" ] && exit "$1" || exit
 }
 
-TEMP=`getopt -n "$PROG" -o hpR:sgSN:K:xXvT: -l help,preserve-dates,remove-section:,skip-files:,strip-all,strip-unneeded,strip-symbol:,keep-symbol:,discard-all,discard-locals,verbose,topdir: -- "$@"` || USAGE
+TEMP=`getopt -n "$PROG" -o hpR:sgSN:K:xXvT: -l help,preserve-dates,remove-section:,skip-files:,strip-all,strip-unneeded,strip-symbol:,keep-symbol:,discard-all,discard-locals,verbose,topdir: -- "$@"` || Usage
 eval set -- "$TEMP"
 
 : ${RPM_STRIP_SKIPLIST:=}
@@ -90,7 +91,7 @@ AddForcedOpts()
 while :; do
 	case "$1" in
 		-h|--help)
-			USAGE 0
+			Usage 0
 			;;
 		-p|--preserve-dates)
 			AddForcedOpts -p
@@ -158,8 +159,7 @@ while :; do
 			break
 			;;
 		*)
-			echo "$PROG: unrecognized option: $1" >&2
-			exit 1
+			Fatal "unrecognized option: $1"
 			;;
 	esac
 done
@@ -217,8 +217,7 @@ for t in `printf %s "$RPM_STRIP_METHOD" |tr , ' '`; do
 			AddShowMethods static
 			;;
 		*)
-			echo "Unrecognized strip method: $t"
-			exit 1
+			Fatal "Unrecognized strip method: $t"
 			;;
 	esac
 done
@@ -243,10 +242,7 @@ if [ -n "$*" ]; then
 		fi
 	done
 else
-	if [ -z "$TOPDIR" ]; then
-		echo "$PROG: non-/ TOPDIR expected" >&2
-		exit 1
-	fi
+	[ -n "$TOPDIR" ] || Fatal "non-/ TOPDIR expected"
 
 	StripTree "$TOPDIR"
 fi
