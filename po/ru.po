@@ -2252,7 +2252,7 @@ msgstr "конфликт файла %s при попытках установки %s и %s"
 #: lib/problems.c:155
 #, c-format
 msgid "file %s from install of %s conflicts with file from package %s"
-msgstr "файл %s из установленного пакета %s конфликтует с файлом из пакета %s"
+msgstr "файл %s из устанавливаемого пакета %s конфликтует с файлом из пакета %s"
 
 #: lib/problems.c:160
 #, c-format
