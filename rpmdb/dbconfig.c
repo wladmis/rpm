@@ -62,8 +62,16 @@ struct dbOption {
 /*@unchecked@*/
 struct dbOption rdbOptions[] = {
  /* XXX DB_CXX_NO_EXCEPTIONS */
+#if defined(DB_CLIENT)
  { "client",	0,POPT_BIT_SET,	&db3dbi.dbi_ecflags, DB_CLIENT,
 	NULL, NULL },
+#endif
+#if defined(DB_RPCCLIENT)
+ { "client",	0,POPT_BIT_SET,	&db3dbi.dbi_ecflags, DB_RPCCLIENT,
+	NULL, NULL },
+ { "rpcclient",	0,POPT_BIT_SET,	&db3dbi.dbi_ecflags, DB_RPCCLIENT,
+	NULL, NULL },
+#endif
 
  { "xa_create",	0,POPT_BIT_SET,	&db3dbi.dbi_cflags, DB_XA_CREATE,
 	NULL, NULL },
@@ -187,8 +195,10 @@ struct dbOption rdbOptions[] = {
  { "tas_spins",	0,POPT_ARG_INT,		&db3dbi.dbi_tas_spins, 0,
 	NULL, NULL },
 
+#if defined(DB_VERB_CHKPOINT)
  { "chkpoint",	0,POPT_BIT_SET,	&db3dbi.dbi_verbose, DB_VERB_CHKPOINT,
 	NULL, NULL },
+#endif
  { "deadlock",	0,POPT_BIT_SET,	&db3dbi.dbi_verbose, DB_VERB_DEADLOCK,
 	NULL, NULL },
  { "recovery",	0,POPT_BIT_SET,	&db3dbi.dbi_verbose, DB_VERB_RECOVERY,
