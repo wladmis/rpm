@@ -95,7 +95,7 @@ fix()
 		>"$f_saved"
 		while ! cmp -s "$f_new" "$f_saved"; do
 			cat "$f_new" >"$f_saved"
-			subst '/if test /n;s,\(^\|[="'\'']\| \+\)-I\${includedir}\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+			subst '/if test /n;s,\(^\|[="'\'']\| \+\)-I\${includedir}\($\|["'\'']\| \+\),\1\2,g' -- "$f_new"
 		done
 	fi
 
@@ -103,7 +103,7 @@ fix()
 		>"$f_saved"
 		while ! cmp -s "$f_new" "$f_saved"; do
 			cat "$f_new" >"$f_saved"
-			subst '/if test /n;s,\(^\|[="'\'']\| \+\)-I\${exec_prefix}/include\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+			subst '/if test /n;s,\(^\|[="'\'']\| \+\)-I\${exec_prefix}/include\($\|["'\'']\| \+\),\1\2,g' -- "$f_new"
 		done
 	fi
 
@@ -111,7 +111,7 @@ fix()
 		>"$f_saved"
 		while ! cmp -s "$f_new" "$f_saved"; do
 			cat "$f_new" >"$f_saved"
-			subst '/if test /n;s,\(^\|[="'\'']\| \+\)-I\${prefix}/include\($\|["'\'']\| \+\),\1\3,g' -- "$f_new"
+			subst '/if test /n;s,\(^\|[="'\'']\| \+\)-I\${prefix}/include\($\|["'\'']\| \+\),\1\2,g' -- "$f_new"
 		done
 	fi
 
