@@ -432,6 +432,13 @@
 @alt@%_initrddir	%_initdir
 @alt@%make_session	%update_wms
 @alt@
+@alt@# GCC versioning.
+@alt@%__gcc_version %(gcc -dumpversion)
+@alt@%__gcc_version_major %(gcc -dumpversion |cut -d. -f1)
+@alt@%__gcc_version_minor %(gcc -dumpversion |cut -d. -f2)
+@alt@%__gcc_version_patch %(gcc -dumpversion |cut -d. -f3)
+@alt@%__gcc_version_base %(gcc -dumpversion |cut -d. -f-2)
+@alt@
 @alt@# <BEGIN GLIBC TRICKS
 @alt@%__glibc_version %(rpm -q glibc --queryformat '%%{VERSION}')
 @alt@%__glibc_version_major %(echo %__glibc_version |cut -d. -f1)
