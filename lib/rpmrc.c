@@ -19,7 +19,6 @@
 
 #include "misc.h"
 #include "debug.h"
-#include "rpmio_internal.h"
 
 /*@access FD_t@*/		/* compared with NULL */
 
