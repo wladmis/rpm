@@ -23,8 +23,15 @@
 
 PROG="${0##*/}"
 
+Fatal()
+{
+	echo "${0##*/}: $*" >&2
+	exit 1
+}
+
 Usage()
 {
+	[ "$1" = 0 ] || exec >&2
 	cat <<EOF
 find-lang - generate list of language specific files for inclusion
             in an rpm spec %files section.
@@ -35,10 +42,10 @@ find-lang comes with ABSOLUTELY NO WARRANTY, see license for details.
 Usage: $PROG options PACKAGE_NAME
 
 Valid options are:
---without-mo        don't find locales files;
---with-man          find man pages;
---with-gnome        find GNOME help and omf files;
---append            don't truncate output file before writing;
+--without-mo        do not look for locales files;
+--with-man          look for man pages;
+--with-gnome        look for GNOME help and omf files;
+--append            do not truncate output file before writing;
 --output=FILENAME   filename where to write output, by default PACKAGE_NAME.lang;
 --topdir=TOPDIR     the top of the tree containing the files to be processed,
                     by default \$RPM_BUILD_ROOT.
@@ -47,7 +54,6 @@ Top directory gets sed'd out of the output list.
 PACKAGE_NAME is usually the %{name} of the package. This should also be
 the basename of the .mo files.
 EOF
-
 	[ -n "$1" ] && exit "$1" || exit
 }
 
@@ -97,8 +103,7 @@ while :; do
 			break
 			;;
 		*)
-			echo "$PROG: unrecognized option: $1" >&2
-			exit 1
+			Fatal "unrecognized option: $1"
 			;;
 	esac
 done
@@ -115,10 +120,7 @@ s:/\+:/:g
 s:/$::
 ')"
 
-if [ -z "$TOPDIR" ]; then
-	echo "$PROG: non-/ TOPDIR expected" >&2
-	exit 1
-fi
+[ -n "$TOPDIR" ] || Fatal "invalid TOPDIR"
 
 FindLang()
 {
