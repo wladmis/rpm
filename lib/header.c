@@ -1435,14 +1435,17 @@ convert (char *ed, const char *td, const char *lang)
 	    ((icd = iconv_open (to_codeset, from_codeset)) != (iconv_t) - 1))
 	{
 		size_t  insize = strlen (ed);
-		size_t  inbufleft = insize, outbufleft = insize * 4;
+		size_t  inbufleft = insize, outbufleft = insize * 4 + 1;
 		char    buf[outbufleft];
 		char   *inbuf = ed, *outbuf = buf;
 
-		if (iconv (icd, &inbuf, &inbufleft, &outbuf, &outbufleft) > 0
-		    && strcmp (ed, buf))
-			/* XXX memory leak */
-			result = strdup (buf);
+		if (iconv (icd, &inbuf, &inbufleft, &outbuf, &outbufleft) >= 0)
+		{
+			*outbuf = '\0';
+			if (strcmp (ed, buf))
+				/* XXX memory leak */
+				result = strdup (buf);
+		}
 		iconv_close (icd);
 	}
 
