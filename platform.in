@@ -239,10 +239,11 @@
 @alt@	%{?__ccache_cxx:export CCACHE_CXX=\"%__ccache_cxx\"}\
 @alt@	%{?__ccache_dir:export CCACHE_DIR=\"%__ccache_dir\"}\
 @alt@	\
-@alt@	unset AUTOCONF_VERSION AUTOMAKE_VERSION LIBTOOL_VERSION ||:\
+@alt@	unset AUTOCONF_VERSION AUTOMAKE_VERSION LIBTOOL_VERSION GCC_VERSION ||:\
 @alt@	%{?_autoconf_version:export AUTOCONF_VERSION=\"%_autoconf_version\"}\
 @alt@	%{?_automake_version:export AUTOMAKE_VERSION=\"%_automake_version\"}\
 @alt@	%{?_libtool_version:export LIBTOOL_VERSION=\"%_libtool_version\"}\
+@alt@	%{?_gcc_version:export GCC_VERSION=\"%_gcc_version\"}\
 @alt@	\
 @alt@	%{verbose:set -x}%{!verbose:exec > /dev/null}\
 @alt@	umask 022\
@@ -465,6 +466,7 @@
 @alt@%set_autoconf_version()	%global _autoconf_version %*
 @alt@%set_automake_version()	%global _automake_version %*
 @alt@%set_libtool_version()	%global _libtool_version %*
+@alt@%set_gcc_version()	%global _gcc_version %*
 @alt@
 @alt@%strip_executable	RPM_STRIP_METHOD=executable @RPMCONFIGDIR@/brp-strip
 @alt@%strip_relocatable	RPM_STRIP_METHOD=relocatable @RPMCONFIGDIR@/brp-strip
