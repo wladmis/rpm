@@ -2821,7 +2821,7 @@ static int checkFiles(StringBuf fileList, int fileListLen)
 {
     StringBuf readBuf = NULL;
     const char * s;
-    char ** av = NULL;
+    const char ** av = 0;
     int ac = 0;
     int rc = 0;
     char *buf;
