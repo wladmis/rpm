@@ -8,6 +8,20 @@
 #include "rpmbuild.h"
 #include "debug.h"
 
+static int
+deps_opt_enabled (void)
+{
+	static int enabled = 0, initialized = 0;
+
+	if (!initialized)
+	{
+		initialized = 1;
+		enabled = rpmExpandNumeric ("%{?_deps_optimization:%_deps_optimization}%{?!_deps_optimization:1}");
+	}
+
+	return enabled;
+}
+
 typedef enum {
 	DEP_UN = 0,	/* uncomparable */
 	DEP_ST = 1,	/* stronger */
@@ -83,10 +97,14 @@ static dep_compare_t compare_deps (rpmTag tag,
 	if (Aflags == Bflags && !strcmp (Aevr, Bevr))
 		return DEP_EQ;
 
+	/* 3. whether dependency optimization is enabled? */
+	if (!deps_opt_enabled ())
+		return DEP_UN;
+
 	Asense = Aflags & RPMSENSE_SENSEMASK;
 	Bsense = Bflags & RPMSENSE_SENSEMASK;
 
-	/* 3. check for supported tags. */
+	/* 4. check for supported tags. */
 	switch (tag) {
 		case RPMTAG_PROVIDEFLAGS:
 		case RPMTAG_OBSOLETEFLAGS:
@@ -98,7 +116,7 @@ static dep_compare_t compare_deps (rpmTag tag,
 			return DEP_UN;
 	}
 
-	/* 4. sanity checks */
+	/* 5. sanity checks */
 	if (
 	    ((Asense & RPMSENSE_LESS) && (Asense & RPMSENSE_GREATER)) ||
 	    ((Bsense & RPMSENSE_LESS) && (Bsense & RPMSENSE_GREATER)) ||
@@ -114,16 +132,16 @@ static dep_compare_t compare_deps (rpmTag tag,
 	   )
 		return DEP_UN;
 
-	/* 6. filter out essentialy differ flags. */
+	/* 7. filter out essentialy differ flags. */
 	if ((Aflags & ~RPMSENSE_SENSEMASK) != (Bflags & ~RPMSENSE_SENSEMASK))
 	{
 		rpmsenseFlags Areq, Breq;
 
-		/* 6a. additional check for REQUIREFLAGS */
+		/* 7a. additional check for REQUIREFLAGS */
 		if (tag != RPMTAG_REQUIREFLAGS)
 			return DEP_UN;
 
-		/* 6b. filter out essentialy differ requires. */
+		/* 7b. filter out essentialy differ requires. */
 		if ((Aflags & ~RPMSENSE_SENSEMASK & ~_ALL_REQUIRES_MASK) !=
 		    (Bflags & ~RPMSENSE_SENSEMASK & ~_ALL_REQUIRES_MASK))
 			return DEP_UN;
@@ -131,7 +149,7 @@ static dep_compare_t compare_deps (rpmTag tag,
 		Areq = Aflags & _ALL_REQUIRES_MASK;
 		Breq = Bflags & _ALL_REQUIRES_MASK;
 
-		/* 6c. Aflags is legacy PreReq? */
+		/* 7c. Aflags is legacy PreReq? */
 		if (isLegacyPreReq (Areq))
 		{
 			if (Breq == 0)
@@ -143,7 +161,7 @@ static dep_compare_t compare_deps (rpmTag tag,
 				return DEP_UN;
 		}
 
-		/* 6d. Bflags is legacy PreReq? */
+		/* 7d. Bflags is legacy PreReq? */
 		else if (isLegacyPreReq (Breq))
 		{
 			if (Areq == 0)
@@ -155,11 +173,11 @@ static dep_compare_t compare_deps (rpmTag tag,
 				return DEP_UN;
 		}
 
-		/* 6e. Aflags contains Bflags? */
+		/* 7e. Aflags contains Bflags? */
 		else if ((Areq & Breq) == Breq)
 			rc = DEP_ST;
 
-		/* 6f. Bflags contains Aflags? */
+		/* 7f. Bflags contains Aflags? */
 		else if ((Areq & Breq) == Areq)
 			rc = DEP_WK;
 
@@ -167,7 +185,7 @@ static dep_compare_t compare_deps (rpmTag tag,
 			return DEP_UN;
 	}
 
-	/* 7. compare versions. */
+	/* 8. compare versions. */
 	aEVR = xstrdup(Aevr);
 	parseEVR(aEVR, &aE, &aV, &aR);
 	bEVR = xstrdup(Bevr);
@@ -177,10 +195,10 @@ static dep_compare_t compare_deps (rpmTag tag,
 	aEVR = _free(aEVR);
 	bEVR = _free(bEVR);
 
-	/* 8. detect overlaps. */
+	/* 9. detect overlaps. */
 	cmp_rc = compare_sense_flags (tag, sense, Asense, Bsense);
 
-	/* 9. EVRs with serial are stronger. */
+	/* 10. EVRs with serial are stronger. */
 	if (cmp_rc == DEP_EQ)
 	{
 		if ((aE && *aE) && !(bE && *bE))
@@ -197,7 +215,7 @@ static dep_compare_t compare_deps (rpmTag tag,
 	if (cmp_rc == DEP_UN || rc == DEP_UN)
 		return cmp_rc;
 
-	/* 10. compare expected with received. */
+	/* 11. compare expected with received. */
 	if (cmp_rc != rc && cmp_rc != DEP_EQ)
 		return DEP_UN;
 
@@ -323,20 +341,19 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 
 	if (o_cnt)
 	{
-		int new_len = len - o_cnt;
+		int     j, new_len = len - o_cnt;
 		const char *new_names[new_len];
 		const char *new_versions[new_len];
-		int new_flags[new_len];
-		int j;
+		int     new_flags[new_len];
 
 		rpmMessage (RPMMESS_DEBUG, "%d old deps to be optimized out\n", o_cnt);
 		for (i = 0, j = 0; i < len; ++i)
 		{
-			char *p;
+			char   *p;
+
 			if (obsolete[i])
 			{
-				rpmMessage (RPMMESS_DEBUG,
-					"old dep \"%s\" optimized out\n", names[i]);
+				rpmMessage (RPMMESS_DEBUG, "old dep \"%s\" optimized out\n", names[i]);
 				continue;
 			}
 
@@ -351,10 +368,11 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 			new_flags[j] = flags[i];
 			++j;
 		}
-		if (!headerModifyEntry (h, nametag, RPM_STRING_ARRAY_TYPE, new_names, new_len) ||
-		    !headerModifyEntry (h, versiontag, RPM_STRING_ARRAY_TYPE, new_versions, new_len) ||
-		    !headerModifyEntry (h, flagtag, RPM_INT32_TYPE, new_flags, new_len))
-		    rpmError (RPMERR_BADHEADER, "addReqProv: error modifying entry for dep %s\n", depName);
+
+		if (   !headerModifyEntry (h, nametag, RPM_STRING_ARRAY_TYPE, new_names, new_len)
+		    || !headerModifyEntry (h, versiontag, RPM_STRING_ARRAY_TYPE, new_versions, new_len)
+		    || !headerModifyEntry (h, flagtag, RPM_INT32_TYPE, new_flags, new_len))
+			rpmError (RPMERR_BADHEADER, "addReqProv: error modifying entry for dep %s\n", depName);
 		rpmMessage (RPMMESS_DEBUG, "%d old deps optimized out, %d left\n", o_cnt, new_len);
 	}
 
@@ -364,11 +382,12 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	    return 0;
     }
 
-	/* Do not add new provided requires. */
-	if ((nametag == RPMTAG_REQUIRENAME) &&
-	    !(depFlags & _notpre (RPMSENSE_RPMLIB | RPMSENSE_KEYRING |
-		                  RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN))
+	/* Do not add NEW provided requires. */
+	if (   deps_opt_enabled ()
+	    && (nametag == RPMTAG_REQUIRENAME)
 	    && !isLegacyPreReq (depFlags)
+	    && !(depFlags & _notpre (RPMSENSE_RPMLIB | RPMSENSE_KEYRING |
+				     RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN))
 	    && hge (h, RPMTAG_PROVIDENAME, &dnt, (void **) &names, &len))
 	{
 
@@ -408,6 +427,91 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		names = hfd (names, dnt);
 		if (skip)
 			return 0;
+	}
+
+	/* Remove OLD provided requires. */
+	if (   deps_opt_enabled ()
+	    && (nametag == RPMTAG_PROVIDENAME)
+	    && hge (h, RPMTAG_REQUIRENAME, &dnt, (void **) &names, &len))
+	{
+
+		int    *flags = 0;
+		const char **versions = 0;
+		rpmTagType dvt = RPM_STRING_ARRAY_TYPE;
+		int i, o_cnt = 0;
+		char obsolete[len];
+
+		memset (obsolete, 0, sizeof obsolete);
+
+		hge (h, RPMTAG_REQUIREVERSION, &dvt, (void **) &versions, NULL);
+		hge (h, RPMTAG_REQUIREFLAGS, NULL, (void **) &flags, NULL);
+
+		for (i = len - 1; flags && versions && (i >= 0); --i)
+		{
+			rpmsenseFlags f = flags[i];
+
+			if ((f & _notpre (RPMSENSE_RPMLIB | RPMSENSE_KEYRING |
+					  RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN))
+			    || isLegacyPreReq (f))
+				continue;
+			if (strcmp (depName, names[i]))
+				continue;
+			if (!(f & RPMSENSE_SENSEMASK))
+			{
+				++o_cnt;
+				obsolete[i] = 1;
+				continue;
+			}
+			if (!(depFlags & RPMSENSE_SENSEMASK))
+				continue;
+			if (rpmRangesOverlap ("", depEVR, depFlags,
+					      "", versions[i], f))
+			{
+				++o_cnt;
+				obsolete[i] = 1;
+				continue;
+			}
+		}
+
+		if (o_cnt)
+		{
+			int j, new_len = len - o_cnt;
+			const char *new_names[new_len];
+			const char *new_versions[new_len];
+			int new_flags[new_len];
+
+			rpmMessage (RPMMESS_DEBUG, "%d old deps to be optimized out\n", o_cnt);
+			for (i = 0, j = 0; i < len; ++i)
+			{
+				char *p;
+
+				if (obsolete[i])
+				{
+					rpmMessage (RPMMESS_DEBUG, "old dep \"%s\" optimized out\n", names[i]);
+					continue;
+				}
+
+				p = alloca (1 + strlen (names[i]));
+				strcpy (p, names[i]);
+				new_names[j] = p;
+
+				p = alloca (1 + strlen (versions[i]));
+				strcpy (p, versions[i]);
+				new_versions[j] = p;
+
+				new_flags[j] = flags[i];
+				++j;
+			}
+
+			if (!headerModifyEntry (h, RPMTAG_REQUIRENAME, RPM_STRING_ARRAY_TYPE, new_names, new_len) ||
+			    !headerModifyEntry (h, RPMTAG_REQUIREVERSION, RPM_STRING_ARRAY_TYPE, new_versions, new_len) ||
+			    !headerModifyEntry (h, RPMTAG_REQUIREFLAGS, RPM_INT32_TYPE, new_flags, new_len))
+			    rpmError (RPMERR_BADHEADER, "addReqProv: error modifying entry for dep %s\n", depName);
+			rpmMessage (RPMMESS_DEBUG, "%d old deps optimized out, %d left\n", o_cnt, new_len);
+		}
+
+		versions = hfd (versions, dvt);
+		names = hfd (names, dnt);
 	}
 
     /* Add this dependency. */
