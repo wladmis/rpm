@@ -210,12 +210,13 @@ FindLibReqs()
 		# Shared library dependencies, glibc version references.
 		echo -E "$d" |awk '
 			BEGIN {start_shared=0; start_version=0; lib_name="";}
-			/^Dynamic Section:$/ {start_shared=1;}
-			/^Version References:$/ {start_version=1;}
-			(start_version==1) && /^ *required from/ {sub(/:/, "", $3); lib_name=$3;}
-			(start_shared==1) && /^ *NEEDED/ {print $2;}
+			/^($)/ {start_shared=0; start_version=0; lib_name=""; next;}
+			/^private/ {start_shared=0; start_version=0; lib_name=""; next;}
+			/^Dynamic Section:$/ {start_shared=1; next;}
+			/^Version References:$/ {start_version=1; next;}
+			(start_version==1) && /^ *required from/ {sub(/:/, "", $3); lib_name=$3; next;}
+			(start_shared==1) && /^ *NEEDED/ {print $2; next;}
 			(start_version==1) && (lib_name!="") && ($4!="") {print lib_name "(" $4 ")";}
-			/^$/ {start_shared=0; start_version=0;}
 		'
 		if [ -n "$FIND_LIBPERL" -a -z "$libperl_so" -a -z "${f##*/usr/lib/perl?/*/auto/*.so}" ]; then
 			libperl_so=`perl -MConfig -e 'print "$Config{libperl}\n"'`
