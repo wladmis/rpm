@@ -20,7 +20,7 @@ INCLUDES = \
 
 myLDFLAGS = # @LDFLAGS_STATIC@
 
-myLDADD = $(top_builddir)/lib/librpm.la
+myLDADD = $(top_builddir)/lib/librpm.la $(top_builddir)/build/librpmbuild.la
 
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
 rpmbin_PROGRAMS = rpm
@@ -51,7 +51,7 @@ rpm.o:	rpmqv.c
 
 rpmb_SOURCES =		build.c
 rpmb_LDFLAGS =		$(myLDFLAGS)
-rpmb_LDADD =		rpmb.o $(myLDADD) $(top_builddir)/build/librpmbuild.la
+rpmb_LDADD =		rpmb.o $(myLDADD)
 rpmb.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMBT -o $@ -c rpmqv.c
 
