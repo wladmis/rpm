@@ -43,6 +43,7 @@ FIND_LIBS=
 FIND_PAM=
 FIND_PERL=
 FIND_SHELL=
+libperl_so=
 
 ParseMethod()
 {
@@ -195,6 +196,10 @@ FindLibReqs()
 			(start_version==1) && (lib_name!="") && ($4!="") {print lib_name "(" $4 ")";}
 			/^$/ {start_shared=0; start_version=0;}
 		'
+		if [ -n "$FIND_PERL" -a -z "$libperl_so" -a -z "${f##*/usr/lib/perl*/*}" ]; then
+			libperl_so=`perl -MConfig -e 'print "$Config{libperl}\n"'`
+			echo "$libperl_so"
+		fi
 	fi
 }
 
