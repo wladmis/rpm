@@ -480,10 +480,12 @@ fi
 * Thu Sep 26 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt5
 - lib/psm.c: fixed chroot(2) handling (aka "rpmi --dbpath" problem).
 - New method now gets executed after %%install:
-  brp-fixup (binconfig,pkgconfig,libtool).
+  brp-fixup (binconfig,pkgconfig,libtool), controlled by %%_fixup_method macro.
 - New macros:
   + %%_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_{topdir,skiplist}
-  + %%{set,add}_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_{topdir,skiplist}()
+  + %%set_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_{topdir,skiplist}()
+  + %%add_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_skiplist()
+  + %%__gcc_version{,_major,_minor,_patch,_base}
 - New group: Development/Objective-C.
 
 * Mon Sep 09 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt4
