@@ -1299,10 +1299,10 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 
 	if (!strcmp (un.machine, "i586") || !strcmp (un.machine, "i686"))
 	{
-		const char *cpu = checkCPU ();
+		const char *c = checkCPU ();
 
-		if (cpu)
-			strcpy (un.machine, cpu);
+		if (c)
+			strcpy (un.machine, c);
 	}
 
 #	endif
