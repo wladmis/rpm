@@ -19,7 +19,7 @@
 #
 
 # If using normal root, avoid changing anything.
-[ -n "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
+[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]
 
 file="$1"
 
