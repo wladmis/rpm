@@ -37,14 +37,14 @@ Source: %srcname.tar.bz2
 
 Provides: %_sysconfdir/%name/macros.d
 
-PreReq: lib%name = %version-%release
+PreReq: lib%name = %version-%release, librpmbuild = %version-%release
 PreReq: alt-gpgkeys, coreutils
 
 # XXX glibc-2.1.92 has incompatible locale changes that affect statically
 # XXX linked binaries like /bin/rpm.
 Requires: glibc-core
 
-BuildPreReq: python22
+BuildPreReq: python
 %{?_with_python:BuildPreReq: python-devel = %__python_version}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 
@@ -68,7 +68,7 @@ PreReq: libdb4.0
 Summary: Shared library required for applications which will build RPM packages
 Summary(ru_RU.KOI8-R): Разделяемая библиотека для разработки приложений, собирающих RPM-пакеты
 Group: System/Libraries
-PreReq: lib%name = %version-%release
+Requires: lib%name = %version-%release
 
 %package -n lib%name-devel
 Summary: Development files for applications which will manipulate RPM packages
@@ -76,7 +76,7 @@ Summary(ru_RU.KOI8-R): Файлы, необходимые для разработки приложений, взаимодейст
 Group: Development/C
 Provides: %name-devel = %version-%release
 Obsoletes: %name-devel
-Requires: lib%name = %version-%release
+Requires: lib%name = %version-%release, librpmbuild = %version-%release
 Requires: bzlib-devel, libbeecrypt-devel, libdb4.0-devel, libpopt-devel, zlib-devel
 
 %package -n lib%name-devel-static
@@ -510,11 +510,13 @@ fi
 - fixup-libraries: fix SUID/SGID libraries as well.
 - find-lang: implemented --with-kde option (aris@, #2666).
 - find-provides: simplify check for perl files (at@ request).
+- rpmd, rpmi, rpmk: do not link with librpmbuild.
 - /bin/rpm: build dynamically and relocate to %_bindir;
   provide symlink for compatibility.
 - /usr/bin/rpm.static: package separately.
 - /usr/lib/librpmbuild-4.0.4.so: package separately.
 - Relocated %_libdir/%name/{rpmrc,macros} to librpm subpackage.
+- Build with current python again.
 
 * Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt28
 - brp-verify_elf:
