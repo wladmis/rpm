@@ -27,7 +27,7 @@ librpmio_la_LIBADD = @LIBBEECRYPT@
 # XXX Add internal libtool dependence
 install-data-local:
 	@cd $(DESTDIR)/$(libdir) && \
-	sed -e "s|^dependency_libs='|& -lpopt -lbeecrypt|" < librpmio.la > .librpmio.la && \
+	sed -e 's,^\(dependency_libs=.*\) -lrt,\1,g;s,^\(dependency_libs=.*\) -lpthread,\1,g' < librpmio.la > .librpmio.la && \
 	mv .librpmio.la librpmio.la
 
 clean-local:
