@@ -321,20 +321,8 @@
 @alt@%nil
 @alt@
 @alt@# Macros for server install/uninstall.
-@alt@%post_service()	\
-@alt@if [ $1 = 1 ]; then	\
-@alt@	/sbin/chkconfig --add %1	\
-@alt@else	\
-@alt@	/sbin/service %1 condrestart ||:	\
-@alt@fi	\
-@alt@%nil
-@alt@
-@alt@%preun_service()	\
-@alt@if [ $1 = 0 ]; then	\
-@alt@	/sbin/chkconfig --del %1 ||:	\
-@alt@	/sbin/service %1 condstop ||:	\
-@alt@fi	\
-@alt@%nil
+@alt@%post_service	/usr/sbin/post_service
+@alt@%preun_service	/usr/sbin/preun_service
 @alt@
 @alt@# Manpage directories.
 @alt@%_man1dir		%_mandir/man1
