@@ -138,7 +138,7 @@ s:^\([^%].*\)::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 		find "$TOPDIR" -type l |sed '
 s:'"$TOPDIR"'::
-s:\(.*/share/locale/\)\([^/_]\+\)\(.*'"$NAME"'\.mo$\):%lang(\2) %attr(root,-,-) \1\2\3:
+s:\(.*/share/locale/\)\([^/_]\+\)\(.*'"$NAME"'\.mo$\):%lang(\2) %attr(-,root,root) \1\2\3:
 s:^\([^%].*\)::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 	fi
