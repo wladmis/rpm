@@ -109,8 +109,8 @@ Package newPackage(Spec spec)
     p->header = headerNew();
     p->icon = NULL;
 
-    p->autoProv = 1;
-    p->autoReq = 1;
+    p->autoProv = xstrdup("yes");
+    p->autoReq = xstrdup("yes");
     
 #if 0    
     p->reqProv = NULL;
@@ -150,6 +150,9 @@ Package freePackage(Package pkg)
 {
     if (pkg == NULL) return NULL;
     
+    pkg->autoProv = _free(pkg->autoProv);
+    pkg->autoReq = _free(pkg->autoReq);
+
     pkg->preInFile = _free(pkg->preInFile);
     pkg->postInFile = _free(pkg->postInFile);
     pkg->preUnFile = _free(pkg->preUnFile);
@@ -222,12 +225,17 @@ int parseNoSource(Spec spec, const char * field, int tag)
 	    break;
 	fe = f;
 	SKIPNONWHITE(fe);
+	{
+	char buf[fe - f + 1];
+	memcpy( buf, f, fe - f );
+	buf[fe - f] = '\0';
 	if (*fe != '\0') fe++;
 
-	if (parseNum(f, &num)) {
+	if (parseNum(buf, &num)) {
 	    rpmError(RPMERR_BADSPEC, _("line %d: Bad number: %s\n"),
-		     spec->lineNum, f);
+		     spec->lineNum, buf);
 	    return RPMERR_BADSPEC;
+	}
 	}
 
 	if (! (p = findSource(spec, num, flag))) {
@@ -258,16 +266,17 @@ int addSource(Spec spec, Package pkg, const char *field, int tag)
     switch (tag) {
       case RPMTAG_SOURCE:
 	flag = RPMBUILD_ISSOURCE;
-	name = "source";
+	name = _("source");
 	fieldp = spec->line + 6;
 	break;
       case RPMTAG_PATCH:
 	flag = RPMBUILD_ISPATCH;
-	name = "patch";
+	name = _("patch");
 	fieldp = spec->line + 5;
 	break;
       case RPMTAG_ICON:
 	flag = RPMBUILD_ISICON;
+	name = _("icon");
 	fieldp = NULL;
 	break;
     }
@@ -309,6 +318,13 @@ int addSource(Spec spec, Package pkg, const char *field, int tag)
 	p->source++;
     } else {
 	p->source = p->fullSource;
+    }
+
+    if ( !*p->source )
+    {
+	rpmError( RPMERR_BADSPEC, _("line %d: Bad %s name: %s\n"),
+	    spec->lineNum, name, p->fullSource );
+	return RPMERR_BADSPEC;
     }
 
     if (tag != RPMTAG_ICON) {
