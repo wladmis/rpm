@@ -4,7 +4,7 @@
 
 Name: rpm
 Version: %rpm_version
-Release: alt2
+Release: alt3
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -471,6 +471,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Sep 05 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt3
+- Fixed typo in %%install_info/%%uninstall_info macros (sb).
+
 * Mon Sep 02 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt2
 - Removed README.ALT, added README.ALT-ru_RU.KOI8-R
   (based on alt-packaging/rpm.spec).
