@@ -10,12 +10,12 @@
  *	Copyright (C) The Internet Society (1998).  All Rights Reserved.
  */
 
-#include "base64.h"
-#include "dsa.h"
-#include "endianness.h"
-#include "mp32.h"
-#include "rsa.h"
-#include "rsapk.h"
+#include <beecrypt/base64.h>
+#include <beecrypt/dsa.h>
+#include <beecrypt/endianness.h>
+#include <beecrypt/mp32.h>
+#include <beecrypt/rsa.h>
+#include <beecrypt/rsapk.h>
 
 
 /**
