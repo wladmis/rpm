@@ -1037,9 +1037,7 @@ checkCPU (void)
 {
 	int     fd = open ("/proc/cpuinfo", O_RDONLY);
 
-	if (fd < 0)
-		return 0;
-	else
+	if (fd >= 0)
 	{
 		char    buffer[BUFSIZ];
 
@@ -1061,9 +1059,10 @@ checkCPU (void)
 			    || strstr (buffer, "Intel(R) Xeon(TM)")
 			    || strstr (buffer, "Intel(R) XEON(TM)"))
 				return "pentium4";
-		} else
-			return 0;
+		}
 	}
+
+	return 0;
 }
 
 /**
