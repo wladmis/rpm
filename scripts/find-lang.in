@@ -23,7 +23,6 @@
 
 : ${RPMCONFIGDIR:=@RPMCONFIGDIR@}
 . "$RPMCONFIGDIR/functions"
-ValidateBuildRoot
 
 Usage()
 {
@@ -53,7 +52,7 @@ EOF
 	[ -n "$1" ] && exit "$1" || exit
 }
 
-TEMP=`getopt -n "$PROG" -o h -l without-mo,with-man,with-gnome,append,output:,topdir: -- "$@"` || Usage
+TEMP=`getopt -n "$PROG" -o h -l without-mo,with-man,with-gnome,append,output:,topdir:,help -- "$@"` || Usage
 eval set -- "$TEMP"
 
 : ${TOPDIR:=$RPM_BUILD_ROOT}
