@@ -477,10 +477,28 @@
 @alt@
 @alt@%add_findprov_lib_path()	%global _findprov_lib_path %_findprov_lib_path %*
 @alt@
-@alt@%set_autoconf_version()	%global _autoconf_version %*
-@alt@%set_automake_version()	%global _automake_version %*
-@alt@%set_libtool_version()	%global _libtool_version %*
-@alt@%set_gcc_version()		%global _gcc_version %*
+@alt@%_buildrequires_build %nil
+@alt@%add_buildrequires(b) %{-b:%global _buildrequires_build %_buildrequires_build %*}
+@alt@
+@alt@%set_autoconf_version() \
+@alt@%global _autoconf_version %* \
+@alt@%add_buildrequires -b autoconf%__autoconf_version \
+@alt@%nil
+@alt@
+@alt@%set_automake_version() \
+@alt@%global _automake_version %* \
+@alt@%add_buildrequires -b automake%__automake_version \
+@alt@%nil
+@alt@
+@alt@%set_libtool_version() \
+@alt@%global _libtool_version %* \
+@alt@%add_buildrequires -b libtool%__libtool_version \
+@alt@%nil
+@alt@
+@alt@%set_gcc_version() \
+@alt@%global _gcc_version %* \
+@alt@%add_buildrequires -b gcc%_gcc_version \
+@alt@%nil
 @alt@
 @alt@%strip_executable	RPM_STRIP_METHOD=executable @RPMCONFIGDIR@/brp-strip
 @alt@%strip_relocatable	RPM_STRIP_METHOD=relocatable @RPMCONFIGDIR@/brp-strip
