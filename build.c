@@ -28,7 +28,7 @@ static int checkSpec(Header h)
     rpmTransactionSet ts;
     rpmDependencyConflict conflicts;
     int numConflicts;
-    int rc;
+    int rc = 0;
 
     if (!headerIsEntry(h, RPMTAG_REQUIREFLAGS))
 	return 0;
@@ -119,7 +119,7 @@ static int buildForTarget(const char * arg, BTA_t ba,
     int specut;
     char buf[BUFSIZ];
     Spec spec = NULL;
-    int rc;
+    int rc = 0;
 
 #ifndef	DYING
     rpmSetTables(RPM_MACHTABLE_BUILDARCH, RPM_MACHTABLE_BUILDOS);
