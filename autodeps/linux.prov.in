@@ -21,8 +21,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
+[ -z "$RPM_FINDPROV_DEBUG" ] || set -x
+
 PROG="${0##*/}"
-[ -z "$RPM_SCRIPT_DEBUG" ] || set -x
 
 # If using normal root, avoid changing anything.
 if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
