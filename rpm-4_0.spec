@@ -511,7 +511,8 @@ fi
   + for symlinks to shared libraries, ignore symlinks to shorter
     locations (workaround for libdb-4.0.so provides problem).
 - macros:
-  + fixed %%__cc, %%__cpp, %%__cxx macros (reported by aris@).
+  + fixed %%__cxx macro definition (reported by aris@),
+    was broken since 4.0.4-alt29.
 
 * Thu Jan 29 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt32
 - find-provides: changed output format of extra provides
