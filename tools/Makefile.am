@@ -36,10 +36,16 @@ rpmsort_LDFLAGS =	@LDFLAGS_STATIC@
 javadeps_SOURCES =	javadeps.c
 
 filesize_SOURCES =	filesize.c
+filesize_LDADD =
+filesize_DEPENDENCIES =
 
 relative_SOURCES =	relative.c
+relative_LDADD =
+relative_DEPENDENCIES =
 
 pdeath_execute_SOURCES =	pdeath_execute.c
+pdeath_execute_LDADD =
+pdeath_execute_DEPENDENCIES =
 
 $(PROGRAMS): $(LDADD)
 
