@@ -6,7 +6,7 @@
 %_arch			@RPMRC_ARCH@
 %_vendor		@RPMCANONVENDOR@
 %_os			@RPMCANONOS@
-%_gnu			@RPMRC_GNU@
+%_gnu			-gnu
 %_target_platform	%{_target_cpu}-%{_vendor}-%{_target_os}
 %optflags		@RPMRC_OPTFLAGS@
 
@@ -35,11 +35,15 @@
 #==============================================================================
 # ---- configure and makeinstall.
 #
+%_configure_script	./configure
+%_configure_target	%{_target_platform}
+%_configure_gettext	--without-included-gettext
 %configure \
   CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
   CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
   FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
-  ./configure %{_target_platform} \\\
+  %{?__libtoolize:[ -f configure.in ] && %{__libtoolize} --copy --force ;} \
+  %{_configure_script} %{?_configure_target:%{_configure_target}} \\\
  	--prefix=%{_prefix} \\\
 	--exec-prefix=%{_exec_prefix} \\\
 	--bindir=%{_bindir} \\\
@@ -52,10 +56,12 @@
 	--localstatedir=%{_localstatedir} \\\
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
-	--infodir=%{_infodir}
+	--infodir=%{_infodir} \\\
+	%{?_configure_gettext:%{_configure_gettext}}
 
+%_makeinstall_target	install
 %makeinstall \
-  make \\\
+  %__make INSTALL="%__install -p" \\\
 	prefix=%{?buildroot:%{buildroot}}%{_prefix} \\\
 	exec_prefix=%{?buildroot:%{buildroot}}%{_exec_prefix} \\\
 	bindir=%{?buildroot:%{buildroot}}%{_bindir} \\\
@@ -69,7 +75,7 @@
 	sharedstatedir=%{?buildroot:%{buildroot}}%{_sharedstatedir} \\\
 	mandir=%{?buildroot:%{buildroot}}%{_mandir} \\\
 	infodir=%{?buildroot:%{buildroot}}%{_infodir} \\\
-  install
+  %{?_makeinstall_target:%{_makeinstall_target}}
 
 %_smp_mflags %([ -z "$RPM_BUILD_NCPUS" ] \\\
 	&& RPM_BUILD_NCPUS="`/usr/bin/getconf _NPROCESSORS_ONLN`"; \\\
@@ -92,9 +98,7 @@
 %__arch_install_post   @ARCH_INSTALL_POST@
 
 %__os_install_post    \
-    @prefix@/lib/rpm/brp-compress \
-    @prefix@/lib/rpm/brp-strip \
-    @prefix@/lib/rpm/brp-strip-comment-note \
+    @RPMCONFIGDIR@/brp-%{_vendor} \
 %{nil}
 
 %__spec_install_post\
@@ -179,3 +183,259 @@
 @mandrake@%_gamesdir	games
 @mandrake@%_gamesbindir   %{_prefix}/%{_gamesdir}
 @mandrake@%_gamesdatadir  %{_datadir}/%{_gamesdir}
+
+@alt@#---------------------------------------------------------------------
+@alt@#	ALT Linux vendor specific macros.
+@alt@#	Contact rpm@alt-linux.org for details.
+@alt@#
+@alt@%distribution	ALT Linux
+@alt@%vendor	ALT Linux Team
+@alt@
+@alt@%__spec_autodep_shell	%{___build_shell}
+@alt@%__spec_autodep_args	%{___build_args}
+@alt@%__spec_autodep_cmd	%{___build_cmd}
+@alt@%__spec_autodep_pre	%{___build_pre}
+@alt@%__spec_autodep_body	%{___build_body}
+@alt@%__spec_autodep_post	%{___build_post}
+@alt@%__spec_autodep_template	#!%{__spec_autodep_shell}\
+@alt@%{__spec_autodep_pre}\
+@alt@%{nil}
+@alt@
+@alt@%__spec_install_pre	\
+@alt@%{___build_pre}	\
+@alt@%clean_buildroot	\
+@alt@%nil
+@alt@
+@alt@%__spec_clean_post	\
+@alt@%clean_buildroot	\
+@alt@%{___build_post}	\
+@alt@%nil
+@alt@
+@alt@%_internal_gpg_path	@RPMCONFIGDIR@/gnupg
+@alt@
+@alt@%prefix	%_prefix
+@alt@
+@alt@%clean_buildroot	%{?buildroot:%([ -n "$(echo %buildroot |tr -d /.)" ] && echo "%__chmod -R u+w %buildroot 2>/dev/null ||:; %__rm -rf %buildroot")}
+@alt@
+@alt@%remove_optflags(a:f:t:p:w:W:d:g:O:A:C:D:E:H:i:M:n:P:U:u:l:s:X:B:I:L:b:V:m:x:c:S:E:o:v:)	\
+@alt@%global optflags %(opt="%optflags"; for f in %{**}; do opt="$(echo "$opt"|sed -e "s/ $f//g;s/$f //g")"; done; echo "$opt")
+@alt@
+@alt@%add_optflags(a:f:t:p:w:W:d:g:O:A:C:D:E:H:i:M:n:P:U:u:l:s:X:B:I:L:b:V:m:x:c:S:E:o:v:)	\
+@alt@%global optflags %{optflags} %{**}
+@alt@
+@alt@# Make
+@alt@%_make_bin make
+@alt@
+@alt@%__nprocs	%(N=`egrep -cs ^cpu[0-9]+ /proc/stat`; [ "$N" -gt 0 ] 2>/dev/null && echo "$N" || echo 1)
+@alt@
+@alt@%make_build	[ -n "$NPROCS" ] || NPROCS=%__nprocs; %_make_bin -j$NPROCS
+@alt@
+@alt@%make_install	%_make_bin INSTALL="%__install -p"
+@alt@
+@alt@# Compatibility
+@alt@%make_compile	%make_build
+@alt@%make	%_make_bin
+@alt@
+@alt@# Macros for install/uninstall info files.
+@alt@
+@alt@%install_info()	\
+@alt@for f in %*; do	\
+@alt@	if [ "$f" = "${f%/*}" ]; then	\
+@alt@		f="%_infodir/$f"	\
+@alt@	fi	\
+@alt@	%__install_info --dir-file="${f%/*}/dir" --info-file="$f"	\
+@alt@done	\
+@alt@%nil
+@alt@
+@alt@%uninstall_info()	\
+@alt@if [ $1 = 0 ]; then	\
+@alt@	for f in %*; do	\
+@alt@		if [ "$f" = "${f%/*}" ]; then	\
+@alt@			f="%_infodir/$f"	\
+@alt@		fi	\
+@alt@		%__install_info --delete --dir-file="${f%/*}/dir" --info-file="$f"	\
+@alt@	done	\
+@alt@fi	\
+@alt@%nil
+@alt@
+@alt@# Macros for server install/uninstall.
+@alt@%post_service()	\
+@alt@if [ $1 = 1 ]; then	\
+@alt@	/sbin/chkconfig --add %1	\
+@alt@else	\
+@alt@	/sbin/service %1 condrestart ||:	\
+@alt@fi	\
+@alt@%nil
+@alt@
+@alt@%preun_service()	\
+@alt@if [ $1 = 0 ]; then	\
+@alt@	/sbin/chkconfig --del %1 ||:	\
+@alt@	/sbin/service %1 condstop ||:	\
+@alt@fi	\
+@alt@%nil
+@alt@
+@alt@# Manpage directories
+@alt@%_man1dir		%_mandir/man1
+@alt@%_man2dir		%_mandir/man2
+@alt@%_man3dir		%_mandir/man3
+@alt@%_man4dir		%_mandir/man4
+@alt@%_man5dir		%_mandir/man5
+@alt@%_man6dir		%_mandir/man6
+@alt@%_man7dir		%_mandir/man7
+@alt@%_man8dir		%_mandir/man8
+@alt@%_man9dir		%_mandir/man9
+@alt@
+@alt@# Menu directories
+@alt@%_menudir	%_libdir/menu
+@alt@%_iconsdir	%_datadir/icons
+@alt@%_miconsdir	%_iconsdir/mini
+@alt@%_liconsdir	%_iconsdir/large
+@alt@
+@alt@# Games directories
+@alt@%_gamesdir	games
+@alt@%_gamesbindir	%{_prefix}/%{_gamesdir}
+@alt@%_gamesdatadir	%{_datadir}/%{_gamesdir}
+@alt@
+@alt@# X11 directories
+@alt@%_x11dir	%{_prefix}/X11R6
+@alt@%_x11bindir	%{_x11dir}/bin
+@alt@%_x11libdir	%{_x11dir}/lib
+@alt@%_x11includedir	%{_x11dir}/include
+@alt@%_x11mandir	%{_x11dir}/man
+@alt@%_x11datadir	%{_x11dir}/share
+@alt@%_x11fontsdir	%{_x11libdir}/X11/fonts
+@alt@
+@alt@# Initscripts
+@alt@%_initdir	%{_sysconfdir}/rc.d/init.d
+@alt@
+@alt@# Licenses
+@alt@%_licensedir	%{_datadir}/license
+@alt@
+@alt@# Common lock directory
+@alt@%_lockdir	%{_var}/lock
+@alt@
+@alt@# Common log directory
+@alt@%_logdir	%{_var}/log
+@alt@
+@alt@# Application cache data directory
+@alt@%_cachedir	%{_var}/cache
+@alt@
+@alt@# Application spool data directory
+@alt@%_spooldir	%{_var}/spool
+@alt@
+@alt@# Directory for emacs lisp modules
+@alt@%_emacslispdir	%{_datadir}/emacs/site-lisp
+@alt@
+@alt@# Update Menus.
+@alt@%_update_menus_bin	%_bindir/update-menus
+@alt@%update_menus	[ -x %_update_menus_bin ] && %_update_menus_bin ||:
+@alt@%clean_menus	[ "$1" = 0 -a -x %_update_menus_bin ] && %_update_menus_bin ||:
+@alt@
+@alt@# Update Window Managers sessions.
+@alt@%_update_wms_bin	%_sbindir/update_wms
+@alt@%update_wms	[ -x %_update_wms_bin ] && %_update_wms_bin ||:
+@alt@%clean_wms	[ "$1" = 0 -a -x %_update_wms_bin ] && %_update_wms_bin ||:
+@alt@
+@alt@# Synchronize the scrollkeeper database.
+@alt@%_update_scrollkeeper_bin	%_sbindir/scrollkeeper-update
+@alt@%update_scrollkeeper	[ -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin ||:
+@alt@%clean_scrollkeeper	[ "$1" = 0 -a -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin ||:
+@alt@
+@alt@%_defattr	%%defattr(-,root,root,755)
+@alt@
+@alt@%_compress_method	auto
+@alt@%_strip_method	executable shared
+@alt@%_findreq_default_method	files lib pam perl shell
+@alt@%_findprov_default_method	pam lib perl
+@alt@
+@alt@%set_compress_method()	%global _compress_method %*
+@alt@%set_strip_method()	%global _strip_method %*
+@alt@
+@alt@%strip_executable	RPM_STRIP_METHOD=executable @RPMCONFIGDIR@/brp-strip
+@alt@%strip_relocatable	RPM_STRIP_METHOD=relocatable @RPMCONFIGDIR@/brp-strip
+@alt@%strip_shared	RPM_STRIP_METHOD=shared @RPMCONFIGDIR@/brp-strip
+@alt@%strip_static	RPM_STRIP_METHOD=static @RPMCONFIGDIR@/brp-strip
+@alt@
+@alt@%cleanup_build	@RPMCONFIGDIR@/brp-cleanup
+@alt@
+@alt@%compress_docs	@RPMCONFIGDIR@/brp-compress
+@alt@
+@alt@%strip_binaries	@RPMCONFIGDIR@/brp-strip
+@alt@
+@alt@# Alternate build section header for "multi-build" packages.
+@alt@%buildmulti	\
+@alt@%global	__spec_install_pre	%{___build_pre}	\
+@alt@%build	\
+@alt@%clean_buildroot	\
+@alt@%nil
+@alt@
+@alt@# MDK (in)compatibility.
+@alt@%_install_info()	%{error:_install_info is now obsolete, use: %%install_info %*}
+@alt@%_remove_install_info()	%{error:_remove_install_info is now obsolete, use: %%uninstall_info %*}
+@alt@%_initrddir	%_initdir
+@alt@%make_session	%update_wms
+@alt@
+@alt@# <BEGIN GLIBC TRICKS
+@alt@%__glibc_version %(rpm -q glibc --queryformat '%%{VERSION}')
+@alt@%__glibc_version_major %(echo %__glibc_version |cut -d. -f1)
+@alt@%__glibc_version_minor %(	\
+@alt@	maj=`echo %__glibc_version_major`;	\
+@alt@	min=`echo %__glibc_version|cut -d. -f2`;	\
+@alt@	rel=`echo %__glibc_version|cut -d. -f3`;	\
+@alt@	[ -n "$rel" ] || rel=0;	\
+@alt@	if [ "$maj" -eq 2 -a "$min" -eq 1 -a "$rel" -gt 90 ]; then	\
+@alt@		min=2	\
+@alt@	fi	\
+@alt@	echo -n "$min"	\
+@alt@)
+@alt@# END GLIBC TRICKS>
+@alt@
+@alt@%__python_version	%(%__python -c 'import sys; print sys.version' 2>/dev/null |head -1 |cut -d' ' -f1 |cut -d. -f1,2)
+@alt@
+@alt@# Access components of packager macro.
+@alt@%packagerName	%(echo -E '%packager' |sed -e 's/[[:space:]]*<.*//')
+@alt@%packagerAddress	%(echo -E '%packager' |sed -e 's/.*<\\\([^<>]\\+@[^<>]\\+\\\)>.*/\\1/')
+@alt@
+@alt@# Fetch name/serial/version/release fields.
+@alt@%get_version()	%(rpm -q --qf '%%{VERSION}' %1 2>/dev/null)
+@alt@%get_release()	%(rpm -q --qf '%%{RELEASE}' %1 2>/dev/null)
+@alt@%get_serial()	%(rpm -q --qf '%%{SERIAL}' %1 2>/dev/null)
+@alt@%add_serial()	%(rpm -q --qf '%%|SERIAL?{Serial: %%{SERIAL}}|' %1 2>/dev/null)
+@alt@%get_NSVR()	%(rpm -q --qf '%%{NAME}-%%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
+@alt@## compiler optflags defaults
+@alt@
+@alt@# core flags
+@alt@%optflags_core	-pipe
+@alt@
+@alt@# default optimization level
+@alt@%_optlevel	2
+@alt@
+@alt@# general optimization flags
+@alt@%optflags_optimization	-O%{_optlevel} -fexpensive-optimizations
+@alt@
+@alt@# warning flags
+@alt@%optflags_warnings	-Wall
+@alt@
+@alt@# debug flags
+@alt@%optflags_debug	-g
+@alt@
+@alt@# shared libraries flags
+@alt@%optflags_shared	-fPIC -DPIC
+@alt@
+@alt@# break c++ programs which use exceptions
+@alt@%optflags_nocpp	-fno-exceptions -fno-rtti
+@alt@
+@alt@# disables traceback, making debugging impossible
+@alt@%optflags_notraceback	-fomit-frame-pointer
+@alt@
+@alt@# aggressive floating-point optimization,
+@alt@# violate some ANSI or IEEE rules and/or specifications
+@alt@%optflags_fastmath	-ffast-math
+@alt@
+@alt@# enable strict aliasing rules, applicable for well written code
+@alt@%optflags_strict	-fstrict-aliasing
+@alt@
+@alt@# flags for compiling kernel
+@alt@%optflags_kernel	-malign-loops=2 -malign-jumps=2 -malign-functions=2 -mpreferred-stack-boundary=2
+@alt@
+@alt@%optflags_default	%optflags_core %optflags_warnings %optflags_optimization
