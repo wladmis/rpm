@@ -4,10 +4,10 @@
 
 #include "system.h"
 #include "rpmio_internal.h"
-#include "beecrypt.h"
-#include "md5.h"
-#include "endianness.h"
-#include "fips180.h"
+#include <beecrypt/beecrypt.h>
+#include <beecrypt/md5.h>
+#include <beecrypt/endianness.h>
+#include <beecrypt/fips180.h>
 #include "debug.h"
 
 #ifdef	SHA_DEBUG
