@@ -490,6 +490,7 @@ fi
     (due to new service package).
 - update-alternatives.8: fixed atavism (#0002273).
 - Updated libdb4 build requirements.
+- find-package, platform.in: added pkg contents index support.
 
 * Sat Feb 01 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt14
 - rpmio/macro.c: filter out non-alphanumeric macro files (#0001925).
