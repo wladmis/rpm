@@ -1088,8 +1088,29 @@ dnl export LIBS INCPATH CONFIG_SITE
 AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	rpmio/Makefile rpmdb/Makefile lib/Makefile build/Makefile
 	autodeps/linux.prov autodeps/linux.req tools/Makefile
-	scripts/Makefile scripts/shell.req scripts/compress_files
-	scripts/brp-alt scripts/brp-compress scripts/brp-fixup scripts/brp-strip scripts/brp-verify_elf
+	scripts/Makefile
+	scripts/brp-adjust_libraries
+	scripts/brp-alt
+	scripts/brp-bytecompile_python
+	scripts/brp-cleanup
+	scripts/brp-compress
+	scripts/brp-fix-perms
+	scripts/brp-fixup
+	scripts/brp-strip
+	scripts/brp-verify_elf
+	scripts/check-files
+	scripts/compress_files
+	scripts/find-lang
+	scripts/find-package
+	scripts/fixup-binconfig
+	scripts/fixup-libtool
+	scripts/fixup-pkgconfig
+	scripts/pam.prov
+	scripts/pam.req
+	scripts/shell.prov
+	scripts/shell.req
+	scripts/strip_files
+	scripts/verify-elf
 	tests/Makefile tests/rpmrc tests/macros tests/hello-test/Makefile
 	po/Makefile.in
 	doc/Makefile doc/manual/Makefile
