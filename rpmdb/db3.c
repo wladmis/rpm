@@ -819,20 +819,13 @@ static inline int parseYesNo( const char *s )
     return 1;
 }
 
-static	int	do_wait_for_lock( void )
+static	int	wait_for_lock (void)
 {
-	const char *str = rpmExpand( "%{_wait_for_lock}", NULL );
-	int lock = ( str && *str != '%' ) ? parseYesNo( str ) : 1;
-	str  =_free( str );
+	const char *str = rpmExpand ("%{_wait_for_lock}", NULL);
+	int val = (str && *str != '%') ? parseYesNo (str) : 1;
+	str = _free (str);
 
-	if ( lock )
-	{
-		struct timespec	t = { 0, 100000000 };
-		nanosleep( &t, 0 );
-		return 1;
-	}
-	else
-		return 0;
+	return val;
 }
 
 static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
@@ -1240,6 +1233,9 @@ static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
 		if (!(db->fd(db, &fdno) == 0 && fdno >= 0)) {
 		    rc = 1;
 		} else {
+		    int ignore_lock = dbi->dbi_use_dbenv && (dbi->dbi_eflags & DB_INIT_CDB);
+		    int wait_lock = wait_for_lock();
+		    int cmd = (ignore_lock || !wait_lock) ? F_SETLK : F_SETLKW;
 		    struct flock l;
 		    memset(&l, 0, sizeof(l));
 		    l.l_whence = 0;
@@ -1250,25 +1246,27 @@ static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
 		    l.l_pid = 0;
 
 		    for (;;) {
-		    rc = fcntl(fdno, F_SETLK, (void *) &l);
-		    if (rc) {
-			/* Warning only if using CDB locking. */
-			rc = ((dbi->dbi_use_dbenv &&
-				(dbi->dbi_eflags & DB_INIT_CDB))
-			    ? 0 : 1);
-			if ( rc && (EACCES == errno || EAGAIN == errno || EDEADLK == errno || EINTR == errno || ENOLCK == errno) && do_wait_for_lock() )
-			    continue;
-			rpmError( (rc ? RPMERR_FLOCK : RPMWARN_FLOCK),
-				_("cannot get %s lock on %s/%s\n"),
-				((dbi->dbi_mode & (O_RDWR|O_WRONLY))
+			rc = fcntl(fdno, cmd, (void *) &l);
+			if (rc) {
+			    if (EINTR == errno)
+				continue;
+
+			    /* Warning only if using CDB locking. */
+			    if (ignore_lock)
+				rc = 0;
+			    else if (wait_lock && (EACCES == errno || EAGAIN == errno || ENOLCK == errno))
+				continue;
+			    rpmError( (rc ? RPMERR_FLOCK : RPMWARN_FLOCK),
+				      _("cannot get %s lock on %s/%s\n"),
+				      ((dbi->dbi_mode & (O_RDWR|O_WRONLY))
 					? _("exclusive") : _("shared")),
-				dbhome, (dbfile ? dbfile : ""));
-		    } else if (dbfile) {
-			rpmMessage(RPMMESS_DEBUG,
-				_("locked   db index       %s/%s\n"),
-				dbhome, dbfile);
-		    }
-		    break;
+				      dbhome, (dbfile ? dbfile : ""));
+			} else if (dbfile) {
+			    rpmMessage(RPMMESS_DEBUG,
+				       _("locked   db index       %s/%s\n"),
+				       dbhome, dbfile);
+			}
+			break;
 		    }
 		}
 	    }
