@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt38
+Release: alt39
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -507,6 +507,21 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Jun 27 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt39
+- rpmio/macro.c(grabArgs):
+  + fixed to avoid newline eat up (#366).
+- lib/header.c:
+  + changed headerFindI18NString() and others to follow
+    the gettext(3) rules (#1379).
+- build.c(buildForTarget):
+  + implemented %%_buildrequires_build support.
+- find-lang:
+  + corrected regexps (#4228).
+- platform:
+  + %%add_buildrequires(b): new macro;
+  + %%set_*_version: use it (#3335);
+  + run scrollkeeper-update quietly (#4485).
+
 * Mon May 17 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt38
 - Disallow root to install source packages by default.
 - find-lang: handle symlinks in --with-gnome mode.
