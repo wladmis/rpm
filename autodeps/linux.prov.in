@@ -29,6 +29,9 @@ if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
 	exit 1
 fi
 
+# Normalize buildroot.
+RPM_BUILD_ROOT=$(readlink -fv "$RPM_BUILD_ROOT") || exit 1
+
 FIND_LIBS=
 FIND_PAM=
 FIND_PERL=
@@ -157,10 +160,12 @@ FindLibProvs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local f dir found d
+	local f dir name found d
 	f="$1"
 	dir="${fname%/*}"
 	[ -n "$dir" ] || return 0
+	name="${fname##*/}"
+	[ -n "$name" ] || return 0
 
 	found=
 	for d in $(echo "$RPM_FINDPROV_LIB_PATH" |tr : ' '); do
@@ -174,20 +179,35 @@ FindLibProvs()
 		local soname
 		soname="$(echo -E "$d" |awk '/SONAME/ {print $2}')" || return 1
 		if [ -n "$soname" ]; then
-			if [ ! -L "$f" ]; then
-				# name
+			while :; do
+				# For libraries with soname, ignore all but files named as soname.
+				[ "$soname" = "$name" ] || break
+
+				# Treat symlinks specially.
+				if [ -L "$f" ]; then
+					local real realpath
+					realpath=$(readlink -fv "$f") || break
+					real="${realpath#$RPM_BUILD_ROOT}"
+					# Ignore symlinks leading out of buildroot.
+					[ "$real" != "$realpath" ] || break
+				fi
+				
+				# Output soname.
 				echo "$soname"
 
-				# version definitions
-	    		echo -E "$d" | awk "-vsoname=$soname" '
+				# Output version definitions.
+	    			echo -E "$d" | awk "-vsoname=$soname" '
 					BEGIN {START=0;}
 					/^Version definitions:$/ {START=1;}
 					/^[0-9]/ && (START==1) && ($4!="") && ($4!=soname) {printf("%s(%s)\n",soname,$4);}
 					/^$/ { START=0; }
 				' || return 1
-			fi
+
+				break
+			done
 		else
-			echo "${f##*/}"
+			# Ignore symlinks for libraries without soname.
+			[ -L "$f" ] || echo "${f##*/}"
 		fi
 	fi
 }
@@ -209,9 +229,11 @@ while IFS= read -r f; do
 			fi
 		done
 	fi
+	# Find out file type (dereference symlinks).
 	if t="$(file -bL "$f")"; then
 		if [ -z "${t##* text*}" ]; then
-			ListScriptProvs "$f" "$t"
+			# Ignore symlinks for scripts.
+			[ -L "$f" ] || ListScriptProvs "$f" "$t"
 		elif [ -z "${t##* shared object*}" ]; then
 			r="$(FindLibProvs "$f")"
 			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
