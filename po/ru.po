@@ -3545,6 +3545,9 @@ msgstr "Разработка/KDE и QT"
 msgid "Development/Kernel"
 msgstr "Разработка/Ядро"
 
+msgid "Development/Objective-C"
+msgstr "Разработка/Objective-C"
+
 msgid "Development/Other"
 msgstr "Разработка/Прочее"
 
