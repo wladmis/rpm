@@ -174,7 +174,7 @@ else
 	cd "$OLDPWD"
 fi
 
-TOPDIR="$(echo "$TOPDIR" |sed '
+TOPDIR="$(printf %s "$TOPDIR" |sed '
 s:/\(\./\)\+:/:g
 s:/\+:/:g
 s:/$::
@@ -194,7 +194,7 @@ export STRIP_EXECUTABLE=
 export STRIP_RELOCATABLE=
 export STRIP_SHARED=
 export STRIP_STATIC=
-for t in `echo "$RPM_STRIP_METHOD" |tr , ' '`; do
+for t in `printf %s "$RPM_STRIP_METHOD" |tr , ' '`; do
 	case "$t" in
 		no|none|off|false)
 			exit 0

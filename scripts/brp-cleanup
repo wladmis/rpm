@@ -30,7 +30,7 @@ if [ "$RPM_CLEANUP_METHOD" = skip ]; then
 fi
 
 # If using normal root, avoid changing anything.
-if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
+if [ -z "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
 	echo "$PROG: non-/ \$RPM_BUILD_ROOT expected" >&2
 	exit 1
 fi
@@ -96,7 +96,7 @@ find -type f -name \*.bs -size 0 -print0 |
 f="$(find -type f -name \*.bs)"
 if [ -n "$f" ]; then
 	echo "$PROG: non empty *.bs file(s) found:"
-	echo "$f"
+	printf %s\\n "$f"
 	echo "$PROG: please contact packager"
 	exit 1
 fi

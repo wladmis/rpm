@@ -36,7 +36,7 @@ exit_handler()
 trap exit_handler EXIT
 
 # If using normal root, avoid changing anything.
-if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
+if [ -z "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
 	echo "$PROG: non-/ RPM_BUILD_ROOT expected" >&2
 	exit 1
 fi
@@ -191,7 +191,7 @@ FindPerlReqs()
 	[ -n "$LIST_PERL" ] || return 0
 
 	local r
-	r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.req)" || return 1
+	r="$(printf %s\\n "$LIST_PERL" |@RPMCONFIGDIR@/perl.req)" || return 1
 	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 }
@@ -208,7 +208,7 @@ FindLibReqs()
 
 	if d="$(objdump -p "$f")"; then 
 		# Shared library dependencies, glibc version references.
-		echo -E "$d" |awk '
+		printf %s\\n "$d" |awk '
 			BEGIN {start_shared=0; start_version=0; lib_name="";}
 			/^($)/ {start_shared=0; start_version=0; lib_name=""; next;}
 			/^private/ {start_shared=0; start_version=0; lib_name=""; next;}
@@ -220,7 +220,7 @@ FindLibReqs()
 		'
 		if [ -n "$FIND_LIBPERL" -a -z "$libperl_so" -a -z "${f##*/usr/lib/perl?/*/auto/*.so}" ]; then
 			libperl_so=`perl -MConfig -e 'print "$Config{libperl}\n"'`
-			echo "$libperl_so"
+			printf %s\\n "$libperl_so"
 		fi
 	fi
 }
@@ -282,4 +282,4 @@ done
 FindPerlReqs
 
 # Finally sort and print them.
-echo "$FOUND_REQS" |LC_COLLATE=C sort -u
+printf %s "$FOUND_REQS" |LC_COLLATE=C sort -u

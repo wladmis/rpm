@@ -26,7 +26,7 @@
 PROG="${0##*/}"
 
 # If using normal root, avoid changing anything.
-if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
+if [ -z "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
 	echo "$PROG: non-/ RPM_BUILD_ROOT expected" >&2
 	exit 1
 fi
@@ -159,7 +159,7 @@ FindPerlProvs()
 	[ -n "$LIST_PERL" ] || return 0
 
 	local r
-	r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.prov)" || return 1
+	r="$(printf %s\\n "$LIST_PERL" |@RPMCONFIGDIR@/perl.prov)" || return 1
 	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
 }
@@ -179,7 +179,7 @@ FindLibProvs()
 	[ -n "$name" ] || return 0
 
 	found=
-	for d in $(echo "$RPM_FINDPROV_LIB_PATH" |tr : ' '); do
+	for d in $(printf %s "$RPM_FINDPROV_LIB_PATH" |tr : ' '); do
 		[ "$d" = "$dir" ] || continue
 		found="$d"
 		break
@@ -188,7 +188,7 @@ FindLibProvs()
 
 	if d="$(objdump -p "$f")"; then
 		local soname
-		soname="$(echo -E "$d" |awk '/SONAME/ {print $2}')" || return 1
+		soname="$(printf %s\\n "$d" |awk '/SONAME/ {print $2}')" || return 1
 		if [ -n "$soname" ]; then
 			while :; do
 				# For libraries with soname, ignore all but files named as soname.
@@ -204,10 +204,10 @@ FindLibProvs()
 				fi
 				
 				# Output soname.
-				echo "$soname"
+				printf %s\\n "$soname"
 
 				# Output version definitions.
-	    			echo -E "$d" | awk "-vsoname=$soname" '
+	    			printf %s\\n "$d" | awk "-vsoname=$soname" '
 					BEGIN {START=0;}
 					/^Version definitions:$/ {START=1;}
 					/^[0-9]/ && (START==1) && ($4!="") && ($4!=soname) {printf("%s(%s)\n",soname,$4);}
@@ -218,7 +218,7 @@ FindLibProvs()
 			done
 		else
 			# Ignore symlinks for libraries without soname.
-			[ -L "$f" ] || echo "${f##*/}"
+			[ -L "$f" ] || printf %s\\n "${f##*/}"
 		fi
 	fi
 }
@@ -258,4 +258,4 @@ done
 FindPerlProvs
 
 # Finally sort and print them.
-echo "$FOUND_PROVS" |LC_COLLATE=C sort -u
+printf %s "$FOUND_PROVS" |LC_COLLATE=C sort -u

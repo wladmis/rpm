@@ -22,7 +22,7 @@
 PROG="${0##*/}"
 
 # If using normal root, avoid changing anything.
-if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
+if [ -z "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
 	echo "$PROG: non-/ \$RPM_BUILD_ROOT expected" >&2
 	exit 1
 fi
@@ -42,7 +42,7 @@ AddShowMethods()
 export FIXUP_BINCONFIG=
 export FIXUP_PKGCONFIG=
 export FIXUP_LIBTOOL=
-for t in `echo "$RPM_FIXUP_METHOD" |tr , ' '`; do
+for t in `printf %s "$RPM_FIXUP_METHOD" |tr , ' '`; do
 	case "$t" in
 		no|none|off|false|skip)
 			exit 0
