@@ -3530,6 +3530,9 @@ msgstr "Разработка/C++"
 msgid "Development/Databases"
 msgstr "Разработка/Базы данных"
 
+msgid "Development/Debuggers"
+msgstr "Разработка/Отладчики"
+
 msgid "Development/GNOME and GTK+"
 msgstr "Разработка/GNOME и GTK+"
 
