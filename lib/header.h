@@ -145,9 +145,8 @@ enum headerSprintfExtenstionType {
 };
 
 /** \ingroup header
- * HEADER_EXT_TAG format function prototype.
- * This will only ever be passed RPM_INT32_TYPE or RPM_STRING_TYPE to
- * help keep things simple.
+ * HEADER_EXT_FORMAT format function prototype.
+ * This is allowed to fail, which indicates the tag doesn't exist.
  *
  * @param type		tag type
  * @param data		tag value
@@ -160,8 +159,9 @@ typedef /*only@*/ char * (*headerTagFormatFunction)(int_32 type,
 				const void * data, char * formatPrefix,
 				int padding, int element);
 /** \ingroup header
- * HEADER_EXT_FORMAT format function prototype.
- * This is allowed to fail, which indicates the tag doesn't exist.
+ * HEADER_EXT_TAG format function prototype.
+ * This will only ever be passed RPM_INT32_TYPE or RPM_STRING_TYPE to
+ * help keep things simple.
  *
  * @param h		header
  * @retval type		address of tag type
@@ -187,8 +187,8 @@ struct headerSprintfExtension_s {
     union {
 /*@observer@*/ /*@null@*/
 	void * generic;				/*!< Private extension. */
-	headerTagFormatFunction formatFunction; /*!< HEADER_EXT_TAG extension. */
-	headerTagTagFunction tagFunction;	/*!< HEADER_EXT_FORMAT extension. */
+	headerTagFormatFunction formatFunction; /*!< HEADER_EXT_FORMAT extension. */
+	headerTagTagFunction tagFunction;	/*!< HEADER_EXT_TAG extension. */
 	struct headerSprintfExtension_s * more;	/*!< Chained table extension. */
     } u;
 };
