@@ -239,8 +239,9 @@
 @alt@	%{?_build_display:export DISPLAY=\"%_build_display\"}\
 @alt@	%{?_build_xauthority:export XAUTHORITY=\"%_build_xauthority\"}\
 @alt@	\
-@alt@	unset CCACHE_CC CCACHE_DIR ||:\
+@alt@	unset CCACHE_CC CCACHE_CXX CCACHE_DIR ||:\
 @alt@	%{?__ccache_cc:export CCACHE_CC=\"%__ccache_cc\"}\
+@alt@	%{?__ccache_cxx:export CCACHE_CXX=\"%__ccache_cxx\"}\
 @alt@	%{?__ccache_dir:export CCACHE_DIR=\"%__ccache_dir\"}\
 @alt@	\
 @alt@	unset AUTOCONF_VERSION AUTOMAKE_VERSION LIBTOOL_VERSION ||:\
