@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt22.1
+Release: alt23
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -478,6 +478,7 @@ fi
   + removed all autotools restrictions.
 - platform.in:
   + fixed typo in %%_scripts_debug support.
+  + %%optflags_warnings: added "--enable Werror" support.
 - find-requires:
   + updated to support ELF objects with private flags.
 
