@@ -2,20 +2,20 @@
 #
 # Convert per-system configuration in /etc/rpmrc to macros in /etc/rpm/macros.
 #
-# prereq: awk fileutils textutils sh-utils mktemp
+# prereq: awk coreutils mktemp
 #
 
 RPMRC=$1
-[ -z "$RPMRC" ] && RPMRC=/etc/rpmrc
+[ -n "$RPMRC" ] || RPMRC=/etc/rpmrc
 MACROS=$2
-[ -z "$MACROS" ] && MACROS=/etc/rpm/macros
+[ -n "$MACROS" ] || MACROS=/etc/rpm/macros
 # for testing
 #RPMRC=/tmp/rpmrc
 #MACROS=/tmp/macros
 
-[ -f $RPMRC ] || exit 0
+[ -f "$RPMRC" ] || exit 0
 
-[ -f $MACROS ] && {
+[ -f "$MACROS" ] && {
   echo "$MACROS already exists" 1>&2
   exit 1
 }
@@ -27,10 +27,20 @@ DIRN="`dirname $MACROS`"
   exit 1
 }
 
-TMP=$(mktemp /tmp/rpmrc.XXXXXX) || {
+TMP="$(mktemp -t rpmrc.XXXXXXXXXX)" || {
   echo could not create temp file 1>&2
   exit 1
 }
+
+exit_handler()
+{
+	local rc=$?
+	trap '' EXIT
+	rm -f -- "$TMP"
+	exit $rc
+}
+
+trap exit_handler SIGHUP SIGINT SIGTERM SIGQUIT SIGPIPE EXIT
 
 awk 'BEGIN {
   macros="'"$MACROS"'"
@@ -101,6 +111,5 @@ if [ -s $TMP ] ; then
   cat $TMP > $RPMRC && rm -f $TMP
   [ -f $TMP ] && { echo "could not overwrite $RPMRC" 1>&2 ; exit 1 ; }
 fi
-rm -f $TMP
 
 exit 0
