@@ -621,6 +621,7 @@
   %{?_findreq_skiplist:export RPM_FINDREQ_SKIPLIST=\"%_findreq_skiplist\"}\
   %{?_findprov_skiplist:export RPM_FINDPROV_SKIPLIST=\"%_findprov_skiplist\"}\
   %{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%_perl_lib_path\"}\
+  %{?_perl_req_method:export RPM_PERL_REQ_METHOD=\"%_perl_req_method\"}\
   %{?__python:export RPM_PYTHON=\"%__python\"}\
   \
   unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
