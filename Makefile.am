@@ -20,15 +20,7 @@ INCLUDES = \
 
 myLDFLAGS = # @LDFLAGS_STATIC@
 
-# XXX libtool can/should generate dependent libs.
-# XXX solaris2.6 cannot use *.la with --all-static (downrev binutils/egcs?)
-# XXX top_builddir ldpaths are wrong building in tree
-myLDADD = \
-	$(top_builddir)/build/librpmbuild.la \
-	$(top_builddir)/lib/librpm.la \
-	$(top_builddir)/rpmdb/librpmdb.la \
-	$(top_builddir)/rpmio/librpmio.la \
-	@LIBINTL@
+myLDADD = $(top_builddir)/lib/librpm.la
 
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
 rpmbin_PROGRAMS = rpm
@@ -59,7 +51,7 @@ rpm.o:	rpmqv.c
 
 rpmb_SOURCES =		build.c
 rpmb_LDFLAGS =		$(myLDFLAGS)
-rpmb_LDADD =		rpmb.o $(myLDADD)
+rpmb_LDADD =		rpmb.o $(myLDADD) $(top_builddir)/build/librpmbuild.la
 rpmb.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMBT -o $@ -c rpmqv.c
 
