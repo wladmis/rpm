@@ -919,7 +919,7 @@ restart:
 			if (retcode) rpmError(RPMERR_QUERYINFO,
 				_("no package provides %s\n"), fn);
 			break;
-		    case RPMQV_PATH:
+		    default:
 			rpmError(RPMERR_QUERYINFO,
 				_("file %s is not owned by any package\n"), fn);
 			break;
