@@ -86,8 +86,9 @@ Obsoletes: spec-helper
 Conflicts: patch < 2.5
 PreReq: shadow-utils
 PreReq: %name = %version-%release
-Requires: autoconf automake bison cpio gcc gettext-tools glibc-devel file kernel-headers
-Requires: libtool m4 make mktemp net-tools patch procps psmisc sed sh texinfo which
+Requires: autoconf autoconf-common automake automake-common bison cpio gcc
+Requires: gettext-tools glibc-devel file kernel-headers libtool m4 make
+Requires: mktemp net-tools patch procps psmisc sed sh texinfo which
 Requires: bzip2 >= 1:1.0.2-alt4
 Requires: fileutils >= 4.1.11-alt4
 Requires: gzip >= 1.3.3-alt2
