@@ -425,6 +425,7 @@ fi
 %rpmattr %_libdir/%name/find-requires
 %rpmattr %_libdir/%name/fixup-*
 %rpmattr %_libdir/%name/http.req
+%rpmattr %_libdir/%name/files.*
 %rpmattr %_libdir/%name/pam.*
 %rpmattr %_libdir/%name/perl.*
 %rpmattr %_libdir/%name/shell.*
@@ -472,10 +473,14 @@ fi
 
 %changelog
 * Fri May 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt19
-- Moved update-alternatives to separate package.
 - Reduced amount of rpm subpackage dependencies.
-- find-requires: more filename-based autodependencies.
+- Moved update-alternatives to separate package.
 - convertrpmrc.sh: relocated to build subpackage.
+- find-requires: more filename-based autodependencies.
+- find-provides: limit path where to search library provides.
+- platform.in: added macros for find-provides library
+  search path manipulations.
+- perl.{req,prov}: new version from perl maintainer.
 
 * Tue May 06 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt18
 - rpmio: fixed gzclose error handling.
