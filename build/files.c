@@ -2358,7 +2358,7 @@ top:
  */
 typedef struct {
 /*@observer@*/ /*@null@*/ const char * msg;
-/*@observer@*/ const char * argv[4];
+/*@observer@*/ const char *argv[3];
     rpmTag ntag;
     rpmTag vtag;
     rpmTag ftag;
@@ -2371,43 +2371,43 @@ typedef struct {
 /*@-exportlocal -exportheadervar@*/
 /*@unchecked@*/
 DepMsg_t depMsgs[] = {
-  { "Provides",		{ "%{__find_provides}", NULL, NULL, NULL },
+  { "Provides",		{ "%{__find_provides}", 0 },
 	RPMTAG_PROVIDENAME, RPMTAG_PROVIDEVERSION, RPMTAG_PROVIDEFLAGS,
 	0, -1 },
-  { "PreReq",		{ NULL, NULL, NULL, NULL },
+  { "PreReq",		{ "%{__find_prereq}", 0 },
 	RPMTAG_REQUIRENAME, RPMTAG_REQUIREVERSION, RPMTAG_REQUIREFLAGS,
 	RPMSENSE_PREREQ, 0 },
-  { "Requires(interp)",	{ NULL, "interp", NULL, NULL },
+  { "Requires(interp)",	{ 0, "interp", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	_notpre(RPMSENSE_INTERP), 0 },
-  { "Requires(rpmlib)",	{ NULL, "rpmlib", NULL, NULL },
+  { "Requires(rpmlib)",	{ 0, "rpmlib", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	_notpre(RPMSENSE_RPMLIB), 0 },
-  { "Requires(verify)",	{ NULL, "verify", NULL, NULL },
+  { "Requires(verify)",	{ 0, "verify", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	RPMSENSE_SCRIPT_VERIFY, 0 },
-  { "Requires(pre)",	{ NULL, "pre", NULL, NULL },
+  { "Requires(pre)",	{ 0, "pre", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	_notpre(RPMSENSE_SCRIPT_PRE), 0 },
-  { "Requires(post)",	{ NULL, "post", NULL, NULL },
+  { "Requires(post)",	{ 0, "post", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	_notpre(RPMSENSE_SCRIPT_POST), 0 },
-  { "Requires(preun)",	{ NULL, "preun", NULL, NULL },
+  { "Requires(preun)",	{ 0, "preun", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	_notpre(RPMSENSE_SCRIPT_PREUN), 0 },
-  { "Requires(postun)",	{ NULL, "postun", NULL, NULL },
+  { "Requires(postun)",	{ 0, "postun", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	_notpre(RPMSENSE_SCRIPT_POSTUN), 0 },
-  { "Requires",		{ "%{__find_requires}", NULL, NULL, NULL },
+  { "Requires",		{ "%{__find_requires}", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,	/* XXX inherit name/version arrays */
 	RPMSENSE_PREREQ, RPMSENSE_PREREQ },
-  { "Conflicts",	{ "%{__find_conflicts}", NULL, NULL, NULL },
+  { "Conflicts",	{ "%{__find_conflicts}", 0 },
 	RPMTAG_CONFLICTNAME, RPMTAG_CONFLICTVERSION, RPMTAG_CONFLICTFLAGS,
 	0, -1 },
-  { "Obsoletes",	{ "%{__find_obsoletes}", NULL, NULL, NULL },
+  { "Obsoletes",	{ "%{__find_obsoletes}", 0 },
 	RPMTAG_OBSOLETENAME, RPMTAG_OBSOLETEVERSION, RPMTAG_OBSOLETEFLAGS,
 	0, -1 },
-  { NULL,		{ NULL, NULL, NULL, NULL },	0, 0, 0, 0, 0 }
+  { 0,		{ 0 },	0, 0, 0, 0, 0 }
 };
 /*@=exportlocal =exportheadervar@*/
 
@@ -2424,20 +2424,62 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
     int writeBytes;
     StringBuf readBuf;
     DepMsg_t *dm;
-    char ** myargv;
-    int failnonzero = 0;
+    int failnonzero = 1;
     int rc = 0;
     int ac;
     int i;
 
-    myargv = xcalloc(5, sizeof(*myargv));
+    const char	*rootURL = spec->rootURL;
+    const char	*rootDir = NULL;
+    const char	*runDirURL = NULL;
+    const char	*scriptName = NULL;
+    const char	*runScript;
+    const char	*runCmd = NULL;
+    const char	*runTemplate = NULL;
+    const char	*runPost = NULL;
+    const char	*mTemplate = "%{__spec_autodep_template}";
+    const char	*mPost = "%{__spec_autodep_post}";
+    urlinfo	u = NULL;
 
     if (!(fi && fi->fc > 0))
 	return 0;
 
-    if (! (pkg->autoReq || pkg->autoProv))
+    if ( !*pkg->autoReq && !*pkg->autoProv )
 	return 0;
     
+    if ( *pkg->autoProv )
+	addMacro(spec->macros, "_findprov_method", NULL, pkg->autoProv, RMIL_SPEC);
+
+    if ( *pkg->autoReq )
+	addMacro(spec->macros, "_findreq_method", NULL, pkg->autoReq, RMIL_SPEC);
+
+	runDirURL = rpmGenPath(rootURL, "%{_builddir}", "");
+
+	(void) urlPath(rootURL, &rootDir);
+	if ( !*rootDir )
+		rootDir = "/";
+
+	if (runDirURL && runDirURL[0] != '/' && urlSplit(runDirURL, &u) ) {
+		runDirURL = _free(runDirURL);
+		return RPMERR_SCRIPT;
+	}
+	if (u) {
+		switch (u->urltype) {
+			case URL_IS_FTP:
+				addMacro(spec->macros, "_remsh", NULL, "%{__remsh}", RMIL_SPEC);
+				addMacro(spec->macros, "_remhost", NULL, u->host, RMIL_SPEC);
+				if (strcmp(rootDir, "/"))
+					addMacro(spec->macros, "_remroot", NULL, rootDir, RMIL_SPEC);
+				break;
+			case URL_IS_HTTP:
+			default:
+				break;
+		}
+	}
+
+	runTemplate = rpmExpand(mTemplate, NULL);
+	runPost = rpmExpand(mPost, NULL);
+
     writeBuf = newStringBuf();
     for (i = 0, writeBytes = 0; i < fi->fc; i++) {
 
@@ -2454,22 +2496,25 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
     }
 
     for (dm = depMsgs; dm->msg != NULL; dm++) {
-	int tag, tagflags;
+	int tag = (dm->ftag > 0) ? dm->ftag : dm->ntag, tagflags = 0;
+	FD_t	fd, xfd;
+	int argc = 0;
+	const char **argv = 0;
+	FILE *fp = 0;
+	const char *runBody = 0;
 
-	tag = (dm->ftag > 0) ? dm->ftag : dm->ntag;
-	tagflags = 0;
+	if ( !dm->argv || !dm->argv[0] )
+		continue;
 
 	switch(tag) {
 	case RPMTAG_PROVIDEFLAGS:
-	    if (!pkg->autoProv)
+	    if (!*pkg->autoProv)
 		continue;
-	    failnonzero = 1;
 	    tagflags = RPMSENSE_FIND_PROVIDES;
 	    /*@switchbreak@*/ break;
 	case RPMTAG_REQUIREFLAGS:
-	    if (!pkg->autoReq)
+	    if (!*pkg->autoReq)
 		continue;
-	    failnonzero = 0;
 	    tagflags = RPMSENSE_FIND_REQUIRES;
 	    /*@switchbreak@*/ break;
 	default:
@@ -2477,63 +2522,84 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	    /*@notreached@*/ /*@switchbreak@*/ break;
 	}
 
-	/* Get the script name (and possible args) to run */
-	if (dm->argv[0] != NULL) {
-	    const char ** av;
-	    char * s;
+	runBody = rpmExpand( dm->argv[0], NULL );
 
-	    /*@-nullderef@*/	/* FIX: double indirection. @*/
-	    s = rpmExpand(dm->argv[0], NULL);
-	    /*@=nullderef@*/
-	    if (!(s != NULL && *s != '%' && *s != '\0')) {
-		s = _free(s);
+	if ( !runBody || '%' == runBody[0] )
+	{
+		runBody = _free(runBody);
 		continue;
-	    }
-
-	    if (!(i = poptParseArgvString(s, &ac, (const char ***)&av))
-	    && ac > 0 && av != NULL)
-	    {
-		myargv = xrealloc(myargv, (ac + 5) * sizeof(*myargv));
-		for (i = 0; i < ac; i++)
-		    myargv[i] = xstrdup(av[i]);
-	    }
-	    av = _free(av);
-	    s = _free(s);
 	}
 
-	if (myargv[0] == NULL)
-	    continue;
+	{
+		const char **av;
+		for ( av = dm->argv + 1; av[0]; ++av )
+		{
+			const char *p = xstrdup( runBody );
+			asprintf( &runBody, "%s %s", p, av[0] );
+			p = _free( p );
+		}
+	}
 
-	rpmMessage(RPMMESS_NORMAL, _("Finding  %s: (using %s)...\n"),
-		dm->msg, myargv[0]);
+	rpmMessage(RPMMESS_NORMAL, _("Finding %s (using %s)\n"), dm->msg, runBody);
 
-#if 0
-	if (*myargv[0] != '/') {	/* XXX FIXME: stat script here */
-	    myargv[0] = _free(myargv[0]);
-	    continue;
+	if (makeTempFile(rootURL, &scriptName, &fd) || fd == NULL || Ferror(fd)) {
+		rc = RPMERR_SCRIPT;
+		rpmError(RPMERR_SCRIPT, _("Unable to open temp file."));
+		break;
+	}
+
+#ifdef HAVE_FCHMOD
+	switch (rootut) {
+		case URL_IS_PATH:
+		case URL_IS_UNKNOWN:
+			(void)fchmod(Fileno(fd), 0600);
+			break;
+		default:
+			break;
 	}
 #endif
 
-	/* Expand rest of script arguments (if any) */
-	for (i = 1; i < 4; i++) {
-	    if (dm->argv[i] == NULL)
+	if ( !fdGetFp(fd) )
+		xfd = Fdopen(fd, "w.fpio");
+	else
+		xfd = fd;
+	if ( !(fp = fdGetFp(xfd)) ) {
+		rc = RPMERR_SCRIPT;
+		scriptName = _free(scriptName);
 		break;
-	    /*@-nullderef@*/	/* FIX: double indirection. @*/
-	    myargv[ac++] = rpmExpand(dm->argv[i], NULL);
-	    /*@=nullderef@*/
 	}
 
-	myargv[ac] = NULL;
-	readBuf = getOutputFrom(NULL, myargv,
+	urlPath(scriptName, &runScript);
+
+	fputs(runTemplate, fp);
+	fputc('\n', fp);
+
+	fputs(runBody, fp);
+	runBody = _free(runBody);
+	fputc('\n', fp);
+
+	fputs(runPost, fp);
+	fputc('\n', fp);
+
+	Fclose(xfd);
+
+	runCmd = rpmExpand( "%{___build_cmd}", " ", runScript, 0 );
+
+	poptParseArgvString(runCmd, &argc, &argv);
+
+	rpmMessage(RPMMESS_NORMAL, _("Executing(%s): %s\n"), dm->msg, runCmd);
+
+	readBuf = getOutputFrom(NULL, argv,
 			getStringBuf(writeBuf), writeBytes, failnonzero);
 
 	/* Free expanded args */
-	for (i = 0; i < ac; i++)
-	    myargv[i] = _free(myargv[i]);
+	argv = _free(argv);
+	runCmd = _free(runCmd);
 
 	if (readBuf == NULL) {
 	    rc = RPMERR_EXEC;
-	    rpmError(rc, _("Failed to find %s:\n"), dm->msg);
+	    rpmError(rc, _("Failed to find %s\n"), dm->msg);
+	    scriptName = _free(scriptName);
 	    break;
 	}
 
@@ -2547,13 +2613,32 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	readBuf = freeStringBuf(readBuf);
 
 	if (rc) {
-	    rpmError(rc, _("Failed to find %s:\n"), dm->msg);
+	    rpmError(rc, _("Failed to find %s\n"), dm->msg);
+	    scriptName = _free(scriptName);
 	    break;
 	}
+
+	Unlink(scriptName);
+	scriptName = _free(scriptName);
     }
 
+	if (u) {
+		switch (u->urltype) {
+			case URL_IS_FTP:
+			case URL_IS_HTTP:
+				delMacro(spec->macros, "_remsh");
+				delMacro(spec->macros, "_remhost");
+				if (strcmp(rootDir, "/"))
+					delMacro(spec->macros, "_remroot");
+				break;
+			default:
+				break;
+		}
+	}
+    runPost = _free(runPost);
+    runTemplate = _free(runTemplate);
+    runDirURL = _free(runDirURL);
     writeBuf = freeStringBuf(writeBuf);
-    myargv = _free(myargv);
     return rc;
 }
 
@@ -2659,7 +2744,6 @@ static void printDeps(Header h)
 int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 {
     Package pkg;
-    int res = 0;
     
     for (pkg = spec->packages; pkg != NULL; pkg = pkg->next) {
 	const char *n, *v, *r;
@@ -2671,8 +2755,8 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	(void) headerNVR(pkg->header, &n, &v, &r);
 	rpmMessage(RPMMESS_NORMAL, _("Processing files: %s-%s-%s\n"), n, v, r);
 		   
-	if ((rc = processPackageFiles(spec, pkg, installSpecialDoc, test)))
-	    res = rc;
+	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
+	if ( rc ) return rc;
 
     /* XXX This should be added always so that packages look alike.
      * XXX However, there is logic in files.c/depends.c that checks for
@@ -2688,5 +2772,5 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	/*@=noeffect@*/
     }
 
-    return res;
+    return 0;
 }
