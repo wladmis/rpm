@@ -245,6 +245,8 @@
 @alt@	%{?_libtool_version:export LIBTOOL_VERSION=\"%_libtool_version\"}\
 @alt@	%{?_gcc_version:export GCC_VERSION=\"%_gcc_version\"}\
 @alt@	\
+@alt@	MAKEFLAGS=\"--print-directory\"\
+@alt@	\
 @alt@	%{verbose:set -x}%{!verbose:exec > /dev/null}\
 @alt@	umask 022\
 @alt@	%__mkdir_p %{u2p:%_builddir}\
