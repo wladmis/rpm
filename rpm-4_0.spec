@@ -1,3 +1,5 @@
+# $Id$
+
 %define rpm_version 4.0.4
 
 Name: rpm
