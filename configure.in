@@ -387,8 +387,8 @@ libdb3a=""
 dnl
 dnl Detect whether internal Berkeley DB should be built.
 dnl
-withval=yes
-AC_ARG_WITH(db, [  --without-db            do not use internal Berkeley db])
+withval=no
+AC_ARG_WITH(db, [  --with-db            use internal Berkeley db])
 
 if test $withval = no ; then
 dnl ------------------ without internal db
@@ -832,7 +832,7 @@ WITH_PYTHON_VERSION=
 if test -n "$withval" -a "$withval" != auto; then
    WITH_PYTHON_VERSION=$withval
 fi
-if test $withval = auto ; then
+if test -z "$withval" -o test $withval = auto ; then
   WITH_PYTHON_VERSION=$(python -c 'import sys; print sys.version' |head -1 |cut -d' ' -f1 |cut -d. -f1,2)
 fi
 
