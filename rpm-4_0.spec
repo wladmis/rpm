@@ -483,9 +483,11 @@ fi
 
 %changelog
 * Tue Apr 22 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt15
+- Fixed `rpmbuild -bE' return code (#0001021).
 - platform.in:
   + export MAKEFLAGS variable (#0001796).
-  + changed macros: %%post_service, %%preun_service.
+  + changed macros: %%post_service, %%preun_service
+    (due to new service package).
 - update-alternatives.8: fixed atavism (#0002273).
 - Updated libdb4 build requirements.
 
