@@ -20,8 +20,7 @@ INCLUDES = \
 
 myLDFLAGS = # @LDFLAGS_STATIC@
 
-mylibLDADD = $(top_builddir)/lib/librpm.la
-myLDADD = $(mylibLDADD) $(top_builddir)/build/librpmbuild.la
+myLDADD = $(top_builddir)/lib/librpm.la $(top_builddir)/build/librpmbuild.la
 
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
 rpmbin_PROGRAMS =
@@ -42,13 +41,13 @@ noinst_HEADERS = build.h debug.h system.h
 
 rpm_SOURCES =
 rpm_LDFLAGS =		$(myLDFLAGS)
-rpm_LDADD =		rpm.o $(mylibLDADD)
+rpm_LDADD =		rpm.o $(myLDADD)
 rpm.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMDB -DIAM_RPMEIU -DIAM_RPMK -DIAM_RPMQV -o $@ -c rpmqv.c
 
 rpm_static_SOURCES =
 rpm_static_LDFLAGS =		@LDFLAGS_STATIC@ $(myLDFLAGS)
-rpm_static_LDADD =		rpm.static.o $(mylibLDADD)
+rpm_static_LDADD =		rpm.static.o $(myLDADD)
 rpm.static.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMDB -DIAM_RPMEIU -DIAM_RPMK -DIAM_RPMQV -o $@ -c rpmqv.c
 
@@ -60,31 +59,31 @@ rpmb.o:	rpmqv.c
 
 rpmd_SOURCES =
 rpmd_LDFLAGS =		$(myLDFLAGS)
-rpmd_LDADD =		rpmd.o $(mylibLDADD)
+rpmd_LDADD =		rpmd.o $(myLDADD)
 rpmd.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMDB -o $@ -c rpmqv.c
 
 rpmi_SOURCES =
 rpmi_LDFLAGS =		$(myLDFLAGS)
-rpmi_LDADD =		rpmi.o $(mylibLDADD)
+rpmi_LDADD =		rpmi.o $(myLDADD)
 rpmi.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMEIU -o $@ -c rpmqv.c
 
 rpmk_SOURCES =
 rpmk_LDFLAGS =		$(myLDFLAGS)
-rpmk_LDADD =		rpmk.o $(mylibLDADD)
+rpmk_LDADD =		rpmk.o $(myLDADD)
 rpmk.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMK -o $@ -c rpmqv.c
 
 rpmq_SOURCES =
 rpmq_LDFLAGS =		$(myLDFLAGS)
-rpmq_LDADD =		rpmq.o $(mylibLDADD)
+rpmq_LDADD =		rpmq.o $(myLDADD)
 rpmq.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMQV -o $@ -c rpmqv.c
 
 rpm2cpio_SOURCES =	rpm2cpio.c
 rpm2cpio_LDFLAGS =	$(myLDFLAGS)
-rpm2cpio_LDADD =	$(mylibLDADD)
+rpm2cpio_LDADD =	$(myLDADD)
 
 $(PROGRAMS): 		$(myLDADD) @WITH_APIDOCS_TARGET@
 
