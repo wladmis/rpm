@@ -503,8 +503,11 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 	goto exit;
     }
 
-    /* If either EVR is non-existent or empty, always overlap. */
-    if (!(AEVR && *AEVR && BEVR && *BEVR)) {
+    if (!AEVR) AEVR = "";
+    if (!BEVR) BEVR = "";
+
+    /* Optimize: when both EVRs are non-existent or empty, always overlap. */
+    if (!(*AEVR || *BEVR)) {
 	result = 1;
 	goto exit;
     }
