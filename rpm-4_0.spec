@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt37
+Release: alt38
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -103,6 +103,7 @@ Requires: patch >= 2.5
 Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
 Requires: rpm-build-perl
+Requires: rpm-build-python
 
 %package build-topdir
 Summary: RPM package installation and build directory tree
@@ -506,6 +507,16 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon May 17 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt38
+- Disallow root to install source packages by default.
+- find-lang: handle symlinks in --with-gnome mode.
+- find-requires:
+  + updated hooks for python support, from Andrey Orlov.
+- brp-bytecompile_python:
+  + use new bytecompiler, from Andrey Orlov.
+- platform:
+  + added python to default lists of find{req,prov} methods.
+
 * Mon Apr 26 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt37
 - build/parseReqs.c(parseRCPOT): better error reporting (#3883).
 - fixup-libraries: recognize PIE objects.
