@@ -47,34 +47,48 @@ for f in "$@"; do
 	[ -z "${t//*ELF*}" ] || continue
 
 	info=$(objdump -p "$f") || continue
-	rpath=`echo "$info" |awk '{if ($1=="RPATH") print $2}'`
 
-	if [ -n "$rpath" ]; then
-		for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR; do
-			if echo "$rpath" |fgrep -qs "$p"; then
-				echo "$f: RPATH contains \"$p\": $rpath" >&2
+	if [ -n "$VERIFY_ELF_RPATH" ]; then
+		rpath=`printf %s "$info" |awk '{if ($1=="RPATH") print $2}'`
+		while [ -n "$rpath" ]; do
+			found=
+			for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR; do
+				if printf %s "$rpath" |fgrep -qs "$p"; then
+					echo "$f: RPATH entry contains \"$p\": $rpath" >&2
+					found=1
+				fi
+			done
+			if [ -n "$found" ]; then
 				rc=1
-				continue 2
+				break
 			fi
+
+			if printf %s "$rpath" |fgrep -qs :; then
+				echo "$f: RPATH entry contains \":\": $rpath" >&2
+				[ "$VERIFY_ELF_RPATH" = relaxed ] || rc=1
+				break
+			fi
+
+			if [ "$VERIFY_ELF_RPATH" = relaxed -o "$VERIFY_ELF_RPATH" = normal ]; then
+				break
+			fi
+
+			echo "$f: RPATH entry found: $rpath" >&2
+			rc=1
+			break
 		done
-		if [ "$RPM_VERIFY_ELF_METHOD" = relaxed ]; then
-			continue
-		fi
+	fi
 
-		if echo "$rpath" |fgrep -qs :; then
-			echo "$f: RPATH contains \":\": $rpath" >&2
+	if [ -n "$VERIFY_ELF_TEXTREL" ]; then
+		textrel=`printf %s "$info" |awk '{if ($1=="TEXTREL") print $2}'`
+		while [ -n "$textrel" ]; do
+			if [ "$VERIFY_ELF_TEXTREL" = relaxed ]; then
+				break
+			fi
+			echo "$f: TEXTREL entry found: $textrel" >&2
 			rc=1
-			continue
-		fi
-		if [ "$RPM_VERIFY_ELF_METHOD" = normal ]; then
-			continue
-		fi
-
-		if [ -n "$rpath" ]; then
-			echo "$f: RPATH defined: $rpath" >&2
-			rc=1
-			continue
-		fi
+			break
+		done
 	fi
 done
 

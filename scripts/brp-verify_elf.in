@@ -22,25 +22,79 @@
 PROG="${0##*/}"
 
 # If using normal root, avoid changing anything.
-if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
+if [ -z "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
 	echo "$PROG: non-/ \$RPM_BUILD_ROOT expected" >&2
 	exit 1
 fi
 
 cd "$RPM_BUILD_ROOT"
 
-RPM_VERIFY_ELF_METHOD="${RPM_VERIFY_ELF_METHOD## }"
-RPM_VERIFY_ELF_METHOD="${RPM_VERIFY_ELF_METHOD%% }"
+SHOW_METHODS=
+add_show_methods()
+{
+	if [ -z "$SHOW_METHODS" ]; then
+		SHOW_METHODS="$*"
+	else
+		SHOW_METHODS="$SHOW_METHODS,$*"
+	fi
+}
 
-echo "Verifying ELF objects in $RPM_BUILD_ROOT ($RPM_VERIFY_ELF_METHOD)"
+export VERIFY_ELF_RPATH=
+set_rpath_method()
+{
+	VERIFY_ELF_RPATH="$1"
+	add_show_methods rpath="$1"
+}
 
-case "$RPM_VERIFY_ELF_METHOD" in
-	none|skip)
-		exit 0
-		;;
-esac
+export VERIFY_ELF_TEXTREL=
+set_textrel_method()
+{
+	VERIFY_ELF_TEXTREL="$1"
+	add_show_methods textrel="$1"
+}
+
+for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
+	case "$t" in
+		no|none|skip)
+			exit 0
+			;;
+		rpath)
+			set_rpath_method normal
+			;;
+		rpath=*)
+			set_rpath_method "${t#rpath=}"
+			;;
+		textrel)
+			set_textrel_method normal
+			;;
+		textrel=*)
+			set_textrel_method "${t#textrel=}"
+			;;
+		normal)
+			set_rpath_method normal
+			set_textrel_method normal
+			;;
+		strict)
+			set_rpath_method strict
+			set_textrel_method strict
+			;;
+		relaxed)
+			set_rpath_method relaxed
+			set_textrel_method relaxed
+			;;
+		*)
+			echo "Unrecognized verify_elf method: $t"
+			exit 1
+			;;
+	esac
+done
+
+[ "$VERIFY_ELF_RPATH" != no ] || VERIFY_ELF_RPATH=
+[ "$VERIFY_ELF_TEXTREL" != no ] || VERIFY_ELF_TEXTREL=
 
 : ${RPM_VERIFY_ELF_TOPDIR:=}
 [ -d "$RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR" ] || exit 0
+
+echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR ($SHOW_METHODS)"
 
 find .$RPM_VERIFY_ELF_TOPDIR -type f -print0 |xargs -r0 @RPMCONFIGDIR@/verify-elf
