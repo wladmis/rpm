@@ -586,13 +586,97 @@ int rpmQueryVerify(QVA_t qva, rpmQVSources source, const char * arg,
     int rc;
     int isSource;
     int retcode = 0;
+    const char ** av = NULL;
     char * end = NULL;
     const char * s;
     int i;
 
     switch (source) {
     case RPMQV_RPM:
+    if (rpmExpandNumeric("%{!?_disable_glob_query:%{?_enable_glob_query:1}}"))
     {
+	int ac = 0;
+	const char * fileURL = NULL;
+	rpmRC rpmrc;
+
+	rc = rpmGlob(arg, &ac, &av);
+	if (rc) return 1;
+
+restart:
+	for (i = 0; i < ac; i++) {
+	    FD_t fd;
+
+	    fileURL = _free(fileURL);
+	    fileURL = av[i];
+	    av[i] = NULL;
+
+	    /* Try to read the header from a package file. */
+	    fd = Fopen(fileURL, "r.ufdio");
+	    if (fd == NULL || Ferror(fd)) {
+		rpmError(RPMERR_OPEN, _("open of %s failed: %s\n"), fileURL,
+			Fstrerror(fd));
+		if (fd) (void) Fclose(fd);
+		retcode = 1;
+		/*@loopbreak@*/ break;
+	    }
+
+	    /*@-mustmod@*/	/* LCL: segfault. */
+	    rpmrc = rpmReadPackageHeader(fd, &h, &isSource, NULL, NULL);
+	    /*@=mustmod@*/
+	    (void) Fclose(fd);
+
+	    if (!(rpmrc == RPMRC_OK || rpmrc == RPMRC_BADMAGIC)) {
+		rpmError(RPMERR_QUERY, _("query of %s failed\n"), fileURL);
+		retcode = 1;
+		/*@loopbreak@*/ break;
+	    }
+	    if (rpmrc == RPMRC_OK && h == NULL) {
+		rpmError(RPMERR_QUERY,
+			_("old format source packages cannot be queried\n"));
+		retcode = 1;
+		/*@loopbreak@*/ break;
+	    }
+
+	    /* Query a package file. */
+	    if (rpmrc == RPMRC_OK) {
+		retcode = showPackage(qva, rpmdb, h);
+		h = headerFree(h);
+		continue;
+	    }
+
+	    /* Try to read a package manifest. */
+	    fd = Fopen(fileURL, "r.fpio");
+	    if (fd == NULL || Ferror(fd)) {
+		rpmError(RPMERR_OPEN, _("open of %s failed: %s\n"), fileURL,
+			Fstrerror(fd));
+		if (fd) (void) Fclose(fd);
+		retcode = 1;
+		/*@loopbreak@*/ break;
+	    }
+	    
+	    /* Read list of packages from manifest. */
+	    retcode = rpmReadPackageManifest(fd, &ac, &av);
+	    if (retcode) {
+		rpmError(RPMERR_MANIFEST, _("%s: read manifest failed: %s\n"),
+			fileURL, Fstrerror(fd));
+		retcode = 1;
+	    }
+	    (void) Fclose(fd);
+
+	    /* If successful, restart the query loop. */
+	    if (retcode == 0)
+		goto restart;
+
+	    /*@loopbreak@*/ break;
+	}
+
+	fileURL = _free(fileURL);
+	if (av) {
+	    for (i = 0; i < ac; i++)
+		av[i] = _free(av[i]);
+	    av = _free(av);
+	}
+    } else {
 	const char * fileURL = arg;
 	rpmRC rpmrc;
 
@@ -678,7 +762,6 @@ int rpmQueryVerify(QVA_t qva, rpmQVSources source, const char * arg,
 	    rpmError(RPMERR_QUERYINFO, _("no packages\n"));
 	    retcode = 1;
 	} else {
-	    const char **av;
 	    for (av = (const char **) arg; av && *av; av++) {
 		if (!rpmdbSetIteratorRE(mi, RPMTAG_NAME, RPMMIRE_DEFAULT, *av))
 		    continue;
