@@ -270,7 +270,7 @@ bzip2 -9 CHANGES ||:
 %__install -p -m644 GROUPS $RPM_BUILD_ROOT%_libdir/%name/
 
 # buildreq ignore rules.
-install -p -m644 rpm-build.buildreq $RPM_BUILD_ROOT%_sysconfdir/buildreqs/files/ignore.d/rpm-build
+install -pD -m644 rpm-build.buildreq $RPM_BUILD_ROOT%_sysconfdir/buildreqs/files/ignore.d/rpm-build
 
 chmod a+x scripts/find-lang
 # Manpages have been moved to their own packages.
