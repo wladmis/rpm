@@ -268,7 +268,7 @@
 @alt@
 @alt@%prefix	%_prefix
 @alt@
-@alt@%clean_buildroot	%{?buildroot:%([ -n "$(echo %buildroot |tr -d /.)" ] && echo "%__chmod -R u+rwX -- %buildroot 2>/dev/null ||:; %__rm -rf -- %buildroot")}
+@alt@%clean_buildroot	%{?buildroot:%([ -n "$(echo %buildroot |tr -d /.)" ] && echo "%__chmod -Rf u+rwX -- %buildroot 2>/dev/null ||:; %__rm -rf -- %buildroot")}
 @alt@
 @alt@%remove_optflags(a:f:t:p:w:W:d:g:O:A:C:D:E:H:i:M:n:P:U:u:l:s:X:B:I:L:b:V:m:x:c:S:E:o:v:)	\
 @alt@%global optflags %(opt="%optflags"; for f in %{**}; do opt="$(echo "$opt"|sed -e "s/ $f//g;s/$f //g")"; done; echo "$opt")
