@@ -234,8 +234,8 @@ fprintf(stderr, "*** addMacros\n");
 			"LC_IDENTIFICATION",
 			"LC_ALL",
 			0
-		}
-		unsigned i;
+		};
+		unsigned int i;
 
 		for (i = 0; name[i][0]; ++i)
 			unsetenv (name[i]);
