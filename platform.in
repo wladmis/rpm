@@ -300,29 +300,15 @@
 @alt@%post_ldconfig %post_ldconfig_lib
 @alt@%postun_ldconfig /sbin/postun_ldconfig
 @alt@
-@alt@# Macros for install/uninstall info files.
+@alt@# Macros used for install/uninstall info files.
 @alt@
-@alt@%install_info()	\
-@alt@for f in %*; do	\
-@alt@	if [ "$f" = "${f##*/}" ]; then	\
-@alt@		f="%_infodir/$f"	\
-@alt@	fi	\
-@alt@	%__install_info --dir-file="${f%/*}/dir" --info-file="$f"	\
-@alt@done	\
-@alt@%nil
+@alt@# in %%post section.
+@alt@%install_info	/usr/sbin/install_info
 @alt@
-@alt@%uninstall_info()	\
-@alt@if [ $1 = 0 ]; then	\
-@alt@	for f in %*; do	\
-@alt@		if [ "$f" = "${f##*/}" ]; then	\
-@alt@			f="%_infodir/$f"	\
-@alt@		fi	\
-@alt@		%__install_info --delete --dir-file="${f%/*}/dir" --info-file="$f"	\
-@alt@	done	\
-@alt@fi	\
-@alt@%nil
+@alt@# in %%preun section.
+@alt@%uninstall_info	/usr/sbin/uninstall_info
 @alt@
-@alt@# Macros for server install/uninstall.
+@alt@# Macros used for service install/uninstall.
 @alt@%post_service	/usr/sbin/post_service
 @alt@%preun_service	/usr/sbin/preun_service
 @alt@
@@ -479,9 +465,10 @@
 @alt@%{__spec_install_custom_pre}\
 @alt@%nil
 @alt@
-@alt@# MDK (in)compatibility.
-@alt@%_install_info()	%{error:_install_info is now obsolete, use: %%install_info %*}
-@alt@%_remove_install_info()	%{error:_remove_install_info is now obsolete, use: %%uninstall_info %*}
+@alt@# MDK backwards compatibility.
+@alt@%_install_info		%install_info
+@alt@%_remove_install_info	%uninstall_info
+@alt@
 @alt@%_initrddir	%_initdir
 @alt@%make_session	%update_wms
 @alt@
