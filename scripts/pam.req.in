@@ -26,11 +26,11 @@ file="$1"
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
 if [ -n "$PAM_SO_SUFFIX" -a -z "${PAM_SO_SUFFIX##%*}" ]; then
-	Fatal "invalid PAM_SO_SUFFIX=$PAM_SO_SUFFIX"
+	Fatal "invalid PAM_SO_SUFFIX: build system provides no valid libpam-devel package"
 fi
 
 if [ -n "$PAM_NAME_SUFFIX" -a -z "${PAM_NAME_SUFFIX##%*}" ]; then
-	Fatal "invalid PAM_NAME_SUFFIX=$PAM_NAME_SUFFIX"
+	Fatal "invalid PAM_NAME_SUFFIX: build system provides no valid libpam-devel package"
 fi
 
 # hack for "buildreq -bi".

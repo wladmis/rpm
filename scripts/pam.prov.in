@@ -26,7 +26,7 @@ file="$1"
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
 if [ -n "$PAM_NAME_SUFFIX" -a -z "${PAM_NAME_SUFFIX##%*}" ]; then
-	Fatal "invalid PAM_NAME_SUFFIX=$PAM_NAME_SUFFIX"
+	Fatal "invalid PAM_NAME_SUFFIX: build system provides no valid libpam-devel package"
 fi
 
 echo "pam$PAM_NAME_SUFFIX(${file##*/})"
