@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt33
+Release: alt33.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -503,6 +503,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Feb 22 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt33.1
+- platform: added force_* macros suggested by Alexey Morozov.
+- headerFindI18NString: do not translate empty strings.
+- expandMacro: handle single % properly.
+
 * Tue Feb 03 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt33
 - lib/psm.c(runScript):
   + executed scripts expect default SIGPIPE handler,
