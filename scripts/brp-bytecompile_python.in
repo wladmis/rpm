@@ -25,7 +25,7 @@ ValidateBuildRoot
 
 cd "$RPM_BUILD_ROOT"
 
-if [ -n "$RPM_PYTHON" -a `find -type f -name \*.py |wc -l` -gt 0 ]; then
+if [ -n "$RPM_PYTHON" -a -x "$RPM_PYTHON" ] && [ `find -type f -name \*.py |wc -l` -gt 0 ]; then
 	echo "Bytecompiling python modules in $PWD using $RPM_PYTHON"
 	$RPM_PYTHON    /usr/lib/rpm/python.compileall.py "--select=$RPM_PYTHON_COMPILE_METHOD" "--exclude=$RPM_PYTHON_COMPILE_EXCLUDE" "--include=$RPM_PYTHON_COMPILE_INCLUDE" "--deep=$RPM_PYTHON_COMPILE_DEEP" ${RPM_PYTHON_COMPILE_SKIP_X:+--skip_x} ${RPM_PYTHON_COMPILE_CLEAN:+--clean} "--prefix=$RPM_BUILD_ROOT"
 	echo "Bytecompiling python modules with optimization in $PWD using $RPM_PYTHON -O"
