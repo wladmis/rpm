@@ -40,5 +40,5 @@ for d in usr/*; do
 done
 
 # Following files should not be group/world readable.
-find "$d" -type f \( -perm -4100 -o -perm -2100 \) -print0 |
+find -type f \( -perm -4100 -o -perm -2100 \) -print0 |
 	xargs -r0 chmod -R go-rw --
