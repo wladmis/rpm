@@ -274,6 +274,16 @@ static int buildForTarget(const char * arg, BTA_t ba,
     }
 #undef	_anyarch
 
+    char *br_build = rpmExpand("%{?_buildrequires_build}", 0);
+    if (spec->packages && br_build && *br_build) {
+	if (parseRCPOT (spec, spec->packages, br_build, RPMTAG_BUILDREQUIRES, 0, RPMSENSE_SCRIPT_BUILD)) {
+	    rc = 1;
+	    br_build = _free(br_build);
+	    goto exit;
+	}
+    }
+    br_build = _free(br_build);
+
     if (ba->buildAmount & RPMBUILD_MACROREQS) {
 	int i;
 	for (i = 0; i < spec->macros->firstFree; ++i) {
