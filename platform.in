@@ -353,6 +353,7 @@
 @alt@
 @alt@%_defattr	%%defattr(-,root,root,755)
 @alt@
+@alt@%_cleanup_method	auto
 @alt@%_compress_method	auto
 @alt@%_strip_method	executable shared
 @alt@%_findreq_default_method	files lib pam perl shell
