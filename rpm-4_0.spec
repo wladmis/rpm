@@ -388,7 +388,6 @@ fi
 %rpmdirattr %_libdir/%name
 %rpmattr %_libdir/%name/delayed_rebuilddb
 %rpmattr %_libdir/%name/pdeath_execute
-%rpmattr %_libdir/%name/convertrpmrc.sh
 %rpmattr %_libdir/%name/rpm[dikq]
 %_libdir/%name/rpm[euv]
 %rpmdatattr %_libdir/%name/macros
@@ -416,6 +415,7 @@ fi
 %rpmattr %_libdir/%name/config.site
 %rpmattr %_libdir/%name/config.sub
 %rpmattr %_libdir/%name/mkinstalldirs
+%rpmattr %_libdir/%name/convertrpmrc.sh
 %rpmattr %_libdir/%name/rpm2cpio.sh
 %rpmattr %_libdir/%name/filesize
 %rpmattr %_libdir/%name/relative
@@ -475,6 +475,7 @@ fi
 - Moved update-alternatives to separate package.
 - Reduced amount of rpm subpackage dependencies.
 - find-requires: more filename-based autodependencies.
+- convertrpmrc.sh: relocated to build subpackage.
 
 * Tue May 06 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt18
 - rpmio: fixed gzclose error handling.
