@@ -249,6 +249,7 @@
 @alt@	%{?_gcc_version:export GCC_VERSION=\"%_gcc_version\"}\
 @alt@	\
 @alt@	export PAM_SO_SUFFIX=\"%{_pam_so_suffix}\"\
+@alt@	export PAM_NAME_SUFFIX=\"%{_pam_name_suffix}\"\
 @alt@	\
 @alt@	export MAKEFLAGS=\"-w PAM_SO_SUFFIX=%_pam_so_suffix\"\
 @alt@	\
