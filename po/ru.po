@@ -2176,7 +2176,7 @@ msgstr "не проверять файлы на контрольную сумму MD5"
 
 #: lib/poptQV.c:222
 msgid "don't verify size of files"
-msgstr "не проверять размер файлов"
+msgstr "не проверять размеры файлов"
 
 #: lib/poptQV.c:225
 msgid "don't verify symlink path of files"
@@ -2184,11 +2184,11 @@ msgstr "не проверять путь символических ссылок"
 
 #: lib/poptQV.c:228
 msgid "don't verify owner of files"
-msgstr "не проверять хозяина файлов"
+msgstr "не проверять владельцев файлов"
 
 #: lib/poptQV.c:231
 msgid "don't verify group of files"
-msgstr "не проверять группу файлов"
+msgstr "не проверять группы файлов"
 
 #: lib/poptQV.c:234
 msgid "don't verify modification time of files"
@@ -2196,7 +2196,7 @@ msgstr "не проверять время модификации файлов"
 
 #: lib/poptQV.c:237 lib/poptQV.c:240
 msgid "don't verify mode of files"
-msgstr "не проверять права доступа файлов пакета"
+msgstr "не проверять права доступа файлов"
 
 #: lib/poptQV.c:243
 msgid "don't verify files in package"
@@ -2397,7 +2397,7 @@ msgstr "(сост. нет)   "
 
 #: lib/query.c:313 lib/query.c:369
 msgid "package has neither file owner or id lists\n"
-msgstr "пакет не содержит списков ни хозяев файлов, ни их ID\n"
+msgstr "пакет не содержит списков ни имен владельцев, ни идентификаторов владельцев файлов\n"
 
 #: lib/query.c:458
 #, c-format
