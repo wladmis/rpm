@@ -20,6 +20,12 @@
 
 PROG="${0##*/}"
 
+echo "Compressing files in $RPM_BUILD_ROOT ($RPM_COMPRESS_METHOD)"
+
+if [ "$RPM_COMPRESS_METHOD" = skip ]; then
+	exit 0
+fi
+
 # If using normal root, avoid changing anything.
 if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
 	echo "$PROG: non-/ \$RPM_BUILD_ROOT expected" >&2
@@ -39,14 +45,6 @@ StripSuffix()
 	done
 	echo -nE "$1"
 }
-
-cd "$RPM_BUILD_ROOT"
-
-echo "Compressing files in $RPM_BUILD_ROOT ($RPM_COMPRESS_METHOD)"
-
-if [ "$RPM_COMPRESS_METHOD" = "skip" ]; then
-	exit 0
-fi
 
 for d in `find "$RPM_BUILD_ROOT" -type d -name info`; do
 	find "$d" -type f \( -name \*.gz -o -name \*.Z \) -print0 |xargs -r0 gunzip
