@@ -261,6 +261,9 @@
 @alt@	%{?__ccache_cxx:export CCACHE_CXX=\"%__ccache_cxx\"}\
 @alt@	%{?__ccache_dir:export CCACHE_DIR=\"%__ccache_dir\"}\
 @alt@	\
+@alt@	export RPM_LIB=\"%_lib\"\
+@alt@	export RPM_LIBDIR=\"%_libdir\"\
+@alt@	\
 @alt@	unset AUTOCONF_VERSION AUTOMAKE_VERSION LIBTOOL_VERSION GCC_VERSION ||:\
 @alt@	%{?_autoconf_version:export AUTOCONF_VERSION=\"%_autoconf_version\"}\
 @alt@	%{?_automake_version:export AUTOMAKE_VERSION=\"%_automake_version\"}\
