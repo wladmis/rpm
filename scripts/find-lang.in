@@ -28,32 +28,53 @@ Usage()
 {
 	[ "$1" = 0 ] || exec >&2
 	cat <<EOF
-find-lang - generate list of language specific files for inclusion
-            in an rpm spec %files section.
-
-find-lang is free software, covered by the GNU General Public License.
-find-lang comes with ABSOLUTELY NO WARRANTY, see license for details.
+find-lang - generate list of language specific files for inclusion in an rpm spec %files section.
 
 Usage: $PROG options PACKAGE_NAME
 
-Valid options are:
---without-mo        do not look for locales files;
---with-man          look for man pages;
---with-gnome        look for GNOME help and omf files;
---with-kde          look for KDE help files;				
---append            do not truncate output file before writing;
---output=FILENAME   filename where to write output, by default PACKAGE_NAME.lang;
---topdir=TOPDIR     the top of the tree containing the files to be processed,
-                    by default \$RPM_BUILD_ROOT.
+Top directory gets sed'd out of the output list.  PACKAGE_NAME is usually
+the %{name} of the package.  This should also be the basename of the
+.mo files.
 
-Top directory gets sed'd out of the output list.
-PACKAGE_NAME is usually the %{name} of the package. This should also be
-the basename of the .mo files.
+Valid options are:
+  --without-mo              do not look for locales files;
+  --with-man                look for man pages;
+  --with-gnome              look for GNOME help and omf files;
+  --with-kde                look for KDE help files;
+  --custom-dir-script=FILE  look for directories using specified sed script;
+  --custom-file-script=FILE look for files using specified sed script;
+  --custom-link-script=FILE look for symlinks using specified sed script;
+  --append                  do not truncate output file before writing;
+  --output=FILENAME         filename where to write output,
+                            PACKAGE_NAME.lang by default;
+  --topdir=TOPDIR           the top of the tree containing the files to be
+                            processed, \$RPM_BUILD_ROOT by default;
+  --version                 print program version and exit;
+  --help                    show this text and exit.
+
+Report bugs to http://bugs.altlinux.ru/
+
 EOF
 	[ -n "$1" ] && exit "$1" || exit
 }
 
-TEMP=`getopt -n "$PROG" -o h -l without-mo,with-man,with-gnome,with-kde,append,output:,topdir:,help -- "$@"` || Usage
+print_version()
+{
+	local revision=`printf %s "$Revision$" |sed -ne 's/^\$Revision: \+\([^ ]\+\).*/\1/p'` ||:
+	cat <<EOF
+find-lang version $revision
+
+Copyright (C) 2000, 2003, 2004  Dmitry V. Levin <ldv@altlinux.org>
+
+This is free software; see the source for copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Written by Dmitry V. Levin <ldv@altlinux.org>
+EOF
+	exit 0
+}
+
+TEMP=`getopt -n "$PROG" -o h -l without-mo,with-man,with-gnome,with-kde,custom-dir-script:,custom-file-script:,custom-link-script:,append,output:,topdir:,help,version -- "$@"` || Usage
 eval set -- "$TEMP"
 
 : ${TOPDIR:=$RPM_BUILD_ROOT}
@@ -61,6 +82,9 @@ FIND_MO=1
 FIND_MAN=
 FIND_GNOME=
 FIND_KDE=
+CUSTOM_DIR_SCRIPT=
+CUSTOM_FILE_SCRIPT=
+CUSTOM_LINK_SCRIPT=
 APPEND=
 OUTPUT=
 NAME=
@@ -68,36 +92,43 @@ while :; do
 	case "$1" in
 		--without-mo)
 			FIND_MO=
-			shift
 			;;
 		--with-man)
 			FIND_MAN=1
-			shift
 			;;
 		--with-gnome)
 			FIND_GNOME=1
-			shift
 			;;
 		--with-kde)
 			FIND_KDE=1
-			shift
 			;;
 		--append)
 			APPEND=1
+			;;
+		--custom-dir-script)
 			shift
+			CUSTOM_DIR_SCRIPT="$1"
+			;;
+		--custom-file-script)
+			shift
+			CUSTOM_FILE_SCRIPT="$1"
+			;;
+		--custom-link-script)
+			shift
+			CUSTOM_LINK_SCRIPT="$1"
 			;;
 		--output)
 			shift
 			OUTPUT="$1"
-			shift
 			;;
 		--topdir)
 			shift
 			TOPDIR="$1"
-			shift
 			;;
 		-h|--help)
 			Usage 0
+			;;
+		--version) print_version
 			;;
 		--)
 			shift
@@ -107,6 +138,7 @@ while :; do
 			Fatal "unrecognized option: $1"
 			;;
 	esac
+	shift
 done
 
 # At least one argument, please.
@@ -115,7 +147,7 @@ done
 cd "$TOPDIR"
 cd "$OLDPWD"
 
-TOPDIR="$(printf %s "$TOPDIR" |sed '
+TOPDIR="$(printf %s "$TOPDIR" |sed -e '
 s:/\(\./\)\+:/:g
 s:/\+:/:g
 s:/$::
@@ -131,13 +163,13 @@ FindLang()
 	echo '%defattr(644,root,root,755)' >>"$OUTFILE"
 
 	if [ -n "$FIND_MO" ]; then
-		find "$TOPDIR" -type f |sed '
+		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/share/locale/\)\([^/_]\+\)\(.*'"$NAME"'\.mo$\):%lang(\2) \1\2\3:
 s:^\([^%].*\)::
 s:%lang(en) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
-		find "$TOPDIR" -type l |sed '
+		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/share/locale/\)\([^/_]\+\)\(.*'"$NAME"'\.mo$\):%lang(\2) %attr(-,root,root) \1\2\3:
 s:^\([^%].*\)::
@@ -146,7 +178,7 @@ s:%lang(en) ::
 	fi
 
 	if [ -n "$FIND_MAN" ]; then
-		find "$TOPDIR" -type f |sed '
+		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/share/man/\)\([^/_]\+\)\(.*'"$NAME"'\..\)\(\.[^/]*\)\?$:%lang(\2) \1\2\3*:
 s:^\([^%].*\)::
@@ -156,7 +188,7 @@ s:^%lang(man.*) .*::
 	fi
 
 	if [ -n "$FIND_GNOME" ]; then
-		find $TOPDIR -type d |sed '
+		find $TOPDIR -type d |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/gnome/help/'"$NAME"'\)$:%dir \1:
 s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_]\+\):%dir %lang(\2) \1\2:
@@ -165,7 +197,7 @@ s:^\([^%].*\)::
 s:%lang(en) ::
 s:%lang(C) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
-		find "$TOPDIR" -type f |sed '
+		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_]\+\):%lang(\2) \1\2:
 s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) \1\2\3\4:
@@ -173,7 +205,7 @@ s:^\([^%].*\)::
 s:%lang(en) ::
 s:%lang(C) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
-		find "$TOPDIR" -type l |sed '
+		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_]\+\):%lang(\2) %attr(-,root,root) \1\2:
 s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) %attr(-,root,root) \1\2\3\4:
@@ -184,25 +216,43 @@ s:%lang(C) ::
 	fi
 
 	if [ -n "$FIND_KDE" ]; then
-		find $TOPDIR -type d |sed '
+		find $TOPDIR -type d |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$NAME"'\):%lang(\2) %dir \1\2\3:
 s:^\([^%].*\)::
 s:%lang(en) ::
 	        ' |grep -v '^$' >> "$OUTFILE" ||:
 
-		find "$TOPDIR" -type f |sed '
+		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$NAME"'/.*\):%lang(\2) \1\2\3:
 s:^\([^%].*\)::
 s:%lang(en) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
-		find "$TOPDIR" -type l |sed '
+		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$NAME"'/.*\):%lang(\2) %attr(-,root,root) \1\2\3:
 s:^\([^%].*\)::
 s:%lang(en) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
+	fi
+
+	if [ -n "$CUSTOM_DIR_SCRIPT" ]; then
+		find $TOPDIR -type d |
+			sed -e "s:$TOPDIR::" -e "$CUSTOM_DIR_SCRIPT" |
+			grep -v '^$' >> "$OUTFILE" ||:
+	fi
+
+	if [ -n "$CUSTOM_FILE_SCRIPT" ]; then
+		find "$TOPDIR" -type f |
+			sed -e "s:$TOPDIR::" -e "$CUSTOM_FILE_SCRIPT" |
+			grep -v '^$' >> "$OUTFILE" ||:
+	fi
+
+	if [ -n "$CUSTOM_LINK_SCRIPT" ]; then
+		find "$TOPDIR" -type l |
+			sed -e "s:$TOPDIR::" -e "$CUSTOM_LINK_SCRIPT" |
+			grep -v '^$' >> "$OUTFILE" ||:
 	fi
 }
 
