@@ -75,7 +75,7 @@ s,\([[:space:]]\)required[[:space:]]\+pam_stack.so[[:space:]]\+service=,\1includ
 ' --
 fi
 
-for d in /lib /usr/lib /usr/X11R6/lib; do
+for d in ./lib ./usr/lib ./usr/X11R6/lib; do
 	[ -d "$d" ] || continue
 	find "$d" -type f -mindepth 1 -maxdepth 1 -name 'lib*.la' -print0 |
 		xargs -r0 rm -fv --
