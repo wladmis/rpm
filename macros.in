@@ -949,7 +949,8 @@ done \
 %ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 
 # Check whether both _with_%{1} and _without_%{1} are defined.
-%check_def() %{expand:%%{?_with_%{1}: %%{?_without_%{1}: %%{error: both _with_%{1} and _without_%{1} are defined}}}}
+%check_def() %{expand:%%{?_with_%{1}: %%{?_without_%{1}: %%{error: both _with_%{1} and _without_%{1} are defined}}}} \
+	%{expand:%%{?_enable_%{1}: %%{?_disable_%{1}: %%{error: both _enable_%{1} and _disable_%{1} are defined}}}}
 
 # Set default with_%{1} value.
 %def_with() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _with_%{1} --with-%{1}}}}
@@ -958,10 +959,10 @@ done \
 %def_without() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _without_%{1} --without-%{1}}}}
 
 # Set default enable_%{1} value.
-%def_enable() %{expand:%%{!?_enable_%{1}: %%{!?_enableout_%{1}: %%global _enable_%{1} --enable-%{1}}}}
+%def_enable() %{expand:%%{!?_enable_%{1}: %%{!?_disable_%{1}: %%global _enable_%{1} --enable-%{1}}}}
 
 # Set default disable_%{1} value.
-%def_disable() %{expand:%%{!?_with_%{1}: %%{!?_disable_%{1}: %%global _disable_%{1} --disable-%{1}}}}
+%def_disable() %{expand:%%{!?_enable_%{1}: %%{!?_disable_%{1}: %%global _disable_%{1} --disable-%{1}}}}
 
 # \endverbatim
 #*/
