@@ -1,7 +1,7 @@
 #!/bin/sh -e
 #
-# pam.prov
-# Copyright (C) 2001  Dmitry V. Levin <ldv@altlinux.org>
+# $Id$
+# Copyright (C) 2001,2003  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,4 +25,4 @@ file="$1"
 
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
-echo "pam(${file##$RPM_BUILD_ROOT/etc/pam.d/})"
+echo "pam(${file##*/})"
