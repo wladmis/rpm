@@ -222,6 +222,9 @@ chrooted"
 		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/security/console.apps/*}" ]; then
 			[ -z "$FOUND_REQS" ] && FOUND_REQS="consolehelper" || FOUND_REQS="$FOUND_REQS
 consolehelper"
+		elif [ -z "${f%%$RPM_BUILD_ROOT/etc/rpm/macros.d/*}" ]; then
+			[ -z "$FOUND_REQS" ] && FOUND_REQS="/etc/rpm/macros.d" || FOUND_REQS="$FOUND_REQS
+/etc/rpm/macros.d"
 		fi
 	fi
 	t="$(file -b "$f")"
