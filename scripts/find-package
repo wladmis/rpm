@@ -57,12 +57,21 @@ FindPackage()
 					echo -E "$package"
 					continue
 				fi
+			# Check for pkg contents binary index.
+			elif [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
+				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
+				if [ -n "$package" ]; then
+					echo -E "$package"
+					continue
+				fi
 			fi
 
 			# Check package database.
 			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
-				echo -E "$package"
-				continue
+				if [ -n "$package" ]; then
+					echo -E "$package"
+					continue
+				fi
 			fi
 
 			# Not found; output raw dependence.
