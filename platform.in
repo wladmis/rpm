@@ -232,9 +232,13 @@
 @alt@
 @alt@%make_install	%_make_bin INSTALL="%__install -p"
 @alt@
-@alt@# Compatibility
+@alt@# Compatibility.
 @alt@%make_compile	%make_build
 @alt@%make	%_make_bin
+@alt@
+@alt@# Library install (ldconfig) macros.
+@alt@%post_ldconfig /sbin/post_ldconfig
+@alt@%postun_ldconfig /sbin/postun_ldconfig
 @alt@
 @alt@# Macros for install/uninstall info files.
 @alt@
