@@ -476,6 +476,7 @@ fi
     look into pkg contents binary index as well;
   + fixed package database checks.
 - perl.{req,prov}: relocated to separate subpackage.
+- tcl.req: fixed perl syntax (at).
 
 * Fri Sep 12 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt24
 - rpm-build: do not package %_libdir/%name/config.* files (#2732).
