@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt20
+Release: alt20.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -472,6 +472,23 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri Jun 20 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt21
+- platform.in:
+  + always define RPM_BUILD_ROOT;
+  + define PAM_SO_SUFFIX and PAM_NAME_SUFFIX;
+  + removed "-fexpensive-optimizations" from %optflags_optimization
+    since it's included in -O2 and -Os.
+- find-provides:
+  + enable shell trace mode if $RPM_FINDPROV_DEBUG is set;
+  + fixed "readlink -fv" bug introduced in 4.0.4-alt20.
+- find-requires:
+  + enable shell trace mode if $RPM_FINDREQ_DEBUG is set.
+- pam.prov:
+  + honor $PAM_NAME_SUFFIX.
+- pam.req:
+  + honor %PAM_SO_SUFFIX and $PAM_NAME_SUFFIX.
+- build/files.c: honor generateDepends() return code.
+
 * Mon May 26 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt20
 - find-provides:
   + ignore symlinks when looking for non-library provides;
