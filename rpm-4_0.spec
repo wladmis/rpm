@@ -475,6 +475,7 @@ fi
 - Removed README.ALT, added README.ALT-ru_RU.KOI8-R
   (based on alt-packaging/rpm.spec).
 - Use subst instead of perl for build.
+- find-requires: added glibc-devel-static requirement autogeneration.
 
 * Wed Aug 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt1
 - rpmio:
