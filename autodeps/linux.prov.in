@@ -146,7 +146,7 @@ $r"
 	# Ignore symlinks for non-PAM scripts.
 	[ ! -L "$f" ] || return 0
 
-	if [ -z "${t##perl script text*}" -o -z "${t##Perl5 module source text}" ] || [ -z "${f%%*.p[lmh]}" -a -z "${t##*text*}" ]; then
+	if [ -z "${t##perl script text*}" -o -z "${t##Perl5 module source text}" -o -z "${f%%*.p[lmh]}" ]; then
 		if [ -n "$FIND_PERL" ]; then
 			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
 $f"
