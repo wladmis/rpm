@@ -84,10 +84,10 @@ for f in "$@"; do
 	if [ -n "$VERIFY_ELF_TEXTREL" ]; then
 		textrel=`printf %s "$info" |awk '{if ($1=="TEXTREL") print $2}'`
 		while [ -n "$textrel" ]; do
+			Info "$f: TEXTREL entry found: $textrel"
 			if [ "$VERIFY_ELF_TEXTREL" = relaxed ]; then
 				break
 			fi
-			Info "$f: TEXTREL entry found: $textrel"
 			rc=1
 			break
 		done
