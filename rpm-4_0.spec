@@ -344,6 +344,14 @@ fi
 %post -n librpmbuild -p /sbin/post_ldconfig
 %postun -n librpmbuild -p /sbin/postun_ldconfig
 
+%files -n librpmbuild
+%_libdir/librpmbuild-*.so
+
+%define rpmattr %attr(755,root,%name)
+%define rpmdirattr %attr(2755,root,%name) %dir
+%define rpmdatattr %attr(644,root,%name)
+%define rpmdbattr %attr(644,root,%name) %verify(not md5 size mtime) %ghost %config(missingok,noreplace)
+
 %files -n lib%name
 %rpmdirattr %_libdir/%name
 %rpmdatattr %_libdir/%name/rpmrc
@@ -351,9 +359,6 @@ fi
 %_libdir/librpm-*.so
 %_libdir/librpmdb-*.so
 %_libdir/librpmio-*.so
-
-%files -n librpmbuild
-%_libdir/librpmbuild-*.so
 
 %files -n lib%name-devel
 %_libdir/librpm.so
@@ -369,11 +374,6 @@ fi
 
 %files -n lib%name-devel-static
 %_libdir/*.a
-
-%define rpmattr %attr(755,root,%name)
-%define rpmdirattr %attr(2755,root,%name) %dir
-%define rpmdatattr %attr(644,root,%name)
-%define rpmdbattr %attr(644,root,%name) %verify(not md5 size mtime) %ghost %config(missingok,noreplace)
 
 %files -f %name.lang
 %dir %_docdir/%name-%rpm_version
