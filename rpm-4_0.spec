@@ -14,7 +14,7 @@ Release: alt42
 %define def_without() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _without_%{1} --without-%{1}}}}
 %define if_with() %if %{expand:%%{?_with_%{1}:1}%%{!?_with_%{1}:0}}
 %define if_without() %if %{expand:%%{?_without_%{1}:1}%%{!?_without_%{1}:0}}
-%define _rpmdir %_prefix/lib/%name
+%define _rpmlibdir %_prefix/lib/%name
 
 %def_with python
 %def_without apidocs
@@ -293,7 +293,7 @@ bzip2 -9 CHANGES ||:
 %__install -pD -m644 rpminit.1 $RPM_BUILD_ROOT%_man1dir/rpminit.1
 
 # Valid groups.
-%__install -p -m644 GROUPS $RPM_BUILD_ROOT%_rpmdir/
+%__install -p -m644 GROUPS $RPM_BUILD_ROOT%_rpmlibdir/
 
 # buildreq ignore rules.
 %__install -pD -m644 rpm-build.buildreq $RPM_BUILD_ROOT%_sysconfdir/buildreqs/files/ignore.d/rpm-build
@@ -303,14 +303,14 @@ chmod a+x scripts/find-lang
 #./scripts/find-lang --with-man %name rpm2cpio --output %name.lang
 RPMCONFIGDIR=./scripts ./scripts/find-lang %name rpm2cpio --output %name.lang
 
-pushd $RPM_BUILD_ROOT%_rpmdir
+pushd $RPM_BUILD_ROOT%_rpmlibdir
 	for f in *-alt-%_target_os; do
 		n=`echo "$f" |%__sed -e 's/-alt//'`
 		[ -e "$n" ] || %__ln_s "$f" "$n"
 	done
 popd
 
-/bin/ls -1d $RPM_BUILD_ROOT%_rpmdir/*-%_target_os |
+/bin/ls -1d $RPM_BUILD_ROOT%_rpmlibdir/*-%_target_os |
 	%__grep -Fv /brp- |
 	%__sed -e "s|^$RPM_BUILD_ROOT|%attr(-,root,%name) |g" >>%name.lang
 
@@ -329,13 +329,13 @@ fi
 if [ -f %_localstatedir/%name/packages.rpm ]; then
 	%__chgrp %name %_localstatedir/%name/*.rpm
 	# Migrate to db3 database.
-	%_rpmdir/pdeath_execute $PPID %_rpmdir/delayed_rebuilddb
+	%_rpmlibdir/pdeath_execute $PPID %_rpmlibdir/delayed_rebuilddb
 elif [ -f %_localstatedir/%name/Packages ]; then
 	%__chgrp %name %_localstatedir/%name/[A-Z]*
 	# Undo db1 configuration.
 	%__rm -f %_sysconfdir/%name/macros.db1
 	[ -n "$DURING_INSTALL" -o -n "$BTE_INSTALL" ] ||
-		%_rpmdir/pdeath_execute $PPID %_rpmdir/delayed_rebuilddb
+		%_rpmlibdir/pdeath_execute $PPID %_rpmlibdir/delayed_rebuilddb
 else
 	# Initialize db3 database.
 	%__rm -f %_sysconfdir/%name/macros.db1
@@ -358,9 +358,9 @@ fi
 %define rpmdbattr %attr(644,root,%name) %verify(not md5 size mtime) %ghost %config(missingok,noreplace)
 
 %files -n lib%name
-%rpmdirattr %_rpmdir
-%rpmdatattr %_rpmdir/rpmrc
-%rpmdatattr %_rpmdir/macros
+%rpmdirattr %_rpmlibdir
+%rpmdatattr %_rpmlibdir/rpmrc
+%rpmdatattr %_rpmlibdir/macros
 %_libdir/librpm-*.so
 %_libdir/librpmdb-*.so
 %_libdir/librpmio-*.so
@@ -422,13 +422,13 @@ fi
 %_bindir/rpmverify
 %_bindir/rpminit
 
-%rpmdirattr %_rpmdir
-%rpmattr %_rpmdir/delayed_rebuilddb
-%rpmattr %_rpmdir/pdeath_execute
-%rpmattr %_rpmdir/rpm[dikq]
-%_rpmdir/rpm[euv]
-%rpmdatattr %_rpmdir/rpmpopt*
-%rpmdatattr %_rpmdir/GROUPS
+%rpmdirattr %_rpmlibdir
+%rpmattr %_rpmlibdir/delayed_rebuilddb
+%rpmattr %_rpmlibdir/pdeath_execute
+%rpmattr %_rpmlibdir/rpm[dikq]
+%_rpmlibdir/rpm[euv]
+%rpmdatattr %_rpmlibdir/rpmpopt*
+%rpmdatattr %_rpmlibdir/GROUPS
 %_libdir/rpmpopt
 %_libdir/rpmrc
 
@@ -441,29 +441,29 @@ fi
 %rpmattr %_bindir/gendiff
 %_bindir/rpmbuild
 %_bindir/relative
-%rpmdirattr %_rpmdir
-%_rpmdir/rpmt
-%rpmattr %_rpmdir/rpmb
-%rpmattr %_rpmdir/filesize
-%rpmattr %_rpmdir/relative
-%rpmattr %_rpmdir/functions
-%rpmattr %_rpmdir/brp-*
-%rpmattr %_rpmdir/*_files
-%rpmattr %_rpmdir/check-files
-%rpmattr %_rpmdir/convertrpmrc.sh
-%rpmattr %_rpmdir/rpm2cpio.sh
-%rpmattr %_rpmdir/find-lang
-%rpmattr %_rpmdir/find-package
-%rpmattr %_rpmdir/find-provides
-%rpmattr %_rpmdir/find-requires
-%rpmattr %_rpmdir/fixup-*
-%rpmattr %_rpmdir/http.req
-%rpmattr %_rpmdir/files.*
-%rpmattr %_rpmdir/pam.*
-%rpmattr %_rpmdir/shell.*
-%rpmattr %_rpmdir/sql.*
-%rpmattr %_rpmdir/verify-elf
-%rpmattr %_rpmdir/Specfile.pm
+%rpmdirattr %_rpmlibdir
+%_rpmlibdir/rpmt
+%rpmattr %_rpmlibdir/rpmb
+%rpmattr %_rpmlibdir/filesize
+%rpmattr %_rpmlibdir/relative
+%rpmattr %_rpmlibdir/functions
+%rpmattr %_rpmlibdir/brp-*
+%rpmattr %_rpmlibdir/*_files
+%rpmattr %_rpmlibdir/check-files
+%rpmattr %_rpmlibdir/convertrpmrc.sh
+%rpmattr %_rpmlibdir/rpm2cpio.sh
+%rpmattr %_rpmlibdir/find-lang
+%rpmattr %_rpmlibdir/find-package
+%rpmattr %_rpmlibdir/find-provides
+%rpmattr %_rpmlibdir/find-requires
+%rpmattr %_rpmlibdir/fixup-*
+%rpmattr %_rpmlibdir/http.req
+%rpmattr %_rpmlibdir/files.*
+%rpmattr %_rpmlibdir/pam.*
+%rpmattr %_rpmlibdir/shell.*
+%rpmattr %_rpmlibdir/sql.*
+%rpmattr %_rpmlibdir/verify-elf
+%rpmattr %_rpmlibdir/Specfile.pm
 
 %_mandir/man?/gendiff.*
 %_man8dir/rpmbuild.*
@@ -489,22 +489,22 @@ fi
 
 %if_with contrib
 %files contrib
-%rpmattr %dir %_rpmdir
-%rpmattr %_rpmdir/cpanflute*
-%rpmattr %_rpmdir/cross-build
-%rpmattr %_rpmdir/find-prov.pl
-%rpmattr %_rpmdir/find-provides.perl
-%rpmattr %_rpmdir/find-req.pl
-%rpmattr %_rpmdir/find-requires.perl
-%rpmattr %_rpmdir/get_magic.pl
-%rpmattr %_rpmdir/getpo.sh
-%rpmattr %_rpmdir/javadeps
-%rpmattr %_rpmdir/magic.*
-%rpmattr %_rpmdir/rpmdiff*
-%rpmattr %_rpmdir/trpm
-%rpmattr %_rpmdir/u_pkg.sh
-%rpmattr %_rpmdir/vpkg-provides.sh
-%rpmattr %_rpmdir/vpkg-provides2.sh
+%rpmattr %dir %_rpmlibdir
+%rpmattr %_rpmlibdir/cpanflute*
+%rpmattr %_rpmlibdir/cross-build
+%rpmattr %_rpmlibdir/find-prov.pl
+%rpmattr %_rpmlibdir/find-provides.perl
+%rpmattr %_rpmlibdir/find-req.pl
+%rpmattr %_rpmlibdir/find-requires.perl
+%rpmattr %_rpmlibdir/get_magic.pl
+%rpmattr %_rpmlibdir/getpo.sh
+%rpmattr %_rpmlibdir/javadeps
+%rpmattr %_rpmlibdir/magic.*
+%rpmattr %_rpmlibdir/rpmdiff*
+%rpmattr %_rpmlibdir/trpm
+%rpmattr %_rpmlibdir/u_pkg.sh
+%rpmattr %_rpmlibdir/vpkg-provides.sh
+%rpmattr %_rpmlibdir/vpkg-provides2.sh
 %endif #with contrib
 
 %changelog
@@ -642,7 +642,7 @@ fi
   provide symlink for compatibility.
 - /usr/bin/rpm.static: package separately.
 - /usr/lib/librpmbuild-4.0.4.so: package separately.
-- Relocated %_rpmdir/{rpmrc,macros} to librpm subpackage.
+- Relocated %_rpmlibdir/{rpmrc,macros} to librpm subpackage.
 - Removed c++ from build dependencies.
 - lib/depends.c(rpmRangesOverlap):
   changed algorithm so EVRs will be compared
@@ -671,9 +671,9 @@ fi
 * Sun Nov 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27
 - helper shell scripts:
   + use printf instead of echo where appropriate;
-  + moved common code to %_rpmdir/functions.
+  + moved common code to %_rpmlibdir/functions.
 - Implemented %%_unpackaged_files_terminate_build support.
-- rpm-build: do not package %_rpmdir/mkinstalldirs.
+- rpm-build: do not package %_rpmlibdir/mkinstalldirs.
 - Do not package build-topdir subpackage by default.
 - verify_elf: implemented TEXTREL checking.
 - Updated README.ALT-ru_RU.KOI8-R.
@@ -701,7 +701,7 @@ fi
 - tcl.req: fixed perl syntax (at).
 
 * Fri Sep 12 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt24
-- rpm-build: do not package %_rpmdir/config.* files (#2732).
+- rpm-build: do not package %_rpmlibdir/config.* files (#2732).
 - build/pack.c: create %%_srcrpmdir (#2353).
 - rpmrc.in:
   + added armv5 arch support (#2801, Sergey Bolshakov).
@@ -849,7 +849,7 @@ fi
   + Added CCACHE_CXX support.
 - rpmpopt:
   + Added with/without/enable/disable aliases to rpmq/rpmquery.
-- Fixed permissions on %_rpmdir in -build subpackage
+- Fixed permissions on %_rpmlibdir in -build subpackage
   (thanks to Ivan Zakharyaschev).
 
 * Mon Nov 04 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt11
