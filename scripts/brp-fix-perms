@@ -40,9 +40,5 @@ for d in usr/*; do
 done
 
 # Following files should not be group/world readable.
-for d in bin sbin lib usr/{bin,sbin,lib} usr/X11R6/bin; do
-	if [ -d "$d" ]; then
-		find "$d" -type f -perm -4100 -print0 |xargs -r0 chmod -R go-rw
-		find "$d" -type f -perm -6100 -print0 |xargs -r0 chmod -R go-rw
-	fi
-done
+find "$d" -type f \( -perm -4100 -o -perm -2100 \) -print0 |
+	xargs -r0 chmod -R go-rw --
