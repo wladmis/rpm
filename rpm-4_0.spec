@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt27.1
+Release: alt27.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -331,7 +331,6 @@ fi
 %_libdir/librpmdb.so
 %_libdir/librpmio.so
 %_libdir/librpmbuild.so
-%_libdir/*.la
 %_includedir/%name
 %if_with apidocs
 %_man3dir/*
@@ -474,13 +473,14 @@ fi
 %endif #with contrib
 
 %changelog
-* Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27.1
+* Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27.2
 - brp-verify_elf:
   "%%set_verify_elf_method relaxed" now affects textrel as well as rpath.
 - verify-elf:
   print textrel information even if textrel=relaxed.
 - pam.{prov,req}: better error diagnostics.
 - platform: corrected %%%__python_version definition (#3311).
+- Do not package .la files.
 
 * Sun Nov 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27
 - helper shell scripts:
