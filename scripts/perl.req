@@ -59,7 +59,7 @@ if ($debug) {
 $method ||= $ENV{RPM_PERL_REQ_METHOD};
 $method =~ s/\s+//g;
 $method eq "strict" || $method eq "normal" || $method eq "relaxed"
-	|| die "$0: strcit, normal, relaxed methods supported\n";
+	|| die "$0: strict, normal, relaxed methods supported\n";
 debug "method = $method";
 
 my @ignore_files = (
