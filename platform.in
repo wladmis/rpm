@@ -211,7 +211,7 @@
 @alt@%{___build_post}	\
 @alt@%nil
 @alt@
-@alt@%_internal_gpg_path	@RPMCONFIGDIR@/gnupg
+@alt@%_internal_gpg_path	/usr/lib/alt-gpgkeys
 @alt@
 @alt@%prefix	%_prefix
 @alt@
