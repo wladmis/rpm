@@ -360,11 +360,12 @@
 @alt@# X11 directories.
 @alt@%_x11dir	%{_prefix}/X11R6
 @alt@%_x11bindir	%{_x11dir}/bin
-@alt@%_x11libdir	%{_x11dir}/lib
+@alt@%_x11libdir	%{_x11dir}/%_lib
+@alt@%_x11x11dir	%{_x11dir}/lib/X11
 @alt@%_x11includedir	%{_x11dir}/include
 @alt@%_x11mandir	%{_x11dir}/man
 @alt@%_x11datadir	%{_x11dir}/share
-@alt@%_x11fontsdir	%{_x11libdir}/X11/fonts
+@alt@%_x11fontsdir	%{_x11x11dir}/fonts
 @alt@
 @alt@# Initscripts.
 @alt@%_initdir	%{_sysconfdir}/rc.d/init.d
@@ -383,6 +384,9 @@
 @alt@
 @alt@# Application spool data directory.
 @alt@%_spooldir	%{_var}/spool
+@alt@
+@alt@# pkg-config directory.
+@alt@%_pkgconfigdir	%{_libdir}/pkgconfig
 @alt@
 @alt@# Directory for emacs lisp modules.
 @alt@%_emacslispdir	%{_datadir}/emacs/site-lisp
