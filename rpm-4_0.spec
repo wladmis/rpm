@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt27
+Release: alt27.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -474,6 +474,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27.1
+- brp-verify_elf:
+  "%%set_verify_elf_method relaxed" now affects textrel as well as rpath.
+- verify-elf:
+  print textrel information even if textrel=relaxed.
+- pam.{prov,req}: better error diagnostics.
+- platform: corrected %%%__python_version definition (#3311).
+
 * Sun Nov 09 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt27
 - helper shell scripts:
   + use printf instead of echo where appropriate;
@@ -493,7 +501,7 @@ fi
 - pam.prov:
   + validate $PAM_NAME_SUFFIX.
 - pam.req:
-  + validate %PAM_SO_SUFFIX and $PAM_NAME_SUFFIX;
+  + validate $PAM_SO_SUFFIX and $PAM_NAME_SUFFIX;
   + induce "buildreq -bi" to generate dependence on
     libpam-devel package (#3050).
 - Updated README.ALT-ru_RU.KOI8-R.
