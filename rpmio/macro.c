@@ -1638,7 +1638,18 @@ rpmInitMacrofileGlob (const char *macrofile)
 		{
 			unsigned i;
 			for (i = 0; i < gl.gl_pathc; ++i)
-				rpmInitMacrofile (gl.gl_pathv[i]);
+			{
+				const char *p = gl.gl_pathv[i];
+
+				if (!*p)
+					continue;
+
+				for (; *p; ++p)
+					if (!xisalnum (*p) && ('_' != *p) && ('-' != *p))
+						break;
+				if (!*p)
+					rpmInitMacrofile (gl.gl_pathv[i]);
+			}
 		}
 		globfree (&gl);
 	}
