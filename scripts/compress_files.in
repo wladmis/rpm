@@ -1,7 +1,7 @@
 #!/bin/sh -e
 #
 # compress_files - compress files helper.
-# Copyright (C) 2000, 2001  Dmitry V. Levin <ldv@fandra.org>
+# Copyright (C) 2000-2002  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the te/bin/rms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 PROG="${0##*/}"
 
 case "$RPM_COMPRESS_METHOD" in
-	no|none|plain)
+	no|none|plain|skip)
 		exit 0
 		;;
 esac
