@@ -17,7 +17,6 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_AIX
 AC_MINIX
-AC_PROG_CXX
 AS=${AS-as}
 AC_SUBST(AS)
 if test "$ac_cv_prog_gcc" = yes; then

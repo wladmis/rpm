@@ -51,8 +51,8 @@ BuildPreReq: python22
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 BuildConflicts: rpm-devel
 
-# Automatically added by buildreq on Mon May 05 2003
-BuildRequires: bzlib-devel-static cpio gcc-c++ glibc-devel-static libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static zlib-devel-static
+# Automatically added by buildreq on Mon May 05 2003 and edited manually.
+BuildRequires: bzlib-devel-static cpio glibc-devel-static libbeecrypt-devel-static libdb4.0-devel-static libpopt-devel-static zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -517,6 +517,7 @@ fi
 - /usr/bin/rpm.static: package separately.
 - /usr/lib/librpmbuild-4.0.4.so: package separately.
 - Relocated %_libdir/%name/{rpmrc,macros} to librpm subpackage.
+- Removed c++ from build dependencies.
 
 * Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt28
 - brp-verify_elf:
