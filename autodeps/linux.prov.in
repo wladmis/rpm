@@ -32,6 +32,7 @@ fi
 FIND_LIBS=
 FIND_PAM=
 FIND_PERL=
+FIND_SHELL=
 
 ParseMethod()
 {
@@ -42,6 +43,7 @@ ParseMethod()
 				FIND_LIBS=
 				FIND_PAM=
 				FIND_PERL=
+				FIND_SHELL=
 				;;
 			lib)
 				FIND_LIBS=1
@@ -61,10 +63,17 @@ ParseMethod()
 			noperl)
 				FIND_PERL=
 				;;
+			sh|shell)
+				FIND_SHELL=1
+				;;
+			nosh|noshell)
+				FIND_SHELL=
+				;;
 			all)
 				FIND_LIBS=1
 				FIND_PAM=1
 				FIND_PERL=1
+				FIND_SHELL=1
 				;;
 			default|yes|true)
 				ParseMethod $RPM_FINDPROV_DEFAULT_METHOD || return 1
@@ -78,7 +87,7 @@ ParseMethod()
 }
 ParseMethod $RPM_FINDPROV_METHOD
 
-if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" ]; then
+if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" -a -z "$FIND_SHELL" ]; then
 	# Nothing to do
 	cat >/dev/null 2>&1
 	exit 0
@@ -103,12 +112,22 @@ ListScriptProvs()
 	local f t
 	f="$1"
 	t="$2"
-	if [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
-		if [ -n "$FIND_PAM" ]; then
-			local r
-			r="$(@RPMCONFIGDIR@/pam.prov "$f")" || return 1
-			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+
+	if [ -z "${t##ASCII *text*}" ]; then
+		if [ -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
+			if [ -n "$FIND_PAM" ]; then
+				local r
+				r="$(@RPMCONFIGDIR@/pam.prov "$f")" || return 1
+				[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
+			fi
+		elif [ "${f##*/}" = ".provides.sh" ]; then
+			if [ -n "$FIND_SHELL" ]; then
+				local r
+				r="$(@RPMCONFIGDIR@/shell.prov "$f")" || return 1
+				[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+$r"
+			fi
 		fi
 	elif [ -z "${t##perl script text*}" -o -z "${f%%*.p[lmh]}" ]; then
 		if [ -n "$FIND_PERL" ]; then

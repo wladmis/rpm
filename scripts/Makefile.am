@@ -12,7 +12,7 @@ EXTRA_DIST = \
 	get_magic.pl getpo.sh http.req \
 	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
 	rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
-	shell.req sql.prov sql.req strip_files tcl.req trpm u_pkg.sh \
+	shell.req shell.prov sql.prov sql.req strip_files tcl.req trpm u_pkg.sh \
 	verify-elf vpkg-provides.sh vpkg-provides2.sh
 
 installprefix = $(DESTDIR)
@@ -30,5 +30,5 @@ config_SCRIPTS = \
 	get_magic.pl getpo.sh http.req \
 	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
 	rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
-	shell.req sql.prov sql.req strip_files tcl.req trpm u_pkg.sh \
+	shell.req shell.prov sql.prov sql.req strip_files tcl.req trpm u_pkg.sh \
 	verify-elf vpkg-provides.sh vpkg-provides2.sh

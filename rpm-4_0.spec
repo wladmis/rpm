@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt15
+Release: alt16
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null)
@@ -16,7 +16,7 @@ Release: alt15
 %define if_without() %if %{expand:%%{?_without_%{1}:1}%%{!?_without_%{1}:0}}
 
 %def_with python
-%def_with apidocs
+%def_without apidocs
 %def_without db
 %def_without contrib
 
@@ -482,6 +482,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Apr 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt16
+- Fixed segfault on "rpmquery --qf '%{FILENAMES}' ncurses" command.
+- Implemented shell functions provides autodetection.
+- Do not build API docs by default.
+
 * Tue Apr 22 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt15
 - Fixed `rpmbuild -bE' return code (#0001021).
 - platform.in:
