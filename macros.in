@@ -945,5 +945,8 @@ done \
 #
 %find_lang	@RPMCONFIGDIR@/find-lang
 
+# Useful ifdef() macro.
+%ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
+
 # \endverbatim
 #*/
