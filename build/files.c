@@ -993,11 +993,17 @@ static int parseForSimple(/*@unused@*/Spec spec, Package pkg, char * buf,
 	    res = 1;
 	} else {
 	/* XXX WATCHOUT: buf is an arg */
-	    {	const char *ddir, *n, *v;
+	    int custom = 0;
 
-		(void) headerNVR(pkg->header, &n, &v, NULL);
-
-		ddir = rpmGetPath("%{_docdir}/", n, "-", v, NULL);
+	    {
+		const char *ddir = rpmExpand("%{?_customdocdir}", NULL);
+		if (ddir) {
+		    custom = 1;
+		} else {
+		    const char *n, *v;
+		    (void) headerNVR(pkg->header, &n, &v, NULL);
+		    ddir = rpmGetPath("%{_docdir}/", n, "-", v, NULL);
+		}
 		strcpy(buf, ddir);
 		ddir = _free(ddir);
 	    }
@@ -1009,7 +1015,8 @@ static int parseForSimple(/*@unused@*/Spec spec, Package pkg, char * buf,
 		appendStringBuf(pkg->specialDoc, "DOCDIR=$RPM_BUILD_ROOT");
 		appendLineStringBuf(pkg->specialDoc, buf);
 		appendLineStringBuf(pkg->specialDoc, "export DOCDIR");
-		appendLineStringBuf(pkg->specialDoc, "rm -rf \"$DOCDIR\"");
+		if (!custom)
+		    appendLineStringBuf(pkg->specialDoc, "rm -rf \"$DOCDIR\"");
 		appendLineStringBuf(pkg->specialDoc, MKDIR_P " \"$DOCDIR\"");
 
 		/*@-temptrans@*/
