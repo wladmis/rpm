@@ -1,9 +1,10 @@
 #!/bin/sh -ef
 #
+# Copyright (C) 2000-2003  Dmitry V. Levin <ldv@altlinux.org>
+# $Id$
+#
 # find-provides - generate list of linux-specific package provides.
 # Inspired by tool with same name from RPM distribution.
-#
-# Copyright (C) 2000,2001,2002  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -79,7 +80,7 @@ ParseMethod $RPM_FINDPROV_METHOD
 
 if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" ]; then
 	# Nothing to do
-	cat &>/dev/null
+	cat >/dev/null 2>&1
 	exit 0
 fi
 
@@ -99,8 +100,9 @@ LIST_PERL=
 
 ListScriptProvs()
 {
-	local f="$1"
-	local t="$2"
+	local f t
+	f="$1"
+	t="$2"
 	if [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
 		if [ -n "$FIND_PAM" ]; then
 			local r
@@ -118,12 +120,12 @@ $f"
 
 FindPerlProvs()
 {
-	if [ -n "$LIST_PERL" ]; then
-		local r
-		r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.prov)" || return 1
-		[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+	[ -n "$LIST_PERL" ] || return 0
+
+	local r
+	r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.prov)" || return 1
+	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
-	fi
 }
 
 # Note this works for both a.out and ELF executables.
@@ -132,8 +134,10 @@ $r"
 FindLibProvs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
-	local f="$1"
-	local d
+
+	local f d
+	f="$1"
+
 	if d="$(objdump -p "$f")"; then
 		local soname
 		soname="$(echo -E "$d" |awk '/SONAME/ {print $2}')" || return 1
@@ -190,4 +194,4 @@ done
 FindPerlProvs
 
 # Finally sort and print them.
-echo "$FOUND_PROVS" |sort -u
+echo "$FOUND_PROVS" |LC_COLLATE=C sort -u

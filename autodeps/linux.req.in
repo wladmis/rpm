@@ -3,7 +3,7 @@
 # find-requires - generate list of linux-specific package requires.
 # Inspired by tool with same name from RPM distribution.
 #
-# Copyright (C) 2000,2001,2002  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2000-2003  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,15 +22,15 @@
 
 PROG="${0##*/}"
 
-Exit()
+exit_handler()
 {
-	RETVAL=$?
-	trap '' EXIT
-	cat &>/dev/null
-	exit $RETVAL
+	local rc=$?
+	trap - EXIT
+	cat >/dev/null 2>&1
+	exit $rc
 }
 
-trap "Exit " EXIT
+trap exit_handler EXIT
 
 # If using normal root, avoid changing anything.
 if [ -z "$(echo "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
@@ -151,11 +151,13 @@ LIST_PERL=
 ListScriptReqs()
 {
 	[ -n "$FIND_SCRIPT" ] || return 0
-	local f="$1"
-	local t="$2"
+
+	local f t
+	f="$1"
+	t="$2"
 	if [ -x "$f" ]; then
 		local r
-		r="$(FindPackage "$f" "$(head -1 "$f" |sed -n 's|^#![ 	]*\(/[^ 	]\+\).*|\1|p')")" || return 1
+		r="$(FindPackage "$f" "$(head -1 "$f" |sed -n 's|^#![[:space:]]*\(/[^[:space:]]\+\).*|\1|p')")" || return 1
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 	fi
@@ -183,12 +185,12 @@ $f"
 
 FindPerlReqs()
 {
-	if [ -n "$LIST_PERL" ]; then
-		local r
-		r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.req)" || return 1
-		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+	[ -n "$LIST_PERL" ] || return 0
+
+	local r
+	r="$(echo "$LIST_PERL" |@RPMCONFIGDIR@/perl.req)" || return 1
+	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
-	fi
 }
 
 # Note this works for both a.out and ELF executables.
@@ -197,8 +199,9 @@ $r"
 FindLibReqs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
-	local f="$1"
-	local d
+
+	local f d
+	f="$1"
 
 	if d="$(objdump -p "$f")"; then 
 		# Shared library dependencies, glibc version references.
@@ -285,4 +288,4 @@ done
 FindPerlReqs
 
 # Finally sort and print them.
-echo "$FOUND_REQS" |sort -u
+echo "$FOUND_REQS" |LC_COLLATE=C sort -u
