@@ -682,32 +682,108 @@ verifyPGPSignature(const char * datafile, const void * sig, int count,
 }
 
 static rpmVerifySignatureReturn
+do_verifyGPGSignature(const char *gpghome, const char *sigfile, const char *datafile, /*@out@*/ char *result)
+	/*@globals rpmGlobalMacroContext, fileSystem @*/
+	/*@modifies *result, rpmGlobalMacroContext, fileSystem @*/
+{
+	int pid, outpipe[2];
+  
+	if ( !sigfile || !datafile )
+		return RPMSIG_BAD;
+
+	/* Now run GPG */
+	outpipe[0] = outpipe[1] = 0;
+	pipe(outpipe);
+
+	pid = fork();
+
+	if ( pid < 0 )
+	{
+		rpmError( RPMERR_FORK, _("Couldn't fork %s: %s"), "gpg", strerror(errno) );
+		return RPMSIG_BAD;
+	} else
+	{
+		if ( !pid )
+		{
+			/* child */
+			const char * cmd;
+			char *const *av;
+			int rc;
+
+			close( outpipe[0] );
+			/* gpg version 0.9 sends its output to stderr. */
+			dup2(outpipe[1], STDERR_FILENO);
+
+			addMacro(NULL, "__plaintext_filename", NULL, datafile, -1);
+			addMacro(NULL, "__signature_filename", NULL, sigfile, -1);
+
+			if ( rpm_close_all() ) {
+				perror( "rpm_close_all" );
+				_exit( -1 );
+			}
+
+			dosetenv( "LANG", "C", 1 );
+			dosetenv( "LANGUAGE", "C", 1 );
+			dosetenv( "LC_ALL", "C", 1 );
+
+			if ( gpghome && *gpghome )
+				dosetenv( "GNUPGHOME", gpghome, 1 );
+
+			cmd = rpmExpand("%{?__gpg_verify_cmd}", NULL);
+			rc = poptParseArgvString(cmd, NULL, (const char ***)&av);
+			if (!rc)
+				rc = execv(av[0], av+1);
+			rpmError(RPMERR_EXEC, _("Could not exec %s: %s\n"), "gpg",
+				strerror(errno));
+			_exit( RPMERR_EXEC );
+		} else
+		{
+			/* parent */
+			int res = RPMSIG_OK, status;
+			FILE *file = fdopen( outpipe[0], "r" );
+			unsigned char buf[BUFSIZ];
+			const char nokey[] = "gpg: Can't check signature: public key not found";
+
+			close(outpipe[1]);
+			result[0] = '\0';
+
+			if ( file )
+			{
+				while ( fgets( buf, sizeof(buf), file ) )
+				{
+					strcat(result, buf);
+					if ( !xstrncasecmp( nokey, buf, sizeof(nokey)-1 ) )
+						res = RPMSIG_NOKEY;
+				}
+
+				fclose(file);
+			}
+
+			while ( waitpid( pid, &status, 0 ) < 0 )
+			{
+				if ( EINTR != errno )
+				{
+					rpmError( RPMERR_FORK, _("waitpid failure: %s"), strerror(errno) );
+					return RPMSIG_BAD;
+				}
+			}
+
+			if ( !res && (!WIFEXITED(status) || WEXITSTATUS(status)) )
+				res = RPMSIG_BAD;
+			return res;
+		}
+	}
+}
+
+static rpmVerifySignatureReturn
 verifyGPGSignature(const char * datafile, const void * sig, int count,
 		/*@out@*/ char * result)
 	/*@globals rpmGlobalMacroContext, fileSystem @*/
 	/*@modifies *result, rpmGlobalMacroContext, fileSystem @*/
 {
-    int pid, status, outpipe[2];
-/*@only@*/ /*@null@*/ const char * sigfile = NULL;
-    byte buf[BUFSIZ];
-    FILE *file;
-    int res = RPMSIG_OK;
-    const char * cmd;
-    char *const *av;
-    int rc;
-
+    char *sigfile = 0;
+  
     /* Write out the signature */
-#ifdef	DYING
-  { const char *tmppath = rpmGetPath("%{_tmppath}", NULL);
-    sigfile = tempnam(tmppath, "rpmsig");
-    tmppath = _free(tmppath);
-  }
-    sfd = Fopen(sigfile, "w.fdio");
-    if (sfd != NULL && !Ferror(sfd)) {
-	(void) Fwrite(sig, sizeof(char), count, sfd);
-	(void) Fclose(sfd);
-    }
-#else
     {	FD_t sfd;
 	if (!makeTempFile(NULL, &sigfile, &sfd)) {
 	    (void) Fwrite(sig, sizeof(char), count, sfd);
@@ -715,65 +791,32 @@ verifyGPGSignature(const char * datafile, const void * sig, int count,
 	    sfd = NULL;
 	}
     }
-#endif
-    if (sigfile == NULL)
-	return RPMSIG_BAD;
 
-    addMacro(NULL, "__plaintext_filename", NULL, datafile, -1);
-    addMacro(NULL, "__signature_filename", NULL, sigfile, -1);
+    if (!sigfile)
+    {
+	rpmError(RPMERR_SCRIPT, _("Unable to open temp file."));
+	return RPMSIG_BAD;
+    }
 
     /* Now run GPG */
-    outpipe[0] = outpipe[1] = 0;
-    (void) pipe(outpipe);
+    {
+	const char *gpg_path = rpmExpand( "%{?_internal_gpg_path}", NULL );
+	const char *gpg_home = ( gpg_path && *gpg_path ) ? gpg_path : 0;
+	rpmVerifySignatureReturn res = gpg_home ?
+		do_verifyGPGSignature( gpg_home, sigfile, datafile, result ) : RPMSIG_NOKEY;
+	gpg_path = _free( gpg_path );
 
-    if (!(pid = fork())) {
-	const char *gpg_path = rpmExpand("%{?_gpg_path}", NULL);
-
-	(void) close(outpipe[0]);
-	/* gpg version 0.9 sends its output to stderr. */
-	(void) dup2(outpipe[1], STDERR_FILENO);
-
-	if (gpg_path && *gpg_path != '\0')
-	    (void) dosetenv("GNUPGHOME", gpg_path, 1);
-
-	cmd = rpmExpand("%{?__gpg_verify_cmd}", NULL);
-	rc = poptParseArgvString(cmd, NULL, (const char ***)&av);
-	if (!rc)
-	    rc = execve(av[0], av+1, environ);
-
-	rpmError(RPMERR_EXEC, _("Could not exec %s: %s\n"), "gpg",
-			strerror(errno));
-	_exit(RPMERR_EXEC);
-    }
-
-    delMacro(NULL, "__plaintext_filename");
-    delMacro(NULL, "__signature_filename");
-
-    (void) close(outpipe[1]);
-    file = fdopen(outpipe[0], "r");
-    result[0] = '\0';
-    if (file) {
-	char * t = result;
-	int nb = 8*BUFSIZ - 1;
-	while (fgets(buf, 1024, file)) {
-	    nb -= strlen(buf);
-	    if (nb > 0) t = stpncpy(t, buf, nb);
-	    if (!xstrncasecmp("gpg: Can't check signature: Public key not found", buf, 48)) {
-		res = RPMSIG_NOKEY;
-	    }
+	if ( RPMSIG_NOKEY == res )
+	{
+	    gpg_path = rpmExpand( "%{?_gpg_path}", NULL );
+	    gpg_home = ( gpg_path && *gpg_path ) ? gpg_path : 0;
+	    res = do_verifyGPGSignature( gpg_home, sigfile, datafile, result );
+	    gpg_path = _free( gpg_path );
 	}
-	(void) fclose(file);
-	*t = '\0';
-    }
 
-    (void) waitpid(pid, &status, 0);
-    if (sigfile) (void) unlink(sigfile);
-    sigfile = _free(sigfile);
-    if (!res && (!WIFEXITED(status) || WEXITSTATUS(status))) {
-	res = RPMSIG_BAD;
+	unlink(sigfile);
+	return res;
     }
-
-    return res;
 }
 
 static int checkPassPhrase(const char * passPhrase, const int sigTag)
