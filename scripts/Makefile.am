@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = 1.4 foreign
 
 EXTRA_DIST = \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
-	brp-cleanup brp-compress brp-fix-perms brp-strip \
+	brp-cleanup brp-compress brp-fix-perms brp-strip brp-verify_elf \
 	compress_files check-prereqs convertrpmrc.sh cross-build \
 	delayed_rebuilddb find-lang find-package find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl \
@@ -12,7 +12,7 @@ EXTRA_DIST = \
 	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
 	rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shell.req sql.prov sql.req strip_files tcl.req trpm u_pkg.sh \
-	vpkg-provides.sh vpkg-provides2.sh
+	verify-elf vpkg-provides.sh vpkg-provides2.sh
 
 installprefix = $(DESTDIR)
 
@@ -21,7 +21,7 @@ all:
 configdir = ${prefix}/lib/rpm
 config_SCRIPTS = \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
-	brp-cleanup brp-compress brp-fix-perms brp-strip \
+	brp-cleanup brp-compress brp-fix-perms brp-strip brp-verify_elf \
 	compress_files check-prereqs convertrpmrc.sh cross-build \
 	delayed_rebuilddb find-lang find-package find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl \
@@ -29,4 +29,4 @@ config_SCRIPTS = \
 	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
 	rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shell.req sql.prov sql.req strip_files tcl.req trpm u_pkg.sh \
-	vpkg-provides.sh vpkg-provides2.sh
+	verify-elf vpkg-provides.sh vpkg-provides2.sh

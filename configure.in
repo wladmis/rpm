@@ -1098,7 +1098,7 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	rpmio/Makefile rpmdb/Makefile lib/Makefile build/Makefile
 	autodeps/linux.prov autodeps/linux.req tools/Makefile
 	scripts/Makefile scripts/shell.req scripts/compress_files
-	scripts/brp-alt scripts/brp-compress scripts/brp-strip
+	scripts/brp-alt scripts/brp-compress scripts/brp-strip scripts/brp-verify_elf
 	tests/Makefile tests/rpmrc tests/macros tests/hello-test/Makefile
 	misc/Makefile po/Makefile.in intl/Makefile
 	doc/Makefile doc/manual/Makefile
