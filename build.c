@@ -268,11 +268,14 @@ static int buildForTarget(const char * arg, BTA_t ba,
 #define	_anyarch(_f)	\
 (((_f)&(RPMBUILD_PREP|RPMBUILD_BUILD|RPMBUILD_INSTALL|RPMBUILD_PACKAGEBINARY)) == 0)
     if (parseSpec(&spec, specURL, ba->rootdir, buildRootURL, 0, passPhrase,
-		cookie, _anyarch(buildAmount), ba->force)) {
+		cookie, _anyarch(buildAmount), ba->force, ba->buildAmount & RPMBUILD_PREPROCESS)) {
 	rc = 1;
 	goto exit;
     }
 #undef	_anyarch
+
+    if (ba->buildAmount & RPMBUILD_PREPROCESS) /* we're done */
+        goto exit;
 
     /* Assemble source header from parsed components */
     initSourceHeader(spec);
