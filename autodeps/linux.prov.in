@@ -1,4 +1,4 @@
-#!/bin/sh -e -f +B
+#!/bin/sh -ef
 #
 # find-provides - generate list of linux-specific package provides.
 # Inspired by tool with same name from RPM distribution.

@@ -1,4 +1,4 @@
-#!/bin/sh -e -f +B
+#!/bin/sh -ef
 #
 # fixup-binconfig - /usr/bin/*-config fixups.
 #
