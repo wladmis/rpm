@@ -32,6 +32,11 @@ static int progressTotal = 0;
 /*@unchecked@*/
 static int progressCurrent = 0;
 
+static int checkedTTY = 0;
+static int countWidth = 0;
+static int nameWidth = 29;
+static int hashesTotal = 50;
+
 static void checkTTY( void )
 {
 	struct winsize ws;
