@@ -808,8 +808,26 @@ int packageSources(Spec spec)
     spec->cookie = _free(spec->cookie);
     
     /* XXX this should be %_srpmdir */
-    {	const char *fn = rpmGetPath("%{_srcrpmdir}/", spec->sourceRpmName,NULL);
+    {
+	const char *fn = rpmGetPath("%{_srcrpmdir}/", spec->sourceRpmName, NULL);
+	{
+		const char *dn = rpmGetPath("%{_srcrpmdir}/", NULL);
+		struct stat st;
 
+		if (Stat(dn, &st) < 0) {
+		    switch(errno) {
+		    case  ENOENT:
+			if (MkdirP(dn, 0755) == 0)
+			    /*@switchbreak@*/ break;
+			/*@fallthrough@*/
+		    default:
+			rpmError(RPMERR_BADFILENAME,_("cannot create %s: %s\n"),
+			    dn, strerror(errno));
+			/*@switchbreak@*/ break;
+		    }
+		}
+		dn = _free(dn);
+	}
 	memset(csa, 0, sizeof(*csa));
 	csa->cpioArchiveSize = 0;
 	/*@-type@*/ /* LCL: function typedefs */
