@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt28
+Release: alt29
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -64,6 +64,12 @@ PreReq: libpopt >= 1:1.7-alt3
 PreReq: libbeecrypt >= 2.2.0-alt1
 PreReq: libdb4.0
 
+%package -n librpmbuild
+Summary: Shared library required for applications which will build RPM packages
+Summary(ru_RU.KOI8-R): Разделяемая библиотека для разработки приложений, собирающих RPM-пакеты
+Group: System/Libraries
+PreReq: lib%name = %version-%release
+
 %package -n lib%name-devel
 Summary: Development files for applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Файлы, необходимые для разработки приложений, взаимодействующих с RPM-пакетами
@@ -85,8 +91,8 @@ Summary: Scripts and executable programs used to build packages
 Summary(ru_RU.KOI8-R): Файлы, необходимые для установки SRPM-пакетов и сборки RPM-пакетов
 Group: Development/Other
 Obsoletes: spec-helper
+PreReq: librpmbuild = %version-%release, %name = %version-%release
 PreReq: shadow-utils
-PreReq: %name = %version-%release
 Requires: autoconf autoconf-common automake automake-common bison coreutils cpio
 Requires: gcc gettext-tools glibc-devel file kernel-headers libtool m4 make
 Requires: net-tools procps psmisc sed service sh texinfo which
@@ -104,6 +110,12 @@ Summary: RPM package installation and build directory tree
 Summary(ru_RU.KOI8-R): Сборочное дерево, используемое для установки SRPM-пакетов и сборки RPM-пакетов
 Group: Development/Other
 PreReq: %name-build = %version-%release
+
+%package static
+Summary: Static version of the RPM package management system
+Summary(ru_RU.KOI8-R): Статическая версия менеджера пакетов RPM
+Group: System/Configuration/Packaging
+PreReq: %name = %version-%release
 
 %package contrib
 Summary: Contributed scripts and executable programs which aren't currently used
@@ -127,6 +139,10 @@ RPM - это мощный неинтерактивный менеджер пакетов, используемый для сборки,
 %description -n lib%name
 This package contains shared libraries required to run dynamically linked
 programs manipulating with RPM packages and databases.
+
+%description -n librpmbuild
+This package contains shared library required to run dynamically linked
+programs building RPM packages.
 
 %description -n lib%name-devel
 This package contains the RPM C library and header files.  These
@@ -154,6 +170,9 @@ build packages using RPM.
 
 %description build-topdir
 This package contains RPM package installation and build directory tree.
+
+%description static
+This package contains statically linked version of the RPM program.
 
 %description contrib
 This package contains extra scripts and executable programs which arent
@@ -322,8 +341,19 @@ fi
 %post -n lib%name -p /sbin/post_ldconfig
 %postun -n lib%name -p /sbin/postun_ldconfig
 
+%post -n librpmbuild -p /sbin/post_ldconfig
+%postun -n librpmbuild -p /sbin/postun_ldconfig
+
 %files -n lib%name
-%_libdir/*-*.so*
+%rpmdirattr %_libdir/%name
+%rpmdatattr %_libdir/%name/rpmrc
+%rpmdatattr %_libdir/%name/macros
+%_libdir/librpm-*.so
+%_libdir/librpmdb-*.so
+%_libdir/librpmio-*.so
+
+%files -n librpmbuild
+%_libdir/librpmbuild-*.so
 
 %files -n lib%name-devel
 %_libdir/librpm.so
@@ -349,7 +379,6 @@ fi
 %dir %_docdir/%name-%rpm_version
 %_docdir/%name-%rpm_version/[A-Z]*
 %_docdir/%name-%rpm_version/manual
-%rpmattr /bin/rpm
 
 #%config(noreplace,missingok) %_sysconfdir/cron.daily/%name
 #%config(noreplace,missingok) %_sysconfdir/logrotate.d/%name
@@ -378,7 +407,9 @@ fi
 %rpmdbattr %_localstatedir/%name/Sha1header
 %rpmdbattr %_localstatedir/%name/Triggername
 
-%rpmattr %_bindir/rpm2cpio
+/bin/rpm
+%_bindir/rpm
+%_bindir/rpm2cpio
 %_bindir/rpmdb
 %_bindir/rpm[eiu]
 %_bindir/rpmsign
@@ -391,9 +422,7 @@ fi
 %rpmattr %_libdir/%name/pdeath_execute
 %rpmattr %_libdir/%name/rpm[dikq]
 %_libdir/%name/rpm[euv]
-%rpmdatattr %_libdir/%name/macros
 %rpmdatattr %_libdir/%name/rpmpopt*
-%rpmdatattr %_libdir/%name/rpmrc
 %rpmdatattr %_libdir/%name/GROUPS
 %_libdir/rpmpopt
 %_libdir/rpmrc
@@ -451,6 +480,9 @@ fi
 %_libdir/python*/site-packages/*module.so
 %endif #with python
 
+%files static
+%_bindir/rpm.static
+
 %if_with contrib
 %files contrib
 %rpmattr %dir %_libdir/%name
@@ -472,6 +504,18 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Jan 04 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt29
+- brp-cleanup: fixed possible cleanup misses.
+- verify-elf: verify SUID/SGID ELF objects as well.
+- fixup-libraries: fix SUID/SGID libraries as well.
+- find-lang: implemented --with-kde option (aris@, #2666).
+- find-provides: simplify check for perl files (at@ request).
+- /bin/rpm: build dynamically and relocate to %_bindir;
+  provide symlink for compatibility.
+- /usr/bin/rpm.static: package separately.
+- /usr/lib/librpmbuild-4.0.4.so: package separately.
+- Relocated %_libdir/%name/{rpmrc,macros} to librpm subpackage.
+
 * Mon Nov 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt28
 - brp-verify_elf:
   "%%set_verify_elf_method relaxed" now affects textrel as well as rpath.
