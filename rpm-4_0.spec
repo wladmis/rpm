@@ -666,7 +666,7 @@ fi
 
 * Mon Oct 28 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt10
 - New macros:
-  %set_{autoconf,automake,libtool}_version.
+  %%set_{autoconf,automake,libtool}_version.
 
 * Fri Oct 25 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt9
 - find-requires: added libperl/nolibperl options.
@@ -704,7 +704,7 @@ fi
 - new brp method: verify_elf.
 - platform:
   + set %%_verify_elf_method to "normal";
-  + added %set_verify_elf_method() macro;
+  + added %%set_verify_elf_method() macro;
   + set %%_configure_target to "--build=%%{_target_platform}".
 
 * Thu Sep 05 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt3
