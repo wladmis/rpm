@@ -1910,8 +1910,7 @@ int rpmdepOrder(rpmTransactionSet ts)
 
 	    /* Skip if not %pre/%post requires or legacy prereq. */
 
-	    if (isErasePreReq(p->requireFlags[j]) ||
-		!( isInstallPreReq(p->requireFlags[j]) ||
+	    if (!( isInstallPreReq(p->requireFlags[j]) ||
 		   isLegacyPreReq(p->requireFlags[j]) ))
 		continue;
 
@@ -1925,7 +1924,7 @@ int rpmdepOrder(rpmTransactionSet ts)
 
 	    if (p->requireFlags == NULL) continue;	/* XXX can't happen */
 
-	    /* Skip if %pre/%post requires or legacy prereq. */
+	    /* Skip if %pre/%post/%preun/%postun requires or legacy prereq. */
 
 	    if (isErasePreReq(p->requireFlags[j]) ||
 		 ( isInstallPreReq(p->requireFlags[j]) ||
