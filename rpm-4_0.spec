@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt42
+Release: alt43
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -279,7 +279,7 @@ done
 # Prepare documentation.
 bzip2 -9 CHANGES ||:
 %__mkdir_p $RPM_BUILD_ROOT%_docdir/%name-%rpm_version
-%__install -p -m644 CHANGES* CREDITS README README.ALT* RPM-GPG-KEY RPM-PGP-KEY TODO \
+%__install -p -m644 CHANGES* CREDITS README README.ALT* RPM-GPG-KEY RPM-PGP-KEY \
 	$RPM_BUILD_ROOT%_docdir/%name-%rpm_version/
 %__cp -a doc/manual $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/
 %__rm -f $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/manual/{Makefile*,buildroot}
@@ -508,6 +508,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue May 10 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt43
+- Rebuilt with glibc-2.3.5 and python-2.4.
+
 * Thu Feb 10 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt42
 - Backported db-4.3 support.
 - GROUPS: new group: System/X11.
