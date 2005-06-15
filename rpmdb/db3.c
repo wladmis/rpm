@@ -897,7 +897,7 @@ static int wait_for_lock (void)
 	return val;
 }
 
-static int dbi_set_lock (dbiIndex dbi, const char *dbhome, const char *dbfile)
+static int dbi_set_lock (dbiIndex dbi, DB *db, const char *dbhome, const char *dbfile)
 {
     int rc = 0;
     /*
@@ -1362,7 +1362,7 @@ static int db3open(/*@keep@*/ rpmdb rpmdb, int rpmtag, dbiIndex * dbip)
 	    dbi->dbi_rmw = NULL;
 
 	    if (rc == 0)
-	    	rc = dbi_set_lock(dbi);
+	    	rc = dbi_set_lock(dbi, db, dbhome, dbfile);
 	}
     }
 
