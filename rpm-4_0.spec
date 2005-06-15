@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt43
+Release: alt44
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -508,6 +508,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Jun 15 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt44
+- librpmdb: Fixed locking issue (#990).
+- rpm-build: Removed net-tools from dependencies.
+
 * Tue May 10 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt43
 - Rebuilt with glibc-2.3.5 and python-2.4.
 
