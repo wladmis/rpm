@@ -915,7 +915,7 @@ static int dbi_set_lock (dbiIndex dbi, DB *db, const char *dbhome, const char *d
      * acquire a lock, but permit failures, as some other
      * DBENV player may already have acquired the lock.
      */
-    if (!dbi->dbi_lockdbfd || dbi->dbi_use_dbenv)
+    if (!dbi->dbi_lockdbfd)
 	return 0;
 
     int fdno = -1;
