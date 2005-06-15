@@ -14,7 +14,7 @@ Release: alt44
 %define def_without() %{expand:%%{!?_with_%{1}: %%{!?_without_%{1}: %%global _without_%{1} --without-%{1}}}}
 %define if_with() %if %{expand:%%{?_with_%{1}:1}%%{!?_with_%{1}:0}}
 %define if_without() %if %{expand:%%{?_without_%{1}:1}%%{!?_without_%{1}:0}}
-%define _rpmlibdir %_prefix/lib/%name
+%define _rpmlibdir %_prefix/lib/rpm
 
 %def_with python
 %def_without apidocs
@@ -511,6 +511,7 @@ fi
 * Wed Jun 15 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt44
 - librpmdb: Fixed locking issue (#990).
 - rpm-build: Removed net-tools from dependencies.
+- platform.in: new macro: %%_rpmlibdir.
 
 * Tue May 10 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt43
 - Rebuilt with glibc-2.3.5 and python-2.4.
