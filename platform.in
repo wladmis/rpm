@@ -398,6 +398,9 @@
 @alt@%_tcllibdir	%_libdir/tcl
 @alt@%_tcldatadir	%_datadir/tcl
 @alt@
+@alt@# RPM directory.
+@alt@%_rpmlibdir	%_prefix/lib/rpm
+@alt@
 @alt@# Update Menus.
 @alt@%_update_menus_bin	%_bindir/update-menus
 @alt@%update_menus	[ -x %_update_menus_bin ] && %_update_menus_bin ||:
