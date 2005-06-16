@@ -350,7 +350,7 @@
 @alt@%_man9dir		%_mandir/man9
 @alt@
 @alt@# Menu directories.
-@alt@%_menudir	%_libdir/menu
+@alt@%_menudir	%_prefix/lib/menu
 @alt@%_iconsdir	%_datadir/icons
 @alt@%_miconsdir	%_iconsdir/mini
 @alt@%_liconsdir	%_iconsdir/large
@@ -427,7 +427,7 @@
 @alt@%_python_req_skip	""
 @alt@%_python_compile_method	ALL
 @alt@%_python_compile_exclude	/usr/share/doc
-@alt@%_python_compile_include	/usr/lib
+@alt@%_python_compile_include	/usr/%_lib
 @alt@%_python_compile_deep	20
 @alt@%_python_compile_skip_x	1
 @alt@%_python_compile_clean	1
@@ -455,7 +455,7 @@
 @alt@%_findreq_skiplist	%_docdir/*
 @alt@%_findprov_skiplist	%_docdir/*
 @alt@
-@alt@%_findprov_lib_path	/lib:/usr/lib:/usr/X11R6/lib
+@alt@%_findprov_lib_path	/lib:/usr/lib:/usr/X11R6/lib:/lib64:/usr/lib64:/usr/X11R6/lib64
 @alt@
 @alt@%set_cleanup_method()	%global _cleanup_method %*
 @alt@%set_compress_method()	%global _compress_method %*

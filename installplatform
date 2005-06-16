@@ -41,7 +41,7 @@ case "$arch" in
   powerpc*|ppc*) SUBSTS='s_ppc64_ppc_ s_ppc\([^6]\|$\)_ppc64\1_' ;;
   *) SUBSTS=y___ ;;
 esac
-base_arch=`echo $arch | sed -e 's_i?86_i386_;s_sparc.*_sparc_;s_alpha.*_alpha_;s_\(powerpc\|ppc\).*_ppc_'`
+base_arch=`echo $arch | sed -e 's_i?86_i386_;s_sparc.*_sparc_;s_alpha.*_alpha_;s_\(powerpc\|ppc\).*_ppc_;s,amd64,x86_64,'`
 
 for SUBST in $SUBSTS ; do
   ARCH=`echo $arch | sed -e $SUBST`
@@ -62,6 +62,7 @@ for SUBST in $SUBSTS ; do
     sparc-linux) MULTILIBNO=1 ;;
     sparcv9-linux) MULTILIBNO=1 ;;
     sparc64-linux) ARCH_INSTALL_POST=${pkglibdir}/brp-sparc64-linux; LIB=lib64; MULTILIBNO=2 ;;
+    x86_64-linux) LIB=lib64; MULTILIBNO=2 ;;
   esac
 
   if [ -n "$MULTILIBNO" ]; then

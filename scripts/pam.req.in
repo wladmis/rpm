@@ -1,7 +1,7 @@
 #!/bin/sh -e
 #
 # $Id$
-# Copyright (C) 2001,2003  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2001,2003,2005  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,11 +36,13 @@ fi
 # hack for "buildreq -bi".
 [ -f "$RPM_LIBDIR/libpam.so" ] ||:
 
+[ "$RPM_LIB" != 'lib64' ] || LIB64='()(64bit)'
+
 # pam_module.so
-sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib[0-9]*/security/\)\?\([^.[:space:]]\+\.so\)\($\|[[:space:]].*\)#\4'$PAM_SO_SUFFIX'#pg' <"$file" |sort -u
+sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib[0-9]*/security/\)\?\([^.[:space:]]\+\.so\)\($\|[[:space:]].*\)#\4'$PAM_SO_SUFFIX$LIB64'#pg' <"$file" |sort -u
 
 # pam_module.so*
-sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib[0-9]*/security/\)\?\([^.[:space:]]\+\.so[^[:space:]]\+\).*#\4#pg' <"$file" |sort -u
+sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib[0-9]*/security/\)\?\([^.[:space:]]\+\.so[^[:space:]]\+\).*#\4'$LIB64'#pg' <"$file" |sort -u
 
 # libpam(include)
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+include[[:space:]].*#libpam(include)#pg' <"$file" |sort -u

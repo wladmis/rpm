@@ -18,7 +18,9 @@ optflags: i686 %optflags_default -march=i686
 optflags: k6 %optflags_default -march=k6
 optflags: athlon %optflags_default -march=athlon
 optflags: pentium4 %optflags_default -march=pentium4
+optflags: amd64 %optflags_default
 optflags: ia64 %optflags_default
+optflags: x86_64 %optflags_default
 
 # XXX Please note that -mieee has been added in rpm-3.0.5.
 optflags: alpha -O2 -mieee -mcpu=ev4
@@ -75,6 +77,9 @@ arch_canon:	k6:	k6	1
 arch_canon:	i586:	i586	1
 arch_canon:	i486:	i486	1
 arch_canon:	i386:	i386	1
+arch_canon:	amd64:	amd64	1
+arch_canon:	x86_64:	x86_64	1
+arch_canon:	ia32e:	ia32e	1
 
 arch_canon:	alpha:	alpha	2
 arch_canon:	alphaev5: alphaev5	2
@@ -165,6 +170,10 @@ buildarchtranslate: osfmach3_i486: i386
 buildarchtranslate: osfmach3_i386: i386
 
 buildarchtranslate: ia64: ia64
+
+buildarchtranslate: x86_64: x86_64
+buildarchtranslate: amd64: x86_64
+buildarchtranslate: ia32e: x86_64
 
 buildarchtranslate: pentium4: pentium4
 buildarchtranslate: athlon: athlon
@@ -270,7 +279,11 @@ arch_compat: i370: noarch
 arch_compat: s390: noarch
 arch_compat: s390x: s390 noarch
 
-arch_compat: ia64: i686 noarch
+arch_compat: ia64: noarch
+
+arch_compat: x86_64: amd64 athlon noarch
+arch_compat: amd64: x86_64 athlon noarch
+arch_compat: ia32e: x86_64 athlon noarch
 
 os_compat:   IRIX64: IRIX
 os_compat: solaris2.7: solaris2.3 solaris2.4 solaris2.5 solaris2.6
@@ -300,6 +313,10 @@ os_compat: BSD_OS: bsdi
 os_compat: bsdi4.0: bsdi
 
 buildarch_compat: ia64: noarch
+
+buildarch_compat: x86_64: noarch
+buildarch_compat: amd64: x86_64
+buildarch_compat: ia32e: x86_64
 
 buildarch_compat: pentium4: i686
 buildarch_compat: athlon: i686 k6

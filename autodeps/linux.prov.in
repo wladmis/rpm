@@ -1,6 +1,6 @@
 #!/bin/sh -ef
 #
-# Copyright (C) 2000-2004  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2000-2005  Dmitry V. Levin <ldv@altlinux.org>
 # $Id$
 #
 # find-provides - generate list of linux-specific package provides.
@@ -219,7 +219,7 @@ FindTclProvs()
 $r"
 }
 
-DEF_RPM_FINDPROV_LIB_PATH='/lib:/usr/lib:/usr/X11R6/lib'
+DEF_RPM_FINDPROV_LIB_PATH='/lib:/usr/lib:/usr/X11R6/lib:/lib64:/usr/lib64:/usr/X11R6/lib64'
 : ${RPM_FINDPROV_LIB_PATH:=$DEF_RPM_FINDPROV_LIB_PATH}
 
 lookup_path()
@@ -240,7 +240,7 @@ FindLibProvs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local f dir name dump
+	local f dir name dump braces= suffix=
 	f="$1"
 	dir="${fname%/*}"
 	[ -n "$dir" ] || return 0
@@ -251,7 +251,9 @@ FindLibProvs()
 
 	if dump="$(objdump -p "$f")"; then
 		local soname
-		soname="$(printf %s\\n "$dump" |awk '/SONAME/ {print $2}')" || return 1
+		soname="$(printf %s\\n "$dump" |sed -ne 's/^[[:space:]]*SONAME[[:space:]]\+\([^[:space:]]\+\)[[:space:]]*$/\1/p')" || return 1
+		suffix="$(printf %s\\n "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
+		[ -z "$suffix" ] || braces='()'
 		if [ -n "$soname" ]; then
 			while :; do
 				# For libraries with soname, ignore all but files named as soname.
@@ -274,17 +276,17 @@ FindLibProvs()
 				lookup_path "$dir" "$DEF_RPM_FINDPROV_LIB_PATH" || nondefdir="$dir"
 
 				# Output soname.
-				printf %s\\n "$soname"
-				[ -z "$nondefdir" ] || printf "$nondefdir/%s\\n" "$soname"
+				printf %s\\n "$soname$braces$suffix"
+				[ -z "$nondefdir" ] || printf "$nondefdir/%s\\n" "$soname$braces$suffix"
 
 				# Output version definitions.
-	    			printf %s\\n "$dump" | awk "-vsoname=$soname" "-vnondefdir=$nondefdir" '
+	    			printf %s\\n "$dump" | awk "-vsoname=$soname" "-vnondefdir=$nondefdir" "-vsuffix=$suffix" '
 					BEGIN {start=0;}
 					/^Version definitions:$/ {start=1;}
 					/^[0-9]/ && (start==1) && ($4!="") && ($4!=soname) {
-						printf("%s(%s)\n",soname,$4)
+						printf("%s(%s)%s\n",soname,$4,suffix)
 						if (nondefdir!="")
-							printf("%s/%s(%s)\n",nondefdir,soname,$4)
+							printf("%s/%s(%s)%s\n",nondefdir,soname,$4,suffix)
 					}
 					/^$/ {start=0;}
 				' || return 1
@@ -293,7 +295,7 @@ FindLibProvs()
 			done
 		else
 			# Ignore symlinks for libraries without soname.
-			[ -L "$f" ] || printf %s\\n "${f##*/}"
+			[ -L "$f" ] || printf %s\\n "${f##*/}$braces$suffix"
 		fi
 	fi
 }

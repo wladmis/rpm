@@ -108,14 +108,14 @@ install-data-local:
 	@@LN_S@ rpm/rpmrc $(DESTDIR)$(libdir)/rpmrc
 	@rm -f $(DESTDIR)$(libdir)/rpmpopt
 	@@LN_S@ rpm/rpmpopt-$(VERSION) $(DESTDIR)$(libdir)/rpmpopt
-	@rm -f $(DESTDIR)$(libdir)/rpm/rpmt
-	@@LN_S@ rpmb $(DESTDIR)$(libdir)/rpm/rpmt
-	@rm -f $(DESTDIR)$(libdir)/rpm/rpme
-	@@LN_S@ rpmi $(DESTDIR)$(libdir)/rpm/rpme
-	@rm -f $(DESTDIR)$(libdir)/rpm/rpmu
-	@@LN_S@ rpmi $(DESTDIR)$(libdir)/rpm/rpmu
-	@rm -f $(DESTDIR)$(libdir)/rpm/rpmv
-	@@LN_S@ rpmq $(DESTDIR)$(libdir)/rpm/rpmv
+	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmt
+	@@LN_S@ rpmb $(DESTDIR)$(prefix)/lib/rpm/rpmt
+	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpme
+	@@LN_S@ rpmi $(DESTDIR)$(prefix)/lib/rpm/rpme
+	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmu
+	@@LN_S@ rpmi $(DESTDIR)$(prefix)/lib/rpm/rpmu
+	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmv
+	@@LN_S@ rpmq $(DESTDIR)$(prefix)/lib/rpm/rpmv
 	rm -f $(DESTDIR)$(bindir)/rpmbuild
 	@LN_S@ ../lib/rpm/rpmb $(DESTDIR)$(bindir)/rpmbuild
 	rm -f $(DESTDIR)$(bindir)/rpmquery

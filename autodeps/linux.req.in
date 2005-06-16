@@ -1,7 +1,7 @@
 #!/bin/sh -ef
 #
 # $Id$
-# Copyright (C) 2000-2004  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2000-2005  Dmitry V. Levin <ldv@altlinux.org>
 #
 # find-requires - generate list of linux-specific package requires.
 # Inspired by tool with same name from RPM distribution.
@@ -255,24 +255,26 @@ FindLibReqs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local f d
+	local f d braces= suffix=
 	f="$1"
 
 	if d="$(objdump -p "$f")"; then 
 		# Shared library dependencies, glibc version references.
-		printf %s\\n "$d" |awk '
+		suffix="$(printf %s\\n "$d" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
+		[ -z "$suffix" ] || braces='()'
+		printf %s\\n "$d" |awk "-vsuffix=$suffix" "-vbraces=$braces" '
 			BEGIN {start_shared=0; start_version=0; lib_name="";}
 			/^($)/ {start_shared=0; start_version=0; lib_name=""; next;}
 			/^private/ {start_shared=0; start_version=0; lib_name=""; next;}
 			/^Dynamic Section:$/ {start_shared=1; next;}
 			/^Version References:$/ {start_version=1; next;}
 			(start_version==1) && /^ *required from/ {sub(/:/, "", $3); lib_name=$3; next;}
-			(start_shared==1) && /^ *NEEDED/ {print $2; next;}
-			(start_version==1) && (lib_name!="") && ($4!="") {print lib_name "(" $4 ")";}
+			(start_shared==1) && /^ *NEEDED/ {print $2 braces suffix; next;}
+			(start_version==1) && (lib_name!="") && ($4!="") {print lib_name "(" $4 ")" suffix;}
 		'
 		if [ -n "$FIND_LIBPERL" -a -z "$libperl_so" -a -z "${f##*/usr/lib/perl?/*/auto/*.so}" ]; then
 			libperl_so=`perl -MConfig -e 'print "$Config{libperl}\n"'`
-			printf %s\\n "$libperl_so"
+			printf %s\\n "$libperl_so$braces$suffix"
 		fi
 	fi
 }

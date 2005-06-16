@@ -18,7 +18,7 @@ mylibs= \
 
 LDADD =
 
-pythondir = $(prefix)/lib/python${PYVER}/site-packages
+pythondir = $(prefix)/$(lib)/python${PYVER}/site-packages
 python_PROGRAMS = rpmmodule.so
 
 noinst_PROGRAMS = poptmodule.so
