@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt44
+Release: alt45
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -16,7 +16,11 @@ Release: alt44
 %define if_without() %if %{expand:%%{?_without_%{1}:1}%%{!?_without_%{1}:0}}
 %define _rpmlibdir %_prefix/lib/rpm
 
+%ifarch %ix86
 %def_with python
+%else
+%def_without python
+%endif
 %def_without apidocs
 %def_without db
 %def_without contrib
@@ -508,6 +512,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Jun 16 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt45
+- Added x86_64 support (Mouse, closes #4903).
+
 * Wed Jun 15 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt44
 - librpmdb: Fixed locking issue (#990).
 - rpm-build: Removed net-tools from dependencies.
