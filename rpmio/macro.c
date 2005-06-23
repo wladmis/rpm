@@ -1644,8 +1644,9 @@ rpmInitMacrofile (const char *macrofile)
 }
 
 static void
-rpmInitMacrofileGlob (const char *macrofile)
+rpmInitMacrofileGlob (const char *arg)
 {
+	const char *macrofile = rpmExpand (arg, NULL);
 	int is_local = strchr (macrofile, '~') ? 1 : 0;
 
 	if (is_local || strchr (macrofile, '*'))
@@ -1681,6 +1682,8 @@ rpmInitMacrofileGlob (const char *macrofile)
 	}
 	else
 		rpmInitMacrofile (macrofile);
+
+	_free (macrofile);
 }
 
 void
