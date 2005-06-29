@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt45
+Release: alt46
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -512,8 +512,20 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Jun 29 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt46
+- lib/header.c:
+  parseFormat(): allocate necessary memory for arrays
+  (closes #6086).
+- GROUPS:
+  new groups: Development/Documentation, Documentation
+  (closes #7182).
+- shell.req:
+  use "bash" for Bourne-Again shell scripts, and "sh" for others
+  (closes #7242).
+
 * Thu Jun 16 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt45
 - Added x86_64 support (Mouse, closes #4903).
+- Build this package without optimizations based on strict aliasing rules.
 
 * Wed Jun 15 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt44
 - librpmdb: Fixed locking issue (#990).
