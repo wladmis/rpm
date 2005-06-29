@@ -3540,6 +3540,9 @@ msgstr "Разработка/C++"
 msgid "Development/Databases"
 msgstr "Разработка/Базы данных"
 
+msgid "Development/Documentation"
+msgstr "Разработка/Документация"
+
 msgid "Development/Debuggers"
 msgstr "Разработка/Отладчики"
 
@@ -3587,6 +3590,9 @@ msgstr "Разработка/Scheme"
 
 msgid "Development/Tcl"
 msgstr "Разработка/Tcl"
+
+msgid "Documentation"
+msgstr "Документация"
 
 msgid "Editors"
 msgstr "Редакторы"
