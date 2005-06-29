@@ -2214,7 +2214,7 @@ static int parseFormat(char * str, const headerTagTableEntry tags,
     /* upper limit on number of individual formats */
     numTokens = 0;
     for (chptr = str; *chptr != '\0'; chptr++)
-	if (*chptr == '%') numTokens++;
+	if (*chptr == '%' || *chptr == '[') numTokens++;
     numTokens = numTokens * 2 + 1;
 
     format = xcalloc(numTokens, sizeof(*format));
