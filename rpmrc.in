@@ -376,7 +376,7 @@ buildarch_compat: ia64: noarch
 buildarch_compat: s390: noarch
 buildarch_compat: s390x: noarch
 
-macrofiles:	@RPMCONFIGDIR@/macros:@RPMCONFIGDIR@/%{_target}/macros:@SYSCONFIGDIR@/macros.specspo:@SYSCONFIGDIR@/macros.db1:@SYSCONFIGDIR@/macros.cdb:@SYSCONFIGDIR@/macros:@SYSCONFIGDIR@/%{_target}/macros:@SYSCONFIGDIR@/%{_target_platform}/macros:@SYSCONFIGDIR@/macros.d/*:~/.rpmmacros
+macrofiles:	@RPMCONFIGDIR@/macros:@RPMCONFIGDIR@/%{_target}/macros:@SYSCONFIGDIR@/macros.specspo:@SYSCONFIGDIR@/macros.db1:@SYSCONFIGDIR@/macros.cdb:@SYSCONFIGDIR@/macros:@SYSCONFIGDIR@/%{_target}/macros:@SYSCONFIGDIR@/macros.d/*:~/.rpmmacros
 
 # \endverbatim
 #*/
