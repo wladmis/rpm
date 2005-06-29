@@ -20,15 +20,22 @@
 
 . @RPMCONFIGDIR@/find-package
 
-FIND_REQ="/bin/sh --rpm-requires"
-
-# Make sure that this shell has the rpm-requires feature
-$FIND_REQ </dev/null >/dev/null 2>&1
-
 file="$1"
 fname="${file##$RPM_BUILD_ROOT}"
 dname="${fname%/*}"
 #extra=
+
+t="$(file -b "$file")" || exit 1
+
+case "$(file -b "$file")" in
+	"Bourne-Again shell script text"*)
+		FIND_REQ='/bin/bash --rpm-requires' ;;
+	*)
+		FIND_REQ='/bin/sh --rpm-requires' ;;
+esac
+
+# Make sure that this shell supports the rpm-requires feature.
+$FIND_REQ </dev/null
 
 if ! reqs="$($FIND_REQ "$file" 2>/dev/null)"; then
 	if egrep -vs '^(#|$)' "$file" 2>/dev/null |head -1 |grep -qs '^[ 	]*exec '; then
