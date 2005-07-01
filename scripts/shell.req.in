@@ -35,7 +35,7 @@ case "$(file -b "$file")" in
 esac
 
 # Make sure that this shell supports the rpm-requires feature.
-$FIND_REQ </dev/null
+$FIND_REQ </dev/null >/dev/null
 
 if ! reqs="$($FIND_REQ "$file" 2>/dev/null)"; then
 	if egrep -vs '^(#|$)' "$file" 2>/dev/null |head -1 |grep -qs '^[ 	]*exec '; then
