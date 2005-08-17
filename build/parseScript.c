@@ -260,6 +260,7 @@ int parseScript(Spec spec, int parsePart)
     stripTrailingBlanksStringBuf(sb);
     p = getStringBuf(sb);
 
+    if (pkg->autoReq && *pkg->autoReq)
     (void) addReqProv(spec, pkg->header, (tagflags | RPMSENSE_INTERP), progArgv[0], NULL, 0);
 
     /* Trigger script insertion is always delayed in order to */
