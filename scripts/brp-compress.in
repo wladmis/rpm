@@ -49,12 +49,30 @@ StripSuffix()
 }
 
 for d in `find "$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR" -type d -name info`; do
+	set -f
+	if [ -n "$RPM_COMPRESS_SKIPLIST" ]; then
+		for skip in $RPM_COMPRESS_SKIPLIST; do
+			if [ -z "${d##$skip}" ]; then
+				continue 2
+			fi
+		done
+	fi
+	set +f
 	find "$d" -type f \( -name \*.gz -o -name \*.Z \) -print0 |xargs -r0 gunzip
 	find "$d" -type f -name \*.bz2 -print0 |xargs -r0 bunzip2
 	find "$d" -type f -a \! -name dir -print0 |xargs -r0 @RPMCONFIGDIR@/compress_files
 done
 
 for d in `find "$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR" -type d -name man`; do
+	set -f
+	if [ -n "$RPM_COMPRESS_SKIPLIST" ]; then
+		for skip in $RPM_COMPRESS_SKIPLIST; do
+			if [ -z "${d##$skip}" ]; then
+				continue 2
+			fi
+		done
+	fi
+	set +f
 	find "$d" -type f -size 0 -print0 |xargs -r0 rm -fv
 	find "$d" -type f -print0 |xargs -r0 chmod a-x
 	# Uncompress everything.
