@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt47
+Release: alt48
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -61,6 +61,7 @@ BuildRequires: bzlib-devel-static glibc-devel-static libbeecrypt-devel-static li
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Файлы, необходимые для разработки приложений, взаимодействующих с RPM-пакетами
+License: GPL/LGPL
 Group: System/Libraries
 PreReq: zlib >= 1.1.4
 PreReq: bzlib >= 1:1.0.2-alt2
@@ -71,12 +72,14 @@ PreReq: libdb4.3
 %package -n librpmbuild
 Summary: Shared library required for applications which will build RPM packages
 Summary(ru_RU.KOI8-R): Разделяемая библиотека для разработки приложений, собирающих RPM-пакеты
+License: GPL/LGPL
 Group: System/Libraries
 Requires: lib%name = %version-%release
 
 %package -n lib%name-devel
 Summary: Development files for applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Файлы, необходимые для разработки приложений, взаимодействующих с RPM-пакетами
+License: GPL/LGPL
 Group: Development/C
 Provides: %name-devel = %version-%release
 Obsoletes: %name-devel
@@ -86,6 +89,7 @@ Requires: bzlib-devel, libbeecrypt-devel, libdb4.3-devel, libpopt-devel, zlib-de
 %package -n lib%name-devel-static
 Summary: Static libraries for developing statically linked applications which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Статические библиотеки, необходимые для разработки статических приложений, взаимодействующих с RPM-пакетами
+License: GPL/LGPL
 Group: Development/C
 Requires: lib%name-devel = %version-%release
 Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.3-devel-static, libpopt-devel-static, zlib-devel-static
@@ -93,6 +97,7 @@ Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.3-devel-static, l
 %package build
 Summary: Scripts and executable programs used to build packages
 Summary(ru_RU.KOI8-R): Файлы, необходимые для установки SRPM-пакетов и сборки RPM-пакетов
+License: GPL
 Group: Development/Other
 Obsoletes: spec-helper
 PreReq: librpmbuild = %version-%release, %name = %version-%release
@@ -114,18 +119,21 @@ Requires: rpm-build-tcl
 %package build-topdir
 Summary: RPM package installation and build directory tree
 Summary(ru_RU.KOI8-R): Сборочное дерево, используемое для установки SRPM-пакетов и сборки RPM-пакетов
+License: GPL
 Group: Development/Other
 PreReq: %name-build = %version-%release
 
 %package static
 Summary: Static version of the RPM package management system
 Summary(ru_RU.KOI8-R): Статическая версия менеджера пакетов RPM
+License: GPL
 Group: System/Configuration/Packaging
 PreReq: %name = %version-%release
 
 %package contrib
 Summary: Contributed scripts and executable programs which aren't currently used
 Summary(ru_RU.KOI8-R): Файлы, не используемые в настоящее время
+License: GPL
 Group: Development/Other
 PreReq: %name-build = %version-%release
 
@@ -189,6 +197,7 @@ currently used.
 Version: %{rpm_version}_%__python_version
 Summary: Python bindings for apps which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Интерфейс для разработки Python-приложений, взаимодействующих с RPM-пакетами
+License: GPL/LGPL
 Group: Development/Python
 PreReq: lib%name = %rpm_version-%release
 Requires: python = %__python_version
@@ -512,6 +521,12 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Sep 05 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt48
+- brp-compress: handle RPM_COMPRESS_SKIPLIST environment variable.
+- parseScript: do not generate RPMSENSE_INTERP dependencies
+  when autoReq is disabled.
+- Corrected license tags (#6710).
+
 * Fri Jul 01 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt47
 - shell.req:
   redirected test run of "bash --rpm-requires" to /dev/null.
