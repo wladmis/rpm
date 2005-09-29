@@ -126,9 +126,9 @@ static void dbiTagsInit(void)
     int rpmtag;
 
     /*@-nullpass@*/
-    dbiTagStr = rpmExpand("%{_dbi_tags}", NULL);
+    dbiTagStr = rpmExpand("%{?_dbi_tags}", NULL);
     /*@=nullpass@*/
-    if (!(dbiTagStr && *dbiTagStr && *dbiTagStr != '%')) {
+    if (!(dbiTagStr && *dbiTagStr)) {
 	dbiTagStr = _free(dbiTagStr);
 	dbiTagStr = xstrdup(_dbiTagStr_default);
     }

@@ -1081,13 +1081,13 @@ static void defaultMachine(/*@out@*/ const char ** arch,
     while (!gotDefaults) {
 	if (!rpmPlatform(platform)) {
 	    const char * s;
-	    s = rpmExpand("%{_host_cpu}", NULL);
+	    s = rpmExpand("%{?_host_cpu}", NULL);
 	    if (s) {
 		strncpy(un.machine, s, sizeof(un.machine));
 		un.machine[sizeof(un.machine)-1] = '\0';
 		s = _free(s);
 	    }
-	    s = rpmExpand("%{_host_os}", NULL);
+	    s = rpmExpand("%{?_host_os}", NULL);
 	    if (s) {
 		strncpy(un.sysname, s, sizeof(un.sysname));
 		un.sysname[sizeof(un.sysname)-1] = '\0';
@@ -1843,8 +1843,8 @@ int rpmReadConfigFiles(const char * file, const char * target)
     /*@=nullstate@*/
 
     /* Finally set target platform */
-    {	const char *cpu = rpmExpand("%{_target_cpu}", NULL);
-	const char *os = rpmExpand("%{_target_os}", NULL);
+    {	const char *cpu = rpmExpand("%{?_target_cpu}", NULL);
+	const char *os = rpmExpand("%{?_target_os}", NULL);
 	rpmSetMachine(cpu, os);
 	cpu = _free(cpu);
 	os = _free(os);

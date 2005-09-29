@@ -205,7 +205,7 @@ fprintf(stderr, "*** addMacros\n");
 	}
     }
 
-    buildCmd = rpmExpand("%{___build_cmd}", " ", buildScript, NULL);
+    buildCmd = rpmExpand("%{?___build_cmd}", " ", buildScript, NULL);
     (void) poptParseArgvString(buildCmd, &argc, &argv);
 
     rpmMessage(RPMMESS_NORMAL, _("Executing(%s): %s\n"), name, buildCmd);

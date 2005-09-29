@@ -1267,14 +1267,14 @@ static void skipFiles(const rpmTransactionSet ts, TFI_t fi)
     if (!noDocs)
 	noDocs = rpmExpandNumeric("%{?_excludedocs}");
 
-    {	const char *tmpPath = rpmExpand("%{_netsharedpath}", NULL);
-	if (tmpPath && *tmpPath != '%')
+    {	const char *tmpPath = rpmExpand("%{?_netsharedpath}", NULL);
+	if (tmpPath && *tmpPath)
 	    netsharedPaths = splitString(tmpPath, strlen(tmpPath), ':');
 	tmpPath = _free(tmpPath);
     }
 
-    s = rpmExpand("%{_install_langs}", NULL);
-    if (!(s && *s != '%'))
+    s = rpmExpand("%{?_install_langs}", NULL);
+    if (!(s && *s))
 	s = _free(s);
     if (s) {
 	languages = (const char **) splitString(s, strlen(s), ':');

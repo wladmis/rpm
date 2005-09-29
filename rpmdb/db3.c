@@ -890,8 +890,8 @@ static inline int parseYesNo( const char *s )
 
 static int wait_for_lock (void)
 {
-	const char *str = rpmExpand ("%{_wait_for_lock}", NULL);
-	int val = (str && *str != '%') ? parseYesNo (str) : 1;
+	const char *str = rpmExpand ("%{?_wait_for_lock}", NULL);
+	int val = (str && *str) ? parseYesNo (str) : 1;
 	str = _free (str);
 
 	return val;

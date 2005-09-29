@@ -725,7 +725,7 @@ int packageBinaries(Spec spec)
 
 	providePackageNVR(pkg->header);
 
-    {	const char * optflags = rpmExpand("%{optflags}", NULL);
+    {	const char * optflags = rpmExpand("%{?optflags}", NULL);
 	(void) headerAddEntry(pkg->header, RPMTAG_OPTFLAGS, RPM_STRING_TYPE,
 			optflags, 1);
 	optflags = _free(optflags);

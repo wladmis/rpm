@@ -359,16 +359,16 @@ dbiIndex db3New(rpmdb rpmdb, int rpmtag)
     char dbiTagMacro[128];
     char * dbOpts;
 
-    sprintf(dbiTagMacro, "%%{_dbi_config_%s}", tagName(rpmtag));
+    sprintf(dbiTagMacro, "%%{?_dbi_config_%s}", tagName(rpmtag));
     /*@-nullpass@*/
     dbOpts = rpmExpand(dbiTagMacro, NULL);
     /*@=nullpass@*/
-    if (!(dbOpts && *dbOpts && *dbOpts != '%')) {
+    if (!(dbOpts && *dbOpts)) {
 	dbOpts = _free(dbOpts);
 	/*@-nullpass@*/
-	dbOpts = rpmExpand("%{_dbi_config}", NULL);
+	dbOpts = rpmExpand("%{?_dbi_config}", NULL);
 	/*@=nullpass@*/
-	if (!(dbOpts && *dbOpts && *dbOpts != '%')) {
+	if (!(dbOpts && *dbOpts)) {
 	    /*@-nullpass@*/
 	    dbOpts = rpmExpand(db3_config_default, NULL);
 	    /*@=nullpass@*/

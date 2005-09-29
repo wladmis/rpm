@@ -268,8 +268,8 @@ static void urlFind(/*@null@*/ /*@in@*/ /*@out@*/ urlinfo * uret, int mustAsk)
 	}
 
 	if (u->proxyh == NULL) {
-	    const char *proxy = rpmExpand("%{_ftpproxy}", NULL);
-	    if (proxy && *proxy != '%') {
+	    const char *proxy = rpmExpand("%{?_ftpproxy}", NULL);
+	    if (proxy && *proxy) {
 		/*@observer@*/ const char * host = (u->host ? u->host : "");
 		const char *uu = (u->user ? u->user : "anonymous");
 		char *nu = xmalloc(strlen(uu) + sizeof("@") + strlen(host));
@@ -281,8 +281,8 @@ static void urlFind(/*@null@*/ /*@in@*/ /*@out@*/ urlinfo * uret, int mustAsk)
 	}
 
 	if (u->proxyp < 0) {
-	    const char *proxy = rpmExpand("%{_ftpport}", NULL);
-	    if (proxy && *proxy != '%') {
+	    const char *proxy = rpmExpand("%{?_ftpport}", NULL);
+	    if (proxy && *proxy) {
 		char *end;
 		int port = strtol(proxy, &end, 0);
 		if (!(end && *end == '\0')) {
@@ -300,15 +300,15 @@ static void urlFind(/*@null@*/ /*@in@*/ /*@out@*/ urlinfo * uret, int mustAsk)
     if (u->urltype == URL_IS_HTTP) {
 
 	if (u->proxyh == NULL) {
-	    const char *proxy = rpmExpand("%{_httpproxy}", NULL);
-	    if (proxy && *proxy != '%')
+	    const char *proxy = rpmExpand("%{?_httpproxy}", NULL);
+	    if (proxy && *proxy)
 		u->proxyh = xstrdup(proxy);
 	    proxy = _free(proxy);
 	}
 
 	if (u->proxyp < 0) {
-	    const char *proxy = rpmExpand("%{_httpport}", NULL);
-	    if (proxy && *proxy != '%') {
+	    const char *proxy = rpmExpand("%{?_httpport}", NULL);
+	    if (proxy && *proxy) {
 		char *end;
 		int port = strtol(proxy, &end, 0);
 		if (!(end && *end == '\0')) {

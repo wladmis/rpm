@@ -1027,8 +1027,8 @@ int rpmRollback(struct rpmInstallArguments_s * ia, const char ** argv)
 	niids = 0;
     }
 
-    {	const char * globstr = rpmExpand("%{_repackage_dir}/*.rpm", NULL);
-	if (globstr == NULL || *globstr == '%') {
+    {	const char * globstr = rpmExpand("%{?_repackage_dir}/*.rpm", NULL);
+	if (globstr == NULL || !strcmp(globstr, "/*.rpm")) {
 	    globstr = _free(globstr);
 	    rc = -1;
 	    goto exit;

@@ -811,9 +811,9 @@ static int parseForRegexLang(const char * fileName, /*@out@*/ char ** lang)
     const char *s;
 
     if (! initialized) {
-	const char *patt = rpmExpand("%{_langpatt}", NULL);
+	const char *patt = rpmExpand("%{?_langpatt}", NULL);
 	int rc = 0;
-	if (!(patt && *patt != '%'))
+	if (!(patt && *patt))
 	    rc = 1;
 	else if (regcomp(&compiledPatt, patt, REG_EXTENDED))
 	    rc = -1;
@@ -855,8 +855,8 @@ static int parseForRegexMultiLib(const char *fileName)
 	int rc = 0;
 
 	initialized = 1;
-	patt = rpmExpand("%{_multilibpatt}", NULL);
-	if (!(patt && *patt != '%'))
+	patt = rpmExpand("%{?_multilibpatt}", NULL);
+	if (!(patt && *patt))
 	    rc = 1;
 	else if (regcomp(&compiledPatt, patt, REG_EXTENDED | REG_NOSUB))
 	    rc = -1;
@@ -2640,7 +2640,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 
 	Fclose(xfd);
 
-	runCmd = rpmExpand( "%{___build_cmd}", " ", runScript, 0 );
+	runCmd = rpmExpand( "%{?___build_cmd}", " ", runScript, 0 );
 
 	poptParseArgvString(runCmd, &argc, &argv);
 
@@ -2900,7 +2900,7 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
 
     Fclose(xfd);
 
-    runCmd = rpmExpand( "%{___build_cmd}", " ", runScript, 0 );
+    runCmd = rpmExpand( "%{?___build_cmd}", " ", runScript, 0 );
 
     if (!((rc = poptParseArgvString(runCmd, &ac, (const char ***)&av)) == 0
           && ac > 0 && av != NULL))
