@@ -1317,10 +1317,8 @@ expandMacro(MacroBuf mb)
 /* XXX Process % in unknown context */
 		c = '%';	/* XXX only need to save % */
 		SAVECHAR(mb, c);
-#if 0
 		rpmError(RPMERR_BADSPEC,
 			_("A %% is followed by an unparseable macro\n"));
-#endif
 		s = se;
 		continue;
 	}
@@ -1436,22 +1434,11 @@ expandMacro(MacroBuf mb)
 	}
 	
 	if (me == NULL) {	/* leave unknown %... as is */
-#ifndef HACK
-#if DEAD
-		/* XXX hack to skip over empty arg list */
-		if (fn == 1 && *f == '*') {
-			s = se;
-			continue;
-		}
-#endif
 		/* XXX hack to permit non-overloaded %foo to be passed */
 		c = '%';	/* XXX only need to save % */
 		SAVECHAR(mb, c);
-#else
 		rpmError(RPMERR_BADSPEC,
-			_("Macro %%%.*s not found, skipping\n"), fn, f);
-		s = se;
-#endif
+			_("Macro %%%.*s not found\n"), fn, f);
 		continue;
 	}
 
