@@ -3390,9 +3390,9 @@ int rpmdbRebuild(const char * prefix)
     _dbapi_rebuild = rpmExpandNumeric("%{?_dbapi_rebuild}");
 
     /*@-nullpass@*/
-    tfn = rpmGetPath("%{_dbpath}", NULL);
+    tfn = rpmGetPath("%{?_dbpath}", NULL);
     /*@=nullpass@*/
-    if (!(tfn && tfn[0] != '%')) {
+    if (!(tfn && tfn[0])) {
 	rpmMessage(RPMMESS_DEBUG, _("no dbpath has been set"));
 	rc = 1;
 	goto exit;
@@ -3403,9 +3403,9 @@ int rpmdbRebuild(const char * prefix)
     tfn = _free(tfn);
 
     /*@-nullpass@*/
-    tfn = rpmGetPath("%{_dbpath_rebuild}", NULL);
+    tfn = rpmGetPath("%{?_dbpath_rebuild}", NULL);
     /*@=nullpass@*/
-    if (!(tfn && tfn[0] != '%' && strcmp(tfn, dbpath))) {
+    if (!(tfn && tfn[0] && strcmp(tfn, dbpath))) {
 	char *pidbuf;
 	char *t;
 	asprintf(&pidbuf, "rebuilddb.%u", getpid());

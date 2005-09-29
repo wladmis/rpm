@@ -1460,8 +1460,8 @@ assert(psm->mi == NULL);
 			headerSprintf(fi->h, bfmt, rpmTagTable, rpmHeaderFormats, NULL);
 
 		bfmt = _free(bfmt);
-		psm->pkgURL = rpmGenPath("%{?_repackage_root:%{_repackage_root}}",
-					 "%{?_repackage_dir:%{_repackage_dir}}",
+		psm->pkgURL = rpmGenPath("%{?_repackage_root}",
+					 "%{?_repackage_dir}",
 					pkgbn);
 		pkgbn = _free(pkgbn);
 		(void) urlPath(psm->pkgURL, &psm->pkgfn);
