@@ -1916,7 +1916,7 @@ static int processPackageFiles(Spec spec, Package pkg,
     s = getStringBuf(pkg->fileList);
     files = splitString(s, strlen(s), '\n');
 
-    parseForAttr(rpmExpand("%_defattr", NULL), &fl);
+    parseForAttr(rpmExpand("%{?_defattr}", NULL), &fl);
 
     for (fp = files; *fp != NULL; fp++) {
 	s = *fp;
