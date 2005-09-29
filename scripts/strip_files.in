@@ -23,21 +23,12 @@
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
-StripNote()
-{
-	if ! objdump -h "$1" |grep '^[ 	]*[0-9]*[ 	]*\.note[ 	]' -A 1 |fgrep -q ALLOC; then
-		echo -n '-R .note'
-	fi
-}
-
 DoStrip()
 {
 	f="$1"
 	shift
 	local opts=
-	if [ -z "$STRIP_FORCED" ]; then
-		opts="-p -R .comment $(StripNote "$f") $*"
-	fi
+	[ -n "$STRIP_FORCED" ] || opts="-p -R .comment $*"
 	strip $opts $STRIP_FORCED_OPTS "$f"
 }
 
