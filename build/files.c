@@ -1128,7 +1128,7 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 	/*@modifies h, *cpioList, fl->processingFailed, fl->fileList,
 		rpmGlobalMacroContext, fileSystem @*/
 {
-    int _addDotSlash = !(isSrc || rpmExpandNumeric("%{_noPayloadPrefix}"));
+    int _addDotSlash = !(isSrc || rpmExpandNumeric("%{?_noPayloadPrefix}"));
     uint_32 multiLibMask = 0;
     int apathlen = 0;
     int dpathlen = 0;
@@ -1813,7 +1813,7 @@ static int processPackageFiles(Spec spec, Package pkg,
     char *specialDoc = NULL;
 
 #ifdef MULTILIB
-    multiLib = rpmExpandNumeric("%{_multilibno}");
+    multiLib = rpmExpandNumeric("%{?_multilibno}");
     if (multiLib)
 	multiLib = RPMFILE_MULTILIB(multiLib);
 #endif /* MULTILIB */

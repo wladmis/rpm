@@ -1265,7 +1265,7 @@ static void skipFiles(const rpmTransactionSet ts, TFI_t fi)
     int i, j;
 
     if (!noDocs)
-	noDocs = rpmExpandNumeric("%{_excludedocs}");
+	noDocs = rpmExpandNumeric("%{?_excludedocs}");
 
     {	const char *tmpPath = rpmExpand("%{_netsharedpath}", NULL);
 	if (tmpPath && *tmpPath != '%')

@@ -404,7 +404,7 @@ dbiIndex dbiOpen(rpmdb db, int rpmtag, /*@unused@*/ unsigned int flags)
 	return dbi;
 
 /*@-globs -mods @*/ /* FIX: rpmGlobalMacroContext not in <rpmlib.h> */
-    _dbapi_rebuild = rpmExpandNumeric("%{_dbapi_rebuild}");
+    _dbapi_rebuild = rpmExpandNumeric("%{?_dbapi_rebuild}");
 /*@=globs =mods @*/
     if (_dbapi_rebuild < 1 || _dbapi_rebuild > 3)
 	_dbapi_rebuild = 3;
@@ -911,7 +911,7 @@ rpmdb newRpmdb(/*@kept@*/ /*@null@*/ const char * root,
     static int _initialized = 0;
 
     if (!_initialized) {
-	_db_filter_dups = rpmExpandNumeric("%{_filterdbdups}");
+	_db_filter_dups = rpmExpandNumeric("%{?_filterdbdups}");
 	_initialized = 1;
     }
 
@@ -1104,7 +1104,7 @@ exit:
 int rpmdbOpen (const char * prefix, rpmdb *dbp, int mode, int perms)
 {
     /*@-mods@*/
-    int _dbapi = rpmExpandNumeric("%{_dbapi}");
+    int _dbapi = rpmExpandNumeric("%{?_dbapi}");
     /*@=mods@*/
     return openDatabase(prefix, NULL, _dbapi, dbp, mode, perms, 0);
 }
@@ -1113,7 +1113,7 @@ int rpmdbInit (const char * prefix, int perms)
 {
     rpmdb db = NULL;
     /*@-mods@*/
-    int _dbapi = rpmExpandNumeric("%{_dbapi}");
+    int _dbapi = rpmExpandNumeric("%{?_dbapi}");
     /*@=mods@*/
     int rc;
 
@@ -1134,7 +1134,7 @@ int rpmdbVerify(const char * prefix)
 {
     rpmdb db = NULL;
     /*@-mods@*/
-    int _dbapi = rpmExpandNumeric("%{_dbapi}");
+    int _dbapi = rpmExpandNumeric("%{?_dbapi}");
     /*@=mods@*/
     int rc = 0;
 
@@ -3386,8 +3386,8 @@ int rpmdbRebuild(const char * prefix)
     if (prefix == NULL) prefix = "/";
     /*@=branchstate@*/
 
-    _dbapi = rpmExpandNumeric("%{_dbapi}");
-    _dbapi_rebuild = rpmExpandNumeric("%{_dbapi_rebuild}");
+    _dbapi = rpmExpandNumeric("%{?_dbapi}");
+    _dbapi_rebuild = rpmExpandNumeric("%{?_dbapi_rebuild}");
 
     /*@-nullpass@*/
     tfn = rpmGetPath("%{_dbpath}", NULL);

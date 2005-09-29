@@ -445,7 +445,7 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
     if (cookie)
 	spec->cookie = xstrdup(cookie);
 
-    spec->timeCheck = rpmExpandNumeric("%{_timecheck}");
+    spec->timeCheck = rpmExpandNumeric("%{?_timecheck}");
 
     /* All the parse*() functions expect to have a line pre-read */
     /* in the spec's line buffer.  Except for parsePreamble(),   */

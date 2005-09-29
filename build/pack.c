@@ -371,7 +371,7 @@ static int rpmLeadVersion(void)
 
     /* Intitialize packaging version from macro configuration. */
     if (rpmpkg_version < 0) {
-	rpmpkg_version = rpmExpandNumeric("%{_package_version}");
+	rpmpkg_version = rpmExpandNumeric("%{?_package_version}");
 	if (rpmpkg_version < RPMPKGVERSION_MIN)
 	    rpmpkg_version = RPMPKGVERSION_MIN;
 	if (rpmpkg_version > RPMPKGVERSION_MAX)

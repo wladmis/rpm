@@ -16,7 +16,7 @@ deps_opt_enabled (void)
 	if (!initialized)
 	{
 		initialized = 1;
-		enabled = rpmExpandNumeric ("%{?_deps_optimization:%_deps_optimization}%{?!_deps_optimization:1}");
+		enabled = rpmExpandNumeric ("%{?_deps_optimization:%{_deps_optimization}}%{?!_deps_optimization:1}");
 	}
 
 	return enabled;

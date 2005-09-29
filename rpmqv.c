@@ -607,7 +607,7 @@ int main(int argc, const char ** argv)
     }
 
 #ifdef	IAM_RPMBT
-    if ( !(geteuid() || rpmExpandNumeric( "%_allow_root_build" )) )
+    if ( !(geteuid() || rpmExpandNumeric( "%{?_allow_root_build}" )) )
 	argerror( _("current site policy disallows root to build packages") );
 
     nice(10);
@@ -950,9 +950,9 @@ int main(int argc, const char ** argv)
 	ba->buildAmount = RPMBUILD_PREP | RPMBUILD_BUILD | RPMBUILD_INSTALL;
 	if (bigMode == MODE_REBUILD) {
 	    ba->buildAmount |= RPMBUILD_PACKAGEBINARY;
-	    if (rpmExpandNumeric ("%{?_rpmbuild_clean:%_rpmbuild_clean}%{?!_rpmbuild_clean:1}"))
+	    if (rpmExpandNumeric ("%{?_rpmbuild_clean:%{_rpmbuild_clean}}%{?!_rpmbuild_clean:1}"))
 		ba->buildAmount |= RPMBUILD_RMSOURCE | RPMBUILD_RMSPEC | RPMBUILD_CLEAN | RPMBUILD_RMBUILD;
-	    if (rpmExpandNumeric ("%_rpmbuild_packagesource") )
+	    if (rpmExpandNumeric ("%{?_rpmbuild_packagesource}") )
 		ba->buildAmount |= RPMBUILD_PACKAGESOURCE;
 	}
 
@@ -1058,7 +1058,7 @@ ia->probFilter |= RPMPROB_FILTER_OLDPACKAGE;
 	if (!ia->incldocs) {
 	    if (ia->transFlags & RPMTRANS_FLAG_NODOCS)
 		;
-	    else if (rpmExpandNumeric("%{_excludedocs}"))
+	    else if (rpmExpandNumeric("%{?_excludedocs}"))
 		ia->transFlags |= RPMTRANS_FLAG_NODOCS;
 	}
 
