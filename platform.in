@@ -572,7 +572,7 @@
 @alt@)
 @alt@# END GLIBC TRICKS>
 @alt@
-@alt@%__python_version	%(%__python -c 'import sys; print "%u.%u" % sys.version_info[0:2]' 2>/dev/null || echo unknown)
+@alt@%__python_version	%(%__python -c 'import sys; print "%%u.%%u" %% sys.version_info[0:2]' 2>/dev/null || echo unknown)
 @alt@
 @alt@# Access components of packager macro.
 @alt@%packagerName	%(echo -E '%packager' |sed -e 's/[[:space:]]*<.*//')
