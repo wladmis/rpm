@@ -802,7 +802,7 @@ fi
 - pam.prov:
   + honor $PAM_NAME_SUFFIX.
 - pam.req:
-  + honor %PAM_SO_SUFFIX and $PAM_NAME_SUFFIX.
+  + honor $PAM_SO_SUFFIX and $PAM_NAME_SUFFIX.
 - build/files.c:
   + honor generateDepends() return code.
 - rpminit:
@@ -844,7 +844,7 @@ fi
 - Updated package dependencies.
 
 * Thu Apr 24 2003 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt16
-- Fixed segfault on "rpmquery --qf '%{FILENAMES}' basesystem" command.
+- Fixed segfault on "rpmquery --qf '%%{FILENAMES}' basesystem" command.
 - Implemented shell functions requires/provides autodetection
   and enabled it by default.
 - New groups (#0002429):
@@ -931,7 +931,7 @@ fi
 
 * Sat Oct 05 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt6
 - Fixed skiplists processing.
-- New macro: %_customdocdir (affects DOCDIR processing).
+- New macro: %%_customdocdir (affects DOCDIR processing).
 
 * Fri Oct 04 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt5
 - lib/psm.c: fixed chroot(2) handling (aka "rpmi --dbpath" problem).
@@ -990,7 +990,7 @@ fi
 - New group: Graphical desktop/GNUstep.
 - Moved contrib subpackage under with/without logic control and disabled
   packaging by default.
-- Moved %_srcdir/RPM from rpm-build subpackage to rpm-build-topdir
+- Moved /usr/src/RPM from rpm-build subpackage to rpm-build-topdir
   subpackage (for reference; it is no longer needed).
 
 * Mon Aug 12 2002 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt0.11
