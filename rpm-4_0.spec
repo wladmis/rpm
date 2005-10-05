@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt48
+Release: alt49
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -521,6 +521,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Sep 29 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt49
+- rpmio/macro.c: Print error message for unparseable macros (closes #8089).
+- Fixed rpmExpand* usage everywhere.
+- strip_files: Removed StripNote() code.
+
 * Mon Sep 05 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt48
 - brp-compress: handle RPM_COMPRESS_SKIPLIST environment variable.
 - parseScript: do not generate RPMSENSE_INTERP dependencies
@@ -628,7 +633,7 @@ fi
 - find_lang: implemented support for symlinks in /usr/share/locale/.
 - platform: added force_* macros suggested by Alexey Morozov.
 - headerFindI18NString: do not translate empty strings.
-- expandMacro: handle single % properly.
+- expandMacro: handle single %% properly.
 - Fixed build with fresh autotools.
 
 * Tue Feb 03 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt33
@@ -654,7 +659,7 @@ fi
 
 * Tue Jan 27 2004 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt31
 - build/parseReqs.c(parseRCPOT):
-  + tokens must not contain '%<=>' symbols since it is common
+  + tokens must not contain '%%<=>' symbols since it is common
     packaging error.
 - build/reqprov.c(compare_deps):
   + fixes in duplicates detection algorithm introduced in
@@ -669,7 +674,7 @@ fi
 - find-provides: output extra provides for sonames found in
   non-default locations.
 - build/parseReqs.c(parseRCPOT):
-  tokens must not contain '%' symbol since it is common
+  tokens must not contain '%%' symbol since it is common
   macros manipulation error.
 - build/reqprov.c(addReqProv):
   + rewritten duplicates detection algorithm;
