@@ -318,11 +318,11 @@ static struct optionalTag {
     rpmTag	ot_tag;
 /*@observer@*/ /*@null@*/ const char * ot_mac;
 } optionalTags[] = {
-    { RPMTAG_VENDOR,		"%{vendor}" },
-    { RPMTAG_PACKAGER,		"%{packager}" },
-    { RPMTAG_DISTRIBUTION,	"%{distribution}" },
-    { RPMTAG_DISTURL,		"%{disturl}" },
-    { RPMTAG_BUILDHOST,		"%{buildhost}" },
+    { RPMTAG_VENDOR,		"%{?vendor}" },
+    { RPMTAG_PACKAGER,		"%{?packager}" },
+    { RPMTAG_DISTRIBUTION,	"%{?distribution}" },
+    { RPMTAG_DISTURL,		"%{?disturl}" },
+    { RPMTAG_BUILDHOST,		"%{?buildhost}" },
     { -1, NULL }
 };
 
@@ -337,7 +337,7 @@ static void fillOutMainPackage(Header h)
     for (ot = optionalTags; ot->ot_mac != NULL; ot++) {
 	if (!headerIsEntry(h, ot->ot_tag)) {
 	    const char *val = rpmExpand(ot->ot_mac, NULL);
-	    if (val && *val != '%')
+	    if (val && *val != '\0')
 		(void) headerAddEntry(h, ot->ot_tag, RPM_STRING_TYPE, (void *)val, 1);
 	    val = _free(val);
 	}
