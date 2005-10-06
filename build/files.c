@@ -2428,10 +2428,10 @@ typedef struct {
 /*@-exportlocal -exportheadervar@*/
 /*@unchecked@*/
 DepMsg_t depMsgs[] = {
-  { "Provides",		{ "%{__find_provides}", 0 },
+  { "Provides",		{ "%{?__find_provides}", 0 },
 	RPMTAG_PROVIDENAME, RPMTAG_PROVIDEVERSION, RPMTAG_PROVIDEFLAGS,
 	0, -1 },
-  { "PreReq",		{ "%{__find_prereq}", 0 },
+  { "PreReq",		{ "%{?__find_prereq}", 0 },
 	RPMTAG_REQUIRENAME, RPMTAG_REQUIREVERSION, RPMTAG_REQUIREFLAGS,
 	RPMSENSE_PREREQ, 0 },
   { "Requires(interp)",	{ 0, "interp", 0 },
@@ -2455,13 +2455,13 @@ DepMsg_t depMsgs[] = {
   { "Requires(postun)",	{ 0, "postun", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	_notpre(RPMSENSE_SCRIPT_POSTUN), 0 },
-  { "Requires",		{ "%{__find_requires}", 0 },
+  { "Requires",		{ "%{?__find_requires}", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,	/* XXX inherit name/version arrays */
 	RPMSENSE_PREREQ, RPMSENSE_PREREQ },
-  { "Conflicts",	{ "%{__find_conflicts}", 0 },
+  { "Conflicts",	{ "%{?__find_conflicts}", 0 },
 	RPMTAG_CONFLICTNAME, RPMTAG_CONFLICTVERSION, RPMTAG_CONFLICTFLAGS,
 	0, -1 },
-  { "Obsoletes",	{ "%{__find_obsoletes}", 0 },
+  { "Obsoletes",	{ "%{?__find_obsoletes}", 0 },
 	RPMTAG_OBSOLETENAME, RPMTAG_OBSOLETEVERSION, RPMTAG_OBSOLETEFLAGS,
 	0, -1 },
   { 0,		{ 0 },	0, 0, 0, 0, 0 }
@@ -2581,7 +2581,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 
 	runBody = rpmExpand( dm->argv[0], NULL );
 
-	if ( !runBody || '%' == runBody[0] )
+	if ( !runBody || !*runBody || '%' == *runBody )
 	{
 		runBody = _free(runBody);
 		continue;
