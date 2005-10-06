@@ -491,6 +491,7 @@ is_builtin_preamble_tag(const char *line, int len)
 	return is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list));
 }
 
+#if 0
 static const char *
 is_builtin_prep_tag(const char *line, int len)
 {
@@ -529,6 +530,7 @@ is_builtin_build_tag(const char *line, int len)
 {
 	return is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list));
 }
+#endif
 
 static const char *
 is_builtin_description_tag(const char *line, int len)
@@ -626,15 +628,19 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	    initialPackage = 0;
 	    /*@switchbreak@*/ break;
 	case PART_PREP:
+#if 0
 	    if (!skip_lookup)
 		rpmSetBuiltinMacroLookup(is_builtin_prep_tag);
+#endif
 	    parsePart = parsePrep(spec);
 	    /*@switchbreak@*/ break;
 	case PART_BUILD:
 	case PART_INSTALL:
 	case PART_CLEAN:
+#if 0
 	    if (!skip_lookup)
 		rpmSetBuiltinMacroLookup(is_builtin_build_tag);
+#endif
 	    parsePart = parseBuildInstallClean(spec, parsePart);
 	    /*@switchbreak@*/ break;
 	case PART_CHANGELOG:
