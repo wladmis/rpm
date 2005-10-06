@@ -325,7 +325,7 @@ popd
 
 /bin/ls -1d $RPM_BUILD_ROOT%_rpmlibdir/*-%_target_os |
 	%__grep -Fv /brp- |
-	%__sed -e "s|^$RPM_BUILD_ROOT|%attr(-,root,%name) |g" >>%name.lang
+	%__sed -e "s|^$RPM_BUILD_ROOT|%%attr(-,root,%name) |g" >>%name.lang
 
 %pre
 if [ -f %_localstatedir/%name/Packages -a -f %_localstatedir/%name/packages.rpm ]; then
