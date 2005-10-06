@@ -389,6 +389,169 @@ void closeSpec(Spec spec)
 extern int noLang;		/* XXX FIXME: pass as arg */
 /*@=redecl@*/
 
+typedef struct tags_struct {
+    int len;
+    const char *token;
+} tags_struct;
+
+static int
+comp_tags(const void *m1, const void *m2)
+{
+	tags_struct *p1 = (tags_struct *) m1;
+	tags_struct *p2 = (tags_struct *) m2;
+	int     len = (p1->len < p2->len) ? p1->len : p2->len;
+	int     rc = strncasecmp(p1->token, p2->token, len);
+
+	if (rc)
+		return rc;
+	return p1->len - p2->len;
+}
+
+#define nr_of_tags(list) (sizeof(list)/sizeof(list[0]))
+
+static tags_struct tags_common_list[] = {
+    {0, "build"},
+    {0, "changelog"},
+    {0, "clean"},
+    {0, "description"},
+    {0, "else"},
+    {0, "endif"},
+    {0, "files"},
+    {0, "if"},
+    {0, "ifarch"},
+    {0, "ifnarch"},
+    {0, "ifnos"},
+    {0, "ifos"},
+    {0, "include"},
+    {0, "install"},
+    {0, "package"},
+    {0, "post"},
+    {0, "postun"},
+    {0, "pre"},
+    {0, "prep"},
+    {0, "preun"},
+    {0, "trigger"},
+    {0, "triggerin"},
+    {0, "triggerpostun"},
+    {0, "triggerun"},
+    {0, "verifyscript"}
+};
+
+static tags_struct tags_files_list[] = {
+    {0, "attr"},
+    {0, "config"},
+    {0, "defattr"},
+    {0, "defverify"},
+    {0, "dev"},
+    {0, "dir"},
+    {0, "doc"},
+    {0, "exclude"},
+    {0, "ghost"},
+    {0, "lang"},
+    {0, "license"},
+    {0, "multilib"},
+    {0, "readme"},
+    {0, "verify"},
+};
+
+static const char *
+is_builtin_tag(const char *line, int len, tags_struct *tlist, size_t nlist)
+{
+	int     i;
+	tags_struct key;
+
+	if (tlist[0].len == 0)
+	{
+		for (i = 0; i < nlist; ++i)
+			tlist[i].len = strlen(tlist[i].token);
+		qsort(tlist, nlist, sizeof(tags_struct), comp_tags);
+	}
+
+	for (i = 0; i < len; ++i)
+	{
+		if (line[i] == '\0' || line[i] == '(' || xisspace(line[i]))
+		{
+			len = i;
+			break;
+		}
+	}
+
+	key.token = line;
+	key.len = len;
+	if (bsearch
+	    (&key, tlist, nlist, sizeof(tags_struct), comp_tags))
+		return line;
+
+	return NULL;
+}
+
+static const char *
+is_builtin_preamble_tag(const char *line, int len)
+{
+	return is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list));
+}
+
+static const char *
+is_builtin_prep_tag(const char *line, int len)
+{
+	int     i;
+	const char *rc;
+
+	for (i = 0; i < len; ++i)
+	{
+		if (line[i] == '\0' || xisspace(line[i]))
+		{
+			len = i;
+			break;
+		}
+	}
+
+	if ((rc = is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list))))
+		return rc;
+
+	if (len == 5 && !strncasecmp(line, "setup", 5))
+		return line;
+
+	if (len >= 5 && !strncasecmp(line, "patch", 5))
+	{
+		for (i = 5; i < len; ++i)
+			if (!xisdigit(line[i]))
+				break;
+		if (i >= len)
+			return line;
+	}
+
+	return 0;
+}
+
+static const char *
+is_builtin_build_tag(const char *line, int len)
+{
+	return is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list));
+}
+
+static const char *
+is_builtin_description_tag(const char *line, int len)
+{
+	return is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list));
+}
+
+static const char *
+is_builtin_script_tag(const char *line, int len)
+{
+	return is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list));
+}
+
+static const char *
+is_builtin_files_tag(const char *line, int len)
+{
+	const char *rc;
+
+	if ((rc = is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list))))
+		return rc;
+	return is_builtin_tag(line, len, tags_files_list, nr_of_tags(tags_files_list));
+}
+
 /*@todo Skip parse recursion if os is not compatible. @*/
 int parseSpec(Spec *specp, const char *specFile, const char *rootURL,
 		const char *buildRootURL, int recursing, const char *passPhrase,
@@ -453,23 +616,29 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
     
     /*@-infloops@*/	/* LCL: parsePart is modified @*/
     while (parsePart < PART_LAST && parsePart != PART_NONE) {
+	rpmBuiltinMacroLookup saved_lookup = NULL;
 	switch (parsePart) {
 	case PART_PREAMBLE:
+	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_preamble_tag);
 	    parsePart = parsePreamble(spec, initialPackage);
 	    initialPackage = 0;
 	    /*@switchbreak@*/ break;
 	case PART_PREP:
+	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_prep_tag);
 	    parsePart = parsePrep(spec);
 	    /*@switchbreak@*/ break;
 	case PART_BUILD:
 	case PART_INSTALL:
 	case PART_CLEAN:
+	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_build_tag);
 	    parsePart = parseBuildInstallClean(spec, parsePart);
 	    /*@switchbreak@*/ break;
 	case PART_CHANGELOG:
+	    saved_lookup = rpmSetBuiltinMacroLookup(NULL);
 	    parsePart = parseChangelog(spec);
 	    /*@switchbreak@*/ break;
 	case PART_DESCRIPTION:
+	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_description_tag);
 	    parsePart = parseDescription(spec);
 	    /*@switchbreak@*/ break;
 
@@ -481,10 +650,12 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	case PART_TRIGGERIN:
 	case PART_TRIGGERUN:
 	case PART_TRIGGERPOSTUN:
+	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_script_tag);
 	    parsePart = parseScript(spec, parsePart);
 	    /*@switchbreak@*/ break;
 
 	case PART_FILES:
+	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_files_tag);
 	    parsePart = parseFiles(spec);
 	    /*@switchbreak@*/ break;
 
@@ -493,6 +664,7 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	case PART_BUILDARCHITECTURES:
 	    /*@switchbreak@*/ break;
 	}
+	if (saved_lookup) rpmSetBuiltinMacroLookup(saved_lookup);
 
 	if (parsePart >= PART_LAST) {
 	    spec = freeSpec(spec);
