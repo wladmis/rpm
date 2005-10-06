@@ -270,10 +270,10 @@
 @alt@	%{?_libtool_version:export LIBTOOL_VERSION=\"%_libtool_version\"}\
 @alt@	%{?_gcc_version:export GCC_VERSION=\"%_gcc_version\"}\
 @alt@	\
-@alt@	export PAM_SO_SUFFIX=\"%{_pam_so_suffix}\"\
-@alt@	export PAM_NAME_SUFFIX=\"%{_pam_name_suffix}\"\
+@alt@	export PAM_SO_SUFFIX=\"%{?_pam_so_suffix}\"\
+@alt@	export PAM_NAME_SUFFIX=\"%{?_pam_name_suffix}\"\
 @alt@	\
-@alt@	export MAKEFLAGS=\"-w PAM_SO_SUFFIX=%_pam_so_suffix\"\
+@alt@	export MAKEFLAGS=\"-w PAM_SO_SUFFIX=%{?_pam_so_suffix}\"\
 @alt@	\
 @alt@	%{verbose:set -x}%{!verbose:exec > /dev/null}\
 @alt@	umask 022\
