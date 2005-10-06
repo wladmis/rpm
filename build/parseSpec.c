@@ -617,28 +617,34 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
     /*@-infloops@*/	/* LCL: parsePart is modified @*/
     while (parsePart < PART_LAST && parsePart != PART_NONE) {
 	rpmBuiltinMacroLookup saved_lookup = NULL;
+	int skip_lookup = rpmExpandNumeric("%{?_allow_undefined_macros}");
 	switch (parsePart) {
 	case PART_PREAMBLE:
-	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_preamble_tag);
+	    if (!skip_lookup)
+		saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_preamble_tag);
 	    parsePart = parsePreamble(spec, initialPackage);
 	    initialPackage = 0;
 	    /*@switchbreak@*/ break;
 	case PART_PREP:
-	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_prep_tag);
+	    if (!skip_lookup)
+		saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_prep_tag);
 	    parsePart = parsePrep(spec);
 	    /*@switchbreak@*/ break;
 	case PART_BUILD:
 	case PART_INSTALL:
 	case PART_CLEAN:
-	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_build_tag);
+	    if (!skip_lookup)
+		saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_build_tag);
 	    parsePart = parseBuildInstallClean(spec, parsePart);
 	    /*@switchbreak@*/ break;
 	case PART_CHANGELOG:
-	    saved_lookup = rpmSetBuiltinMacroLookup(NULL);
+	    if (!skip_lookup)
+		saved_lookup = rpmSetBuiltinMacroLookup(NULL);
 	    parsePart = parseChangelog(spec);
 	    /*@switchbreak@*/ break;
 	case PART_DESCRIPTION:
-	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_description_tag);
+	    if (!skip_lookup)
+		saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_description_tag);
 	    parsePart = parseDescription(spec);
 	    /*@switchbreak@*/ break;
 
@@ -650,12 +656,14 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	case PART_TRIGGERIN:
 	case PART_TRIGGERUN:
 	case PART_TRIGGERPOSTUN:
-	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_script_tag);
+	    if (!skip_lookup)
+		saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_script_tag);
 	    parsePart = parseScript(spec, parsePart);
 	    /*@switchbreak@*/ break;
 
 	case PART_FILES:
-	    saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_files_tag);
+	    if (!skip_lookup)
+		saved_lookup = rpmSetBuiltinMacroLookup(is_builtin_files_tag);
 	    parsePart = parseFiles(spec);
 	    /*@switchbreak@*/ break;
 
