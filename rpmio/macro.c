@@ -1208,6 +1208,7 @@ expandMacro(MacroBuf mb)
 
     while (rc == 0 && mb->nb > 0 && (c = *s) != '\0') {
 	const char *s_orig = s;
+	size_t nb_orig = mb->nb;
 	s++;
 	/* Copy text until next macro */
 	switch(c) {
@@ -1329,8 +1330,8 @@ expandMacro(MacroBuf mb)
 /* XXX Process % in unknown context */
 		c = '%';	/* XXX only need to save % */
 		SAVECHAR(mb, c);
-		rpmError(RPMERR_BADSPEC,
-			_("Unparseable macro: %s\n"), s_orig);
+		rpmError(_wm(118),
+			_("Unparseable macro: %.*s\n"), nb_orig, s_orig);
 		s = se;
 		continue;
 	}
