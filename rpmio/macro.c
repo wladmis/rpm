@@ -1332,7 +1332,6 @@ expandMacro(MacroBuf mb)
 		rpmError(RPMERR_BADSPEC,
 			_("Unparseable macro: %s\n"), s_orig);
 		s = se;
-		rc2 = 1;
 		continue;
 	}
 
