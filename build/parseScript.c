@@ -242,14 +242,14 @@ int parseScript(Spec spec, int parsePart)
     }
 
     sb = newStringBuf();
-    if ((rc = readLine(spec, STRIP_NOTHING)) > 0) {
+    if ((rc = readLine(spec, STRIP_NOTHING))  == 1) {
 	nextPart = PART_NONE;
     } else {
 	if (rc)
 	    goto exit;
 	while (! (nextPart = isPart(spec->line))) {
 	    appendStringBuf(sb, spec->line);
-	    if ((rc = readLine(spec, STRIP_NOTHING)) > 0) {
+	    if ((rc = readLine(spec, STRIP_NOTHING))  == 1) {
 		nextPart = PART_NONE;
 		break;
 	    }

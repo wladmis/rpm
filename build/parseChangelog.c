@@ -208,7 +208,7 @@ int parseChangelog(Spec spec)
     StringBuf sb = newStringBuf();
     
     /* There are no options to %changelog */
-    if ((rc = readLine(spec, STRIP_COMMENTS)) > 0) {
+    if ((rc = readLine(spec, STRIP_COMMENTS))  == 1) {
 	sb = freeStringBuf(sb);
 	return PART_NONE;
     }
@@ -217,7 +217,7 @@ int parseChangelog(Spec spec)
     
     while (! (nextPart = isPart(spec->line))) {
 	appendStringBuf(sb, spec->line);
-	if ((rc = readLine(spec, STRIP_COMMENTS)) > 0) {
+	if ((rc = readLine(spec, STRIP_COMMENTS))  == 1) {
 	    nextPart = PART_NONE;
 	    break;
 	}

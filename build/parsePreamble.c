@@ -872,7 +872,7 @@ int parsePreamble(Spec spec, int initialPackage)
 	xx = headerAddEntry(pkg->header, RPMTAG_NAME, RPM_STRING_TYPE, NVR, 1);
     }
 
-    if ((rc = readLine(spec, STRIP_TRAILINGSPACE | STRIP_COMMENTS)) > 0) {
+    if ((rc = readLine(spec, STRIP_TRAILINGSPACE | STRIP_COMMENTS))  == 1) {
 	nextPart = PART_NONE;
     } else {
 	if (rc)
@@ -894,7 +894,7 @@ int parsePreamble(Spec spec, int initialPackage)
 		    return PART_BUILDARCHITECTURES;
 	    }
 	    if ((rc =
-		 readLine(spec, STRIP_TRAILINGSPACE | STRIP_COMMENTS)) > 0) {
+		 readLine(spec, STRIP_TRAILINGSPACE | STRIP_COMMENTS))  == 1) {
 		nextPart = PART_NONE;
 		break;
 	    }

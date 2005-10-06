@@ -106,7 +106,7 @@ int parseDescription(Spec spec)
     
     sb = newStringBuf();
 
-    if ((rc = readLine(spec, STRIP_TRAILINGSPACE | STRIP_COMMENTS)) > 0) {
+    if ((rc = readLine(spec, STRIP_TRAILINGSPACE | STRIP_COMMENTS))  == 1) {
 	nextPart = PART_NONE;
     } else {
 	if (rc) {
@@ -116,7 +116,7 @@ int parseDescription(Spec spec)
 	    appendLineStringBuf(sb, spec->line);
 	    if (t) t->t_nlines++;
 	    if ((rc =
-		 readLine(spec, STRIP_TRAILINGSPACE | STRIP_COMMENTS)) > 0) {
+		 readLine(spec, STRIP_TRAILINGSPACE | STRIP_COMMENTS))  == 1) {
 		nextPart = PART_NONE;
 		break;
 	    }
