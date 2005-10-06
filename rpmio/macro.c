@@ -1281,7 +1281,7 @@ expandMacro(MacroBuf mb)
     size_t fn, gn;
     char *t = mb->t;	/* save expansion pointer for printExpand */
     int c;
-    int rc = 0;
+    int rc = 0, rc2 = 0;
     int negate;
     char grab;
     int chkexist;
@@ -1420,8 +1420,8 @@ expandMacro(MacroBuf mb)
 		SAVECHAR(mb, c);
 		rpmError(RPMERR_BADSPEC,
 			_("Unparseable macro: %s\n"), s_orig);
-		rc = 1;
 		s = se;
+		rc2 = 1;
 		continue;
 	}
 
@@ -1542,7 +1542,7 @@ expandMacro(MacroBuf mb)
 		if (!is_builtin_tag(f, fn)) {
 			rpmError(RPMERR_BADSPEC,
 				_("Macro %%%.*s not found\n"), fn, f);
-			rc = 1;
+			rc2 = 1;
 		}
 		continue;
 	}
@@ -1581,7 +1581,7 @@ expandMacro(MacroBuf mb)
     mb->depth--;
     if (rc > 0 || mb->expand_trace)
 	printExpansion(mb, t, mb->t);
-    return rc;
+    return rc ? rc : rc2;
 }
 
 /* =============================================================== */
