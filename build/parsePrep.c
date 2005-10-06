@@ -565,7 +565,7 @@ int parsePrep(Spec spec)
     spec->prep = newStringBuf();
 
     /* There are no options to %prep */
-    if ((rc = readLine(spec, STRIP_NOTHING))  == 1) {
+    if ((rc = readLine(spec, STRIP_NOTHING)) == 1) {
 	return PART_NONE;
     }
     if (rc)
@@ -577,7 +577,7 @@ int parsePrep(Spec spec)
 	/* Need to expand the macros inline.  That way we  */
 	/* can give good line number information on error. */
 	appendStringBuf(sb, spec->line);
-	if ((rc = readLine(spec, STRIP_NOTHING))  == 1) {
+	if ((rc = readLine(spec, STRIP_NOTHING)) == 1) {
 	    nextPart = PART_NONE;
 	    break;
 	}
