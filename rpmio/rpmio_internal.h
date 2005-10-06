@@ -545,6 +545,9 @@ int rpmioSlurp(const char * fn,
         /*@globals fileSystem @*/
         /*@modifies *bp, *blenp, fileSystem @*/;
 
+typedef const char * (*rpmBuiltinMacroLookup)(const char *, int);
+extern rpmBuiltinMacroLookup rpmSetBuiltinMacroLookup(rpmBuiltinMacroLookup);
+
 #ifdef __cplusplus
 }
 #endif
