@@ -525,6 +525,7 @@ fi
 - rpmio/macro.c: Print error message and set error status for
   unparseable and unknown macros (closes #8089).
 - Fixed rpmExpand* usage everywhere.
+- platform.in: Fixed %% quotation.
 - strip_files: Removed StripNote() code.
 
 * Mon Sep 05 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt48
