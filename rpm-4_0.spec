@@ -522,7 +522,8 @@ fi
 
 %changelog
 * Thu Sep 29 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt49
-- rpmio/macro.c: Print error message for unparseable macros (closes #8089).
+- rpmio/macro.c: Print error message and set error status for
+  unparseable and unknown macros (closes #8089).
 - Fixed rpmExpand* usage everywhere.
 - strip_files: Removed StripNote() code.
 

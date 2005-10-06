@@ -1158,6 +1158,106 @@ doFoo(MacroBuf mb, int negate, const char * f, size_t fn,
     }
 }
 
+static struct tags_struct {
+    int len;
+    const char *token;
+} tags_list[] = {
+    {0, "attr"},
+    {0, "build"},
+    {0, "changelog"},
+    {0, "clean"},
+    {0, "config"},
+    {0, "defattr"},
+    {0, "defverify"},
+    {0, "description"},
+    {0, "dev"},
+    {0, "dir"},
+    {0, "doc"},
+    {0, "docdir"},
+    {0, "donotuse"},
+    {0, "else"},
+    {0, "endif"},
+    {0, "exclude"},
+    {0, "files"},
+    {0, "ghost"},
+    {0, "if"},
+    {0, "ifarch"},
+    {0, "ifnarch"},
+    {0, "ifnos"},
+    {0, "ifos"},
+    {0, "include"},
+    {0, "install"},
+    {0, "lang"},
+    {0, "license"},
+    {0, "missingok"},
+    {0, "multilib"},
+    {0, "noreplace"},
+    {0, "package"},
+    {0, "patch"},
+    {0, "post"},
+    {0, "postun"},
+    {0, "pre"},
+    {0, "prep"},
+    {0, "preun"},
+    {0, "readme"},
+    {0, "setup"},
+    {0, "spec"},
+    {0, "trigger"},
+    {0, "triggerin"},
+    {0, "triggerpostun"},
+    {0, "triggerun"},
+    {0, "verify"},
+    {0, "verifyscript"}
+};
+
+#define nr_of_tags (sizeof(tags_list)/sizeof(tags_list[0]))
+
+static int
+comp_tags(const void *m1, const void *m2)
+{
+	struct tags_struct *p1 = (struct tags_struct *) m1;
+	struct tags_struct *p2 = (struct tags_struct *) m2;
+	int     len = (p1->len < p2->len) ? p1->len : p2->len;
+	int     rc = strncasecmp(p1->token, p2->token, len);
+
+	if (rc)
+		return rc;
+	return p1->len - p2->len;
+}
+	
+static const char *
+is_builtin_tag(const char *line, int len)
+{
+	int     i;
+	struct tags_struct key;
+
+	if (tags_list[0].len == 0)
+	{
+		for (i = 0; i < nr_of_tags; ++i)
+			tags_list[i].len = strlen(tags_list[i].token);
+		qsort(tags_list, nr_of_tags, sizeof(struct tags_struct),
+		      comp_tags);
+	}
+
+	for (i = 0; i < len; ++i)
+	{
+		if (line[i] == '\0' || line[i] == '(' || xisspace(line[i]))
+		{
+			len = i;
+			break;
+		}
+	}
+
+	key.token = line;
+	key.len = len;
+	if (bsearch
+	    (&key, tags_list, nr_of_tags, sizeof(struct tags_struct),
+	     comp_tags))
+		return line;
+
+	return NULL;
+}
+
 /**
  * The main macro recursion loop.
  * @todo Dynamically reallocate target buffer.
@@ -1320,6 +1420,7 @@ expandMacro(MacroBuf mb)
 		SAVECHAR(mb, c);
 		rpmError(RPMERR_BADSPEC,
 			_("Unparseable macro: %s\n"), s_orig);
+		rc = 1;
 		s = se;
 		continue;
 	}
@@ -1438,8 +1539,11 @@ expandMacro(MacroBuf mb)
 		/* XXX hack to permit non-overloaded %foo to be passed */
 		c = '%';	/* XXX only need to save % */
 		SAVECHAR(mb, c);
-		rpmError(RPMERR_BADSPEC,
-			_("Macro %%%.*s not found\n"), fn, f);
+		if (!is_builtin_tag(f, fn)) {
+			rpmError(RPMERR_BADSPEC,
+				_("Macro %%%.*s not found\n"), fn, f);
+			rc = 1;
+		}
 		continue;
 	}
 
