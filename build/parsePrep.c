@@ -420,7 +420,7 @@ static int doSetupMacro(Spec spec, char *line)
     /* XXX FIXME: owner & group fixes were conditioned on !geteuid() */
     /* Fix the owner, group, and permissions of the setup build tree */
     {	/*@observer@*/ static const char *fixmacs[] =
-		{ "%{_fixowner}", "%{_fixgroup}", "%{_fixperms}", NULL };
+		{ "%{?_fixowner}", "%{?_fixgroup}", "%{?_fixperms}", NULL };
 	const char ** fm;
 
 	for (fm = fixmacs; *fm; fm++) {
@@ -428,7 +428,7 @@ static int doSetupMacro(Spec spec, char *line)
 	    /*@-nullpass@*/
 	    fix = rpmExpand(*fm, " .", NULL);
 	    /*@=nullpass@*/
-	    if (fix && *fix != '%')
+	    if (fix && *fix != ' ')
 		appendLineStringBuf(spec->prep, fix);
 	    fix = _free(fix);
 	}
