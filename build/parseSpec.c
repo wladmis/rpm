@@ -260,7 +260,9 @@ retry:
     SKIPSPACE(s);
 
     match = -1;
-    if (! strncmp("%ifarch", s, sizeof("%ifarch")-1)) {
+    if (!spec->readStack->reading && !strncmp("%if", s, sizeof("%if")-1)) {
+	match = 0;
+    } else if (! strncmp("%ifarch", s, sizeof("%ifarch")-1)) {
 	const char *arch = rpmExpand("%{_target_cpu}", NULL);
 	s += 7;
 	match = matchTok(arch, s);
@@ -284,14 +286,10 @@ retry:
 	s += 3;
         match = parseExpressionBoolean(spec, s);
 	if (match < 0) {
-	  if ( spec->readStack->reading ) {
 	    rpmError(RPMERR_UNMATCHEDIF,
 			_("%s:%d: parseExpressionBoolean returns %d\n"),
 			ofi->fileName, ofi->lineNum, match);
 	    return RPMERR_BADSPEC;
-	  } else {
-	    match = 0;
-	  }
 	}
     } else if (! strncmp("%else", s, sizeof("%else")-1)) {
 	s += 5;
