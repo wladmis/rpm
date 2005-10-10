@@ -100,7 +100,8 @@ struct SpecStruct {
 /*@owned@*/ /*@null@*/ spectags st;
 
 /*@owned@*/ struct OpenFileInfo * fileStack;
-    char lbuf[4*BUFSIZ];
+    char lbuf[10*BUFSIZ];
+    char *lbufPtr;
     char nextpeekc;
 /*@dependent@*/ char * nextline;
 /*@dependent@*/ char * line;
