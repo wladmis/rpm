@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt49
+Release: alt50
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -259,26 +259,26 @@ make apidocs
 %endif #with apidocs
 
 %install
-%make_install DESTDIR="$RPM_BUILD_ROOT" install
-%__chmod a-w $RPM_BUILD_ROOT%_usrsrc/RPM{,/RPMS/*}
+%make_install DESTDIR='%buildroot' install
+%__chmod a-w %buildroot%_usrsrc/RPM{,/RPMS/*}
 
 # Save list of packages through cron.
-#%__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/cron.daily
-#%__install -p -m750 scripts/%name.daily $RPM_BUILD_ROOT%_sysconfdir/cron.daily/%name
+#%__mkdir_p %buildroot%_sysconfdir/cron.daily
+#%__install -p -m750 scripts/%name.daily %buildroot%_sysconfdir/cron.daily/%name
 #
-#%__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/logrotate.d
-#%__install -p -m640 scripts/%name.log $RPM_BUILD_ROOT%_sysconfdir/logrotate.d/%name
+#%__mkdir_p %buildroot%_sysconfdir/logrotate.d
+#%__install -p -m640 scripts/%name.log %buildroot%_sysconfdir/logrotate.d/%name
 
-%__mkdir_p $RPM_BUILD_ROOT%_sysconfdir/%name/macros.d
-touch $RPM_BUILD_ROOT%_sysconfdir/%name/macros
-cat << E_O_F > $RPM_BUILD_ROOT%_sysconfdir/%name/macros.db1
+%__mkdir_p %buildroot%_sysconfdir/%name/macros.d
+touch %buildroot%_sysconfdir/%name/macros
+cat << E_O_F > %buildroot%_sysconfdir/%name/macros.db1
 %%_dbapi		1
 E_O_F
-cat << E_O_F > $RPM_BUILD_ROOT%_sysconfdir/%name/macros.cdb
+cat << E_O_F > %buildroot%_sysconfdir/%name/macros.cdb
 %{?enable_cdb:#%%__dbi_cdb	%enable_cdb}
 E_O_F
 
-%__mkdir_p $RPM_BUILD_ROOT%_localstatedir/%name
+%__mkdir_p %buildroot%_localstatedir/%name
 for dbi in \
 	Basenames Conflictname Dirnames Group Installtid Name Providename \
 	Provideversion Removetid Requirename Requireversion Triggername \
@@ -286,46 +286,46 @@ for dbi in \
 	__db.001 __db.002 __db.003 __db.004 __db.005 __db.006 __db.007 \
 	__db.008 __db.009
 do
-    touch "$RPM_BUILD_ROOT%_localstatedir/%name/$dbi"
+    touch "%buildroot%_localstatedir/%name/$dbi"
 done
 
 # Prepare documentation.
 bzip2 -9 CHANGES ||:
-%__mkdir_p $RPM_BUILD_ROOT%_docdir/%name-%rpm_version
+%__mkdir_p %buildroot%_docdir/%name-%rpm_version
 %__install -p -m644 CHANGES* CREDITS README README.ALT* RPM-GPG-KEY RPM-PGP-KEY \
-	$RPM_BUILD_ROOT%_docdir/%name-%rpm_version/
-%__cp -a doc/manual $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/
-%__rm -f $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/manual/{Makefile*,buildroot}
+	%buildroot%_docdir/%name-%rpm_version/
+%__cp -a doc/manual %buildroot%_docdir/%name-%rpm_version/
+%__rm -f %buildroot%_docdir/%name-%rpm_version/manual/{Makefile*,buildroot}
 %if_with apidocs
-%__cp -a apidocs/man/man3 $RPM_BUILD_ROOT%_mandir/
-%__cp -a apidocs/html $RPM_BUILD_ROOT%_docdir/%name-%rpm_version/apidocs/
+%__cp -a apidocs/man/man3 %buildroot%_mandir/
+%__cp -a apidocs/html %buildroot%_docdir/%name-%rpm_version/apidocs/
 %endif #with apidocs
 
 # rpminit(1).
-%__install -pD -m755 rpminit $RPM_BUILD_ROOT%_bindir/rpminit
-%__install -pD -m644 rpminit.1 $RPM_BUILD_ROOT%_man1dir/rpminit.1
+%__install -pD -m755 rpminit %buildroot%_bindir/rpminit
+%__install -pD -m644 rpminit.1 %buildroot%_man1dir/rpminit.1
 
 # Valid groups.
-%__install -p -m644 GROUPS $RPM_BUILD_ROOT%_rpmlibdir/
+%__install -p -m644 GROUPS %buildroot%_rpmlibdir/
 
 # buildreq ignore rules.
-%__install -pD -m644 rpm-build.buildreq $RPM_BUILD_ROOT%_sysconfdir/buildreqs/files/ignore.d/rpm-build
+%__install -pD -m644 rpm-build.buildreq %buildroot%_sysconfdir/buildreqs/files/ignore.d/rpm-build
 
 chmod a+x scripts/find-lang
 # Manpages have been moved to their own packages.
 #./scripts/find-lang --with-man %name rpm2cpio --output %name.lang
 RPMCONFIGDIR=./scripts ./scripts/find-lang %name rpm2cpio --output %name.lang
 
-pushd $RPM_BUILD_ROOT%_rpmlibdir
+pushd %buildroot%_rpmlibdir
 	for f in *-alt-%_target_os; do
 		n=`echo "$f" |%__sed -e 's/-alt//'`
 		[ -e "$n" ] || %__ln_s "$f" "$n"
 	done
 popd
 
-/bin/ls -1d $RPM_BUILD_ROOT%_rpmlibdir/*-%_target_os |
+/bin/ls -1d %buildroot%_rpmlibdir/*-%_target_os |
 	%__grep -Fv /brp- |
-	%__sed -e "s|^$RPM_BUILD_ROOT|%%attr(-,root,%name) |g" >>%name.lang
+	%__sed -e "s|^%buildroot|%%attr(-,root,%name) |g" >>%name.lang
 
 %pre
 if [ -f %_localstatedir/%name/Packages -a -f %_localstatedir/%name/packages.rpm ]; then
@@ -337,6 +337,8 @@ Please remove (or at least rename) one of those files, and re-install.
 " >&2
     exit 1
 fi
+
+[ ! -L %_rpmlibdir/noarch-alt-%_target_os ] || %__rm -f %_rpmlibdir/noarch-alt-%_target_os ||:
 
 %post
 if [ -f %_localstatedir/%name/packages.rpm ]; then
@@ -521,6 +523,16 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Oct 10 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt50
+- parseSpec.c:
+  + Added %docdir to tags_files_list.
+  + Backported nested conditionals handling fix.
+  + Backported multiline macro support.
+- GROUPS: New group added: Networking/FTN (closes #7718).
+- rpmbuild.8: Added --nosource/--nopatch descriptions (closes #8015).
+- installplatform, platform.in:
+  + Maintain noarch as self-contained architecture (mouse@).
+
 * Thu Sep 29 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt49
 - Changed expandMacro() and related callers to print error message
   and set error status for undefined macros (closes #8089).
