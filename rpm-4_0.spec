@@ -530,7 +530,7 @@ fi
   + Backported multiline macro support.
 - GROUPS: New group added: Networking/FTN (closes #7718).
 - rpmbuild.8: Added --nosource/--nopatch descriptions (closes #8015).
-- installplatform, platform.in:
+- installplatform, platform.in, rpmrc.in:
   + Maintain noarch as self-contained architecture (mouse@).
 
 * Thu Sep 29 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt49
