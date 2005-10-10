@@ -21,6 +21,7 @@ optflags: pentium4 %optflags_default -march=pentium4
 optflags: amd64 %optflags_default
 optflags: ia64 %optflags_default
 optflags: x86_64 %optflags_default
+optflags: noarch %optflags_default
 
 # XXX Please note that -mieee has been added in rpm-3.0.5.
 optflags: alpha -O2 -mieee -mcpu=ev4
