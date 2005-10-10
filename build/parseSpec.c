@@ -445,6 +445,7 @@ static tags_struct tags_files_list[] = {
     {0, "dev"},
     {0, "dir"},
     {0, "doc"},
+    {0, "docdir"},
     {0, "exclude"},
     {0, "ghost"},
     {0, "lang"},
