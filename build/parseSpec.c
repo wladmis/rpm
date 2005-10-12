@@ -528,7 +528,6 @@ is_builtin_preamble_tag(const char *line, int len)
 	return is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list));
 }
 
-#if 0
 static const char *
 is_builtin_prep_tag(const char *line, int len)
 {
@@ -567,8 +566,12 @@ is_builtin_build_tag(const char *line, int len)
 {
 	return is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list));
 }
-#endif
 
+static const char *
+is_builtin_changelog_tag(const char *line, int len)
+{
+	return is_builtin_tag(line, len, tags_common_list, nr_of_tags(tags_common_list));
+}
 static const char *
 is_builtin_description_tag(const char *line, int len)
 {
@@ -656,38 +659,32 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
     /*@-infloops@*/	/* LCL: parsePart is modified @*/
     while (parsePart < PART_LAST && parsePart != PART_NONE) {
 	rpmBuiltinMacroLookup saved_lookup = rpmSetBuiltinMacroLookup(NULL);
-	int skip_lookup = rpmExpandNumeric("%{?_allow_undefined_macros}");
+	int saved_lookup_failed = rpmSetBuiltinMacroLookupFailedOK(rpmExpandNumeric("%{?_allow_undefined_macros}"));
 	switch (parsePart) {
 	case PART_PREAMBLE:
-	    if (!skip_lookup)
-		rpmSetBuiltinMacroLookup(is_builtin_preamble_tag);
+	    rpmSetBuiltinMacroLookup(is_builtin_preamble_tag);
 	    parsePart = parsePreamble(spec, initialPackage);
 	    initialPackage = 0;
 	    /*@switchbreak@*/ break;
 	case PART_PREP:
-#if 0
-	    if (!skip_lookup)
-		rpmSetBuiltinMacroLookup(is_builtin_prep_tag);
-#endif
+	    rpmSetBuiltinMacroLookup(is_builtin_prep_tag);
+	    rpmSetBuiltinMacroLookupFailedOK(1);
 	    parsePart = parsePrep(spec);
 	    /*@switchbreak@*/ break;
 	case PART_BUILD:
 	case PART_INSTALL:
 	case PART_CLEAN:
-#if 0
-	    if (!skip_lookup)
-		rpmSetBuiltinMacroLookup(is_builtin_build_tag);
-#endif
+	    rpmSetBuiltinMacroLookup(is_builtin_build_tag);
+	    rpmSetBuiltinMacroLookupFailedOK(1);
 	    parsePart = parseBuildInstallClean(spec, parsePart);
 	    /*@switchbreak@*/ break;
 	case PART_CHANGELOG:
-	    if (!skip_lookup)
-		rpmSetBuiltinMacroLookup(NULL);
+	    rpmSetBuiltinMacroLookup(is_builtin_changelog_tag);
+	    rpmSetBuiltinMacroLookupFailedOK(1);
 	    parsePart = parseChangelog(spec);
 	    /*@switchbreak@*/ break;
 	case PART_DESCRIPTION:
-	    if (!skip_lookup)
-		rpmSetBuiltinMacroLookup(is_builtin_description_tag);
+	    rpmSetBuiltinMacroLookup(is_builtin_description_tag);
 	    parsePart = parseDescription(spec);
 	    /*@switchbreak@*/ break;
 
@@ -699,14 +696,12 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	case PART_TRIGGERIN:
 	case PART_TRIGGERUN:
 	case PART_TRIGGERPOSTUN:
-	    if (!skip_lookup)
-		rpmSetBuiltinMacroLookup(is_builtin_script_tag);
+	    rpmSetBuiltinMacroLookup(is_builtin_script_tag);
 	    parsePart = parseScript(spec, parsePart);
 	    /*@switchbreak@*/ break;
 
 	case PART_FILES:
-	    if (!skip_lookup)
-		rpmSetBuiltinMacroLookup(is_builtin_files_tag);
+	    rpmSetBuiltinMacroLookup(is_builtin_files_tag);
 	    parsePart = parseFiles(spec);
 	    /*@switchbreak@*/ break;
 
@@ -716,6 +711,7 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	    /*@switchbreak@*/ break;
 	}
 	rpmSetBuiltinMacroLookup(saved_lookup);
+	rpmSetBuiltinMacroLookupFailedOK(saved_lookup_failed);
 
 	if (parsePart >= PART_LAST) {
 	    spec = freeSpec(spec);

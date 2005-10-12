@@ -1159,6 +1159,7 @@ doFoo(MacroBuf mb, int negate, const char * f, size_t fn,
 }
 
 static rpmBuiltinMacroLookup current_rpmBuiltinMacroLookup;
+static int current_rpmBuiltinMacroLookupFailedOK;
 
 rpmBuiltinMacroLookup
 rpmSetBuiltinMacroLookup(rpmBuiltinMacroLookup f)
@@ -1166,6 +1167,15 @@ rpmSetBuiltinMacroLookup(rpmBuiltinMacroLookup f)
 	rpmBuiltinMacroLookup old = current_rpmBuiltinMacroLookup;
 
 	current_rpmBuiltinMacroLookup = f;
+	return old;
+}
+
+int
+rpmSetBuiltinMacroLookupFailedOK(int val)
+{
+	int old = current_rpmBuiltinMacroLookupFailedOK;
+
+	current_rpmBuiltinMacroLookupFailedOK = val;
 	return old;
 }
 
@@ -1452,9 +1462,14 @@ expandMacro(MacroBuf mb)
 		SAVECHAR(mb, c);
 		if (current_rpmBuiltinMacroLookup &&
 		    !current_rpmBuiltinMacroLookup(f, fn)) {
+			if (current_rpmBuiltinMacroLookupFailedOK)
+			rpmError(_wm(118),
+				_("Macro %%%.*s not found\n"), fn, f);
+			else {
 			rpmError(RPMERR_BADSPEC,
 				_("Macro %%%.*s not found\n"), fn, f);
 			rc2 = 1;
+			}
 		}
 		continue;
 	}
