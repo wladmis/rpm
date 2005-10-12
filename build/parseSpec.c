@@ -103,6 +103,12 @@ void handleComments(char *s)
 	*s = '\0';
 }
 
+static int isCommentLine(const char *s)
+{
+    SKIPSPACE(s);
+    return (*s == '#');
+}
+
 /**
  */
 static void forceIncludeFile(Spec spec, const char * fileName)
@@ -180,11 +186,22 @@ static int copyNextLine(Spec spec, OFI_t *ofi, int strip)
 	spec->lbufPtr = spec->lbuf;
 
 	/* Don't expand macros (eg. %define) in false branch of %if clause */
-	if (spec->readStack->reading &&
-	    expandMacros(spec, spec->macros, spec->lbuf, sizeof(spec->lbuf))) {
+	if (spec->readStack->reading) {
+	    int failed_ok;
+	    int saved_lookup_failed;
+	    int rc;
+
+	    failed_ok = saved_lookup_failed = rpmSetBuiltinMacroLookupFailedOK(0);
+	    if (!failed_ok)
+	        failed_ok = (strip & STRIP_COMMENTS) && isCommentLine(spec->lbuf);
+	    rpmSetBuiltinMacroLookupFailedOK(failed_ok);
+	    rc = expandMacros(spec, spec->macros, spec->lbuf, sizeof(spec->lbuf));
+	    rpmSetBuiltinMacroLookupFailedOK(saved_lookup_failed);
+	    if (rc) {
 		rpmError(RPMERR_BADSPEC, _("line %d: %s\n"),
 			spec->lineNum, spec->lbuf);
 		return RPMERR_BADSPEC;
+	    }
 	}
 	spec->nextline = spec->lbuf;
     }
