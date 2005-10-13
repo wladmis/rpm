@@ -531,6 +531,8 @@ fi
     pass undefined macros within comments but issue warning messages.
   + When processing %%prep, %%build, %%install and %%clean sections,
     pass undefined macros and issue warning messages.
+  + When processing undefined macros, issue warnings instead of errors
+    for short macros which cannot be defined.
 
 * Mon Oct 10 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt50
 - parseSpec.c:
