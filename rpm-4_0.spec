@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt50
+Release: alt51
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -523,6 +523,15 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Oct 13 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt51
+- rpmio/macro.c, build/parseSpec:
+  + When %%_allow_undefined_macros is set to true value,
+    pass undefined macros but issue warning messages.
+  + When processing section where comments should be skipped,
+    pass undefined macros within comments but issue warning messages.
+  + When processing %%prep, %%build, %%install and %%clean sections,
+    pass undefined macros and issue warning messages.
+
 * Mon Oct 10 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt50
 - parseSpec.c:
   + Added %docdir to tags_files_list.
