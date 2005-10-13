@@ -1462,13 +1462,13 @@ expandMacro(MacroBuf mb)
 		SAVECHAR(mb, c);
 		if (current_rpmBuiltinMacroLookup &&
 		    !current_rpmBuiltinMacroLookup(f, fn)) {
-			if (current_rpmBuiltinMacroLookupFailedOK)
-			rpmError(_wm(118),
-				_("Macro %%%.*s not found\n"), fn, f);
+			if (current_rpmBuiltinMacroLookupFailedOK || fn <= 2)
+				rpmError(_wm(118),
+					_("Macro %%%.*s not found\n"), fn, f);
 			else {
-			rpmError(RPMERR_BADSPEC,
-				_("Macro %%%.*s not found\n"), fn, f);
-			rc2 = 1;
+				rpmError(RPMERR_BADSPEC,
+					_("Macro %%%.*s not found\n"), fn, f);
+				rc2 = 1;
 			}
 		}
 		continue;
