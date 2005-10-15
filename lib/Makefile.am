@@ -31,7 +31,7 @@ librpm_la_SOURCES = \
 	closeall.c cpio.c depends.c formats.c fs.c fsm.c getdate.c \
 	header_internal.c manifest.c misc.c package.c \
 	problems.c poptI.c poptK.c poptQV.c psm.c query.c \
-	rpmchecksig.c rpminstall.c rpmlead.c rpmlibprov.c rpmrc.c rpmvercmp.c \
+	rpmchecksig.c rpminstall.c rpmlead.c rpmlibprov.c rpmrc.c \
 	signature.c stringbuf.c tagName.c tagtable.c transaction.c \
 	verify.c
 librpm_la_LDFLAGS = -release @VERSION@
