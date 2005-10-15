@@ -32,22 +32,11 @@ librpm_la_SOURCES = \
 	header_internal.c manifest.c misc.c package.c \
 	problems.c poptI.c poptK.c poptQV.c psm.c query.c \
 	rpmchecksig.c rpminstall.c rpmlead.c rpmlibprov.c rpmrc.c \
-	signature.c stringbuf.c tagtable.c transaction.c \
+	signature.c stringbuf.c transaction.c \
 	verify.c
 librpm_la_LDFLAGS = -release @VERSION@
 librpm_la_LIBADD = $(top_builddir)/rpmdb/librpmdb.la $(top_builddir)/rpmio/librpmio.la @LIBPOPT@
 librpm_la_DEPENDENCIES = $(top_builddir)/rpmdb/librpmdb.la $(top_builddir)/rpmio/librpmio.la
-
-tagtable.c: rpmlib.h 
-	@echo '#include "system.h"' > tagtable.c
-	@echo '#include "rpmlib.h"' >> tagtable.c
-	@echo '' >> tagtable.c
-	@echo 'const struct headerTagTableEntry_s rpmTagTable[] = {' >> tagtable.c
-	$(AWK) '/(RPMTAG_[A-Z0-9]*)[ \t]+([0-9]*)/ && !/internal/ { if ($$2 == "=") { printf("\t{ \"%s\", %s },\n", $$1, $$3); } else { printf("\t{ \"%s\", %s },\n", $$2, $$3); } }' < $(srcdir)/rpmlib.h >> tagtable.c
-	@echo '	{ NULL, 0 }' >> tagtable.c
-	@echo '};' >> tagtable.c
-	@echo '' >> tagtable.c
-	@echo 'const int rpmTagTableSize = sizeof(rpmTagTable) / sizeof(rpmTagTable[0]) - 1;' >> tagtable.c
 
 getdate.c: getdate.y
 	@echo expect 10 shift/reduce conflicts
@@ -75,7 +64,7 @@ getdate.c: getdate.y
 	   fi ;\
 	fi
 
-BUILT_SOURCES = tagtable.c getdate.c
+BUILT_SOURCES = getdate.c
 
 .PHONY:	sources
 sources:
