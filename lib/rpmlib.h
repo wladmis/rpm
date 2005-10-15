@@ -196,7 +196,7 @@ int rpmPackageGetEntry(void *leadp, Header sigs, Header h,
  */
 /*@-redecl@*/
 /*@observer@*/ /*@unchecked@*/
-extern const struct headerTagTableEntry_s rpmTagTable[];
+extern const struct headerTagTableEntry_s * rpmTagTable;
 /*@=redecl@*/
 
 /**
