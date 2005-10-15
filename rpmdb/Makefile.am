@@ -23,7 +23,8 @@ LIBS =
 
 lib_LTLIBRARIES = librpmdb.la
 librpmdb_la_SOURCES = $(DBLIBSRCS) \
-	dbconfig.c header.c fprint.c merge.c poptDB.c rpmhash.c rpmdb.c rpmvercmp.c
+	dbconfig.c header.c fprint.c merge.c poptDB.c rpmhash.c rpmdb.c \
+	rpmvercmp.c tagname.c
 librpmdb_la_LDFLAGS = -release @VERSION@ @libdb3@
 librpmdb_la_LIBADD = $(LIBDB) $(top_builddir)/rpmio/librpmio.la
 librpmdb_la_DEPENDENCIES = $(top_builddir)/rpmio/librpmio.la
