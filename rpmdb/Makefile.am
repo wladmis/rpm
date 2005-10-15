@@ -36,8 +36,8 @@ tagtbl.c: Makefile.am $(top_srcdir)/lib/rpmlib.h
 	@echo '' >> $@
 	@echo '/*@observer@*/ /*@unchecked@*/' >> $@
 	@echo 'static const struct headerTagTableEntry_s rpmTagTbl[] = {' >> $@
-	${AWK} '/(RPMTAG_[A-Z0-9]*)[ \t]+([0-9]*)/ && !/internal/ { if ($$2 == "=") { printf("\t{ \"%s\",	%s },\n", $$1, $$3) } else { printf("\t{ \"%s\",	%s, },\n", $$2, $$3) } }' < $(top_srcdir)/lib/rpmlib.h >> $@
-	@echo '	{ NULL, 0, }' >> $@
+	${AWK} '/(RPMTAG_[A-Z0-9]*)[ \t]+([0-9]*)/ && !/internal/ { if ($$2 == "=") { printf("\t{ \"%s\",	%s },\n", $$1, $$3) } else { printf("\t{ \"%s\",	%s },\n", $$2, $$3) } }' < $(top_srcdir)/lib/rpmlib.h >> $@
+	@echo '	{ NULL, 0 }' >> $@
 	@echo '};' >> $@
 	@echo '' >> $@
 	@echo '/*@observer@*/ /*@unchecked@*/' >> $@
