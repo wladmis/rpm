@@ -4,7 +4,7 @@
 
 #include "system.h"
 
-#if HAVE_GELF_H
+#if HAVE_GELF_H && HAVE_LIBELF
 
 #include <gelf.h>
 
