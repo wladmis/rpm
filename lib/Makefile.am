@@ -12,8 +12,7 @@ EXTRA_DIST = getdate.y
 
 pkgincdir = $(pkgincludedir)
 pkginc_HEADERS = \
-	header.h hdrinline.h \
-	misc.h rpmcli.h rpmlib.h stringbuf.h
+	header.h misc.h rpmcli.h rpmlib.h stringbuf.h
 noinst_HEADERS = \
 	cpio.h depends.h fsm.h header_internal.h \
 	manifest.h psm.h \
@@ -30,8 +29,7 @@ LIBS =
 lib_LTLIBRARIES = librpm.la
 librpm_la_SOURCES = \
 	closeall.c cpio.c depends.c formats.c fs.c fsm.c getdate.c \
-	header.c header_internal.c \
-	manifest.c misc.c package.c \
+	header_internal.c manifest.c misc.c package.c \
 	problems.c poptI.c poptK.c poptQV.c psm.c query.c \
 	rpmchecksig.c rpminstall.c rpmlead.c rpmlibprov.c rpmrc.c rpmvercmp.c \
 	signature.c stringbuf.c tagName.c tagtable.c transaction.c \

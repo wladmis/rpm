@@ -13,7 +13,7 @@ DBLIBSRCS = db3.c db1.c falloc.c
 LIBDB = @libdb3@
 
 pkgincdir = $(pkgincludedir)
-pkginc_HEADERS = rpmdb.h
+pkginc_HEADERS = hdrinline.h rpmdb.h
 noinst_HEADERS = falloc.h fprint.h rpmhash.h
 
 mylibpaths = -L$(top_builddir)/lib/.libs
@@ -23,7 +23,7 @@ LIBS =
 
 lib_LTLIBRARIES = librpmdb.la
 librpmdb_la_SOURCES = $(DBLIBSRCS) \
-	dbconfig.c fprint.c merge.c poptDB.c rpmhash.c rpmdb.c
+	dbconfig.c header.c fprint.c merge.c poptDB.c rpmhash.c rpmdb.c
 librpmdb_la_LDFLAGS = -release @VERSION@ @libdb3@
 librpmdb_la_LIBADD = $(LIBDB) $(top_builddir)/rpmio/librpmio.la
 librpmdb_la_DEPENDENCIES = $(top_builddir)/rpmio/librpmio.la
