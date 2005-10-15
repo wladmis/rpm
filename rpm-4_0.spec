@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt51
+Release: alt52
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -21,6 +21,7 @@ Release: alt51
 %else
 %def_without python
 %endif
+%def_with libelf
 %def_without apidocs
 %def_without db
 %def_without contrib
@@ -51,6 +52,7 @@ Requires: glibc-core
 
 %{?_with_python:BuildPreReq: python-devel = %__python_version}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
+%{?_with_libelf:BuildPreReq: libelf-devel-static}
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 BuildConflicts: rpm-devel
@@ -523,6 +525,12 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Oct 15 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt52
+- Relocated some code from librpm to librpmdb, do resolve
+  undefined references between libraries.
+- domd5(): Backported prelink support.
+- Link librpmdb with libelf by default.
+
 * Thu Oct 13 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt51
 - rpmio/macro.c, build/parseSpec:
   + When %%_allow_undefined_macros is set to true value,
@@ -536,7 +544,7 @@ fi
 
 * Mon Oct 10 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt50
 - parseSpec.c:
-  + Added %docdir to tags_files_list.
+  + Added %%docdir to tags_files_list.
   + Backported nested conditionals handling fix.
   + Backported multiline macro support.
 - GROUPS: New group added: Networking/FTN (closes #7718).
