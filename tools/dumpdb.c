@@ -34,7 +34,7 @@ int main(int argc, char ** argv)
 	while ((h = rpmdbNextIterator(mi)) != NULL) {
 
 	    blockNum++;
-	    if (!(dspBlockNum != 0 && dspBlockNum != blockNum))
+	    if (dspBlockNum && blockNum != dspBlockNum)
 		continue;
 
 	    headerDump(h, stdout, HEADER_DUMP_INLINE, rpmTagTable);
