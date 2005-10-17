@@ -115,6 +115,7 @@ void loadFi(Header h, TFI_t fi)
     HGE_t hge;
     HFD_t hfd;
     uint_32 * uip;
+    char * strp;
     int len;
     int rc;
     int i;
@@ -134,14 +135,18 @@ void loadFi(Header h, TFI_t fi)
     if (h && fi->h == NULL)	fi->h = headerLink(h);
 
     /* Duplicate name-version-release so that headers can be free'd. */
-    rc = hge(fi->h, RPMTAG_NAME, NULL, (void **) &fi->name, NULL);
-    fi->name = xstrdup(fi->name);
-    rc = hge(fi->h, RPMTAG_VERSION, NULL, (void **) &fi->version, NULL);
-    fi->version = xstrdup(fi->version);
-    rc = hge(fi->h, RPMTAG_RELEASE, NULL, (void **) &fi->release, NULL);
-    fi->release = xstrdup(fi->release);
-    rc = hge(fi->h, RPMTAG_SHA1HEADER, NULL, (void **) &fi->digest, NULL);
-    fi->digest = xstrdup(fi->digest);
+    strp = NULL;
+    rc = hge(fi->h, RPMTAG_NAME, NULL, (void **) &strp, NULL);
+    fi->name = strp ? xstrdup(strp) : NULL;
+    strp = NULL;
+    rc = hge(fi->h, RPMTAG_VERSION, NULL, (void **) &strp, NULL);
+    fi->version = strp ? xstrdup(strp) : NULL;
+    strp = NULL;
+    rc = hge(fi->h, RPMTAG_RELEASE, NULL, (void **) &strp, NULL);
+    fi->release = strp ? xstrdup(strp) : NULL;
+    strp = NULL;
+    rc = hge(fi->h, RPMTAG_SHA1HEADER, NULL, (void **) &strp, NULL);
+    fi->digest = strp ? xstrdup(strp) : NULL;
 
     /* -1 means not found */
     rc = hge(fi->h, RPMTAG_EPOCH, NULL, (void **) &uip, NULL);
