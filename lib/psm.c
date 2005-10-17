@@ -35,6 +35,38 @@ extern const char * chroot_prefix;
 /*@=redecl =declundef =exportheadervar@*/
 #endif
 
+static int upgrade_honor_buildtime(void)
+{
+    static int honor_buildtime = -1;
+
+    if (honor_buildtime < 0)
+	honor_buildtime = rpmExpandNumeric("%{?_upgrade_honor_buildtime}") ? 1 : 0;
+
+    return honor_buildtime;
+}
+
+static int rpmBuildTimeCompare(Header first, Header second)
+{
+    int_32 * one, * two;
+
+    if (!headerGetEntry(first, RPMTAG_BUILDTIME, NULL, (void **) &one, NULL))
+	one = NULL;
+    if (!headerGetEntry(second, RPMTAG_BUILDTIME, NULL, (void **) &two, NULL))
+	two = NULL;
+
+    if (!one && !two)
+	return 0;
+    if (one && !two)
+	return 1;
+    if (!one && two)
+	return -1;
+    if (*one < *two)
+	return -1;
+    if (*one > *two)
+	return 1;
+    return 0;
+}
+
 int rpmVersionCompare(Header first, Header second)
 {
     const char * one, * two;
@@ -68,7 +100,14 @@ int rpmVersionCompare(Header first, Header second)
     (void) headerGetEntry(first, RPMTAG_RELEASE, NULL, (void **) &one, NULL);
     (void) headerGetEntry(second, RPMTAG_RELEASE, NULL, (void **) &two, NULL);
 
-    return rpmvercmp(one, two);
+    rc = rpmvercmp(one, two);
+    if (rc)
+	return rc;
+
+    if (upgrade_honor_buildtime())
+	return rpmBuildTimeCompare(first, second);
+
+    return 0;
 }
 
 void loadFi(Header h, TFI_t fi)
@@ -101,6 +140,8 @@ void loadFi(Header h, TFI_t fi)
     fi->version = xstrdup(fi->version);
     rc = hge(fi->h, RPMTAG_RELEASE, NULL, (void **) &fi->release, NULL);
     fi->release = xstrdup(fi->release);
+    rc = hge(fi->h, RPMTAG_SHA1HEADER, NULL, (void **) &fi->digest, NULL);
+    fi->digest = xstrdup(fi->digest);
 
     /* -1 means not found */
     rc = hge(fi->h, RPMTAG_EPOCH, NULL, (void **) &uip, NULL);
@@ -194,6 +235,7 @@ void freeFi(TFI_t fi)
     fi->name = _free(fi->name);
     fi->version = _free(fi->version);
     fi->release = _free(fi->release);
+    fi->digest = _free(fi->digest);
     fi->actions = _free(fi->actions);
     fi->replacedSizes = _free(fi->replacedSizes);
     fi->replaced = _free(fi->replaced);
@@ -1390,14 +1432,20 @@ int psmStage(PSM_t psm, pkgStage stage)
 	}
 
 	if (psm->goal == PSM_PKGINSTALL) {
+	    char b[80];
 	    psm->scriptArg = psm->npkgs_installed + 1;
 
 assert(psm->mi == NULL);
 	    psm->mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_NAME, fi->name, 0);
+	    sprintf(b, "%u", fi->epoch);
+	    xx = rpmdbSetIteratorRE(psm->mi, RPMTAG_EPOCH,
+			RPMMIRE_DEFAULT, b);
 	    xx = rpmdbSetIteratorRE(psm->mi, RPMTAG_VERSION,
 			RPMMIRE_DEFAULT, fi->version);
 	    xx = rpmdbSetIteratorRE(psm->mi, RPMTAG_RELEASE,
 			RPMMIRE_DEFAULT, fi->release);
+	    xx = rpmdbSetIteratorRE(psm->mi, RPMTAG_SHA1HEADER,
+			RPMMIRE_DEFAULT, fi->digest);
 
 	    while ((psm->oh = rpmdbNextIterator(psm->mi))) {
 		fi->record = rpmdbGetIteratorOffset(psm->mi);

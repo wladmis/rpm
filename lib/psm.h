@@ -105,6 +105,8 @@ struct transactionFileInfo_s {
 
   /* for TR_REMOVED packages */
     unsigned int record;
+
+    const char *digest;
 };
 
 /**

@@ -270,6 +270,9 @@ alAddPackage(availableList al,
     if (!hge(h, RPMTAG_EPOCH, NULL, (void **) &p->epoch, NULL))
 	p->epoch = NULL;
 
+    if (!hge(h, RPMTAG_BUILDTIME, NULL, (void **) &p->buildtime, NULL))
+	p->buildtime = NULL;
+
     if (!hge(h, RPMTAG_PROVIDENAME, NULL, (void **) &p->provides,
 	&p->providesCount)) {
 	p->providesCount = 0;
@@ -714,6 +717,24 @@ static int removePackage(rpmTransactionSet ts, int dboffset, int depends)
     return 0;
 }
 
+static int rpmDigestCompare(Header first, Header second)
+{
+    const char * one, * two;
+
+    if (!headerGetEntry(first, RPMTAG_SHA1HEADER, NULL, (void **) &one, NULL))
+	one = NULL;
+    if (!headerGetEntry(second, RPMTAG_SHA1HEADER, NULL, (void **) &two, NULL))
+	two = NULL;
+
+    if (one && two)
+	return strcmp(one, two);
+    if (one && !two)
+	return 1;
+    if (!one && two)
+	return -1;
+    return 0;
+}
+
 int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
 			const void * key, int upgrade, rpmRelocation * relocs)
 {
@@ -758,7 +779,7 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
 
 	mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_NAME, name, 0);
 	while((h2 = rpmdbNextIterator(mi)) != NULL) {
-	    if (rpmVersionCompare(h, h2))
+	    if (rpmDigestCompare(h, h2) || rpmVersionCompare(h, h2))
 		(void) removePackage(ts, rpmdbGetIteratorOffset(mi), alNum);
 	    else {
 		uint_32 *p, multiLibMask = 0, oldmultiLibMask = 0;

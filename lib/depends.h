@@ -60,6 +60,8 @@ struct availablePackage {
 /*@kept@*//*@null@*/ const void * key;	/*!< Private data associated with a package (e.g. file name of package). */
 /*@null@*/ rpmRelocation * relocs;
 /*@null@*/ FD_t fd;
+
+    int_32 * buildtime;
 } ;
 
 /** \ingroup rpmdep

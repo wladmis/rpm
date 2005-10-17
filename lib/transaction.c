@@ -1516,6 +1516,16 @@ static /*@dependent@*/ TFI_t tsNextIterator(void * a)
 
 #define	NOTIFY(_ts, _al)	if ((_ts)->notify) (void) (_ts)->notify _al
 
+static int upgrade_honor_buildtime(void)
+{
+    static int honor_buildtime = -1;
+
+    if (honor_buildtime < 0)
+	honor_buildtime = rpmExpandNumeric("%{?_upgrade_honor_buildtime}") ? 1 : 0;
+
+    return honor_buildtime;
+}
+
 int rpmRunTransactions(	rpmTransactionSet ts,
 			rpmCallbackFunction notify, rpmCallbackData notifyData,
 			rpmProblemSet okProbs, rpmProblemSet * newProbs,
@@ -1655,11 +1665,23 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 	/* XXX multilib should not display "already installed" problems */
 	if (!(ts->ignoreSet & RPMPROB_FILTER_REPLACEPKG) && !alp->multiLib) {
 	    rpmdbMatchIterator mi;
+	    char b[80];
+
 	    mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_NAME, alp->name, 0);
+	    if (alp->epoch) {
+		sprintf(b, "%u", *alp->epoch);
+		(void) rpmdbSetIteratorRE(mi, RPMTAG_EPOCH,
+			RPMMIRE_DEFAULT, b);
+	    }
 	    (void) rpmdbSetIteratorRE(mi, RPMTAG_VERSION,
 			RPMMIRE_DEFAULT, alp->version);
 	    (void) rpmdbSetIteratorRE(mi, RPMTAG_RELEASE,
 			RPMMIRE_DEFAULT, alp->release);
+	    if (alp->buildtime && upgrade_honor_buildtime()) {
+		sprintf(b, "%u", *alp->buildtime);
+		(void) rpmdbSetIteratorRE(mi, RPMTAG_BUILDTIME,
+		    RPMMIRE_DEFAULT, b);
+	    }
 
 	    while (rpmdbNextIterator(mi) != NULL) {
 		psAppend(ts->probs, RPMPROB_PKG_INSTALLED, alp,
