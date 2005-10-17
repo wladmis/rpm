@@ -529,7 +529,13 @@ fi
 - Relocated some code from librpm to librpmdb, do resolve
   undefined references between libraries.
 - domd5(): Backported prelink support.
-- Link librpmdb with libelf by default.
+- Changed build to link librpmdb with libelf by default.
+- Set umask 022 for install scripts and triggers execution.
+- Backported epoch handling fix to package upgrade algorithm.
+- Backported my own changes to the package upgrade algorithm:
+  + Remove old files on "-U --force" even if package NEVRs match.
+  + When comparing package versions on -U or -F, optionally
+    take build dates into account.
 
 * Thu Oct 13 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt51
 - rpmio/macro.c, build/parseSpec:
