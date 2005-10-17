@@ -1059,7 +1059,8 @@ static int runScript(PSM_t psm, Header h,
 		xx = chroot(rootDir);
 		/*@=unrecog =superuser @*/
 	    }
-	    xx = chdir("/");
+	    (void) chdir("/");
+	    (void) umask(022);
 	    xx = execv(argv[0], (char *const *)argv);
 	    break;
 	default:
