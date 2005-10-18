@@ -205,6 +205,7 @@ rpm	alias --vendor --eval %vendor
 rpm	alias --packager --eval %packager
 rpm	alias --distribution --eval %distribution
 rpm	alias --nowait-lock --define '_wait_for_lock 0'
+rpm	alias --ignorebuildtime --define '_upgrade_honor_buildtime 0'
 #==============================================================================
 rpmb	alias --dbpath		--define '_dbpath !#:+' \
 	--POPTdesc=$"use <dir> as the directory for the database" \
@@ -281,6 +282,7 @@ rpmi	alias --ftpport		--define '_ftpport !#:+'
 rpmi	alias --ftpproxy	--define '_ftpproxy !#:+'
 rpmi	alias --httpport	--define '_httpport !#:+'
 rpmi	alias --httpproxy	--define '_httpproxy !#:+'
+rpmi	alias --ignorebuildtime --define '_upgrade_honor_buildtime 0'
 #==============================================================================
 rpmk	alias --dbpath		--define '_dbpath !#:+' \
 	--POPTdesc=$"use <dir> as the directory for the database" \

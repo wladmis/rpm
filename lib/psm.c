@@ -40,7 +40,7 @@ static int upgrade_honor_buildtime(void)
     static int honor_buildtime = -1;
 
     if (honor_buildtime < 0)
-	honor_buildtime = rpmExpandNumeric("%{?_upgrade_honor_buildtime}") ? 1 : 0;
+	honor_buildtime = rpmExpandNumeric("%{?_upgrade_honor_buildtime}%{?!_upgrade_honor_buildtime:1}") ? 1 : 0;
 
     return honor_buildtime;
 }

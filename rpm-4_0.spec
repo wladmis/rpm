@@ -534,8 +534,8 @@ fi
 - Backported epoch handling fix to package upgrade algorithm.
 - Backported my own changes to the package upgrade algorithm:
   + Remove old files on "-U --force" even if package NEVRs match.
-  + When comparing package versions on -U or -F, optionally
-    take build dates into account.
+  + When comparing package versions on -U or -F, take
+    build dates into account.
 
 * Thu Oct 13 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt51
 - rpmio/macro.c, build/parseSpec:
