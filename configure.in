@@ -281,15 +281,13 @@ AC_CHECK_FUNC(socket, [], [
 ])
 
 WITH_LIBELF_LIB=
-AC_CHECK_HEADER([gelf.h], [
-    AC_CHECK_LIB(elf, gelf_getehdr, [
-	AC_DEFINE(HAVE_LIBELF, 1, [Define to 1 if you have the 'elf' library (-lelf).])
-	WITH_LIBELF_LIB="-lelf"
-    ])
+AC_CHECK_LIB(elf, gelf_getehdr, [
+    AC_DEFINE(HAVE_LIBELF, 1, [Define to 1 if you have the 'elf' library (-lelf).])
+    WITH_LIBELF_LIB="-lelf"
 ])
 AC_SUBST(WITH_LIBELF_LIB)
 
-AC_CHECK_HEADERS(thread.h pthread.h synch.h semaphore.h)
+AC_CHECK_HEADERS(thread.h pthread.h synch.h semaphore.h gelf.h)
 
 dnl Better not use fchmod at all.
 AC_CHECK_FUNC(fchmod)
