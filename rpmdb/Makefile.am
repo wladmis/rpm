@@ -36,16 +36,13 @@ tagtbl.c: Makefile.am $(top_srcdir)/lib/rpmlib.h
 	@echo '#include "rpmlib.h"' >> $@
 	@echo '' >> $@
 	@echo '/*@observer@*/ /*@unchecked@*/' >> $@
-	@echo 'static const struct headerTagTableEntry_s rpmTagTbl[] = {' >> $@
+	@echo 'const struct headerTagTableEntry_s rpmTagTable[] = {' >> $@
 	${AWK} '/(RPMTAG_[A-Z0-9]*)[ \t]+([0-9]*)/ && !/internal/ { if ($$2 == "=") { printf("\t{ \"%s\",	%s },\n", $$1, $$3) } else { printf("\t{ \"%s\",	%s },\n", $$2, $$3) } }' < $(top_srcdir)/lib/rpmlib.h >> $@
 	@echo '	{ NULL, 0 }' >> $@
 	@echo '};' >> $@
 	@echo '' >> $@
-	@echo '/*@observer@*/ /*@unchecked@*/' >> $@
-	@echo 'const struct headerTagTableEntry_s * rpmTagTable = rpmTagTbl;' >> $@
-	@echo '' >> $@
 	@echo '/*@unchecked@*/' >> $@
-	@echo 'const int rpmTagTableSize = sizeof(rpmTagTbl) / sizeof(rpmTagTbl[0]) - 1;' >> $@
+	@echo 'const int rpmTagTableSize = sizeof(rpmTagTable) / sizeof(rpmTagTable[0]) - 1;' >> $@
 	@echo '/*@=bounds@*/' >> $@
 
 BUILT_SOURCES = tagtbl.c
