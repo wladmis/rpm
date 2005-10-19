@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt52
+Release: alt53
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -525,6 +525,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Oct 19 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt53
+- librpmdb: reverted incompatible part of rpmTagTable backport.
+  Reported by Alexey Tourbin.
+
 * Sat Oct 15 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt52
 - Relocated some code from librpm to librpmdb, do resolve
   undefined references between libraries.
