@@ -676,7 +676,9 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
     /*@-infloops@*/	/* LCL: parsePart is modified @*/
     while (parsePart < PART_LAST && parsePart != PART_NONE) {
 	rpmBuiltinMacroLookup saved_lookup = rpmSetBuiltinMacroLookup(NULL);
-	int saved_lookup_failed = rpmSetBuiltinMacroLookupFailedOK(rpmExpandNumeric("%{?_allow_undefined_macros}"));
+	int saved_lookup_failed =
+		rpmSetBuiltinMacroLookupFailedOK(preprocess ||
+			rpmExpandNumeric("%{?_allow_undefined_macros}"));
 	switch (parsePart) {
 	case PART_PREAMBLE:
 	    rpmSetBuiltinMacroLookup(is_builtin_preamble_tag);
