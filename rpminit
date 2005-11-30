@@ -1,5 +1,9 @@
 #!/bin/sh -e
 # $Id$
+#
+# Written by Solar Designer <solar at owl.openwall.com> and placed in the
+# public domain.
+# Further modifications by ldv, still public domain.
 
 verbose=
 Verbose()
