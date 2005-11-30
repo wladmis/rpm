@@ -321,6 +321,9 @@
 @alt@%make_compile	%make_build
 @alt@%make	%_make_bin
 @alt@
+@alt@# Autotools.
+@alt@%__autoreconf		autoreconf -fisv
+@alt@
 @alt@# Library cache update (ldconfig) macros.
 @alt@%post_ldconfig_lib /sbin/ldconfig
 @alt@%post_ldconfig_sys /sbin/post_ldconfig
