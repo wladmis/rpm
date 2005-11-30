@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt53
+Release: alt54
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -16,11 +16,7 @@ Release: alt53
 %define if_without() %if %{expand:%%{?_without_%{1}:1}%%{!?_without_%{1}:0}}
 %define _rpmlibdir %_prefix/lib/rpm
 
-%ifarch %ix86
 %def_with python
-%else
-%def_without python
-%endif
 %def_with libelf
 %def_without apidocs
 %def_without db
@@ -525,6 +521,16 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Nov 30 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt54
+- build/parseSpec.c: Pass undefined macros in preprocess mode
+  (patch from raorn@).
+- platform.in:
+  + Added %%__autoconf macro (#8307);
+  + Added --disable-dependency-tracking to %configure (#8558).
+- rpminit, rpminit.1: Added public domain statements (#8433).
+- python/Makefile.am: Fixed x86_64 support.
+- Enabled build of python subpackage for x86_64.
+
 * Wed Oct 19 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt53
 - librpmdb: reverted incompatible part of rpmTagTable backport.
   Reported by Alexey Tourbin.
