@@ -526,7 +526,7 @@ fi
   (patch from raorn@).
 - platform.in:
   + Added %%__autoconf macro (#8307);
-  + Added --disable-dependency-tracking to %configure (#8558).
+  + Added --disable-dependency-tracking to %%configure (#8558).
 - rpminit, rpminit.1: Added public domain statements (#8433).
 - python/Makefile.am: Fixed x86_64 support.
 - Enabled build of python subpackage for x86_64.
