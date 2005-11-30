@@ -60,6 +60,7 @@
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} \\\
+	--disable-dependency-tracking \\\
 	%{?_configure_gettext:%{_configure_gettext}}
 
 %_makeinstall_target	install
