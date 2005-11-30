@@ -18,15 +18,17 @@ mylibs= \
 
 LDADD =
 
-pythondir = $(prefix)/lib/python${PYVER}/site-packages
+pythondir = $(libdir)/python${PYVER}/site-packages
 python_PROGRAMS = rpmmodule.so
 
 noinst_PROGRAMS = poptmodule.so
 
 rpmmodule_so_SOURCES =
+rpmmodule_so_CFLAGS = -fPIC -DPIC
 rpmmodule_so_LDFLAGS = $(mylibs) $(LIBS) -shared -Wl,-soname,rpmmodule.so
 
 poptmodule_so_SOURCES = poptmodule.c
+poptmodule_so_CFLAGS = -fPIC -DPIC
 poptmodule_so_LDFLAGS = $(mylibs) $(LIBS) -shared -Wl,-soname,poptmodule.so
 
 noinst_LTLIBRARIES = librpmmodule.la
