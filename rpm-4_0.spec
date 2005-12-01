@@ -525,7 +525,7 @@ fi
 - build/parseSpec.c: Pass undefined macros in preprocess mode
   (patch from raorn@).
 - platform.in:
-  + Added %%__autoconf macro (#8307);
+  + Added %%__autoreconf macro (#8307);
   + Added --disable-dependency-tracking to %%configure (#8558).
 - rpminit, rpminit.1: Added public domain statements (#8433).
 - python/Makefile.am: Fixed x86_64 support.
