@@ -173,7 +173,7 @@ $f"
 		fi
 	fi
 
-	if [ -z "${f%%*.py}" -o -z "${f%%*.pyo}" -o -z "${f%%*.pyc}" ]; then
+	if [ -z "${f%%*.py}" -o -z "${f%%*.pyo}" -o -z "${f%%*.pyc}" -o -z "${f%%*.pth}" ]; then
 		if [ -n "$FIND_PYTHON" ]; then
 			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
 $f"
