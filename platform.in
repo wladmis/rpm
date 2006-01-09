@@ -353,11 +353,13 @@
 @alt@%_man8dir		%_mandir/man8
 @alt@%_man9dir		%_mandir/man9
 @alt@
-@alt@# Menu directories.
+@alt@# Desktop-related directories.
 @alt@%_menudir	%_prefix/lib/menu
 @alt@%_iconsdir	%_datadir/icons
 @alt@%_miconsdir	%_iconsdir/mini
 @alt@%_liconsdir	%_iconsdir/large
+@alt@%_desktopdir	%_datadir/applications
+@alt@%_pixmapsdir	%_datadir/pixmaps
 @alt@
 @alt@# Games directories.
 @alt@%_gamesdir	games
