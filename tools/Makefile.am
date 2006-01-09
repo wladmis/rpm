@@ -28,7 +28,7 @@ noinst_PROGRAMS = \
 	dump dumpdb rpmarchive rpmheader rpmlead rpmsignature
 
 pkgbindir = @RPMCONFIGDIR@
-pkgbin_PROGRAMS = javadeps filesize relative pdeath_execute
+pkgbin_PROGRAMS = javadeps filesize dump_ld_config relative pdeath_execute
 
 rpmsort_SOURCES = rpmsort.c
 rpmsort_LDFLAGS = @LDFLAGS_STATIC@
@@ -40,6 +40,9 @@ filesize_LDADD =
 
 relative_SOURCES = relative.c
 relative_LDADD =
+
+dump_ld_config_SOURCES = dump_ld_config.c
+dump_ld_config_LDADD =
 
 pdeath_execute_SOURCES = pdeath_execute.c
 pdeath_execute_LDADD =
