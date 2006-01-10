@@ -219,8 +219,10 @@ FindTclProvs()
 $r"
 }
 
-DEF_RPM_FINDPROV_LIB_PATH='/lib:/usr/lib:/usr/X11R6/lib:/lib64:/usr/lib64:/usr/X11R6/lib64'
+DEF_RPM_FINDPROV_LIB_PATH="$RPM_LIB:$RPM_LIBDIR:$(@RPMCONFIGDIR@/dump_ld_config |tr -s '\n' :)"
+DEF_RPM_FINDPROV_LIB_PATH="$(printf %s "$DEF_RPM_FINDPROV_LIB_PATH" |sed -e 's/^:\+//; s/:\+$//')"
 : ${RPM_FINDPROV_LIB_PATH:=$DEF_RPM_FINDPROV_LIB_PATH}
+RPM_FINDPROV_LIB_PATH="$(printf %s "$RPM_FINDPROV_LIB_PATH" |sed -e 's/^:\+//; s/:\+$//')"
 
 lookup_path()
 {
@@ -276,16 +278,20 @@ FindLibProvs()
 				lookup_path "$dir" "$DEF_RPM_FINDPROV_LIB_PATH" || nondefdir="$dir"
 
 				# Output soname.
-				printf %s\\n "$soname$braces$suffix"
-				[ -z "$nondefdir" ] || printf "$nondefdir/%s\\n" "$soname$braces$suffix"
+				if [ -z "$nondefdir" ]; then
+					printf '%s\n' "$soname$braces$suffix"
+				else
+					printf '%s/%s\n' "$nondefdir" "$soname$braces$suffix"
+				fi
 
 				# Output version definitions.
 	    			printf %s\\n "$dump" | awk "-vsoname=$soname" "-vnondefdir=$nondefdir" "-vsuffix=$suffix" '
 					BEGIN {start=0;}
 					/^Version definitions:$/ {start=1;}
 					/^[0-9]/ && (start==1) && ($4!="") && ($4!=soname) {
-						printf("%s(%s)%s\n",soname,$4,suffix)
-						if (nondefdir!="")
+						if (nondefdir=="")
+							printf("%s(%s)%s\n",soname,$4,suffix)
+						else
 							printf("%s/%s(%s)%s\n",nondefdir,soname,$4,suffix)
 					}
 					/^$/ {start=0;}
