@@ -280,7 +280,8 @@ FindLibReqs()
 			tr -s '[:space:]' : |
 			sed -e 's/^:\+//; s/:\+$//')"
 		deps="$(LD_LIBRARY_PATH="$rpath" ldd -- "$f")" || return 1
-		deps="$(printf %s "$deps" |sed -e "s|$RPM_BUILD_ROOT||g")"
+		deps="$(printf %s "$deps" |
+			sed -e "s|$RPM_BUILD_ROOT||g" -e 's|/tls/|/|' -e 's|/sse2/|/|' -e "s|/$RPM_ARCH/|/|" -e 's|/i[3-9]86/|/|')"
 		# Shared library dependencies, version references.
 		for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
 			name="$(printf %s "$vers" |cut -d: -f1)"
