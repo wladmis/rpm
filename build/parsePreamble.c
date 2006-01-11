@@ -542,37 +542,8 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
 	break;
       case RPMTAG_BUILDROOT:
 	SINGLE_TOKEN_ONLY;
-      {	const char * buildRoot = NULL;
-	const char * buildRootURL = spec->buildRootURL;
-
-	/*
-	 * Note: rpmGenPath should guarantee a "canonical" path. That means
-	 * that the following pathologies should be weeded out:
-	 *          //bin//sh
-	 *          //usr//bin/
-	 *          /.././../usr/../bin//./sh
-	 */
-	if (buildRootURL == NULL) {
-	    buildRootURL = rpmGenPath(NULL, "%{?buildroot:%{buildroot}}", NULL);
-	    if (strcmp(buildRootURL, "/")) {
-		spec->buildRootURL = buildRootURL;
-		spec->gotBuildRootURL = 1;
-	    }
-	}
-	macro = NULL;
-	buildRootURL = rpmGenPath(NULL, spec->buildRootURL, NULL);
-	(void) urlPath(buildRootURL, &buildRoot);
-	/*@-branchstate@*/
-	if (*buildRoot == '\0') buildRoot = "/";
-	/*@=branchstate@*/
-	if (!strcmp(buildRoot, "/")) {
-	    rpmError(RPMERR_BADSPEC,
-		     _("BuildRoot can not be \"/\": %s\n"), spec->buildRootURL);
-	    buildRootURL = _free(buildRootURL);
-	    return RPMERR_BADSPEC;
-	}
-	buildRootURL = _free(buildRootURL);
-      }	break;
+	/* Just ignore legacy tag. */
+	break;
       case RPMTAG_PREFIXES:
 	addOrAppendListEntry(pkg->header, tag, field);
 	xx = hge(pkg->header, tag, &type, (void **)&array, &num);
