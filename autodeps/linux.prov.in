@@ -219,9 +219,9 @@ FindTclProvs()
 $r"
 }
 
-DEF_RPM_FINDPROV_LIB_PATH="$RPM_LIB:$RPM_LIBDIR:$(@RPMCONFIGDIR@/dump_ld_config |tr -s '\n' :)"
+DEF_RPM_FINDPROV_LIB_PATH="/$RPM_LIB:$RPM_LIBDIR:$(@RPMCONFIGDIR@/dump_ld_config |tr -s '\n' :)"
 DEF_RPM_FINDPROV_LIB_PATH="$(printf %s "$DEF_RPM_FINDPROV_LIB_PATH" |sed -e 's/^:\+//; s/:\+$//')"
-: ${RPM_FINDPROV_LIB_PATH:=$DEF_RPM_FINDPROV_LIB_PATH}
+RPM_FINDPROV_LIB_PATH="$RPM_FINDPROV_LIB_PATH:$DEF_RPM_FINDPROV_LIB_PATH"
 RPM_FINDPROV_LIB_PATH="$(printf %s "$RPM_FINDPROV_LIB_PATH" |sed -e 's/^:\+//; s/:\+$//')"
 
 lookup_path()
