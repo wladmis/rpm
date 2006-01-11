@@ -254,7 +254,7 @@ FindLibReqs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local braces deps dir dump f fname name prefix rpath suffix v vers
+	local braces deps dir dump f name pathname prefix rpath suffix v vers
 	f="$1"
 
 	if dump="$(objdump -p "$f")"; then 
@@ -280,8 +280,8 @@ FindLibReqs()
 		for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
 			name="$(printf %s "$vers" |cut -d: -f1)"
 			vers="$(printf %s "$vers" |cut -d: -f2-)"
-			fname="$(printf %s "$deps" |awk "-vname=$name" '{if ($1==name && $2=="=>") print $3;}')"
-			prefix="${fname%/*}"
+			pathname="$(printf %s "$deps" |awk "-vname=$name" '{if ($1==name && $2=="=>") print $3;}')"
+			prefix="${pathname%/*}"
 			if [ -z "$prefix" -o -n "${prefix##/*}" ]; then
 				echo >&2 "Library $name not found."
 				return 1;
