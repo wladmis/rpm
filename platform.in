@@ -461,7 +461,7 @@
 @alt@%_findreq_skiplist	%_docdir/*
 @alt@%_findprov_skiplist	%_docdir/*
 @alt@
-@alt@%_findprov_lib_path	/lib:/usr/lib:/usr/X11R6/lib:/lib64:/usr/lib64:/usr/X11R6/lib64
+@alt@%_findprov_lib_path	%nil
 @alt@
 @alt@%set_cleanup_method()	%global _cleanup_method %*
 @alt@%set_compress_method()	%global _compress_method %*
