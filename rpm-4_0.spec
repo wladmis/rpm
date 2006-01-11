@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt54
+Release: alt55
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -457,6 +457,7 @@ fi
 %rpmdirattr %_rpmlibdir
 %_rpmlibdir/rpmt
 %rpmattr %_rpmlibdir/rpmb
+%rpmattr %_rpmlibdir/dump_ld_config
 %rpmattr %_rpmlibdir/filesize
 %rpmattr %_rpmlibdir/relative
 %rpmattr %_rpmlibdir/functions
@@ -477,6 +478,7 @@ fi
 %rpmattr %_rpmlibdir/sql.*
 %rpmattr %_rpmlibdir/verify-elf
 %rpmattr %_rpmlibdir/Specfile.pm
+%rpmattr %_rpmlibdir/*.awk
 
 %_mandir/man?/gendiff.*
 %_man8dir/rpmbuild.*
@@ -521,6 +523,18 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Jan 11 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt55
+- platform.in:
+  + Add macros: %%_desktopdir, %%_pixmapsdir (#8767).
+- find-provides:
+  + Handle *.pth files like other python files
+    (#8812, patch from Ivan Fedorov).
+  + Remove old-style provides for sonames in non-default locations.
+- find-requires:
+  + Change output format for dependencies on sonames in non-default
+    locations (from basename style to pathname style).
+- dump_ld_config, shlib.req.awk: New helpers.
+
 * Wed Nov 30 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt54
 - build/parseSpec.c: Pass undefined macros in preprocess mode
   (patch from raorn@).
