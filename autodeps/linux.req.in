@@ -283,7 +283,7 @@ FindLibReqs()
 			pathname="$(printf %s "$deps" |awk "-vname=$name" '{if ($1==name && $2=="=>") print $3;}')"
 			prefix="${pathname%/*}"
 			if [ -z "$prefix" -o -n "${prefix##/*}" ]; then
-				echo >&2 "Library $name not found."
+				echo >&2 "Library $name referenced from $fname not found."
 				return 1;
 			fi
 			for dir in $RPM_FINDREQ_RPATH; do
