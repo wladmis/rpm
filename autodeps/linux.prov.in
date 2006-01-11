@@ -23,16 +23,11 @@
 
 [ -z "$RPM_SCRIPTS_DEBUG" ] || set -x
 
-PROG="${0##*/}"
-
-# If using normal root, avoid changing anything.
-if [ -z "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
-	echo "$PROG: non-/ RPM_BUILD_ROOT expected" >&2
-	exit 1
-fi
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
 
 # Normalize buildroot.
-real_buildroot=$(readlink -fv "$RPM_BUILD_ROOT") || exit 1
+real_buildroot="$(cd "$RPM_BUILD_ROOT" && /bin/pwd)" || exit 1
 
 FIND_LIBS=
 FIND_PAM=
@@ -242,20 +237,24 @@ FindLibProvs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local f dir name dump braces= suffix=
+	local braces dir dump f name suffix
 	f="$1"
 	dir="${fname%/*}"
 	[ -n "$dir" ] || return 0
 	name="${fname##*/}"
 	[ -n "$name" ] || return 0
 
-	lookup_path "$dir" "$RPM_FINDPROV_LIB_PATH" || return 0
+	[ "$dir" = "/$RPM_LIB/security" ] || lookup_path "$dir" "$RPM_FINDPROV_LIB_PATH" || return 0
 
 	if dump="$(objdump -p "$f")"; then
+		if [ "$dir" = "/$RPM_LIB/security" ]; then
+			printf 'PAM(%s)\n' "$name"
+			return 0
+		fi
 		local soname
 		soname="$(printf %s\\n "$dump" |sed -ne 's/^[[:space:]]*SONAME[[:space:]]\+\([^[:space:]]\+\)[[:space:]]*$/\1/p')" || return 1
 		suffix="$(printf %s\\n "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
-		[ -z "$suffix" ] || braces='()'
+		[ -z "$suffix" ] && braces= || braces='()'
 		if [ -n "$soname" ]; then
 			while :; do
 				# For libraries with soname, ignore all but files named as soname.
