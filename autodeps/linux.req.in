@@ -260,7 +260,7 @@ FindLibReqs()
 	if dump="$(objdump -p "$f")"; then 
 		suffix="$(printf '%s\n' "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
 		[ -z "$suffix" ] && braces= || braces='()'
-		rpath="$(printf %s "$dump" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ')" || return 1
+		rpath="$(printf %s "$dump" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")" || return 1
 		if [ -n "$rpath" ]; then
 			rpath="$rpath $RPM_FINDREQ_RPATH"
 		else
