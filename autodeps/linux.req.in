@@ -1,7 +1,7 @@
 #!/bin/sh -ef
 #
 # $Id$
-# Copyright (C) 2000-2005  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2000-2006  Dmitry V. Levin <ldv@altlinux.org>
 #
 # find-requires - generate list of linux-specific package requires.
 # Inspired by tool with same name from RPM distribution.
@@ -248,30 +248,61 @@ FindTclReqs()
 $r"
 }
 
-# Note this works for both a.out and ELF executables.
-# It also auto-generates requirements for scripts.
+dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
+shlib_req='@RPMCONFIGDIR@/shlib.req.awk'
+RPM_FINDREQ_RPATH=
+[ ! -s "$RPM_BUILD_ROOT/etc/ld.so.conf" ] ||
+	RPM_FINDREQ_RPATH="$("$dump_ld_config" "$RPM_BUILD_ROOT/etc/ld.so.conf" "$RPM_BUILD_ROOT")"
+RPM_FINDREQ_RPATH="$RPM_FINDREQ_RPATH $RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
 
+# Note this works for both a.out and ELF objects.
 FindLibReqs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local f d braces= suffix=
+	local f dump v name vers braces= suffix=
 	f="$1"
 
-	if d="$(objdump -p "$f")"; then 
-		# Shared library dependencies, glibc version references.
-		suffix="$(printf %s\\n "$d" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
-		[ -z "$suffix" ] || braces='()'
-		printf %s\\n "$d" |awk "-vsuffix=$suffix" "-vbraces=$braces" '
-			BEGIN {start_shared=0; start_version=0; lib_name="";}
-			/^($)/ {start_shared=0; start_version=0; lib_name=""; next;}
-			/^private/ {start_shared=0; start_version=0; lib_name=""; next;}
-			/^Dynamic Section:$/ {start_shared=1; next;}
-			/^Version References:$/ {start_version=1; next;}
-			(start_version==1) && /^ *required from/ {sub(/:/, "", $3); lib_name=$3; next;}
-			(start_shared==1) && /^ *NEEDED/ {print $2 braces suffix; next;}
-			(start_version==1) && (lib_name!="") && ($4!="") {print lib_name "(" $4 ")" suffix;}
-		'
+	if dump="$(objdump -p "$f")"; then 
+		suffix="$(printf '%s\n' "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
+		[ -z "$suffix" ] && braces= || braces='()'
+		rpath="$(printf %s "$dump" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ')" || return 1
+		if [ -n "$rpath" ]; then
+			rpath="$rpath $RPM_FINDREQ_RPATH"
+		else
+			rpath="$RPM_FINDREQ_RPATH"
+		fi
+		rpath="$(printf %s "$rpath" |
+			tr -s '[:space:]' '\n' |
+			grep -v '^$' |
+			LANG=C uniq |
+			sed -e "s|^|$RPM_BUILD_ROOT&|" |
+			tr -s '[:space:]' : |
+			sed -e 's/^:\+//; s/:\+$//')"
+		deps="$(LD_LIBRARY_PATH="$rpath" ldd -- "$f")" || return 1
+		deps="$(printf %s "$deps" |sed -e "s|$RPM_BUILD_ROOT||g")"
+		# Shared library dependencies, version references.
+		for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
+			name="$(printf %s "$vers" |cut -d: -f1)"
+			fname="$(printf %s "$deps" |awk "-vname=$name" '{if ($1==name && $2=="=>") print $3;}')"
+			prefix="${fname%/*}"
+			if [ -z "$prefix" -o -n "${prefix##/*}" ]; then
+				echo >&2 "Library $name not found."
+				return 1;
+			fi
+			for dir in $RPM_FINDREQ_RPATH; do
+				if [ "$prefix" = "$dir" ]; then
+					prefix=
+					break
+				fi
+			done
+			[ -z "$prefix" ] || prefix="$prefix/"
+			printf '%s%s%s%s\n' "$prefix" "$name" "$braces" "$suffix"
+			for v in `printf %s "$vers" |cut -d: -f2- |tr : ' '`; do
+				printf '%s%s(%s)%s\n' "$prefix" "$name" "$v" "$suffix"
+			done
+		done
+
 		if [ -n "$FIND_LIBPERL" -a -z "$libperl_so" -a -z "${f##*/usr/lib/perl?/*/auto/*.so}" ]; then
 			libperl_so=`perl -MConfig -e 'print "$Config{libperl}\n"'`
 			printf %s\\n "$libperl_so$braces$suffix"
