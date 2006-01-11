@@ -260,7 +260,7 @@ FindLibReqs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local f dump v name vers braces= suffix=
+	local braces deps dir dump f fname name prefix rpath suffix v vers
 	f="$1"
 
 	if dump="$(objdump -p "$f")"; then 
@@ -284,6 +284,7 @@ FindLibReqs()
 		# Shared library dependencies, version references.
 		for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
 			name="$(printf %s "$vers" |cut -d: -f1)"
+			vers="$(printf %s "$vers" |cut -d: -f2-)"
 			fname="$(printf %s "$deps" |awk "-vname=$name" '{if ($1==name && $2=="=>") print $3;}')"
 			prefix="${fname%/*}"
 			if [ -z "$prefix" -o -n "${prefix##/*}" ]; then
@@ -297,10 +298,12 @@ FindLibReqs()
 				fi
 			done
 			[ -z "$prefix" ] || prefix="$prefix/"
-			printf '%s%s%s%s\n' "$prefix" "$name" "$braces" "$suffix"
-			for v in `printf %s "$vers" |cut -d: -f2- |tr : ' '`; do
+			v=
+			for v in `printf %s "$vers" |tr : ' '`; do
 				printf '%s%s(%s)%s\n' "$prefix" "$name" "$v" "$suffix"
 			done
+			[ -n "$v" ] ||
+				printf '%s%s%s%s\n' "$prefix" "$name" "$braces" "$suffix"
 		done
 
 		if [ -n "$FIND_LIBPERL" -a -z "$libperl_so" -a -z "${f##*/usr/lib/perl?/*/auto/*.so}" ]; then
