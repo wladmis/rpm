@@ -530,9 +530,14 @@ fi
   + Handle *.pth files like other python files
     (#8812, patch from Ivan Fedorov).
   + Remove old-style provides for sonames in non-default locations.
+  + Change provides format of PAM modules from pam_module.so to
+    PAM(pam_module.so).
 - find-requires:
   + Change output format for dependencies on sonames in non-default
     locations (from basename style to pathname style).
+- pam.req:
+  + Change requires format of PAM modules from pam_module.so to
+    PAM(pam_module.so).
 - dump_ld_config, shlib.req.awk: New helpers.
 
 * Wed Nov 30 2005 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt54
