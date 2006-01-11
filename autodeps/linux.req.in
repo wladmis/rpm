@@ -352,7 +352,7 @@ $p"
 	t="$(file -b "$f")"
 	if [ -z "${t##* text*}" ]; then
 		ListScriptReqs "$f" "$t"
-	elif [ -z "${t##* executable*}" ]; then
+	elif [ -z "${t##* executable*dynamically linked*}" ]; then
 		r="$(FindExeReqs "$f")"
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
