@@ -253,7 +253,7 @@ shlib_req='@RPMCONFIGDIR@/shlib.req.awk'
 RPM_FINDREQ_RPATH=
 [ ! -s "$RPM_BUILD_ROOT/etc/ld.so.conf" ] ||
 	RPM_FINDREQ_RPATH="$("$dump_ld_config" "$RPM_BUILD_ROOT/etc/ld.so.conf" "$RPM_BUILD_ROOT")"
-RPM_FINDREQ_RPATH="$RPM_FINDREQ_RPATH $RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
+RPM_FINDREQ_RPATH="$RPM_FINDREQ_RPATH /$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
 
 # Note this works for both a.out and ELF objects.
 FindLibReqs()
