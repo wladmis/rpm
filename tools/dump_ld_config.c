@@ -109,7 +109,7 @@ path_list_add(const char *path)
 	e = xmalloc(sizeof(*e));
 
 	e->next = 0;
-	e->name = xstrdup(path);
+	e->name = xstrdup(prefix ? (path + strlen(prefix)) : path);
 	if (!path_list_head)
 		path_list_head = e;
 	if (path_list_tail)
