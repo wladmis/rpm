@@ -23,7 +23,8 @@
 
 [ -z "$RPM_SCRIPTS_DEBUG" ] || set -x
 
-PROG="${0##*/}"
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
 
 exit_handler()
 {
@@ -34,12 +35,6 @@ exit_handler()
 }
 
 trap exit_handler EXIT
-
-# If using normal root, avoid changing anything.
-if [ -z "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ]; then
-	echo "$PROG: non-/ RPM_BUILD_ROOT expected" >&2
-	exit 1
-fi
 
 FIND_FILES=
 FIND_LIBS=
@@ -130,8 +125,7 @@ ParseMethod()
 				ParseMethod $RPM_FINDREQ_DEFAULT_METHOD
 				;;
 			*)
-				echo "Unrecognized find-requires method: $t" >&2
-				exit 1
+				Fatal "Unrecognized find-requires method: $t"
 				;;
 		esac
 	done

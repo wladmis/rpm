@@ -1,6 +1,6 @@
 #!/bin/sh -ef
 #
-# Copyright (C) 2000-2005  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2000-2006  Dmitry V. Levin <ldv@altlinux.org>
 # $Id$
 #
 # find-provides - generate list of linux-specific package provides.
@@ -97,8 +97,7 @@ ParseMethod()
 				ParseMethod $RPM_FINDPROV_DEFAULT_METHOD || return 1
 				;;
 			*)
-				echo "Unrecognized find-provides method: $t" >&2
-				exit 1
+				Fatal "Unrecognized find-provides method: $t"
 				;;
 		esac
 	done
