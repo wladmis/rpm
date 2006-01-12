@@ -153,20 +153,37 @@ parse_include_pattern(const char *filename, const char *pattern)
 {
 	char   *newp = NULL, *p;
 
-	if (prefix && pattern[0] == '/')
+	if (prefix)
 	{
-		newp = xmalloc(strlen(prefix) + strlen(pattern) + 1);
-		strcpy(newp, prefix);
-		strcat(newp, pattern);
-		pattern = newp;
-	} else if (pattern[0] != '/' && (p = strrchr(filename, '/')))
-	{
-		size_t  patlen = strlen(pattern) + 1;
+		if (pattern[0] == '/')
+		{
+			newp = xmalloc(strlen(prefix) + strlen(pattern) + 1);
+			strcpy(newp, prefix);
+			strcat(newp, pattern);
+			pattern = newp;
+		} else if ((p = strrchr(filename, '/')))
+		{
+			size_t  preflen = strlen(prefix);
+			size_t  patlen = strlen(pattern) + 1;
 
-		newp = xmalloc(p - filename + 1 + patlen);
-		memcpy(newp, filename, p - filename + 1);
-		memcpy(newp + (p - filename + 1), pattern, patlen);
-		pattern = newp;
+			newp = xmalloc(p - filename + 1 + preflen + patlen);
+			memcpy(newp, prefix, preflen);
+			memcpy(newp + preflen, filename, p - filename + 1);
+			memcpy(newp + (p - filename + 1 + preflen), pattern,
+			       patlen);
+			pattern = newp;
+		}
+	} else
+	{
+		if (pattern[0] != '/' && (p = strrchr(filename, '/')))
+		{
+			size_t  patlen = strlen(pattern) + 1;
+
+			newp = xmalloc(p - filename + 1 + patlen);
+			memcpy(newp, filename, p - filename + 1);
+			memcpy(newp + (p - filename + 1), pattern, patlen);
+			pattern = newp;
+		}
 	}
 
 	glob_t  gl;
@@ -253,7 +270,7 @@ main(int ac, char **av)
 			return 1;
 		prefix = av[2];
 	}
-	if (ac > 1)
+	if (ac > 1 && av[1][0])
 		fname = av[1];
 
 	parse_file(fname);
