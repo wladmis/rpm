@@ -46,7 +46,7 @@ PreReq: alt-gpgkeys, coreutils
 # XXX linked binaries like /bin/rpm.
 Requires: glibc-core
 
-%{?_with_python:BuildPreReq: python-devel = %__python_version}
+%{?_with_python:BuildPreReq: python-devel}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
 
@@ -201,12 +201,9 @@ PreReq: lib%name = %rpm_version-%release
 Requires: python = %__python_version
 
 %description python
-The %name-python package contains a module which permits applications
-written in the Python programming language to use the interface
-supplied by RPM (RPM Package Manager) libraries.
-
-This package should be installed if you want to develop Python
-programs that will manipulate RPM packages and databases.
+This package contains a module which permits applications written in
+the Python programming language to use the interface supplied by RPM
+(RPM Package Manager) libraries.
 %endif #with python
 
 %prep
