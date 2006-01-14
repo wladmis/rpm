@@ -244,6 +244,7 @@ $r"
 
 dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
 shlib_req='@RPMCONFIGDIR@/shlib.req.awk'
+elf_ldd='@RPMCONFIGDIR@/ldd'
 RPM_FINDREQ_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT")"
 RPM_FINDREQ_RPATH="$RPM_FINDREQ_RPATH /$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
 
@@ -271,7 +272,7 @@ FindLibReqs()
 			sed -e "s|^|$RPM_BUILD_ROOT&|" |
 			tr -s '[:space:]' : |
 			sed -e 's/^:\+//; s/:\+$//')"
-		deps="$(LD_LIBRARY_PATH="$rpath" ldd -- "$f")" || return 1
+		deps="$("$elf_ldd" -- "$f" "$rpath")" || return 1
 		deps="$(printf %s "$deps" |
 			sed -e "s|$RPM_BUILD_ROOT||g" -e 's|/tls/|/|' -e 's|/sse2/|/|' -e "s|/$RPM_ARCH/|/|" -e 's|/i[3-9]86/|/|')"
 		# Shared library dependencies, version references.
