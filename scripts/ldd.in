@@ -40,12 +40,6 @@ while test $# -gt 0; do
   esac
 done
 
-try_trace()
-{
-	local add_env="LD_TRACE_LOADED_OBJECTS=1 LD_WARN=$undefined LD_BIND_NOW=$undefined LD_LIBRARY_VERSION=\$verify_out LD_LIBRARY_PATH=\"\$rpath\""
-	eval $add_env '"$@"'
-}
-
 case $# in
 	[01]) Fatal 'insufficient arguments' ;;
 	2) ;;
@@ -59,7 +53,8 @@ info="$(readelf -l "$file")" ||
 	Fatal "$file: unable to fetch ELF segment headers"
 interp="$(printf %s "$info" |sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')" ||
 	Fatal "$file: program interpreter not specified"
-[ -n "$interp" ] || interp=/lib/ld-linux.so.2
+[ -n "$interp" ] ||
+	interp=/lib/ld-linux.so.2
 if [ -f "$RPM_BUILD_ROOT$interp" -a -x "$RPM_BUILD_ROOT$interp" ]; then
 	rtld="$RPM_BUILD_ROOT$interp"
 elif [ -f "$interp" -a -x "$interp" ]; then
@@ -69,12 +64,11 @@ else
 fi
 
 verify_out="$("$rtld" --verify "$file")"
-ret=$?
+[ "$?" = 0 -o "$?" = 2 ] ||
+	Fatal "$file: trace failed"
 
-case $ret in
-	[02])	try_trace "$rtld" "$file" || Fatal "$file: trace failed"
-		;;
-	*)	Fatal "$file: trace failed" ;;
-esac
+LD_TRACE_LOADED_OBJECTS=1 LD_WARN="$undefined" LD_BIND_NOW="$undefined" LD_LIBRARY_VERSION="$verify_out" \
+	"$rtld" --library-path "$rpath" "$file" ||
+	Fatal "$file: trace failed"
 
 exit 0
