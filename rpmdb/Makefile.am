@@ -12,6 +12,7 @@ DBLIBSRCS = db3.c db1.c falloc.c
 
 LIBDB = @libdb3@
 LIBELF = @WITH_LIBELF_LIB@
+LIBPOPT = @LIBPOPT@
 
 pkgincdir = $(pkgincludedir)
 pkginc_HEADERS = hdrinline.h rpmdb.h
@@ -27,7 +28,7 @@ librpmdb_la_SOURCES = $(DBLIBSRCS) \
 	dbconfig.c hdrNVR.c header.c fprint.c legacy.c merge.c poptDB.c \
 	rpmhash.c rpmdb.c rpmvercmp.c tagname.c tagtbl.c
 librpmdb_la_LDFLAGS = -release @VERSION@ @libdb3@
-librpmdb_la_LIBADD = $(LIBDB) $(LIBELF) $(top_builddir)/rpmio/librpmio.la
+librpmdb_la_LIBADD = $(LIBDB) $(LIBELF) $(LIBPOPT) $(top_builddir)/rpmio/librpmio.la
 librpmdb_la_DEPENDENCIES = $(top_builddir)/rpmio/librpmio.la
 
 tagtbl.c: Makefile.am $(top_srcdir)/lib/rpmlib.h 

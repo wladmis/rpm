@@ -532,6 +532,7 @@ fi
 - platform.in:
   + Set %%_verify_elf_method to
     fhs=relaxed,rpath=normal,textrel=normal,unresolved=relaxed
+- Link librpmdb with -lpopt.
 
 * Wed Jan 11 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt55
 - platform.in:
