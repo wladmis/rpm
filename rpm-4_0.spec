@@ -524,6 +524,9 @@ fi
 * Sat Jan 14 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt56
 - ldd: New helper.
 - find-requires: Use ldd helper instead of system ldd.
+- brp-verify-elf, verify-elf: Handle "fhs" and "unresolved" options.
+- platform.in: Set %%_verify_elf_method to
+  fhs=relaxed,rpath=normal,textrel=normal,unresolved=relaxed
 
 * Wed Jan 11 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt55
 - platform.in:
