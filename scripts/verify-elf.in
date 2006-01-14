@@ -101,6 +101,20 @@ for f in "$@"; do
 
 	if [ -n "$VERIFY_ELF_UNRESOLVED" ]; then
 		while [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; do
+			rpath="$(printf %s "$dump" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
+			if [ -n "$rpath" ]; then
+				rpath="$rpath $RPM_VERIFY_ELF_LDD_RPATH"
+			else
+				rpath="$RPM_VERIFY_ELF_LDD_RPATH"
+			fi
+			rpath="$(printf %s "$rpath" |
+				tr -s '[:space:]' '\n' |
+				grep -v '^$' |
+				LANG=C uniq |
+				sed -e "s|^|$RPM_BUILD_ROOT&|" |
+				tr -s '[:space:]' : |
+				sed -e 's/^:\+//; s/:\+$//')"
+
 			if ! ldd_info="$("$elf_ldd" --undefined -- "$f" "$RPM_VERIFY_ELF_LDD_RPATH" 2>&1)"; then
 				printf >&2 '%s\n' "$ldd_info"
 				rc=1
