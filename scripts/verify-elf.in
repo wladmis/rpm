@@ -115,7 +115,7 @@ for f in "$@"; do
 				tr -s '[:space:]' : |
 				sed -e 's/^:\+//; s/:\+$//')"
 
-			if ! ldd_info="$("$elf_ldd" --undefined -- "$f" "$RPM_VERIFY_ELF_LDD_RPATH" 2>&1)"; then
+			if ! ldd_info="$("$elf_ldd" --undefined -- "$f" "$rpath" 2>&1)"; then
 				printf >&2 '%s\n' "$ldd_info"
 				rc=1
 				break
