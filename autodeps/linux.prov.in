@@ -340,7 +340,7 @@ $f"
 $f"
 		fi
 	else
-		echo "Not found: $f" >&2
+		Info "$f: file type not available"
 	fi
 done
 
