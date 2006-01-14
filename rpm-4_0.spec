@@ -465,6 +465,7 @@ fi
 %rpmattr %_rpmlibdir/*_files
 %rpmattr %_rpmlibdir/check-files
 %rpmattr %_rpmlibdir/convertrpmrc.sh
+%rpmattr %_rpmlibdir/ldd
 %rpmattr %_rpmlibdir/rpm2cpio.sh
 %rpmattr %_rpmlibdir/find-lang
 %rpmattr %_rpmlibdir/find-package
