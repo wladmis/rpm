@@ -439,8 +439,8 @@ fi
 %_rpmlibdir/rpm[euv]
 %rpmdatattr %_rpmlibdir/rpmpopt*
 %rpmdatattr %_rpmlibdir/GROUPS
-%_libdir/rpmpopt
-%_libdir/rpmrc
+%_prefix/lib/rpmpopt
+%_prefix/lib/rpmrc
 
 %_man1dir/rpminit.*
 %_man8dir/rpm.*

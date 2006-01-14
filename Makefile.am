@@ -104,10 +104,10 @@ install-data-local:
 	@$(mkinstalldirs) $(DESTDIR)$(rpmbindir)
 	@@LN_S@ ..$(bindir)/rpm $(DESTDIR)$(rpmbindir)/
 	@$(mkinstalldirs) $(DESTDIR)$(varprefix)/lib/rpm
-	@rm -f $(DESTDIR)$(libdir)/rpmrc
-	@@LN_S@ rpm/rpmrc $(DESTDIR)$(libdir)/rpmrc
-	@rm -f $(DESTDIR)$(libdir)/rpmpopt
-	@@LN_S@ rpm/rpmpopt-$(VERSION) $(DESTDIR)$(libdir)/rpmpopt
+	@rm -f $(DESTDIR)$(prefix)/lib/rpmrc
+	@@LN_S@ rpm/rpmrc $(DESTDIR)$(prefix)/lib/rpmrc
+	@rm -f $(DESTDIR)$(prefix)/lib/rpmpopt
+	@@LN_S@ rpm/rpmpopt-$(VERSION) $(DESTDIR)$(prefix)/lib/rpmpopt
 	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmt
 	@@LN_S@ rpmb $(DESTDIR)$(prefix)/lib/rpm/rpmt
 	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpme
