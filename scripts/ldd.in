@@ -1,0 +1,80 @@
+#! /bin/sh
+# Copyright (C) 1996-2004, 2005 Free Software Foundation, Inc.
+# Copyright (C) 2006  Dmitry V. Levin <ldv@altlinux.org>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+[ -z "$RPM_SCRIPTS_DEBUG" ] || set -x
+
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
+
+undefined=
+while test $# -gt 0; do
+  case "$1" in
+  --undefined)
+    undefined=1
+    shift
+    ;;
+  --)		# Stop option processing.
+    shift; break
+    ;;
+  -*)
+    Fatal "unrecognized option: $1"
+    ;;
+  *)
+    break
+    ;;
+  esac
+done
+
+try_trace()
+{
+	local add_env="LD_TRACE_LOADED_OBJECTS=1 LD_WARN=$undefined LD_BIND_NOW=$undefined LD_LIBRARY_VERSION=\$verify_out LD_LIBRARY_PATH=\"\$rpath\""
+	eval $add_env '"$@"'
+}
+
+case $# in
+	[01]) Fatal 'insufficient arguments' ;;
+	2) ;;
+	*) Fatal 'too many arguments' ;;
+esac
+
+file="$1" && shift
+rpath="$1" && shift
+
+info="$(readelf -l "$file")" ||
+	Fatal "$file: unable to fetch ELF segment headers"
+interp="$(printf %s "$info" |sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')" ||
+	Fatal "$file: program interpreter not specified"
+[ -n "$interp" ] || interp=/lib/ld-linux.so.2
+if [ -f "$RPM_BUILD_ROOT$interp" -a -x "$RPM_BUILD_ROOT$interp" ]; then
+	rtld="$RPM_BUILD_ROOT$interp"
+elif [ -f "$interp" -a -x "$interp" ]; then
+	rtld="$interp"
+else
+	Fatal "$file: program interpreter $interp not found"
+fi
+
+verify_out="$("$rtld" --verify "$file")"
+ret=$?
+
+case $ret in
+	[02])	try_trace "$rtld" "$file" || Fatal "$file: trace failed"
+		;;
+	*)	Fatal "$file: trace failed" ;;
+esac
+
+exit 0
