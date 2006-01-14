@@ -53,8 +53,12 @@ info="$(readelf -l "$file")" ||
 	Fatal "$file: unable to fetch ELF segment headers"
 interp="$(printf %s "$info" |sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')" ||
 	Fatal "$file: program interpreter not specified"
-[ -n "$interp" ] ||
-	interp="/$RPM_LIB/ld-linux.so.2"
+if [ -z "$interp" ]; then
+	dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
+	interp="$(readelf -l "$dump_ld_config" |
+		sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')" ||
+		Fatal "$dump_ld_config: program interpreter not found"
+fi
 if [ -f "$RPM_BUILD_ROOT$interp" -a -x "$RPM_BUILD_ROOT$interp" ]; then
 	rtld="$RPM_BUILD_ROOT$interp"
 elif [ -f "$interp" -a -x "$interp" ]; then
