@@ -3,7 +3,7 @@
 # verify-elf - verify ELF objects.
 #
 # $Id$
-# Copyright (C) 2002, 2003, 2004  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2002, 2003, 2004, 2006  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@ ValidateBuildRoot
 
 : ${RPM_VERIFY_ELF_SKIPLIST:=}
 
+elf_ldd='@RPMCONFIGDIR@/ldd'
+
 rc=0
 for f in "$@"; do
 	if [ ! -f "$f" ]; then
@@ -44,11 +46,17 @@ for f in "$@"; do
 		done
 	fi
 
-	t="$(/usr/bin/file -b "$f")"
-
+	t="$(file -b "$f")"
 	[ -z "${t##ELF *}" -o -z "${t##* ELF *}" ] || continue
 
 	info=$(objdump -p "$f") || continue
+
+	if [ -n "$VERIFY_ELF_FHS" ]; then
+		if [ -z "${fname#/usr/share/*}" -o -z "${fname#/etc/*}" ]; then
+			Info "$f: ELF object out of allowed directory tree"
+			[ "$VERIFY_ELF_FHS" = relaxed ] || rc=1
+		fi
+	fi
 
 	if [ -n "$VERIFY_ELF_RPATH" ]; then
 		rpath=`printf %s "$info" |awk '{if ($1=="RPATH") print $2}'`
@@ -85,13 +93,54 @@ for f in "$@"; do
 		textrel=`printf %s "$info" |awk '{if ($1=="TEXTREL") print $2}'`
 		while [ -n "$textrel" ]; do
 			Info "$f: TEXTREL entry found: $textrel"
-			if [ "$VERIFY_ELF_TEXTREL" = relaxed ]; then
-				break
-			fi
+			[ "$VERIFY_ELF_TEXTREL" != relaxed ] || break
 			rc=1
 			break
 		done
 	fi
+
+	if [ -n "$VERIFY_ELF_UNRESOLVED" ]; then
+		while [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; do
+			if ! ldd_info="$("$elf_ldd" --undefined -- "$f" "$RPM_VERIFY_ELF_LDD_RPATH" 2>&1)"; then
+				printf >&2 '%s\n' "$ldd_info"
+				rc=1
+				break
+			fi
+			[ "$VERIFY_ELF_UNRESOLVED" = relaxed ] && ldd_rc=0 || ldd_rc=1
+			printf '%s\n' "$ldd_info" |
+				awk -vrc="$ldd_rc" -vprog="$PROG" -vfname="$f" -- '
+BEGIN {
+        if (rc == "0")
+                prefix="WARNING"
+        else
+                prefix="ERROR"
+        errors=0
+}
+$2 == "=>" && $3 == "not" && $4 == "found" {
+        lib=$1
+        printf ("%s: %s: %s: not found: %s\n", prog, prefix, fname, lib)
+        errors=1
+}
+$1 == "undefined" && $2 == "symbol:" {
+        sym=$3
+        lib=$4
+        sub("^[(]", "", lib)
+        sub("[)]$", "", lib)
+        if (lib == fname) {
+                printf ("%s: %s: %s: undefined symbol: %s\n", prog, prefix, fname, sym)
+                errors=1
+        }
+}
+END {
+        if (rc != "0" && errors != 0)
+                exit 1
+}
+				' && ldd_rc=0 || ldd_rc=1
+			[ "$VERIFY_ELF_UNRESOLVED" = relaxed -o "$ldd_rc" = 0 ] || rc=1
+			break
+		done
+	fi
+	
 done
 
 exit $rc
