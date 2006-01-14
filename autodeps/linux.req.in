@@ -349,11 +349,11 @@ $p"
 	t="$(file -b "$f")"
 	if [ -z "${t##* text*}" ]; then
 		ListScriptReqs "$f" "$t"
-	elif [ -z "${t##ELF* executable*dynamically linked*}" ]; then
+	elif [ -z "${t##*ELF* executable*dynamically linked*}" ]; then
 		r="$(FindExeReqs "$f")"
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
-	elif [ -z "${t##ELF* shared object*}" ]; then
+	elif [ -z "${t##*ELF* shared object*}" ]; then
 		r="$(FindLibReqs "$f")"
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
