@@ -98,9 +98,8 @@ done
 echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (fhs=$VERIFY_ELF_FHS,rpath=$VERIFY_ELF_RPATH,textrel=$VERIFY_ELF_TEXTREL,unresolved=$VERIFY_ELF_UNRESOLVED)"
 
 dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
-RPM_VERIFY_ELF_LDD_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT" |tr -s '\n' :)"
-RPM_VERIFY_ELF_LDD_RPATH="$RPM_VERIFY_ELF_LDD_RPATH:/$RPM_LIB:$RPM_LIBDIR:$("$dump_ld_config" |tr -s '\n' :)"
-RPM_VERIFY_ELF_LDD_RPATH="$(printf %s "$RPM_VERIFY_ELF_LDD_RPATH" |sed -e 's/^:\+//; s/:\+$//')"
+RPM_VERIFY_ELF_LDD_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT")"
+RPM_VERIFY_ELF_LDD_RPATH="$RPM_VERIFY_ELF_LDD_RPATH /$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
 export RPM_VERIFY_ELF_LDD_RPATH
 
 find .$RPM_VERIFY_ELF_TOPDIR -type f -print0 |xargs -r0 @RPMCONFIGDIR@/verify-elf
