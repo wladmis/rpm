@@ -328,7 +328,7 @@ while IFS= read -r f; do
 	if t="$(file -bL "$f")"; then
 		if [ -z "${t##* text*}" ]; then
 			ListScriptProvs "$f" "$t"
-		elif [ -z "${t##* shared object*}" ]; then
+		elif [ -z "${t##*ELF* shared object*}" ]; then
 			r="$(FindLibProvs "$f")"
 			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
 $r"
