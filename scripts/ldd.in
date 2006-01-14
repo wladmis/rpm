@@ -54,7 +54,7 @@ info="$(readelf -l "$file")" ||
 interp="$(printf %s "$info" |sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')" ||
 	Fatal "$file: program interpreter not specified"
 [ -n "$interp" ] ||
-	interp=/lib/ld-linux.so.2
+	interp="/$RPM_LIB/ld-linux.so.2"
 if [ -f "$RPM_BUILD_ROOT$interp" -a -x "$RPM_BUILD_ROOT$interp" ]; then
 	rtld="$RPM_BUILD_ROOT$interp"
 elif [ -f "$interp" -a -x "$interp" ]; then
