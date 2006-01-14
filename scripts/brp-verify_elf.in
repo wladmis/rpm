@@ -3,7 +3,7 @@
 # brp-verify_elf - verify ELF objects.
 #
 # $Id$
-# Copyright (C) 2002,2003  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2002, 2003, 2006  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,13 +25,21 @@ ValidateBuildRoot
 
 cd "$RPM_BUILD_ROOT"
 
+export VERIFY_ELF_FHS=normal
 export VERIFY_ELF_RPATH=normal
 export VERIFY_ELF_TEXTREL=normal
+export VERIFY_ELF_UNRESOLVED=normal
 
 for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	case "$t" in
 		no|none|skip)
 			exit 0
+			;;
+		fhs)
+			VERIFY_ELF_FHS=normal
+			;;
+		fhs=*)
+			VERIFY_ELF_FHS="${t#fhs=}"
 			;;
 		rpath)
 			VERIFY_ELF_RPATH=normal
@@ -45,17 +53,29 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 		textrel=*)
 			VERIFY_ELF_TEXTREL="${t#textrel=}"
 			;;
+		unresolved)
+			VERIFY_ELF_UNRESOLVED=normal
+			;;
+		unresolved=*)
+			VERIFY_ELF_UNRESOLVED="${t#unresolved=}"
+			;;
 		normal)
+			VERIFY_ELF_FHS=normal
 			VERIFY_ELF_RPATH=normal
 			VERIFY_ELF_TEXTREL=normal
+			VERIFY_ELF_UNRESOLVED=normal
 			;;
 		strict)
+			VERIFY_ELF_FHS=strict
 			VERIFY_ELF_RPATH=strict
 			VERIFY_ELF_TEXTREL=strict
+			VERIFY_ELF_UNRESOLVED=strict
 			;;
 		relaxed)
+			VERIFY_ELF_FHS=relaxed
 			VERIFY_ELF_RPATH=relaxed
 			VERIFY_ELF_TEXTREL=relaxed
+			VERIFY_ELF_UNRESOLVED=relaxed
 			;;
 		*)
 			Fatal "Unrecognized verify_elf method: $t"
@@ -63,14 +83,24 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	esac
 done
 
+[ "$VERIFY_ELF_FHS" != no ] || VERIFY_ELF_FHS=
+[ -z "$RPM_VERIFY_ELF_FHS" ] || VERIFY_ELF_FHS="$RPM_VERIFY_ELF_FHS"
 [ "$VERIFY_ELF_RPATH" != no ] || VERIFY_ELF_RPATH=
 [ -z "$RPM_VERIFY_ELF_RPATH" ] || VERIFY_ELF_RPATH="$RPM_VERIFY_ELF_RPATH"
 [ "$VERIFY_ELF_TEXTREL" != no ] || VERIFY_ELF_TEXTREL=
 [ -z "$RPM_VERIFY_ELF_TEXTREL" ] || VERIFY_ELF_TEXTREL="$RPM_VERIFY_ELF_TEXTREL"
+[ "$VERIFY_ELF_UNRESOLVED" != no ] || VERIFY_ELF_UNRESOLVED=
+[ -z "$RPM_VERIFY_ELF_UNRESOLVED" ] || VERIFY_ELF_UNRESOLVED="$RPM_VERIFY_ELF_UNRESOLVED"
 
 : ${RPM_VERIFY_ELF_TOPDIR:=}
 [ -d "$RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR" ] || exit 0
 
-echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (rpath=$VERIFY_ELF_RPATH,textrel=$VERIFY_ELF_TEXTREL)"
+echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (fhs=$VERIFY_ELF_FHS,rpath=$VERIFY_ELF_RPATH,textrel=$VERIFY_ELF_TEXTREL,unresolved=$VERIFY_ELF_UNRESOLVED)"
+
+dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
+RPM_VERIFY_ELF_LDD_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT" |tr -s '\n' :)"
+RPM_VERIFY_ELF_LDD_RPATH="$RPM_VERIFY_ELF_LDD_RPATH:/$RPM_LIB:$RPM_LIBDIR:$("$dump_ld_config" |tr -s '\n' :)"
+RPM_VERIFY_ELF_LDD_RPATH="$(printf %s "$RPM_VERIFY_ELF_LDD_RPATH" |sed -e 's/^:\+//; s/:\+$//')"
+export RPM_VERIFY_ELF_LDD_RPATH
 
 find .$RPM_VERIFY_ELF_TOPDIR -type f -print0 |xargs -r0 @RPMCONFIGDIR@/verify-elf
