@@ -25,7 +25,7 @@ noinst_PROGRAMS = poptmodule.so
 
 rpmmodule_so_SOURCES =
 rpmmodule_so_CFLAGS = -fPIC -DPIC
-rpmmodule_so_LDFLAGS = $(mylibs) $(LIBS) -shared -Wl,-soname,rpmmodule.so
+rpmmodule_so_LDFLAGS = $(mylibs) $(LIBS) -lpython${PYVER} -shared -Wl,-soname,rpmmodule.so
 
 poptmodule_so_SOURCES = poptmodule.c
 poptmodule_so_CFLAGS = -fPIC -DPIC
