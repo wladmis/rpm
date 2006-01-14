@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt55
+Release: alt56
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -523,6 +523,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Jan 14 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt56
+- ldd: New helper.
+- find-requires: Use ldd helper instead of system ldd.
+
 * Wed Jan 11 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt55
 - platform.in:
   + Add macros: %%_desktopdir, %%_pixmapsdir (#8767).
