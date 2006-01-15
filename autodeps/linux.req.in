@@ -257,9 +257,9 @@ FindLibReqs()
 	f="$1"
 
 	if dump="$(objdump -p "$f")"; then 
-		suffix="$(printf '%s\n' "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
+		suffix="$(printf '%s\n' "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')"
 		[ -z "$suffix" ] && braces= || braces='()'
-		rpath="$(printf %s "$dump" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")" || return 1
+		rpath="$(printf %s "$dump" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
 		if [ -n "$rpath" ]; then
 			rpath="$rpath $RPM_FINDREQ_RPATH"
 		else
@@ -282,8 +282,8 @@ FindLibReqs()
 			pathname="$(printf %s "$deps" |awk "-vname=$name" '{if ($1==name && $2=="=>") print $3;}')"
 			prefix="${pathname%/*}"
 			if [ -z "$prefix" -o -n "${prefix##/*}" ]; then
-				echo >&2 "Library $name referenced from $fname not found."
-				return 1;
+				Info "WARNING: $fname: library $name not found"
+				continue;
 			fi
 			for dir in $RPM_FINDREQ_RPATH; do
 				if [ "$prefix" = "$dir" ]; then
