@@ -279,7 +279,10 @@ FindLibReqs()
 		for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
 			name="$(printf %s "$vers" |cut -d: -f1)"
 			vers="$(printf %s "$vers" |cut -d: -f2-)"
-			pathname="$(printf %s "$deps" |awk "-vname=$name" '{if ($1==name && $2=="=>") print $3;}')"
+			pathname="$(printf %s "$deps" |awk "-vname=$name" '
+NF>2 && $1==name && $2=="=>" && $3~/^/ {print $3}
+NF==2 && $2~/^\(.+\)$/ {lib=$1; sub("^/.*/","",lib); if (lib==name) print $1}
+				')"
 			prefix="${pathname%/*}"
 			if [ -z "$prefix" -o -n "${prefix##/*}" ]; then
 				Info "WARNING: $fname: library $name not found"
