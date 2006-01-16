@@ -30,7 +30,7 @@ elf_ldd='@RPMCONFIGDIR@/ldd'
 rc=0
 for f in "$@"; do
 	if [ ! -f "$f" ]; then
-		Info "$f: file unavailable"
+		Info "ERROR: $f: file unavailable"
 		rc=1
 		continue
 	fi
@@ -52,8 +52,9 @@ for f in "$@"; do
 	info=$(objdump -p "$f") || continue
 
 	if [ -n "$VERIFY_ELF_FHS" ]; then
-		if [ -z "${fname#/usr/share/*}" -o -z "${fname#/etc/*}" ]; then
-			Info "$f: ELF object out of allowed directory tree"
+		if [ -z "${fname##/usr/share/*}" -o -z "${fname##/etc/*}" ]; then
+			[ "$VERIFY_ELF_FHS" = relaxed ] && prefix=WARNING || prefix=ERROR
+			Info "$prefix: $f: ELF object out of allowed directory tree"
 			[ "$VERIFY_ELF_FHS" = relaxed ] || rc=1
 		fi
 	fi
@@ -62,9 +63,10 @@ for f in "$@"; do
 		rpath=`printf %s "$info" |awk '{if ($1=="RPATH") print $2}'`
 		while [ -n "$rpath" ]; do
 			found=
+			[ "$VERIFY_ELF_RPATH" = relaxed ] && prefix=WARNING || prefix=ERROR
 			for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR; do
 				if printf %s "$rpath" |fgrep -qs "$p"; then
-					Info "$f: RPATH entry contains \"$p\": $rpath"
+					Info "$prefix: $f: RPATH entry contains \"$p\": $rpath"
 					found=1
 				fi
 			done
@@ -74,7 +76,7 @@ for f in "$@"; do
 			fi
 
 			if printf %s "$rpath" |fgrep -qs :; then
-				Info "$f: RPATH entry contains \":\": $rpath"
+				Info "$prefix: $f: RPATH entry contains \":\": $rpath"
 				[ "$VERIFY_ELF_RPATH" = relaxed ] || rc=1
 				break
 			fi
@@ -83,7 +85,7 @@ for f in "$@"; do
 				break
 			fi
 
-			Info "$f: RPATH entry found: $rpath"
+			Info "$prefix: $f: RPATH entry found: $rpath"
 			rc=1
 			break
 		done
@@ -91,12 +93,11 @@ for f in "$@"; do
 
 	if [ -n "$VERIFY_ELF_TEXTREL" ]; then
 		textrel=`printf %s "$info" |awk '{if ($1=="TEXTREL") print $2}'`
-		while [ -n "$textrel" ]; do
-			Info "$f: TEXTREL entry found: $textrel"
-			[ "$VERIFY_ELF_TEXTREL" != relaxed ] || break
-			rc=1
-			break
-		done
+		if [ -n "$textrel" ]; then
+			[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR
+			Info "$prefix: $f: TEXTREL entry found: $textrel"
+			[ "$VERIFY_ELF_TEXTREL" = relaxed ] || rc=1
+		fi
 	fi
 
 	if [ -n "$VERIFY_ELF_UNRESOLVED" ]; then
@@ -149,7 +150,7 @@ END {
         if (rc != "0" && errors != 0)
                 exit 1
 }
-				' && ldd_rc=0 || ldd_rc=1
+				' >&2 && ldd_rc=0 || ldd_rc=1
 			[ "$VERIFY_ELF_UNRESOLVED" = relaxed -o "$ldd_rc" = 0 ] || rc=1
 			break
 		done
