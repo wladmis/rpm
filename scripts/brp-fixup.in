@@ -3,7 +3,7 @@
 # brp-fixup - Misc fixups.
 #
 # $Id$
-# Copyright (C) 2002-2005  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2002-2006  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -76,14 +76,12 @@ if [ -n "$FIXUP_BINCONFIG" -a -d ./usr/bin ]; then
 		xargs -r0 @RPMCONFIGDIR@/fixup-binconfig
 fi
 
-if [ -n "$FIXUP_PKGCONFIG" -a -d ./usr/lib/pkgconfig ]; then
-	find ./usr/lib/pkgconfig -maxdepth 1 -type f -name \*.pc -print0 |
-		xargs -r0 @RPMCONFIGDIR@/fixup-pkgconfig
-fi
-
-if [ -n "$FIXUP_PKGCONFIG" -a -d ./usr/lib64/pkgconfig ]; then
-	find ./usr/lib64/pkgconfig -maxdepth 1 -type f -name \*.pc -print0 |
-		xargs -r0 @RPMCONFIGDIR@/fixup-pkgconfig
+if [ -n "$FIXUP_PKGCONFIG" ]; then
+	for d in ."$RPM_LIBDIR"/pkgconfig ./usr/share/pkgconfig; do
+		[ -d "$d" ] || continue
+		find "$d" -maxdepth 1 -type f -name \*.pc -print0 |
+			xargs -r0 @RPMCONFIGDIR@/fixup-pkgconfig
+	done
 fi
 
 if [ -n "$FIXUP_LIBTOOL" ]; then
