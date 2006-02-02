@@ -37,11 +37,12 @@ exit_handler()
 trap exit_handler EXIT
 
 FIND_FILES=
+FIND_LIBPERL=
 FIND_LIBS=
 FIND_PAM=
 FIND_PERL=
+FIND_PKGCONFIG=
 FIND_PYTHON=
-FIND_LIBPERL=
 FIND_SHELL=
 FIND_TCL=
 libperl_so=
@@ -53,11 +54,12 @@ ParseMethod()
 		case "${t/%,}" in
 			no|none|off|false)
 				FIND_FILES=
+				FIND_LIBPERL=
 				FIND_LIBS=
 				FIND_PAM=
 				FIND_PERL=
+				FIND_PKGCONFIG=
 				FIND_PYTHON=
-				FIND_LIBPERL=
 				FIND_SHELL=
 				FIND_TCL=
 				;;
@@ -93,6 +95,12 @@ ParseMethod()
 				FIND_PERL=
 				FIND_LIBPERL=
 				;;
+			pkgconfig)
+				FIND_PKGCONFIG=1
+				;;
+			nopkgconfig)
+				FIND_PKGCONFIG=
+				;;
 			python)
 				FIND_PYTHON=1
 				;;
@@ -113,11 +121,12 @@ ParseMethod()
 				;;
 			all)
 				FIND_FILES=1
+				FIND_LIBPERL=1
 				FIND_LIBS=1
 				FIND_PAM=1
-				FIND_PYTHON=1
 				FIND_PERL=1
-				FIND_LIBPERL=1
+				FIND_PKGCONFIG=1
+				FIND_PYTHON=1
 				FIND_SHELL=1
 				FIND_TCL=1
 				;;
@@ -133,11 +142,13 @@ ParseMethod()
 ParseMethod $RPM_FINDREQ_METHOD
 
 FIND_SCRIPT=
-if [ -n "$FIND_PAM" -o -n "$FIND_PERL" -o -n "$FIND_SHELL" -o -n "$FIND_TCL" ]; then
+if [ -n "$FIND_PAM" -o -n "$FIND_PERL" -o -n "$FIND_PYTHON" -o \
+     -n "$FIND_SHELL" -o -n "$FIND_TCL" ]; then
 	FIND_SCRIPT=1
 fi
 
-if [ -z "$FIND_LIBS" -a -z "$FIND_SCRIPT" -a -z "$FIND_FILES" ]; then
+if [ -z "$FIND_FILES" -a -z "$FIND_LIBPERL" -a -z "$FIND_LIBS" -a \
+     -z "$FIND_PKGCONFIG" -a -z "$FIND_SCRIPT" ]; then
 	# Nothing to do
 	exit
 fi
@@ -350,7 +361,12 @@ $p"
 		done
 	fi
 	t="$(file -b "$f")"
-	if [ -z "${t##* text*}" ]; then
+	if [ -z "${fname##/usr/share/pkgconfig/*.pc}" -o -z "${fname##$RPM_LIBDIR/pkgconfig/*.pc}" ]; then
+		[ -n "$FIND_PKGCONFIG" ] || continue
+		r="$(@RPMCONFIGDIR@/pkgconfig.req "$f")"
+		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+	elif [ -z "${t##* text*}" ]; then
 		ListScriptReqs "$f" "$t"
 	elif [ -z "${t##*ELF* executable*dynamically linked*}" ]; then
 		r="$(FindExeReqs "$f")"

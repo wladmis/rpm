@@ -10,9 +10,9 @@ EXTRA_DIST = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
-	functions files.req.list ldd \
-	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
-	rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
+	functions files.req.list ldd magic.prov magic.req \
+	pam.prov pam.req pkgconfig.prov pkgconfig.req perl.prov perl.req \
+	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shell.req shell.prov shlib.req.awk sql.prov sql.req strip_files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
 
@@ -29,8 +29,8 @@ config_SCRIPTS = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
-	functions files.req.list ldd \
-	magic.prov magic.req pam.prov pam.req perl.prov perl.req rpmdiff rpmdiff.cgi \
-	rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
+	functions files.req.list ldd magic.prov magic.req \
+	pam.prov pam.req pkgconfig.prov pkgconfig.req perl.prov perl.req \
+	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shell.req shell.prov shlib.req.awk sql.prov sql.req strip_files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh

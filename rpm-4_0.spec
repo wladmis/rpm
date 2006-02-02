@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt57
+Release: alt58
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -108,6 +108,7 @@ Requires: gzip >= 0:1.3.3-alt2
 Requires: info-install >= 0:4.5-alt2
 Requires: mktemp >= 1:1.3.1
 Requires: patch >= 2.5
+Requires: pkgconfig-reqprov
 Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
 Requires: rpm-build-perl
@@ -472,6 +473,7 @@ fi
 %rpmattr %_rpmlibdir/http.req
 %rpmattr %_rpmlibdir/files.*
 %rpmattr %_rpmlibdir/pam.*
+%rpmattr %_rpmlibdir/pkgconfig.*
 %rpmattr %_rpmlibdir/shell.*
 %rpmattr %_rpmlibdir/sql.*
 %rpmattr %_rpmlibdir/verify-elf
@@ -521,6 +523,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Feb 02 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt58
+- Implemented pkgconfig reqprov support and enabled it by default.
+
 * Mon Jan 16 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt57
 - find-requires:
   + Fix ld-linux* dependencies handling.

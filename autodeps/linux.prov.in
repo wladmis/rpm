@@ -32,6 +32,7 @@ real_buildroot="$(cd "$RPM_BUILD_ROOT" && /bin/pwd)" || exit 1
 FIND_LIBS=
 FIND_PAM=
 FIND_PERL=
+FIND_PKGCONFIG=
 FIND_PYTHON=
 FIND_SHELL=
 FIND_TCL=
@@ -45,6 +46,7 @@ ParseMethod()
 				FIND_LIBS=
 				FIND_PAM=
 				FIND_PERL=
+				FIND_PKGCONFIG=
 				FIND_PYTHON=
 				FIND_SHELL=
 				FIND_TCL=
@@ -66,6 +68,12 @@ ParseMethod()
 				;;
 			noperl)
 				FIND_PERL=
+				;;
+			pkgconfig)
+				FIND_PKGCONFIG=1
+				;;
+			nopkgconfig)
+				FIND_PKGCONFIG=
 				;;
 			python)
 				FIND_PYTHON=1
@@ -89,6 +97,7 @@ ParseMethod()
 				FIND_LIBS=1
 				FIND_PAM=1
 				FIND_PERL=1
+				FIND_PKGCONFIG=1
 				FIND_PYTHON=1
 				FIND_SHELL=1
 				FIND_TCL=1
@@ -104,7 +113,9 @@ ParseMethod()
 }
 ParseMethod $RPM_FINDPROV_METHOD
 
-if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" -a -z "$FIND_PYTHON" -a -z "$FIND_SHELL" -a -z "$FIND_TCL" ]; then
+if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" -a \
+     -z "$FIND_PKGCONFIG" -a -z "$FIND_PYTHON" -a -z "$FIND_SHELL" -a \
+     -z "$FIND_TCL" ]; then
 	# Nothing to do
 	cat >/dev/null 2>&1
 	exit 0
@@ -326,7 +337,12 @@ while IFS= read -r f; do
 	fi
 	# Find out file type (dereference symlinks).
 	if t="$(file -bL "$f")"; then
-		if [ -z "${t##* text*}" ]; then
+		if [ -z "${fname##/usr/share/pkgconfig/*.pc}" -o -z "${fname##$RPM_LIBDIR/pkgconfig/*.pc}" ]; then
+			[ -n "$FIND_PKGCONFIG" ] || continue
+			r="$(@RPMCONFIGDIR@/pkgconfig.prov "$f")"
+			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+$r"
+		elif [ -z "${t##* text*}" ]; then
 			ListScriptProvs "$f" "$t"
 		elif [ -z "${t##*ELF* shared object*}" ]; then
 			r="$(FindLibProvs "$f")"
