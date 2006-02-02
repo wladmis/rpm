@@ -22,7 +22,8 @@
 ValidateBuildRoot
 
 for f; do
-	pkg-config --print-provides "$f" |while read name op version; do
-		echo "pkgconfig($name) $op $version"
-	done
+	PKG_CONFIG_PATH=$RPM_BUILD_ROOT/usr/share/pkgconfig:$RPM_BUILD_ROOT$RPM_LIBDIR/pkgconfig:/usr/share/pkgconfig:$RPM_LIBDIR/pkgconfig \
+		pkg-config --print-provides "$f" |while read name op version; do
+			echo "pkgconfig($name) $op $version"
+		done
 done
