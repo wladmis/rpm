@@ -326,7 +326,7 @@ while IFS= read -r f; do
 	fname="${fname#.}"
 
 	if [ -n "$RPM_FINDPROV_TOPDIR" ] && [ -z "${fname%%$RPM_FINDPROV_TOPDIR/*}" ]; then
-		continue;
+		continue
 	fi
 	if [ -n "$RPM_FINDPROV_SKIPLIST" ]; then
 		for skip in $RPM_FINDPROV_SKIPLIST; do
