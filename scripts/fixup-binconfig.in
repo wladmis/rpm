@@ -110,12 +110,12 @@ fix()
 	return 1
 	while ! cmp -s "$f_new" "$f_saved"; do
 		cat "$f_new" >"$f_saved" &&
-		subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)/usr\(/local\)\?/lib\($\|["'\'']\| \+\)@\1\4@g' -- "$f_new" &&
-		subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\('$RPM_BUILD_ROOT'\|'$RPM_BUILD_DIR'\|/usr/lib/gcc-lib\)["'\'' ]*\($\|["'\'']\| \+\)@\1\4@g' -- "$f_new" ||
+		subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)/usr\(/local\)\?/'"$RPM_LIB"'\($\|["'\'']\| \+\)@\1\4@g' -- "$f_new" &&
+		subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\('$RPM_BUILD_ROOT'\|'$RPM_BUILD_DIR'\|/usr/lib[^/]*/gcc-lib\)["'\'' ]*\($\|["'\'']\| \+\)@\1\4@g' -- "$f_new" ||
 		return 1
 	done
 
-	if [ "$libdir" = /usr/lib ]; then
+	if [ "$libdir" = "$RPM_LIBDIR" ]; then
 		>"$f_saved" || return 1
 		while ! cmp -s "$f_new" "$f_saved"; do
 			cat "$f_new" >"$f_saved" &&
@@ -128,7 +128,7 @@ fix()
 		>"$f_saved" || return 1
 		while ! cmp -s "$f_new" "$f_saved"; do
 			cat "$f_new" >"$f_saved" &&
-			subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\${exec_prefix}/lib\($\|["'\'']\| \+\)@\1\3@g' -- "$f_new" ||
+			subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\${exec_prefix}/'"$RPM_LIB"'\($\|["'\'']\| \+\)@\1\3@g' -- "$f_new" ||
 			return 1
 		done
 	fi
@@ -137,7 +137,7 @@ fix()
 		>"$f_saved"
 		while ! cmp -s "$f_new" "$f_saved"; do
 			cat "$f_new" >"$f_saved" &&
-			subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\${prefix}/lib\($\|["'\'']\| \+\)@\1\3@g' -- "$f_new" ||
+			subst '/if test /n;s@\(^\|[="'\'']\| \+\)\(-L\|-Wl,-rpath,\)\${prefix}/'"$RPM_LIB"'\($\|["'\'']\| \+\)@\1\3@g' -- "$f_new" ||
 			return 1
 		done
 	fi

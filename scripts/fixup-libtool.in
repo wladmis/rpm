@@ -62,8 +62,8 @@ for f in "$@"; do
 	saved_val=
 	while [ "$new_val" != "$saved_val" ]; do
 		saved_val="$new_val"
-		new_val=`printf %s "$new_val" |sed -e 's,\(^\| \+\)-L/usr\(/local\)\?/lib\($\| \+\),\1\3,g'`
-		new_val=`printf %s "$new_val" |sed -e 's,\(^\| \+\)-L\('$RPM_BUILD_ROOT'\|'$RPM_BUILD_DIR'\|/usr/lib/gcc-lib\)[^ ]*\($\| \+\),\1\3,g'`
+		new_val=`printf %s "$new_val" |sed -e 's,\(^\| \+\)-L/usr\(/local\)\?/'"$RPM_LIB"'\($\| \+\),\1\3,g'`
+		new_val=`printf %s "$new_val" |sed -e 's,\(^\| \+\)-L\('$RPM_BUILD_ROOT'\|'$RPM_BUILD_DIR'\|/usr/lib[^/]*/gcc-lib\)[^ ]*\($\| \+\),\1\3,g'`
 	done
 
 	new_val="$(printf %s "$new_val" |tr -s ' ')"
