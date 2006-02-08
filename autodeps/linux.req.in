@@ -264,7 +264,7 @@ FindLibReqs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local braces deps dir dump f name pathname prefix rpath suffix v vers
+	local braces canon_prefix deps dir dump f name pathname prefix rpath suffix v vers
 	f="$1"
 
 	if dump="$(objdump -p "$f")"; then 
@@ -284,8 +284,7 @@ FindLibReqs()
 			tr -s '[:space:]' : |
 			sed -e 's/^:\+//; s/:\+$//')"
 		deps="$("$elf_ldd" -- "$f" "$rpath")" || return 1
-		deps="$(printf %s "$deps" |
-			sed -e "s|$RPM_BUILD_ROOT||g" -e 's|/tls/|/|' -e 's|/sse2/|/|' -e "s|/$RPM_ARCH/|/|" -e 's|/i[3-9]86/|/|')"
+		deps="$(printf %s "$deps" |sed -e "s|$RPM_BUILD_ROOT||g")"
 		# Shared library dependencies, version references.
 		for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
 			name="$(printf %s "$vers" |cut -d: -f1)"
@@ -295,12 +294,14 @@ NF>2 && $1==name && $2=="=>" && $3~/^/ {print $3}
 NF==2 && $2~/^\(.+\)$/ {lib=$1; sub("^/.*/","",lib); if (lib==name) print $1}
 				')"
 			prefix="${pathname%/*}"
-			if [ -z "$prefix" -o -n "${prefix##/*}" ]; then
+			canon_prefix="$(printf %s "$prefix/" |
+				sed -e 's|/tls/|/|' -e 's|/sse2/|/|' -e "s|/$RPM_ARCH/|/|" -e 's|/i[3-9]86/|/|' -e 's|/\+$||')"
+			if [ -z "$canon_prefix" -o -n "${canon_prefix##/*}" ]; then
 				Info "WARNING: $fname: library $name not found"
-				continue;
+				continue
 			fi
 			for dir in $RPM_FINDREQ_RPATH; do
-				if [ "$prefix" = "$dir" ]; then
+				if [ "$canon_prefix" = "$dir" ]; then
 					prefix=
 					break
 				fi
@@ -342,7 +343,7 @@ while IFS= read -r f; do
 	fname="${fname#.}"
 
 	if [ -n "$RPM_FINDREQ_TOPDIR" ] && [ -z "${fname%%$RPM_FINDREQ_TOPDIR/*}" ]; then
-		continue;
+		continue
 	fi
 	if [ -n "$RPM_FINDREQ_SKIPLIST" ]; then
 		for skip in $RPM_FINDREQ_SKIPLIST; do
