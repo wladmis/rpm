@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt58
+Release: alt59
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -523,6 +523,13 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Feb 08 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt59
+- find-requires:
+  + Do not strip arch-dependent path components when processing
+    dependencies on libraries from non-standard locations.
+- fixup-{binconfig,libtool,pkgconfig}:
+  + Redone %%_libdir processing in more generic way.
+
 * Thu Feb 02 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt58
 - Implemented pkgconfig reqprov support and enabled it by default.
 
