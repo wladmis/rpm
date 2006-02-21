@@ -368,14 +368,19 @@
 @alt@%_gamesdatadir	%{_datadir}/%{_gamesdir}
 @alt@
 @alt@# X11 directories.
-@alt@%_x11dir	%{_prefix}/X11R6
-@alt@%_x11bindir	%{_x11dir}/bin
-@alt@%_x11libdir	%{_x11dir}/%_lib
-@alt@%_x11x11dir	%{_x11dir}/lib/X11
-@alt@%_x11includedir	%{_x11dir}/include
-@alt@%_x11mandir	%{_x11dir}/man
-@alt@%_x11datadir	%{_x11dir}/share
-@alt@%_x11fontsdir	%{_x11x11dir}/fonts
+@alt@%_x11dir		%{_prefix}
+@alt@%_x11bindir	%{_bindir}
+@alt@%_x11libdir	%{_libdir}
+@alt@%_x11x11libdir	%{_libdir}/X11
+@alt@%_x11x11dir	%{_datadir}/X11
+@alt@%_x11includedir	%{_includedir}
+@alt@%_x11mandir	%{_mandir}
+@alt@%_x11datadir	%{_datadir}
+@alt@%_x11fontsdir	%{_datadir}/X11/fonts
+@alt@%_x11modulesdir	%{_libdir}/X11/modules
+@alt@%_x11drvddir	%{_prefix}/libexec/X11/drv.d
+@alt@%_x11sysconfdir	%{_sysconfdir}/X11
+@alt@%_x11appconfdir	%{_sysconfdir}/X11/app-defaults
 @alt@
 @alt@# Initscripts.
 @alt@%_initdir	%{_sysconfdir}/rc.d/init.d
