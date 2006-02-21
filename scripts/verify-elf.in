@@ -54,8 +54,8 @@ for f in "$@"; do
 	if [ -n "$VERIFY_ELF_FHS" ]; then
 		if [ -z "${fname##/usr/share/*}" -o -z "${fname##/etc/*}" ]; then
 			[ "$VERIFY_ELF_FHS" = relaxed ] && prefix=WARNING || prefix=ERROR
-			Info "$prefix: $f: ELF object out of allowed directory tree"
 			[ "$VERIFY_ELF_FHS" = relaxed ] || rc=1
+			Info "$prefix: $f: ELF object out of allowed directory tree"
 		fi
 	fi
 
@@ -63,10 +63,9 @@ for f in "$@"; do
 		rpath=`printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}'`
 		while [ -n "$rpath" ]; do
 			found=
-			[ "$VERIFY_ELF_RPATH" = relaxed ] && prefix=WARNING || prefix=ERROR
 			for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR; do
 				if printf %s "$rpath" |fgrep -qs "$p"; then
-					Info "$prefix: $f: RPATH entry contains \"$p\": $rpath"
+					Info "ERROR: $f: RPATH entry contains \"$p\": $rpath"
 					found=1
 				fi
 			done
@@ -75,9 +74,28 @@ for f in "$@"; do
 				break
 			fi
 
+			if [ -n "$rpath" ]; then
+				if [ -z "${rpath##:*}" ]; then
+					Info "ERROR: $f: RPATH starts with \":\": $rpath"
+					rc=1
+					break
+				fi
+				if [ -z "${rpath%%*:}" ]; then
+					Info "ERROR: $f: RPATH ends with \":\": $rpath"
+					rc=1
+					break
+				fi
+				if [ -z "${rpath##*::*}" ]; then
+					Info "ERROR: $f: RPATH contains \"::\": $rpath"
+					rc=1
+					break
+				fi
+			fi
+
 			if printf %s "$rpath" |fgrep -qs :; then
-				Info "$prefix: $f: RPATH entry contains \":\": $rpath"
+				[ "$VERIFY_ELF_RPATH" = relaxed ] && prefix=WARNING || prefix=ERROR
 				[ "$VERIFY_ELF_RPATH" = relaxed ] || rc=1
+				Info "$prefix: $f: RPATH entry contains \":\": $rpath"
 				break
 			fi
 
@@ -85,7 +103,7 @@ for f in "$@"; do
 				break
 			fi
 
-			Info "$prefix: $f: RPATH entry found: $rpath"
+			Info "ERROR: $f: RPATH entry found: $rpath"
 			rc=1
 			break
 		done
@@ -95,8 +113,8 @@ for f in "$@"; do
 		textrel=`printf %s "$objdump_info" |awk '{if ($1=="TEXTREL") print $2}'`
 		if [ -n "$textrel" ]; then
 			[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR
-			Info "$prefix: $f: TEXTREL entry found: $textrel"
 			[ "$VERIFY_ELF_TEXTREL" = relaxed ] || rc=1
+			Info "$prefix: $f: TEXTREL entry found: $textrel"
 		fi
 	fi
 
