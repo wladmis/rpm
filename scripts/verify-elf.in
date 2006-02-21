@@ -49,7 +49,7 @@ for f in "$@"; do
 	t="$(file -b "$f")"
 	[ -z "${t##ELF *}" -o -z "${t##* ELF *}" ] || continue
 
-	info=$(objdump -p "$f") || continue
+	objdump_info=$(objdump -p "$f") || continue
 
 	if [ -n "$VERIFY_ELF_FHS" ]; then
 		if [ -z "${fname##/usr/share/*}" -o -z "${fname##/etc/*}" ]; then
@@ -60,7 +60,7 @@ for f in "$@"; do
 	fi
 
 	if [ -n "$VERIFY_ELF_RPATH" ]; then
-		rpath=`printf %s "$info" |awk '{if ($1=="RPATH") print $2}'`
+		rpath=`printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}'`
 		while [ -n "$rpath" ]; do
 			found=
 			[ "$VERIFY_ELF_RPATH" = relaxed ] && prefix=WARNING || prefix=ERROR
@@ -92,7 +92,7 @@ for f in "$@"; do
 	fi
 
 	if [ -n "$VERIFY_ELF_TEXTREL" ]; then
-		textrel=`printf %s "$info" |awk '{if ($1=="TEXTREL") print $2}'`
+		textrel=`printf %s "$objdump_info" |awk '{if ($1=="TEXTREL") print $2}'`
 		if [ -n "$textrel" ]; then
 			[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR
 			Info "$prefix: $f: TEXTREL entry found: $textrel"
@@ -102,7 +102,7 @@ for f in "$@"; do
 
 	if [ -n "$VERIFY_ELF_UNRESOLVED" ]; then
 		while [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; do
-			rpath="$(printf %s "$dump" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
+			rpath="$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
 			if [ -n "$rpath" ]; then
 				rpath="$rpath $RPM_VERIFY_ELF_LDD_RPATH"
 			else
