@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt59
+Release: alt60
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -523,6 +523,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Feb 21 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt60
+- verify-elf:
+  + Fixed typo in VERIFY_ELF_UNRESOLVED support.
+  + Prohibit rpaths starting/anding with ":" or containing "::".
+- platform.in:
+  + Updated %%_x11*dir macros (#8825).
+  + Added %%_niconsdir, updated %%_miconsdir and %%_liconsdir (#9067).
+
 * Wed Feb 08 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt59
 - find-requires:
   + Do not strip arch-dependent path components when processing
