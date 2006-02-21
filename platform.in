@@ -356,8 +356,9 @@
 @alt@# Desktop-related directories.
 @alt@%_menudir	%_prefix/lib/menu
 @alt@%_iconsdir	%_datadir/icons
-@alt@%_miconsdir	%_iconsdir/mini
-@alt@%_liconsdir	%_iconsdir/large
+@alt@%_miconsdir	%_iconsdir/hicolor/16x16/apps
+@alt@%_niconsdir	%_iconsdir/hicolor/32x32/apps
+@alt@%_liconsdir	%_iconsdir/hicolor/48x48/apps
 @alt@%_desktopdir	%_datadir/applications
 @alt@%_pixmapsdir	%_datadir/pixmaps
 @alt@
