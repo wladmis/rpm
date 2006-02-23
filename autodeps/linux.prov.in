@@ -268,53 +268,52 @@ FindLibProvs()
 		soname="$(printf %s\\n "$dump" |sed -ne 's/^[[:space:]]*SONAME[[:space:]]\+\([^[:space:]]\+\)[[:space:]]*$/\1/p')" || return 1
 		suffix="$(printf %s\\n "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
 		[ -z "$suffix" ] && braces= || braces='()'
-		if [ -n "$soname" ]; then
-			while :; do
-				# For libraries with soname, ignore all but files named as soname.
-				[ "$soname" = "$name" ] || break
+		while :; do
+			# For libraries with soname, ignore all but files named as soname.
+			[ -z "$soname" -o "$soname" = "$name" ] || break
 
-				# Treat symlinks specially.
-				if [ -L "$f" ]; then
-					local real realpath realdir
-					realpath=$(readlink -fv "$f") || break
-					real="${realpath#$real_buildroot}"
-					# Ignore symlinks leading out of buildroot.
-					[ "$real" != "$realpath" ] || break
-					realdir="${real%/*}"
-					# Ignore symlinks to shorter locations.
-					[ "${#dir}" -le "${#realdir}" ] || break
-				fi
-				
-				# Check for non-default path.
-				local nondefdir=
-				lookup_path "$dir" "$DEF_RPM_FINDPROV_LIB_PATH" || nondefdir="$dir"
+			# Treat symlinks specially.
+			if [ -L "$f" ]; then
+				[ -n "$soname" ] || break
+				local real realpath realdir
+				realpath=$(readlink -fv "$f") || break
+				real="${realpath#$real_buildroot}"
+				# Ignore symlinks leading out of buildroot.
+				[ "$real" != "$realpath" ] || break
+				realdir="${real%/*}"
+				# Ignore symlinks to shorter locations.
+				[ "${#dir}" -le "${#realdir}" ] || break
+			fi
 
-				# Output soname.
-				if [ -z "$nondefdir" ]; then
-					printf '%s\n' "$soname$braces$suffix"
-				else
-					printf '%s/%s\n' "$nondefdir" "$soname$braces$suffix"
-				fi
+			# soname is either empty or equal to name
+			soname="$name"
 
-				# Output version definitions.
-	    			printf %s\\n "$dump" | awk "-vsoname=$soname" "-vnondefdir=$nondefdir" "-vsuffix=$suffix" '
-					BEGIN {start=0;}
-					/^Version definitions:$/ {start=1;}
-					/^[0-9]/ && (start==1) && ($4!="") && ($4!=soname) {
-						if (nondefdir=="")
-							printf("%s(%s)%s\n",soname,$4,suffix)
-						else
-							printf("%s/%s(%s)%s\n",nondefdir,soname,$4,suffix)
-					}
-					/^$/ {start=0;}
-				' || return 1
+			# Check for non-default path.
+			local nondefdir=
+			lookup_path "$dir" "$DEF_RPM_FINDPROV_LIB_PATH" || nondefdir="$dir"
 
-				break
-			done
-		else
-			# Ignore symlinks for libraries without soname.
-			[ -L "$f" ] || printf %s\\n "${f##*/}$braces$suffix"
-		fi
+			# Output soname.
+			if [ -z "$nondefdir" ]; then
+				printf '%s\n' "$soname$braces$suffix"
+			else
+				printf '%s/%s\n' "$nondefdir" "$soname$braces$suffix"
+			fi
+
+			# Output version definitions.
+    			printf %s\\n "$dump" | awk "-vsoname=$soname" "-vnondefdir=$nondefdir" "-vsuffix=$suffix" '
+				BEGIN {start=0;}
+				/^Version definitions:$/ {start=1;}
+				/^[0-9]/ && (start==1) && ($4!="") && ($4!=soname) {
+					if (nondefdir=="")
+						printf("%s(%s)%s\n",soname,$4,suffix)
+					else
+						printf("%s/%s(%s)%s\n",nondefdir,soname,$4,suffix)
+				}
+				/^$/ {start=0;}
+			' || return 1
+
+			break
+		done
 	fi
 }
 
