@@ -25,6 +25,7 @@ ValidateBuildRoot
 
 cd "$RPM_BUILD_ROOT"
 
+export VERIFY_ELF_ARCH=normal
 export VERIFY_ELF_FHS=relaxed
 export VERIFY_ELF_RPATH=normal
 export VERIFY_ELF_TEXTREL=normal
@@ -34,6 +35,12 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	case "$t" in
 		no|none|skip)
 			exit 0
+			;;
+		arch)
+			VERIFY_ELF_ARCH=normal
+			;;
+		arch=*)
+			VERIFY_ELF_ARCH="${t#arch=}"
 			;;
 		fhs)
 			VERIFY_ELF_FHS=normal
@@ -60,18 +67,21 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 			VERIFY_ELF_UNRESOLVED="${t#unresolved=}"
 			;;
 		normal)
+			VERIFY_ELF_ARCH=normal
 			VERIFY_ELF_FHS=normal
 			VERIFY_ELF_RPATH=normal
 			VERIFY_ELF_TEXTREL=normal
 			VERIFY_ELF_UNRESOLVED=normal
 			;;
 		strict)
+			VERIFY_ELF_ARCH=strict
 			VERIFY_ELF_FHS=strict
 			VERIFY_ELF_RPATH=strict
 			VERIFY_ELF_TEXTREL=strict
 			VERIFY_ELF_UNRESOLVED=strict
 			;;
 		relaxed)
+			VERIFY_ELF_ARCH=relaxed
 			VERIFY_ELF_FHS=relaxed
 			VERIFY_ELF_RPATH=relaxed
 			VERIFY_ELF_TEXTREL=relaxed
@@ -83,6 +93,8 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	esac
 done
 
+[ "$VERIFY_ELF_ARCH" != no ] || VERIFY_ELF_ARCH=
+[ -z "$RPM_VERIFY_ELF_ARCH" ] || VERIFY_ELF_ARCH="$RPM_VERIFY_ELF_ARCH"
 [ "$VERIFY_ELF_FHS" != no ] || VERIFY_ELF_FHS=
 [ -z "$RPM_VERIFY_ELF_FHS" ] || VERIFY_ELF_FHS="$RPM_VERIFY_ELF_FHS"
 [ "$VERIFY_ELF_RPATH" != no ] || VERIFY_ELF_RPATH=
@@ -95,7 +107,7 @@ done
 : ${RPM_VERIFY_ELF_TOPDIR:=}
 [ -d "$RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR" ] || exit 0
 
-echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (fhs=$VERIFY_ELF_FHS,rpath=$VERIFY_ELF_RPATH,textrel=$VERIFY_ELF_TEXTREL,unresolved=$VERIFY_ELF_UNRESOLVED)"
+echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (arch=$VERIFY_ELF_ARCH,fhs=$VERIFY_ELF_FHS,rpath=$VERIFY_ELF_RPATH,textrel=$VERIFY_ELF_TEXTREL,unresolved=$VERIFY_ELF_UNRESOLVED)"
 
 dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
 RPM_VERIFY_ELF_LDD_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT")"
