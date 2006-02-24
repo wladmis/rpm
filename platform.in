@@ -432,7 +432,7 @@
 @alt@
 @alt@%_cleanup_method	auto
 @alt@%_compress_method	auto
-@alt@%_verify_elf_method	fhs=relaxed,rpath=normal,textrel=normal,unresolved=relaxed
+@alt@%_verify_elf_method	arch=normal,fhs=relaxed,rpath=normal,textrel=normal,unresolved=relaxed
 @alt@%_perl_req_method	normal
 @alt@%_python_lib_path	""
 @alt@%_python_req_method	slight

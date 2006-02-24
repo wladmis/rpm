@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt60
+Release: alt61
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -523,6 +523,17 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Feb 23 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt61
+- find-provides:
+  + Applied "new style provides" rules for sonameless libraries too.
+- lib/rpmrc.c:
+  + Extended %%_preScriptEnvironment to export RPM_TARGET_ARCH.
+- brp-verify-elf, verify-elf:
+  + Implement "arch" option.
+- platform.in:
+  + Set %%_verify_elf_method to
+    arch=normal,fhs=relaxed,rpath=normal,textrel=normal,unresolved=relaxed
+
 * Tue Feb 21 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt60
 - verify-elf:
   + Fixed typo in VERIFY_ELF_UNRESOLVED support.
