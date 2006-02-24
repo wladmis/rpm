@@ -485,7 +485,9 @@ export RPM_SOURCE_DIR RPM_BUILD_DIR RPM_DOC_DIR\n\
 RPM_OPT_FLAGS=\"%{optflags}\"\n\
 RPM_ARCH=\"%{_arch}\"\n\
 RPM_OS=\"%{_os}\"\n\
-export RPM_OPT_FLAGS RPM_ARCH RPM_OS\n\
+RPM_TARGET_ARCH=\"%{_target_cpu}\"\n\
+RPM_TARGET_OS=\"%{_target_os}\"\n\
+export RPM_OPT_FLAGS RPM_ARCH RPM_OS RPM_TARGET_ARCH RPM_TARGET_OS\n\
 RPM_PACKAGE_NAME=\"%{name}\"\n\
 RPM_PACKAGE_VERSION=\"%{version}\"\n\
 RPM_PACKAGE_RELEASE=\"%{release}\"\n\
