@@ -66,6 +66,7 @@ for f in "$@"; do
 	if [ -n "$VERIFY_ELF_RPATH" ]; then
 		rpath=`printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}'`
 		if [ -n "$rpath" ]; then
+			prefix=
 			if [ -z "${rpath##:*}" ]; then
 				Info "ERROR: $f: RPATH starts with \":\": $rpath"
 				rc=1
@@ -93,9 +94,9 @@ for f in "$@"; do
 			done
 			[ -z "$found" ] || rc=1
 
-			if [ rc = 0 ]; then
-				[ "$VERIFY_ELF_RPATH" = strict ] && prefix=WARNING || prefix=ERROR
-				[ "$VERIFY_ELF_RPATH" = strict ] || rc=1
+			if [ -z "$prefix" -a rc = 0 ]; then
+				[ "$VERIFY_ELF_RPATH" = strict ] && prefix=ERROR || prefix=WARNING
+				[ "$VERIFY_ELF_RPATH" = strict ] && rc=1 ||:
 				Info "$prefix: $f: RPATH entry found: $rpath"
 			fi
 		fi
