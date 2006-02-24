@@ -51,17 +51,39 @@ for f in "$@"; do
 
 	objdump_info=$(objdump -p "$f") || continue
 
-	if [ -n "$VERIFY_ELF_FHS" ]; then
-		if [ -z "${fname##/usr/share/*}" -o -z "${fname##/etc/*}" ]; then
-			[ "$VERIFY_ELF_FHS" = relaxed ] && prefix=WARNING || prefix=ERROR
-			[ "$VERIFY_ELF_FHS" = relaxed ] || rc=1
-			Info "$prefix: $f: ELF object out of allowed directory tree"
-		fi
+	if [ -n "$VERIFY_ELF_ARCH" -a "$RPM_TARGET_ARCH" = noarch ]; then
+		[ "$VERIFY_ELF_ARCH" = relaxed ] && prefix=WARNING || prefix=ERROR
+		[ "$VERIFY_ELF_ARCH" = relaxed ] || rc=1
+		Info "$prefix: $f: ELF object for $RPM_TARGET_ARCH architecture"
+	fi
+
+	if [ -n "$VERIFY_ELF_FHS" ] && [ -z "${fname##/usr/share/*}" -o -z "${fname##/etc/*}" ]; then
+		[ "$VERIFY_ELF_FHS" = relaxed ] && prefix=WARNING || prefix=ERROR
+		[ "$VERIFY_ELF_FHS" = relaxed ] || rc=1
+		Info "$prefix: $f: ELF object out of allowed directory tree"
 	fi
 
 	if [ -n "$VERIFY_ELF_RPATH" ]; then
 		rpath=`printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}'`
-		while [ -n "$rpath" ]; do
+		if [ -n "$rpath" ]; then
+			if [ -z "${rpath##:*}" ]; then
+				Info "ERROR: $f: RPATH starts with \":\": $rpath"
+				rc=1
+			fi
+			if [ -z "${rpath%%*:}" ]; then
+				Info "ERROR: $f: RPATH ends with \":\": $rpath"
+				rc=1
+			fi
+			if [ -z "${rpath##*::*}" ]; then
+				Info "ERROR: $f: RPATH contains \"::\": $rpath"
+				rc=1
+			fi
+			if [ rc = 0 ] && printf %s "$rpath" |fgrep -qs :; then
+				[ "$VERIFY_ELF_RPATH" = relaxed ] && prefix=WARNING || prefix=ERROR
+				[ "$VERIFY_ELF_RPATH" = relaxed ] || rc=1
+				Info "$prefix: $f: RPATH entry contains \":\": $rpath"
+			fi
+
 			found=
 			for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR; do
 				if printf %s "$rpath" |fgrep -qs "$p"; then
@@ -69,44 +91,14 @@ for f in "$@"; do
 					found=1
 				fi
 			done
-			if [ -n "$found" ]; then
-				rc=1
-				break
-			fi
+			[ -z "$found" ] || rc=1
 
-			if [ -n "$rpath" ]; then
-				if [ -z "${rpath##:*}" ]; then
-					Info "ERROR: $f: RPATH starts with \":\": $rpath"
-					rc=1
-					break
-				fi
-				if [ -z "${rpath%%*:}" ]; then
-					Info "ERROR: $f: RPATH ends with \":\": $rpath"
-					rc=1
-					break
-				fi
-				if [ -z "${rpath##*::*}" ]; then
-					Info "ERROR: $f: RPATH contains \"::\": $rpath"
-					rc=1
-					break
-				fi
+			if [ rc = 0 ]; then
+				[ "$VERIFY_ELF_RPATH" = strict ] && prefix=WARNING || prefix=ERROR
+				[ "$VERIFY_ELF_RPATH" = strict ] || rc=1
+				Info "$prefix: $f: RPATH entry found: $rpath"
 			fi
-
-			if printf %s "$rpath" |fgrep -qs :; then
-				[ "$VERIFY_ELF_RPATH" = relaxed ] && prefix=WARNING || prefix=ERROR
-				[ "$VERIFY_ELF_RPATH" = relaxed ] || rc=1
-				Info "$prefix: $f: RPATH entry contains \":\": $rpath"
-				break
-			fi
-
-			if [ "$VERIFY_ELF_RPATH" = relaxed -o "$VERIFY_ELF_RPATH" = normal ]; then
-				break
-			fi
-
-			Info "ERROR: $f: RPATH entry found: $rpath"
-			rc=1
-			break
-		done
+		fi
 	fi
 
 	if [ -n "$VERIFY_ELF_TEXTREL" ]; then
