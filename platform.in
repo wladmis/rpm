@@ -196,6 +196,8 @@
 @alt@	export RPM_OPT_FLAGS=\"%optflags\"\
 @alt@	export RPM_ARCH=\"%_arch\"\
 @alt@	export RPM_OS=\"%_os\"\
+@alt@	export RPM_TARGET_ARCH=\"%_target_cpu\"\
+@alt@	export RPM_TARGET_OS=\"%_target_os\"\
 @alt@	export RPM_DOC_DIR=\"%_docdir\"\
 @alt@	export RPM_PACKAGE_NAME=\"%name\"\
 @alt@	export RPM_PACKAGE_VERSION=\"%version\"\
