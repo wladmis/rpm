@@ -531,6 +531,7 @@ fi
 - brp-verify-elf, verify-elf:
   + Implement "arch" option.
 - platform.in:
+  + Extended %%___build_pre to export RPM_TARGET_ARCH.
   + Set %%_verify_elf_method to
     arch=normal,fhs=relaxed,rpath=normal,textrel=normal,unresolved=relaxed
 
