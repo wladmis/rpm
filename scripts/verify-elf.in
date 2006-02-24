@@ -85,14 +85,12 @@ for f in "$@"; do
 				Info "$prefix: $f: RPATH entry contains \":\": $rpath"
 			fi
 
-			found=
 			for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR; do
 				if printf %s "$rpath" |fgrep -qs "$p"; then
 					Info "ERROR: $f: RPATH entry contains \"$p\": $rpath"
-					found=1
+					rc=1
 				fi
 			done
-			[ -z "$found" ] || rc=1
 
 			if [ -z "$prefix" -a rc = 0 ]; then
 				[ "$VERIFY_ELF_RPATH" = strict ] && prefix=ERROR || prefix=WARNING
