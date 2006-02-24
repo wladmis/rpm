@@ -768,11 +768,13 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 			spec = freeSpec(spec);
 			return RPMERR_BADSPEC;
 		}
+#if 0
 #ifdef	DYING
 		rpmSetMachine(saveArch, NULL);
 		saveArch = _free(saveArch);
 #else
 		delMacro(NULL, "_target_cpu");
+#endif
 #endif
 		index++;
 	    }
