@@ -54,7 +54,7 @@ for f in "$@"; do
 	if [ -n "$VERIFY_ELF_ARCH" -a "$RPM_TARGET_ARCH" = noarch ]; then
 		[ "$VERIFY_ELF_ARCH" = relaxed ] && prefix=WARNING || prefix=ERROR
 		[ "$VERIFY_ELF_ARCH" = relaxed ] || rc=1
-		Info "$prefix: $f: ELF object for $RPM_TARGET_ARCH architecture"
+		Info "$prefix: $f: ELF object for \"$RPM_TARGET_ARCH\" architecture"
 	fi
 
 	if [ -n "$VERIFY_ELF_FHS" ] && [ -z "${fname##/usr/share/*}" -o -z "${fname##/etc/*}" ]; then
