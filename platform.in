@@ -45,6 +45,7 @@
   FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   %{?_disable_static:export lt_cv_prog_cc_static_works=no ;} \
   %{?_enable_static:export lt_cv_prog_cc_static_works=yes ;} \
+  export lt_cv_deplibs_check_method=pass_all ; \
   %{?__libtoolize:[ -f configure.ac -o -f configure.in ] && %{__libtoolize} --copy --force ;} \
   %{_configure_script} %{?_configure_target:%{_configure_target}} \\\
  	--prefix=%{_prefix} \\\
