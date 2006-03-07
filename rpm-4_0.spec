@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt61
+Release: alt62
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -523,6 +523,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Mar 07 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt62
+- platform.in:
+  + %%configure: Export lt_cv_deplibs_check_method=pass_all.
+  + %%_verify_elf_method: Changed unresolved from relaxed to normal.
+- brp-verify_elf, verify-elf:
+  + Implemented VERIFY_ELF_UNRESOLVED=normal (like strict
+    for standard paths and relaxed for others).
+
 * Thu Feb 23 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt61
 - find-provides:
   + Applied "new style provides" rules for sonameless libraries too.
