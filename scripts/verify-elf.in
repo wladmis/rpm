@@ -27,6 +27,19 @@ ValidateBuildRoot
 
 elf_ldd='@RPMCONFIGDIR@/ldd'
 
+lookup_path()
+{
+	local d dir path found=
+	dir="$1" && shift
+	path="$1" && shift
+	for d in $(printf %s "$path" |tr : ' '); do
+		[ "$d" = "$dir" ] || continue
+		found="$d"
+		break
+	done
+	[ -n "$found" ] && return 0 || return 1
+}
+
 rc=0
 for f in "$@"; do
 	if [ ! -f "$f" ]; then
@@ -130,7 +143,21 @@ for f in "$@"; do
 				rc=1
 				break
 			fi
-			[ "$VERIFY_ELF_UNRESOLVED" = relaxed ] && ldd_rc=0 || ldd_rc=1
+			case "$VERIFY_ELF_UNRESOLVED" in
+				relaxed)
+					ldd_rc=0
+					;;
+				strict)
+					ldd_rc=1
+					;;
+				*)
+					if lookup_path "${fname%/*}" "$RPM_VERIFY_ELF_LDD_RPATH"; then
+						ldd_rc=1
+					else
+						ldd_rc=0
+					fi
+					;;
+			esac
 			printf '%s\n' "$ldd_info" |
 				awk -vrc="$ldd_rc" -vprog="$PROG" -vfname="$f" -- '
 BEGIN {
@@ -160,7 +187,7 @@ END {
                 exit 1
 }
 				' >&2 && ldd_rc=0 || ldd_rc=1
-			[ "$VERIFY_ELF_UNRESOLVED" = relaxed -o "$ldd_rc" = 0 ] || rc=1
+			[ "$ldd_rc" = 0 ] || rc=1
 			break
 		done
 	fi
