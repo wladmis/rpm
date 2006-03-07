@@ -29,7 +29,7 @@ export VERIFY_ELF_ARCH=normal
 export VERIFY_ELF_FHS=relaxed
 export VERIFY_ELF_RPATH=normal
 export VERIFY_ELF_TEXTREL=normal
-export VERIFY_ELF_UNRESOLVED=relaxed
+export VERIFY_ELF_UNRESOLVED=normal
 
 for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	case "$t" in
