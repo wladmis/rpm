@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt62
+Release: alt63
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -523,6 +523,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Mar 09 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt63
+- verify-elf:
+  + Extended VERIFY_ELF_UNRESOLVED=normal to behave like strict
+    for executables too.
+
 * Tue Mar 07 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt62
 - platform.in:
   + %%configure: Export lt_cv_deplibs_check_method=pass_all.
