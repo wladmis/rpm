@@ -151,7 +151,8 @@ for f in "$@"; do
 					ldd_rc=1
 					;;
 				*)
-					if lookup_path "${fname%/*}" "$RPM_VERIFY_ELF_LDD_RPATH"; then
+					if [ -z "${t##*ELF* executable*dynamically linked*}" ] ||
+					   lookup_path "${fname%/*}" "$RPM_VERIFY_ELF_LDD_RPATH"; then
 						ldd_rc=1
 					else
 						ldd_rc=0
