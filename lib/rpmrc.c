@@ -870,22 +870,19 @@ exit:
 /*
  * Generic CPUID function
  */
-static inline void cpuid(unsigned int op, int *eax, int *ebx, int *ecx, int *edx)
+static inline void cpuid(unsigned int op, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 	/*@modifies *eax, *ebx, *ecx, *edx @*/
 {
 #ifdef	__LCLINT__
     *eax = *ebx = *ecx = *edx = 0;
 #endif
-#ifdef PIC
-	__asm__("pushl %%ebx; cpuid; movl %%ebx,%1; popl %%ebx"
-		: "=a"(*eax), "=g"(*ebx), "=&c"(*ecx), "=&d"(*edx)
-		: "a" (op));
-#else
-	__asm__("cpuid"
-		: "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
-		: "a" (op));
-#endif
-
+    asm volatile (
+	"pushl	%%ebx		\n"
+	"cpuid			\n"
+	"movl	%%ebx,	%%esi	\n"
+	"popl	%%ebx		\n"
+    : "=a" (*eax), "=S" (*ebx), "=c" (*ecx), "=d" (*edx)
+    : "a" (op));
 }
 
 /*
@@ -894,15 +891,8 @@ static inline void cpuid(unsigned int op, int *eax, int *ebx, int *ecx, int *edx
 static inline unsigned int cpuid_eax(unsigned int op)
 	/*@*/
 {
-	unsigned int val;
-
-#ifdef PIC
-	__asm__("pushl %%ebx; cpuid; popl %%ebx"
-		: "=a" (val) : "a" (op) : "ecx", "edx");
-#else
-	__asm__("cpuid"
-		: "=a" (val) : "a" (op) : "ebx", "ecx", "edx");
-#endif
+	unsigned int tmp, val;
+	cpuid(op, &val, &tmp, &tmp, &tmp);
 	return val;
 }
 
@@ -910,14 +900,7 @@ static inline unsigned int cpuid_ebx(unsigned int op)
 	/*@*/
 {
 	unsigned int tmp, val;
-
-#ifdef PIC
-	__asm__("pushl %%ebx; cpuid; movl %%ebx,%1; popl %%ebx"
-		: "=a" (tmp), "=g" (val) : "a" (op) : "ecx", "edx");
-#else
-	__asm__("cpuid"
-		: "=a" (tmp), "=b" (val) : "a" (op) : "ecx", "edx");
-#endif
+	cpuid(op, &tmp, &val, &tmp, &tmp);
 	return val;
 }
 
@@ -925,30 +908,16 @@ static inline unsigned int cpuid_ecx(unsigned int op)
 	/*@*/
 {
 	unsigned int tmp, val;
-#ifdef PIC
-	__asm__("pushl %%ebx; cpuid; popl %%ebx"
-		: "=a" (tmp), "=c" (val) : "a" (op) : "edx");
-#else
-	__asm__("cpuid"
-		: "=a" (tmp), "=c" (val) : "a" (op) : "ebx", "edx");
-#endif
+	cpuid(op, &tmp, &tmp, &val, &tmp);
 	return val;
-
 }
 
 static inline unsigned int cpuid_edx(unsigned int op)
 	/*@*/
 {
 	unsigned int tmp, val;
-#ifdef PIC
-	__asm__("pushl %%ebx; cpuid; popl %%ebx"
-		: "=a" (tmp), "=d" (val) : "a" (op) : "ecx");
-#else
-	__asm__("cpuid"
-		: "=a" (tmp), "=d" (val) : "a" (op) : "ebx", "ecx");
-#endif
+	cpuid(op, &tmp, &tmp, &tmp, &val);
 	return val;
-
 }
 
 /*@unchecked@*/
@@ -970,10 +939,10 @@ static inline int RPMClass(void)
 	
 	signal(SIGILL, model3);
 	
-	if(sigsetjmp(jenv, 1))
+	if (sigsetjmp(jenv, 1))
 		return 3;
 		
-	if(cpuid_eax(0x000000000)==0)
+	if (cpuid_eax(0x000000000)==0)
 		return 4;
 
 	cpuid(0x00000001, &tfms, &junk, &junk, &cap);
@@ -981,7 +950,7 @@ static inline int RPMClass(void)
 	
 	cpu = (tfms>>8)&15;
 	
-	if(cpu < 6)
+	if (cpu < 6)
 		return cpu;
 		
 	if (cap & (1<<15)) {
@@ -994,7 +963,6 @@ static inline int RPMClass(void)
 	return 5;
 }
 
-#if 0
 /* should only be called for model 6 CPU's */
 static int is_athlon(void)
 	/*@*/
@@ -1021,7 +989,73 @@ static int is_athlon(void)
 
 	return 1;
 }
-#endif
+
+static int is_pentium3(void)
+{
+    unsigned int eax, ebx, ecx, edx, family, model;
+    char vendor[16];
+    cpuid(0, &eax, &ebx, &ecx, &edx);
+    memset(vendor, 0, sizeof(vendor));
+    *((unsigned int *)&vendor[0]) = ebx;
+    *((unsigned int *)&vendor[4]) = edx;
+    *((unsigned int *)&vendor[8]) = ecx;
+    if (strncmp(vendor, "GenuineIntel", 12) != 0)
+	return 0;
+    cpuid(1, &eax, &ebx, &ecx, &edx);
+    family = (eax >> 8) & 0x0f;
+    model = (eax >> 4) & 0x0f;
+    if (family == 6)
+	switch (model)
+	{
+	    case 7:	// Pentium III, Pentium III Xeon (model 7)
+	    case 8:	// Pentium III, Pentium III Xeon, Celeron (model 8)
+	    case 9:	// Pentium M
+			/*
+			    Intel recently announced its new technology for mobile platforms,
+			    named Centrino, and presents it as a big advance in mobile PCs.
+			    One of the main part of Centrino consists in a brand new CPU,
+			    the Pentium M, codenamed Banias, that we'll study in this review.
+			    A particularity of this CPU is that it was designed for mobile platform
+			    exclusively, unlike previous mobile CPU (Pentium III-M, Pentium 4-M)
+			    that share the same micro-architecture as their desktop counterparts.
+			    The Pentium M introduces a new micro-architecture, adapted for mobility
+			    constraints, and that is halfway between the Pentium III and the Pentium 4.
+						    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+			*/
+	    case 10:	// Pentium III Xeon (model A)
+	    case 11:	// Pentium III (model B)
+		return 1;
+	}
+    return 0;
+}
+
+static int is_pentium4(void)
+{
+    unsigned int eax, ebx, ecx, edx, family, model;
+    char vendor[16];
+    cpuid(0, &eax, &ebx, &ecx, &edx);
+    memset(vendor, 0, sizeof(vendor));
+    *((unsigned int *)&vendor[0]) = ebx;
+    *((unsigned int *)&vendor[4]) = edx;
+    *((unsigned int *)&vendor[8]) = ecx;
+    if (strncmp(vendor, "GenuineIntel", 12) != 0)
+	return 0;
+    cpuid(1, &eax, &ebx, &ecx, &edx);
+    family = (eax >> 8) & 0x0f;
+    model = (eax >> 4) & 0x0f;
+    if (family == 15)
+	switch (model)
+	{
+	    case 0:	// Pentium 4, Pentium 4 Xeon                 (0.18um)
+	    case 1:	// Pentium 4, Pentium 4 Xeon MP, Celeron     (0.18um)
+	    case 2:	// Pentium 4, Mobile Pentium 4-M,
+			// Pentium 4 Xeon, Pentium 4 Xeon MP,
+			// Celeron, Mobile Celron                    (0.13um)
+	    case 3:	// Pentium 4, Celeron                        (0.09um)
+		return 1;
+	}
+    return 0;
+}
 
 #endif
 
@@ -1033,39 +1067,6 @@ static void mfspr_ill(int notused)
     longjmp(mfspr_jmpbuf, -1);
 }
 #endif
-
-static const char *
-checkCPU (void)
-{
-	int     fd = open ("/proc/cpuinfo", O_RDONLY);
-
-	if (fd >= 0)
-	{
-		char    buffer[BUFSIZ];
-
-		memset (buffer, 0, sizeof buffer);
-		read (fd, buffer, sizeof buffer - 1);
-		close (fd);
-
-		if (strstr (buffer, "AMD"))
-		{
-			if (strstr (buffer, "Athlon")
-			    || strstr (buffer, "Duron"))
-				return "athlon";
-
-			if (strstr (buffer, "K6"))
-				return "k6";
-		} else if (strstr (buffer, "Intel"))
-		{
-			if (strstr (buffer, "Pentium(R) 4")
-			    || strstr (buffer, "Intel(R) Xeon(TM)")
-			    || strstr (buffer, "Intel(R) XEON(TM)"))
-				return "pentium4";
-		}
-	}
-
-	return 0;
-}
 
 /**
  */
@@ -1112,6 +1113,13 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 	if (!strcmp(un.sysname, "AIX")) {
 	    strcpy(un.machine, __power_pc() ? "ppc" : "rs6000");
 	    sprintf(un.sysname,"aix%s.%s", un.version, un.release);
+	}
+	else if(!strcmp(un.sysname, "Darwin")) { 
+#ifdef __ppc__
+	    strcpy(un.machine, "ppc");
+#else ifdef __i386__
+	    strcpy(un.machine, "i386");
+#endif 
 	}
 	else if (!strcmp(un.sysname, "SunOS")) {
 	    if (!strncmp(un.release,"4", 1)) /* SunOS 4.x */ {
@@ -1287,25 +1295,18 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 #	endif
 
 #	if defined(__linux__) && defined(__i386__)
-#if 0
 	{
 	    char class = (char) (RPMClass() | '0');
 
 	    if ((class == '6' && is_athlon()) || class == '7')
 	    	strcpy(un.machine, "athlon");
+	    else if (is_pentium4())
+		strcpy(un.machine, "pentium4");
+	    else if (is_pentium3())
+		strcpy(un.machine, "pentium3");
 	    else if (strchr("3456", un.machine[1]) && un.machine[1] != class)
 		un.machine[1] = class;
 	}
-#endif
-
-	if (!strcmp (un.machine, "i586") || !strcmp (un.machine, "i686"))
-	{
-		const char *c = checkCPU ();
-
-		if (c)
-			strcpy (un.machine, c);
-	}
-
 #	endif
 
 #	if defined(__linux__) && defined(__powerpc__)
@@ -1319,12 +1320,25 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 
 	    if ( pvr ) {
 		pvr >>= 16;
-		if ( pvr >= 0x40)
-		    strcpy(un.machine, "ppcpseries");
-		else if ( (pvr == 0x36) || (pvr == 0x37) )
+		switch (pvr) {
+		/* IBM750FX, 7410, 7450,  7451, 7441, 7455, 7445 */ 
+		case 0x7000:
+		case 0x8000:
+		case 0x8001:
+		case 0x800c:
+		    strcpy(un.machine, "ppc"); 
+		    break;
+		case 0x36:
+		case 0x37:
 		    strcpy(un.machine, "ppciseries");
-		else
-		    strcpy(un.machine, "ppc");
+		    break;
+		default:
+		    if ( pvr >= 0x40)
+			strcpy(un.machine, "ppcpseries");
+		    else
+			strcpy(un.machine, "ppc");
+		    break;
+		}
 	    }
 	}
 #	endif
