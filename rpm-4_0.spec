@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt63
+Release: alt64
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -54,7 +54,7 @@ BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindi
 BuildConflicts: rpm-devel
 
 # Automatically added by buildreq on Mon May 05 2003 and edited manually.
-BuildRequires: bzlib-devel-static glibc-devel-static libbeecrypt-devel-static libdb4.3-devel-static libpopt-devel-static zlib-devel-static
+BuildRequires: bzlib-devel-static glibc-devel-static libbeecrypt-devel-static libdb4.4-devel-static libpopt-devel-static zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -65,7 +65,7 @@ PreReq: zlib >= 1.1.4
 PreReq: bzlib >= 1:1.0.2-alt2
 PreReq: libpopt >= 1:1.7-alt3
 PreReq: libbeecrypt >= 2.2.0-alt1
-PreReq: libdb4.3
+PreReq: libdb4.4
 
 %package -n librpmbuild
 Summary: Shared library required for applications which will build RPM packages
@@ -82,7 +82,7 @@ Group: Development/C
 Provides: %name-devel = %version-%release
 Obsoletes: %name-devel
 Requires: lib%name = %version-%release, librpmbuild = %version-%release
-Requires: bzlib-devel, libbeecrypt-devel, libdb4.3-devel, libpopt-devel, zlib-devel
+Requires: bzlib-devel, libbeecrypt-devel, libdb4.4-devel, libpopt-devel, zlib-devel
 
 %package -n lib%name-devel-static
 Summary: Static libraries for developing statically linked applications which will manipulate RPM packages
@@ -90,7 +90,7 @@ Summary(ru_RU.KOI8-R): Статические библиотеки, необходимые для разработки статич
 License: GPL/LGPL
 Group: Development/C
 Requires: lib%name-devel = %version-%release
-Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.3-devel-static, libpopt-devel-static, zlib-devel-static
+Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.4-devel-static, libpopt-devel-static, zlib-devel-static
 
 %package build
 Summary: Scripts and executable programs used to build packages
@@ -523,6 +523,17 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Mar 20 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt64
+- rpmrc.c:
+  + Backported defaultMachine changes from rpm-4_4 branch.
+- rpmrc.in:
+  + Added pentium2, pentium3, athlonxp.
+  + Replaced -mcpu=i686 with -mtune=pentium4.
+  + Added -mtune=athlon-xp for k6-compatibles.
+- installplatform, macros.in:
+  + Updated for new arches.
+- Updated libdb4 build requirements.
+
 * Thu Mar 09 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt63
 - verify-elf:
   + Extended VERIFY_ELF_UNRESOLVED=normal to behave like strict
