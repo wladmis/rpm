@@ -18,8 +18,9 @@ optflags: i686 %optflags_default -march=i686 -mtune=pentium4
 optflags: pentium2 %optflags_default -march=pentium2 -mtune=pentium4
 optflags: pentium3 %optflags_default -march=pentium3 -mtune=pentium4
 optflags: pentium4 %optflags_default -march=pentium4
-optflags: k6 %optflags_default -march=k6 -mtune=athlon-4
-optflags: athlon %optflags_default -march=athlon -mtune=athlon-4
+optflags: k6 %optflags_default -march=k6 -mtune=athlon-xp
+optflags: athlon %optflags_default -march=athlon -mtune=athlon-xp
+optflags: athlonxp %optflags_default -march=athlon-xp
 optflags: amd64 %optflags_default
 optflags: ia64 %optflags_default
 optflags: ia32e %optflags_default
@@ -80,6 +81,7 @@ optflags: s390x %optflags_default
 arch_canon:	pentium4:	pentium4	1
 arch_canon:	pentium3:	pentium3	1
 arch_canon:	pentium2:	pentium2	1
+arch_canon:	athlonxp:	athlonxp	1
 arch_canon:	athlon:	athlon	1
 arch_canon:	i686:	i686	1
 arch_canon:	k6:	k6	1
@@ -87,8 +89,8 @@ arch_canon:	i586:	i586	1
 arch_canon:	i486:	i486	1
 arch_canon:	i386:	i386	1
 arch_canon:	amd64:	amd64	1
-arch_canon:	x86_64:	x86_64	1
 arch_canon:	ia32e:	ia32e	1
+arch_canon:	x86_64:	x86_64	1
 
 arch_canon:	alpha:	alpha	2
 arch_canon:	alphaev5: alphaev5	2
@@ -194,6 +196,7 @@ buildarchtranslate: ia32e: x86_64
 buildarchtranslate: pentium4: pentium4
 buildarchtranslate: pentium3: pentium3
 buildarchtranslate: pentium2: pentium2
+buildarchtranslate: athlonxp: athlonxp
 buildarchtranslate: athlon: athlon
 buildarchtranslate: i686: i686
 buildarchtranslate: k6: k6
@@ -242,8 +245,9 @@ arch_compat: alphaev5: alpha
 arch_compat: alpha: axp noarch
 
 arch_compat: pentium4: pentium3
+arch_compat: athlonxp: athlon pentium3
 arch_compat: pentium3: pentium2
-arch_compat: athlon: pentium2 k6
+arch_compat: athlon: k6 pentium2
 arch_compat: pentium2: i686
 arch_compat: i686: i586
 arch_compat: k6: i586
@@ -303,9 +307,9 @@ arch_compat: s390x: s390 noarch
 
 arch_compat: ia64: noarch
 
-arch_compat: x86_64: amd64 athlon noarch
-arch_compat: amd64: x86_64 athlon noarch
-arch_compat: ia32e: x86_64 athlon noarch
+arch_compat: amd64: x86_64
+arch_compat: ia32e: x86_64
+arch_compat: x86_64: athlonxp pentium4
 
 os_compat:   IRIX64: IRIX
 os_compat: solaris2.7: solaris2.3 solaris2.4 solaris2.5 solaris2.6
@@ -343,8 +347,9 @@ buildarch_compat: amd64: x86_64
 buildarch_compat: ia32e: x86_64
 
 buildarch_compat: pentium4: pentium3
+buildarch_compat: athlonxp: athlon pentium3
 buildarch_compat: pentium3: pentium2
-buildarch_compat: athlon: pentium2 k6
+buildarch_compat: athlon: k6 pentium2
 buildarch_compat: pentium2: i686
 buildarch_compat: i686: i586
 buildarch_compat: k6: i586
