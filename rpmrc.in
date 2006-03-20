@@ -11,67 +11,75 @@
 #############################################################
 # Values for RPM_OPT_FLAGS for various platforms
 
-optflags: i386 %optflags_default -march=i386 -mcpu=i686
-optflags: i486 %optflags_default -march=i486 -mcpu=i686
-optflags: i586 %optflags_default -march=i586 -mcpu=i686
-optflags: i686 %optflags_default -march=i686
-optflags: k6 %optflags_default -march=k6
-optflags: athlon %optflags_default -march=athlon
+optflags: i386 %optflags_default -march=i386 -mtune=pentium4
+optflags: i486 %optflags_default -march=i486 -mtune=pentium4
+optflags: i586 %optflags_default -march=i586 -mtune=pentium4
+optflags: i686 %optflags_default -march=i686 -mtune=pentium4
+optflags: pentium2 %optflags_default -march=pentium2 -mtune=pentium4
+optflags: pentium3 %optflags_default -march=pentium3 -mtune=pentium4
 optflags: pentium4 %optflags_default -march=pentium4
+optflags: k6 %optflags_default -march=k6 -mtune=athlon-4
+optflags: athlon %optflags_default -march=athlon -mtune=athlon-4
 optflags: amd64 %optflags_default
 optflags: ia64 %optflags_default
+optflags: ia32e %optflags_default
 optflags: x86_64 %optflags_default
 optflags: noarch %optflags_default
 
-# XXX Please note that -mieee has been added in rpm-3.0.5.
-optflags: alpha -O2 -mieee -mcpu=ev4
-optflags: alphaev5 -O2 -mieee -mcpu=ev5
-optflags: alphaev56 -O2 -mieee -mcpu=ev56
-optflags: alphapca56 -O2 -mieee -mcpu=pca56
-optflags: alphaev6 -O2 -mieee -mcpu=ev6
-optflags: alphaev67 -O2 -mieee -mcpu=ev67
+# The official RPM starting with 3.0.5 uses -mieee on Alpha by default.
+# We don't as to not kill floating-point performance, but packages which
+# care might want to add that flag themselves.
+optflags: alpha %optflags_default -march=ev4
+optflags: alphaev5 %optflags_default -march=ev5
+optflags: alphaev56 %optflags_default -march=ev56
+optflags: alphapca56 %optflags_default -march=pca56
+optflags: alphaev6 %optflags_default -march=ev6
+optflags: alphaev67 %optflags_default -march=ev67
 
-optflags: sparc -O2 -m32 -mcpu=v8 -mtune=ultrasparc
-optflags: sparcv9 -O2 -m32 -mcpu=ultrasparc
-optflags: sparc64 -O2 -m64 -mcpu=ultrasparc
+optflags: sparc %optflags_default -m32 -mcpu=v8 -mtune=ultrasparc
+optflags: sparcv8 %optflags_default -m32 -mcpu=v8 -mtune=ultrasparc
+optflags: sparcv9 %optflags_default -m32 -mcpu=ultrasparc
+optflags: sparc64 %optflags_default -m64 -mcpu=ultrasparc
 
-optflags: m68k -O2 -fomit-frame-pointer
+optflags: m68k %optflags_default -fomit-frame-pointer
 
-optflags: ppc -O2 -fsigned-char
-optflags: ppciseries -O2 -fsigned-char
-optflags: ppcpseries -O2 -fsigned-char
-optflags: ppc64 -O2 -fsigned-char
+optflags: ppc %optflags_default -fsigned-char
+optflags: ppciseries %optflags_default -fsigned-char
+optflags: ppcpseries %optflags_default -fsigned-char
+optflags: ppc64 %optflags_default -fsigned-char
 
-optflags: parisc -O2 -mpa-risc-1-0
-optflags: hppa1.0 -O2 -mpa-risc-1-0
-optflags: hppa1.1 -O2 -mpa-risc-1-0
-optflags: hppa1.2 -O2 -mpa-risc-1-0
-optflags: hppa2.0 -O2 -mpa-risc-1-0
+optflags: parisc %optflags_default -mpa-risc-1-0
+optflags: hppa1.0 %optflags_default -mpa-risc-1-0
+optflags: hppa1.1 %optflags_default -mpa-risc-1-0
+optflags: hppa1.2 %optflags_default -mpa-risc-1-0
+optflags: hppa2.0 %optflags_default -mpa-risc-1-0
 
-optflags: mips -O2
-optflags: mipsel -O2
+optflags: mips %optflags_default
+optflags: mipsel %optflags_default
 
-optflags: armv3l -O2 -fsigned-char -fomit-frame-pointer -march=armv3
-optflags: armv4b -O2 -fsigned-char -fomit-frame-pointer -march=armv4
-optflags: armv4l -O2 -fsigned-char -fomit-frame-pointer -march=armv4
-optflags: armv5b -Os -fsigned-char -mcpu=xscale -mtune=xscale
-optflags: armv5l -Os -fsigned-char -mcpu=xscale -mtune=xscale
+optflags: armv3l %optflags_default -fsigned-char -fomit-frame-pointer -march=armv3
+optflags: armv4b %optflags_default -fsigned-char -fomit-frame-pointer -march=armv4
+optflags: armv4l %optflags_default -fsigned-char -fomit-frame-pointer -march=armv4
+optflags: armv5b %optflags_default -fsigned-char -mcpu=xscale -mtune=xscale
+optflags: armv5l %optflags_default -fsigned-char -mcpu=xscale -mtune=xscale
 
-optflags: atarist -O2 -fomit-frame-pointer
-optflags: atariste -O2 -fomit-frame-pointer
-optflags: ataritt -O2 -fomit-frame-pointer
-optflags: falcon -O2 -fomit-frame-pointer
-optflags: atariclone -O2 -fomit-frame-pointer
-optflags: milan -O2 -fomit-frame-pointer
-optflags: hades -O2 -fomit-frame-pointer
+optflags: atarist %optflags_default -fomit-frame-pointer
+optflags: atariste %optflags_default -fomit-frame-pointer
+optflags: ataritt %optflags_default -fomit-frame-pointer
+optflags: falcon %optflags_default -fomit-frame-pointer
+optflags: atariclone %optflags_default -fomit-frame-pointer
+optflags: milan %optflags_default -fomit-frame-pointer
+optflags: hades %optflags_default -fomit-frame-pointer
 
-optflags: s390 -O2
-optflags: s390x -O2 
+optflags: s390 %optflags_default
+optflags: s390x %optflags_default 
 
 #############################################################
 # Canonical arch names and numbers
 
 arch_canon:	pentium4:	pentium4	1
+arch_canon:	pentium3:	pentium3	1
+arch_canon:	pentium2:	pentium2	1
 arch_canon:	athlon:	athlon	1
 arch_canon:	i686:	i686	1
 arch_canon:	k6:	k6	1
@@ -94,6 +102,7 @@ arch_canon: 	sun4:	sparc	3
 arch_canon: 	sun4m:	sparc	3
 arch_canon: 	sun4c:	sparc	3
 arch_canon:	sun4d:  sparc   3
+arch_canon:   sparcv8: sparcv8	3
 arch_canon:   sparcv9: sparcv9	3
 # This is really a place holder for MIPS.
 arch_canon:	mips:	mips	4
@@ -132,6 +141,9 @@ arch_canon:	s390x: s390x	15
 
 arch_canon:	ppc64:	ppc64	16
 
+arch_canon:	sh: sh		17
+arch_canon:	xtensa: xtensa	18
+
 #############################################################
 # Canonical OS names and numbers
 
@@ -162,6 +174,9 @@ os_canon:       VM/ESA: VM/ESA	19
 os_canon:    Linux/390: OS/390	20
 os_canon:    Linux/ESA: VM/ESA	20
 
+os_canon:       Darwin: darwin	21
+os_canon:       MacOSX: macosx	21
+
 #############################################################
 # For a given uname().machine, the default build arch
 
@@ -177,6 +192,8 @@ buildarchtranslate: amd64: x86_64
 buildarchtranslate: ia32e: x86_64
 
 buildarchtranslate: pentium4: pentium4
+buildarchtranslate: pentium3: pentium3
+buildarchtranslate: pentium2: pentium2
 buildarchtranslate: athlon: athlon
 buildarchtranslate: i686: i686
 buildarchtranslate: k6: k6
@@ -193,6 +210,7 @@ buildarchtranslate: alphaev67: alpha
 buildarchtranslate: sun4c: sparc
 buildarchtranslate: sun4d: sparc
 buildarchtranslate: sun4m: sparc
+buildarchtranslate: sparcv8: sparc
 buildarchtranslate: sparcv9: sparc
 buildarchtranslate: sun4u: sparc64
 
@@ -223,8 +241,10 @@ arch_compat: alphaev56: alphaev5
 arch_compat: alphaev5: alpha
 arch_compat: alpha: axp noarch
 
-arch_compat: pentium4: i686
-arch_compat: athlon: i686 k6
+arch_compat: pentium4: pentium3
+arch_compat: pentium3: pentium2
+arch_compat: athlon: pentium2 k6
+arch_compat: pentium2: i686
 arch_compat: i686: i586
 arch_compat: k6: i586
 arch_compat: i586: i486
@@ -251,6 +271,7 @@ arch_compat: sun4m: sparc
 arch_compat: sun4u: sparc64
 arch_compat: sparc64: sparcv9
 arch_compat: sparcv9: sparc
+arch_compat: sparcv8: sparc
 arch_compat: sparc: noarch
 
 arch_compat: mips: noarch
@@ -313,14 +334,18 @@ os_compat: TOS: FreeMiNT MiNT mint
 os_compat: BSD_OS: bsdi
 os_compat: bsdi4.0: bsdi
 
+os_compat: Darwin: MacOSX
+
 buildarch_compat: ia64: noarch
 
 buildarch_compat: x86_64: noarch
 buildarch_compat: amd64: x86_64
 buildarch_compat: ia32e: x86_64
 
-buildarch_compat: pentium4: i686
-buildarch_compat: athlon: i686 k6
+buildarch_compat: pentium4: pentium3
+buildarch_compat: pentium3: pentium2
+buildarch_compat: athlon: pentium2 k6
+buildarch_compat: pentium2: i686
 buildarch_compat: i686: i586
 buildarch_compat: k6: i586
 buildarch_compat: i586: i486
