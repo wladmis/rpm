@@ -543,7 +543,7 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
       case RPMTAG_BUILDROOT:
 	SINGLE_TOKEN_ONLY;
 	/* Just ignore legacy tag. */
-	break;
+	return 0;
       case RPMTAG_PREFIXES:
 	addOrAppendListEntry(pkg->header, tag, field);
 	xx = hge(pkg->header, tag, &type, (void **)&array, &num);
