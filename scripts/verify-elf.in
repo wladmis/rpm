@@ -114,7 +114,7 @@ for f in "$@"; do
 	fi
 	
 	if [ -n "$VERIFY_ELF_STACK" ]; then
-		if [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; then
+		if [ -z "${t##*ELF* executable*}" -o -z "${t##*ELF* shared object*}" ]; then
 			stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
 			if [ -z "$stack" ]; then
 				[ "$VERIFY_ELF_STACK" = strict ] && prefix=ERROR || prefix=WARNING
