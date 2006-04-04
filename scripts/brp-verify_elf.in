@@ -26,8 +26,9 @@ ValidateBuildRoot
 cd "$RPM_BUILD_ROOT"
 
 export VERIFY_ELF_ARCH=normal
-export VERIFY_ELF_FHS=relaxed
+export VERIFY_ELF_FHS=normal
 export VERIFY_ELF_RPATH=normal
+export VERIFY_ELF_STACK=normal
 export VERIFY_ELF_TEXTREL=normal
 export VERIFY_ELF_UNRESOLVED=normal
 
@@ -54,6 +55,12 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 		rpath=*)
 			VERIFY_ELF_RPATH="${t#rpath=}"
 			;;
+		stack)
+			VERIFY_ELF_STACK=normal
+			;;
+		stack=*)
+			VERIFY_ELF_STACK="${t#stack=}"
+			;;
 		textrel)
 			VERIFY_ELF_TEXTREL=normal
 			;;
@@ -70,6 +77,7 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 			VERIFY_ELF_ARCH=normal
 			VERIFY_ELF_FHS=normal
 			VERIFY_ELF_RPATH=normal
+			VERIFY_ELF_STACK=normal
 			VERIFY_ELF_TEXTREL=normal
 			VERIFY_ELF_UNRESOLVED=normal
 			;;
@@ -77,6 +85,7 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 			VERIFY_ELF_ARCH=strict
 			VERIFY_ELF_FHS=strict
 			VERIFY_ELF_RPATH=strict
+			VERIFY_ELF_STACK=strict
 			VERIFY_ELF_TEXTREL=strict
 			VERIFY_ELF_UNRESOLVED=strict
 			;;
@@ -84,6 +93,7 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 			VERIFY_ELF_ARCH=relaxed
 			VERIFY_ELF_FHS=relaxed
 			VERIFY_ELF_RPATH=relaxed
+			VERIFY_ELF_STACK=relaxed
 			VERIFY_ELF_TEXTREL=relaxed
 			VERIFY_ELF_UNRESOLVED=relaxed
 			;;
@@ -99,6 +109,8 @@ done
 [ -z "$RPM_VERIFY_ELF_FHS" ] || VERIFY_ELF_FHS="$RPM_VERIFY_ELF_FHS"
 [ "$VERIFY_ELF_RPATH" != no ] || VERIFY_ELF_RPATH=
 [ -z "$RPM_VERIFY_ELF_RPATH" ] || VERIFY_ELF_RPATH="$RPM_VERIFY_ELF_RPATH"
+[ "$VERIFY_ELF_STACK" != no ] || VERIFY_ELF_STACK=
+[ -z "$RPM_VERIFY_ELF_STACK" ] || VERIFY_ELF_STACK="$RPM_VERIFY_ELF_STACK"
 [ "$VERIFY_ELF_TEXTREL" != no ] || VERIFY_ELF_TEXTREL=
 [ -z "$RPM_VERIFY_ELF_TEXTREL" ] || VERIFY_ELF_TEXTREL="$RPM_VERIFY_ELF_TEXTREL"
 [ "$VERIFY_ELF_UNRESOLVED" != no ] || VERIFY_ELF_UNRESOLVED=
@@ -107,7 +119,7 @@ done
 : ${RPM_VERIFY_ELF_TOPDIR:=}
 [ -d "$RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR" ] || exit 0
 
-echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (arch=$VERIFY_ELF_ARCH,fhs=$VERIFY_ELF_FHS,rpath=$VERIFY_ELF_RPATH,textrel=$VERIFY_ELF_TEXTREL,unresolved=$VERIFY_ELF_UNRESOLVED)"
+echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (arch=$VERIFY_ELF_ARCH,fhs=$VERIFY_ELF_FHS,rpath=$VERIFY_ELF_RPATH,stack=$VERIFY_ELF_STACK,textrel=$VERIFY_ELF_TEXTREL,unresolved=$VERIFY_ELF_UNRESOLVED)"
 
 dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
 RPM_VERIFY_ELF_LDD_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT")"

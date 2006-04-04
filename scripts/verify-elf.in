@@ -77,7 +77,7 @@ for f in "$@"; do
 	fi
 
 	if [ -n "$VERIFY_ELF_RPATH" ]; then
-		rpath=`printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}'`
+		rpath="$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}')"
 		if [ -n "$rpath" ]; then
 			prefix=
 			if [ -z "${rpath##:*}" ]; then
@@ -112,9 +112,25 @@ for f in "$@"; do
 			fi
 		fi
 	fi
+	
+	if [ -n "$VERIFY_ELF_STACK" ]; then
+		if [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; then
+			stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
+			if [ -z "$stack" ]; then
+				[ "$VERIFY_ELF_STACK" = strict ] && prefix=ERROR || prefix=WARNING
+				[ "$VERIFY_ELF_STACK" = strict ] && rc=1 ||:
+				Info "$prefix: $f: STACK entry not found"
+			elif [ "$stack" = on ]; then
+				[ "$VERIFY_ELF_STACK" = strict ] && prefix=ERROR || prefix=WARNING
+				[ "$VERIFY_ELF_STACK" = strict ] && rc=1 ||:
+				stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+.*\)/\1/p')"
+				Info "$prefix: $f: found executable STACK entry: $stack"
+			fi
+		fi
+	fi
 
 	if [ -n "$VERIFY_ELF_TEXTREL" ]; then
-		textrel=`printf %s "$objdump_info" |awk '{if ($1=="TEXTREL") print $2}'`
+		textrel="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*TEXTREL[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
 		if [ -n "$textrel" ]; then
 			[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR
 			[ "$VERIFY_ELF_TEXTREL" = relaxed ] || rc=1
@@ -192,7 +208,6 @@ END {
 			break
 		done
 	fi
-	
 done
 
 exit $rc
