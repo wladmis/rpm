@@ -6,7 +6,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt64
+Release: alt65
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -523,6 +523,15 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Apr 04 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt65
+- build/parsePreamble.c:
+  + Ignore RPMTAG_BUILDROOT value completely.
+- brp-verify_elf, verify-elf:
+  + Implemented VERIFY_ELF_STACK=normal (lakostis).
+- platform.in:
+  + Set %%_verify_elf_method to
+    arch=normal,fhs=normal,rpath=normal,stack=normal,textrel=normal,unresolved=normal
+
 * Mon Mar 20 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt64
 - rpmrc.c:
   + Backported defaultMachine changes from rpm-4_4 branch.
