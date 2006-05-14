@@ -522,7 +522,7 @@ static PyObject * hdrSubscript(hdrObject * s, PyObject * item) {
 	while (extensions->name) {
 	    if (extensions->type == HEADER_EXT_TAG
 		&& !xstrcasecmp(extensions->name + 7, str)) {
-		(const struct headerSprintfExtension *) ext = extensions;
+		ext = extensions;
 	    }
 	    extensions++;
 	}

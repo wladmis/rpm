@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt65
+Release: alt66
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -29,11 +29,12 @@ Summary(ru_RU.KOI8-R): Менеджер пакетов RPM
 License: GPL
 Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
+Packager: Dmitry V. Levin <ldv@altlinux.org>
 
 # 1. ftp://ftp.rpm.org/pub/rpm/dist/
 # 2. cvs -d :pserver:anonymous@cvs.rpm.org:/cvs/devel export -r rpm-4_0 rpm
 # 3. ALT Linux CVS
-Source: %srcname.tar.bz2
+Source: %srcname.tar
 
 Provides: %_sysconfdir/%name/macros.d
 
@@ -521,6 +522,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun May 14 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt66
+- Fixed build with gcc-4.1.0.
+
 * Tue Apr 04 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt65
 - build/parsePreamble.c:
   + Ignore RPMTAG_BUILDROOT value completely.
