@@ -1,7 +1,6 @@
 #!/bin/sh -ef
 #
 # Copyright (C) 2000-2006  Dmitry V. Levin <ldv@altlinux.org>
-# $Id$
 #
 # find-provides - generate list of linux-specific package provides.
 # Inspired by tool with same name from RPM distribution.

@@ -1,7 +1,6 @@
 #/*! \page config_rpmpopt Default configuration: /usr/lib/rpm/rpmpopt-@VERSION@
 # \verbatim
 #
-# $Id$
 #
 # This file *should not be modified*. Local customizations
 # belong in /etc/popt, not here. This file will be replaced

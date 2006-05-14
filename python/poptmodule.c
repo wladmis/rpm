@@ -6,7 +6,6 @@
 
 #define PY_POPT_VERSION "0.2"
 
-static const char *rcs_id = "$Id$";
 
 static char *module_doc = "Python bindings for the popt library\n\
 \n\
@@ -669,7 +668,6 @@ void initpopt()
     dict = PyModule_GetDict(module);
     PyDict_SetItemString(dict, "__version__", 
         PyString_FromString(PY_POPT_VERSION));
-    PyDict_SetItemString(dict, "cvsid", PyString_FromString(rcs_id));
     for (c = intConstants; c->name; c++) {
         PyObject *val = PyInt_FromLong(c->value);
         PyDict_SetItemString(dict, c->name, val);

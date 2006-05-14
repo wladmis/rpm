@@ -1,4 +1,3 @@
-# $Id$
 /etc/alternatives/packages.d
 /etc/chroot.d
 /etc/cron.d

@@ -1,5 +1,4 @@
 /*
-  $Id$
   Copyright (C) 2001  Dmitry V. Levin <ldv@altlinux.org>
 
   This program is free software; you can redistribute it and/or modify

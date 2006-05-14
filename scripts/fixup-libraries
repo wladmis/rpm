@@ -2,7 +2,6 @@
 #
 # fixup-shared - fix permissions of libraries.
 #
-# $Id$
 # Copyright (C) 2003-2005  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify

@@ -1,5 +1,3 @@
-# $Id$
-
 %define rpm_name rpm
 %define rpm_version 4.0.4
 %define srcname %rpm_name-4_0-%rpm_version

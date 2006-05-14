@@ -1,6 +1,5 @@
 #!/bin/sh -e
 #
-# $Id$
 # Copyright (C) 2003  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
