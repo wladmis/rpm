@@ -7,7 +7,7 @@
 #include "rpmlib.h"
 #include "debug.h"
 
-const char *const tagName(int tag)
+const char * tagName(int tag)
 {
     int i;
     static char nameBuf[128];	/* XXX yuk */

@@ -217,7 +217,7 @@ void freeFi(TFI_t fi)
  * @param fi		transaction element file info
  * @return		formatted string
  */
-/*@observer@*/ const char *const fiTypeString(/*@partial@*/TFI_t fi)
+/*@observer@*/ const char * fiTypeString(/*@partial@*/TFI_t fi)
 	/*@*/;
 
 /**

@@ -281,7 +281,7 @@ void freeFi(TFI_t fi)
     /*@=nullstate@*/
 }
 
-/*@observer@*/ const char *const fiTypeString(TFI_t fi)
+/*@observer@*/ const char * fiTypeString(TFI_t fi)
 {
     switch(fi->type) {
     case TR_ADDED:	return " install";
@@ -840,7 +840,7 @@ static char * SCRIPT_PATH =
  * @param tag		scriptlet tag
  * @return		name of scriptlet
  */
-static /*@observer@*/ const char * const tag2sln(int tag)
+static /*@observer@*/ const char * tag2sln(int tag)
 	/*@*/
 {
     switch (tag) {
@@ -1362,7 +1362,7 @@ static int runImmedTriggers(PSM_t psm)
     return rc;
 }
 
-/*@observer@*/ static const char *const pkgStageString(pkgStage a)
+/*@observer@*/ static const char * pkgStageString(pkgStage a)
 	/*@*/
 {
     switch(a) {

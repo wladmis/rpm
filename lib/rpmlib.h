@@ -1597,7 +1597,7 @@ int rpmRunTransactions(rpmTransactionSet ts,
  * @return		name of tag
  */
 /*@-redecl@*/
-/*@observer@*/ extern const char *const tagName(int tag)
+/*@observer@*/ extern const char * tagName(int tag)
 	/*@*/;
 /*@=redecl@*/
 

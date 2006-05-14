@@ -539,7 +539,7 @@ dbiIndex db3New(rpmdb rpmdb, int rpmtag)
     /*@=globstate@*/
 }
 
-const char *const prDbiOpenFlags(int dbflags, int print_dbenv_flags)
+const char * prDbiOpenFlags(int dbflags, int print_dbenv_flags)
 {
     static char buf[256];
     struct dbOption *opt;

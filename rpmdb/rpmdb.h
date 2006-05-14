@@ -372,7 +372,7 @@ extern "C" {
  * @return			formatted flags (static buffer)
  */
 /*@-redecl@*/
-/*@exposed@*/ extern const char *const prDbiOpenFlags(int dbflags,
+/*@exposed@*/ extern const char * prDbiOpenFlags(int dbflags,
 						int print_dbenv_flags)
 	/*@*/;
 /*@=redecl@*/

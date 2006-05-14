@@ -176,7 +176,7 @@ int_32 *const getBuildTime(void)
     return buildTime;
 }
 
-const char *const buildHost(void)
+const char * buildHost(void)
 {
     static char hostname[1024];
     static int gotit = 0;

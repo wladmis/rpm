@@ -23,7 +23,7 @@
 #include "debug.h"
 
 /*@-redecl@*/	/* FIX: avoid rpmlib.h, need for debugging. */
-/*@observer@*/ const char *const tagName(int tag)	/*@*/;
+/*@observer@*/ const char * tagName(int tag)	/*@*/;
 /*@=redecl@*/
 
 /*@access entryInfo @*/

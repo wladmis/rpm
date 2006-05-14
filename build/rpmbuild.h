@@ -140,7 +140,7 @@ gid_t getGidS(const char * gname)	/*@*/;
  * Return build hostname.
  * @return		build hostname
  */
-extern /*@observer@*/ const char * const buildHost(void)	/*@*/;
+extern /*@observer@*/ const char * buildHost(void)	/*@*/;
 
 /** \ingroup rpmbuild
  * Return build time stamp.

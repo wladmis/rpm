@@ -270,7 +270,7 @@ void rpmProblemSetFree(rpmProblemSet probs)
     free(probs);
 }
 
-static /*@observer@*/ const char *const ftstring (fileTypes ft)
+static /*@observer@*/ const char * ftstring (fileTypes ft)
 	/*@*/
 {
     switch (ft) {
