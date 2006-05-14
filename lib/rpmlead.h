@@ -6,7 +6,7 @@
  * Routines to read and write an rpm lead structure for a a package.
  */
 
-#include <rpmlib.h>
+#include "rpmlib.h"
 
 #ifdef __cplusplus
 extern "C" {

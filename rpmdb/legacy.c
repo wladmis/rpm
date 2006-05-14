@@ -18,8 +18,8 @@
 #endif /* HAVE_GELF_H */
 
 #include "rpmio_internal.h"
-#include <rpmlib.h>
-#include <rpmmacro.h>
+#include "rpmlib.h"
+#include "rpmmacro.h"
 #include "misc.h"
 #include "debug.h"
 

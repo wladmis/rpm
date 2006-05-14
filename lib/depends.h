@@ -6,7 +6,7 @@
  * Structures used for dependency checking.
  */
 
-#include <header.h>
+#include "header.h"
 
 typedef /*@abstract@*/ struct transactionElement_s *	transactionElement;
 typedef /*@abstract@*/ struct tsortInfo_s *		tsortInfo;

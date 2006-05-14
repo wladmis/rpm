@@ -5,7 +5,7 @@
  * \file lib/header_internal.h
  */
 
-#include <header.h>
+#include "header.h"
 
 #if !defined(__LCLINT__)
 #include <netinet/in.h>

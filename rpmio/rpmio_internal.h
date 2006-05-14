@@ -6,9 +6,9 @@
  */
 
 
-#include <rpmio.h>
-#include <rpmurl.h>
-#include <rpmpgp.h>
+#include "rpmio.h"
+#include "rpmurl.h"
+#include "rpmpgp.h"
 
 /** \ingroup rpmio
  */

@@ -18,7 +18,7 @@
 #include <header_internal.h>
 
 /* We get parseEVR() from there used in parsing the >-test in conditionals: */
-#include <rpmlib.h>
+#include "rpmlib.h"
 
 #include "debug.h"
 

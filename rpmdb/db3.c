@@ -33,7 +33,7 @@ typedef	int int32_t;
 #include "rpmmacro.h"
 #include "rpmurl.h"	/* XXX urlPath proto */
 
-#include <rpmdb.h>
+#include "rpmdb.h"
 
 #include "debug.h"
 
