@@ -167,7 +167,7 @@ gid_t getGidS(const char *gname)
     return gids[x];
 }
 
-int_32 *const getBuildTime(void)
+int_32 * getBuildTime(void)
 {
     static int_32 buildTime[1];
 

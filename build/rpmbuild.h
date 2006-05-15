@@ -146,7 +146,7 @@ extern /*@observer@*/ const char * buildHost(void)	/*@*/;
  * Return build time stamp.
  * @return		build time stamp
  */
-extern /*@observer@*/ int_32 * const getBuildTime(void)	/*@*/;
+extern /*@observer@*/ int_32 * getBuildTime(void)	/*@*/;
 
 /** \ingroup rpmbuild
  * Read next line from spec file.
