@@ -258,18 +258,33 @@ elf_ldd='@RPMCONFIGDIR@/ldd'
 RPM_FINDREQ_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT")"
 RPM_FINDREQ_RPATH="$RPM_FINDREQ_RPATH /$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
 
-# Note this works for both a.out and ELF objects.
 FindLibReqs()
 {
 	[ -n "$FIND_LIBS" ] || return 0
 
-	local braces canon_prefix deps dir dump f name pathname prefix rpath suffix v vers
+	local braces canon_prefix deps dir dump f interp name pathname prefix rpath segments suffix v vers
 	f="$1"
 
-	if dump="$(objdump -p "$f")"; then 
+	if dump="$(objdump -p "$f")" &&
+	   segments="$(readelf -l "$f")"; then
+		interp="$(printf '%s\n' "$segments" |
+			  sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')"
+		[ -z "$interp" ] ||
+			printf '%s\n' "$interp"
+		if printf '%s\n' "$segments" |
+			egrep -qs '[[:space:]]\.gnu\.hash([[:space:]]|$)' &&
+		   ! printf '%s\n' "$segments" |
+			egrep -qs '[[:space:]]\.hash([[:space:]]|$)'; then
+			echo 'rtld(GNU_HASH)'
+		fi
+
 		suffix="$(printf '%s\n' "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')"
 		[ -z "$suffix" ] && braces= || braces='()'
-		rpath="$(printf %s "$dump" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
+
+		rpath="$(printf %s "$dump" |
+			 awk '{if ($1=="RPATH") print $2}' |
+			 tr -s : ' ' |
+			 sed -e "s|\$ORIGIN|${fname%/*}|g")"
 		if [ -n "$rpath" ]; then
 			rpath="$rpath $RPM_FINDREQ_RPATH"
 		else
