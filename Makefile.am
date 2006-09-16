@@ -141,7 +141,7 @@ install-data-local:
 		$(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/RPMS/i586 ;\
 		$(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/RPMS/i686 ;\
 		$(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/RPMS/athlon ;\
-		$(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/RPMS/athlonxp ;\
+		$(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/RPMS/athlon_xp ;\
 		$(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/RPMS/pentium2 ;\
 		$(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/RPMS/pentium3 ;\
 		$(mkinstalldirs) $(DESTDIR)$(pkgsrcdir)/RPMS/pentium4 ;;\

@@ -30,17 +30,17 @@ target_platform="`$RPM --eval '%{?_gnu:%undefine _gnu}%{_target_platform}'`"
 target="`$RPM --eval '%{_target}'`"
 
 case "$arch" in
-  i[3456]86|k6|athlon|athlonxp|pentium[234])
-    SUBSTS='s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_i386_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_i486_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_i586_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_i686_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_k6_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_athlon_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_athlonxp_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_pentium2_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_pentium3_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_pentium4_ s_\(i[3456]86\|k6\|athlonxp\|athlon\|pentium[234]\)_noarch_'
+  i[3456]86|k6|athlon|athlon_xp|pentium[234])
+    SUBSTS='s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),i386, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),i486, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),i586, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),i686, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),k6, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),athlon, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),athlon_xp, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),pentium2, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),pentium3, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),pentium4, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),noarch,'
     ;;
   alpha*)
-    SUBSTS='s_alpha_alpha_ s_alpha_alphaev5_ s_alpha_alphaev56_ s_alpha_alphapca56_ s_alpha_alphaev6_ s_alpha_alphaev67_'
+    SUBSTS='s,alpha,alpha, s,alpha,alphaev5, s,alpha,alphaev56, s,alpha,alphapca56, s,alpha,alphaev6, s,alpha,alphaev67,'
     ;;
   sparc*)
-    SUBSTS='s_sparc\(64\|v9\)_sparc_ s_sparc64_sparcv9_;s_sparc\([^v]\|$\)_sparcv9\1_ s_sparcv9_sparc64_;s_sparc\([^6]\|$\)_sparc64\1_'
+    SUBSTS='s,sparc\(64\|v9\),sparc, s,sparc64,sparcv9,;s,sparc\([^v]\|$\),sparcv9\1, s,sparcv9,sparc64,;s,sparc\([^6]\|$\),sparc64\1,'
     ;;
   powerpc*|ppc*)
-    SUBSTS='s_ppc64_ppc_ s_ppc\([^6]\|$\)_ppc64\1_'
+    SUBSTS='s,ppc64,ppc, s,ppc\([^6]\|$\),ppc64\1,'
     ;;
   x86_64)
     SUBSTS='s,x86_64,x86_64, s,x86_64,noarch,'
