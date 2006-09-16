@@ -695,12 +695,17 @@ restart:
 	    /*@=mustmod@*/
 	    (void) Fclose(fd);
 
-	    if (!(rpmrc == RPMRC_OK || rpmrc == RPMRC_BADMAGIC)) {
+	    if (rpmrc == RPMRC_BADMAGIC) {
+		rpmError(RPMERR_QUERY, _("%s is not an RPM package\n"), fileURL);
+		retcode = 1;
+		break;
+	    }
+	    if (rpmrc != RPMRC_OK) {
 		rpmError(RPMERR_QUERY, _("query of %s failed\n"), fileURL);
 		retcode = 1;
 		break;
 	    }
-	    if (rpmrc == RPMRC_OK && h == NULL) {
+	    if (h == NULL) {
 		rpmError(RPMERR_QUERY,
 			_("old format source packages cannot be queried\n"));
 		retcode = 1;
