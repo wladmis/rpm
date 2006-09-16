@@ -28,9 +28,11 @@ RPM_COMPRESS_METHOD="${RPM_COMPRESS_METHOD## }"
 RPM_COMPRESS_METHOD="${RPM_COMPRESS_METHOD%% }"
 echo "Compressing files in $RPM_BUILD_ROOT ($RPM_COMPRESS_METHOD)"
 
-if [ "$RPM_COMPRESS_METHOD" = skip ]; then
-	exit 0
-fi
+case "$RPM_COMPRESS_METHOD" in
+	false|no|none|off|skip)
+		exit 0
+		;;
+esac
 
 : ${RPM_COMPRESS_TOPDIR:=}
 [ -d "$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR" ] || exit 0

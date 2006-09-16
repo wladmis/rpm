@@ -197,7 +197,7 @@ export STRIP_SHARED=
 export STRIP_STATIC=
 for t in `printf %s "$RPM_STRIP_METHOD" |tr , ' '`; do
 	case "$t" in
-		no|none|off|false)
+		false|no|none|off|skip)
 			exit 0
 			;;
 		exec*)
