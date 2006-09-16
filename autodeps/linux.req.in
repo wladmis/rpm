@@ -269,8 +269,9 @@ FindLibReqs()
 	   segments="$(readelf -l "$f")"; then
 		interp="$(printf '%s\n' "$segments" |
 			  sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')"
-		[ -z "$interp" ] ||
-			printf '%s\n' "$interp"
+#		not yet, waiting for updated glibc...
+#		[ -z "$interp" ] ||
+#			printf '%s\n' "$interp"
 		if printf '%s\n' "$segments" |
 			egrep -qs '[[:space:]]\.gnu\.hash([[:space:]]|$)' &&
 		   ! printf '%s\n' "$segments" |
