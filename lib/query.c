@@ -542,6 +542,8 @@ int showMatches(QVA_t qva, rpmdbMatchIterator mi, QVF_t showPackage)
 	/*@-nullpass@*/
 	if ((rc = showPackage(qva, rpmdbGetIteratorRpmDB(mi), h)) != 0)
 	    ec = rc;
+	if (qva->qva_source == RPMQV_DBOFFSET)
+	    break;
 	/*@=nullpass@*/
     }
     mi = rpmdbFreeIterator(mi);
