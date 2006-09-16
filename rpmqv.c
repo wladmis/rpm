@@ -926,7 +926,7 @@ int main(int argc, const char ** argv)
     switch (bigMode) {
 #ifdef	IAM_RPMDB
     case MODE_INITDB:
-	(void) rpmdbInit(rootdir, 0644);
+	ec = rpmdbInit(rootdir, 0644);
 	break;
 
     case MODE_REBUILDDB:
