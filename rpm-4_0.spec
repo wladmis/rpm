@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt66
+Release: alt67
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -522,6 +522,22 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Sep 21 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt67
+- autodeps/linux.req.in:FindLibReqs():
+  If object contains .gnu.hash section but does not
+  contain .hash section, add rtld(GNU_HASH) requirement.
+- GROUPS: Removed trailing whitespaces (#9963).
+- Rename athlonxp platform to athlon_xp (#9991).
+- scripts/brp-compress.in:
+  Recognize "false|no|none|off" as well as "skip" (#9854).
+- scripts/brp-strip.in:
+  Recognize "skip" as well as "false|no|none|off" (#9854).
+- rpmdb: Honor rpmdbInit() return code (#9406).
+- rpmQueryVerify(): when rpmReadPackageManifest() is disabled,
+  treat RPMRC_BADMAGIC return code from rpmReadPackageHeader()
+  like other read errors (#9433).
+- showMatches(): Backported --querybynumber looping fix (#9773).
+
 * Sun May 14 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt66
 - Fixed build with gcc-4.1.0.
 
