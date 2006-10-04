@@ -29,6 +29,7 @@ ValidateBuildRoot
 real_buildroot="$(cd "$RPM_BUILD_ROOT" && /bin/pwd)" || exit 1
 
 FIND_LIBS=
+FIND_MONO=
 FIND_PAM=
 FIND_PERL=
 FIND_PKGCONFIG=
@@ -43,6 +44,7 @@ ParseMethod()
 		case "${t/%,}" in
 			no|none|off|false)
 				FIND_LIBS=
+				FIND_MONO=
 				FIND_PAM=
 				FIND_PERL=
 				FIND_PKGCONFIG=
@@ -55,6 +57,12 @@ ParseMethod()
 				;;
 			nolib)
 				FIND_LIBS=
+				;;
+			mono)
+				FIND_MONO=1
+				;;
+			nomono)
+				FIND_MONO=
 				;;
 			pam)
 				FIND_PAM=1
@@ -94,6 +102,7 @@ ParseMethod()
 				;;
 			all)
 				FIND_LIBS=1
+				FIND_MONO=1
 				FIND_PAM=1
 				FIND_PERL=1
 				FIND_PKGCONFIG=1
@@ -112,8 +121,13 @@ ParseMethod()
 }
 ParseMethod $RPM_FINDPROV_METHOD
 
-if [ -z "$FIND_LIBS" -a -z "$FIND_PAM" -a -z "$FIND_PERL" -a \
-     -z "$FIND_PKGCONFIG" -a -z "$FIND_PYTHON" -a -z "$FIND_SHELL" -a \
+if [ -z "$FIND_LIBS" -a \
+     -z "$FIND_MONO" -a \
+     -z "$FIND_PAM" -a \
+     -z "$FIND_PERL" -a \
+     -z "$FIND_PKGCONFIG" -a \
+     -z "$FIND_PYTHON" -a \
+     -z "$FIND_SHELL" -a \
      -z "$FIND_TCL" ]; then
 	# Nothing to do
 	cat >/dev/null 2>&1
@@ -132,6 +146,7 @@ case "$LD_PRELOAD" in
 esac
 
 FOUND_PROVS=
+LIST_MONO=
 LIST_PERL=
 LIST_PYTHON=
 LIST_TCL=
@@ -190,6 +205,18 @@ $f"
 $f"
 		fi
 	fi
+}
+
+FindMonoProvs()
+{
+	[ -n "$FIND_MONO" -a -n "$LIST_MONO" -a -x "@RPMCONFIGDIR@/mono.prov" ] || return 0
+
+	local r
+	r="$(printf %s\\n "$LIST_MONO" |
+	     @RPMCONFIGDIR@/mono.prov "$RPM_BUILD_DIR" "$RPM_BUILD_ROOT" "$RPM_LIBDIR")" ||
+		return 1
+	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
+$r"
 }
 
 FindPerlProvs()
@@ -348,6 +375,9 @@ $r"
 $r"
 			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
 $f"
+		elif [ -z "${t##*MS Windows PE*}" ]; then
+			[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
+$f"
 		elif [ "${f##*/}" = '__init__.py' ]; then
 			# Zero-length python init files have major sense.
 			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
@@ -357,6 +387,9 @@ $f"
 		Info "$f: file type not available"
 	fi
 done
+
+# Find provides in listed .Net executables and shared libraries, if any
+FindMonoProvs
 
 # Find provides in listed perl scripts, if any
 FindPerlProvs

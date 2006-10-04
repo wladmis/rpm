@@ -38,6 +38,7 @@ trap exit_handler EXIT
 FIND_FILES=
 FIND_LIBPERL=
 FIND_LIBS=
+FIND_MONO=
 FIND_PAM=
 FIND_PERL=
 FIND_PKGCONFIG=
@@ -55,6 +56,7 @@ ParseMethod()
 				FIND_FILES=
 				FIND_LIBPERL=
 				FIND_LIBS=
+				FIND_MONO=
 				FIND_PAM=
 				FIND_PERL=
 				FIND_PKGCONFIG=
@@ -79,6 +81,12 @@ ParseMethod()
 				;;
 			nofiles)
 				FIND_FILES=
+				;;
+			mono)
+				FIND_MONO=1
+				;;
+			nomono)
+				FIND_MONO=
 				;;
 			pam)
 				FIND_PAM=1
@@ -122,6 +130,7 @@ ParseMethod()
 				FIND_FILES=1
 				FIND_LIBPERL=1
 				FIND_LIBS=1
+				FIND_MONO=1
 				FIND_PAM=1
 				FIND_PERL=1
 				FIND_PKGCONFIG=1
@@ -141,13 +150,20 @@ ParseMethod()
 ParseMethod $RPM_FINDREQ_METHOD
 
 FIND_SCRIPT=
-if [ -n "$FIND_PAM" -o -n "$FIND_PERL" -o -n "$FIND_PYTHON" -o \
-     -n "$FIND_SHELL" -o -n "$FIND_TCL" ]; then
+if [ -n "$FIND_PAM" -o \
+     -n "$FIND_PERL" -o \
+     -n "$FIND_PYTHON" -o \
+     -n "$FIND_SHELL" -o \
+     -n "$FIND_TCL" ]; then
 	FIND_SCRIPT=1
 fi
 
-if [ -z "$FIND_FILES" -a -z "$FIND_LIBPERL" -a -z "$FIND_LIBS" -a \
-     -z "$FIND_PKGCONFIG" -a -z "$FIND_SCRIPT" ]; then
+if [ -z "$FIND_FILES" -a \
+     -z "$FIND_LIBPERL" -a \
+     -z "$FIND_LIBS" -a \
+     -z "$FIND_MONO" -a \
+     -z "$FIND_PKGCONFIG" -a \
+     -z "$FIND_SCRIPT" ]; then
 	# Nothing to do
 	exit
 fi
@@ -171,9 +187,21 @@ case "$LD_PRELOAD" in
 esac
 
 FOUND_REQS=
+LIST_MONO=
 LIST_PERL=
 LIST_PYTHON=
 LIST_TCL=
+
+FindMonoReqs()
+{
+	[ -n "$FIND_MONO" -a -n "$LIST_MONO" -a -x "@RPMCONFIGDIR@/mono.req" ] || return 0
+
+	local r
+	r="$(printf %s\\n "$LIST_MONO" |
+	     @RPMCONFIGDIR@/mono.req "$RPM_BUILD_DIR" "$RPM_BUILD_ROOT" "$RPM_LIBDIR")" || return 1
+	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+}
 
 ListScriptReqs()
 {
@@ -394,8 +422,14 @@ $r"
 $r"
 		[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
 $f"
+	elif [ -z "${t##*MS Windows PE*}" ]; then
+		[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
+$f"
 	fi
 done
+
+# Find requires in listed .Net files, if any
+FindMonoReqs
 
 # Find requires in listed perl scripts, if any
 FindPerlReqs
