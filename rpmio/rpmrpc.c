@@ -1467,6 +1467,14 @@ fprintf(stderr, "*** Access(%s,%d)\n", path, amode);
     return access(path, amode);
 }
 
+static int rpm_glob_stat(const char *path, struct stat *buf)
+{
+	if (stat(path, buf) == 0)
+		return 0;
+	else
+		return lstat(path, buf);
+}
+
 int Glob(const char *pattern, int flags,
 	int errfunc(const char * epath, int eerrno), glob_t *pglob)
 {
@@ -1491,8 +1499,14 @@ fprintf(stderr, "*** Glob(%s,0x%x,%p,%p)\n", pattern, (unsigned)flags, (void *)e
     case URL_IS_HTTP:		/* XXX WRONG WRONG WRONG */
     case URL_IS_PATH:
 	pattern = lpath;
-	/*@fallthrough@*/
+	break;
     case URL_IS_UNKNOWN:
+	pglob->gl_closedir = closedir;
+	pglob->gl_readdir = readdir;
+	pglob->gl_opendir = opendir;
+	pglob->gl_lstat = lstat;
+	pglob->gl_stat = rpm_glob_stat;
+	flags |= GLOB_ALTDIRFUNC;
 	break;
     case URL_IS_DASH:
     default:
