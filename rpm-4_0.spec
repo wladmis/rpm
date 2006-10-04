@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt67
+Release: alt68
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -522,6 +522,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Oct 04 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt68
+- rpmio/rpmrpc.c (Glob): Override gl_stat to allow broken symlinks.
+- Implemented mono reqprov hooks and enabled them by default,
+  based on patch from Ildar Mulyukov (#9426).
+
 * Thu Sep 21 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt67
 - autodeps/linux.req.in:FindLibReqs():
   If object contains .gnu.hash section but does not
