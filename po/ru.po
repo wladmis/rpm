@@ -3657,6 +3657,9 @@ msgstr "Графические оболочки/Motif"
 msgid "Graphical desktop/Other"
 msgstr "Графические оболочки/Прочее"
 
+msgid "Graphical desktop/Rox"
+msgstr "Графические оболочки/Rox"
+
 msgid "Graphical desktop/Sawfish"
 msgstr "Графические оболочки/Sawfish"
 
