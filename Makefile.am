@@ -47,7 +47,7 @@ rpm.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMDB -DIAM_RPMEIU -DIAM_RPMK -DIAM_RPMQV -o $@ -c rpmqv.c
 
 rpm_static_SOURCES =
-rpm_static_LDFLAGS =		@LDFLAGS_STATIC@ $(myLDFLAGS)
+rpm_static_LDFLAGS =		@LDFLAGS_STATIC@ $(myLDFLAGS) -pthread
 rpm_static_LDADD =		rpm.static.o $(myLDADD)
 rpm.static.o:	rpmqv.c
 	$(COMPILE) -DIAM_RPMDB -DIAM_RPMEIU -DIAM_RPMK -DIAM_RPMQV -o $@ -c rpmqv.c
