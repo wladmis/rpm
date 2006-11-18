@@ -65,7 +65,7 @@ static int checkOwners(const char * urlfn)
  * @return		expanded %patch macro (NULL on error)
  */
 /*@observer@*/ static char *doPatch(Spec spec, int c, int strip, const char *db,
-		     int reverse, int removeEmpties)
+		     int reverse, int removeEmpties, int silent)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem@*/
 	/*@modifies rpmGlobalMacroContext, fileSystem @*/
@@ -90,6 +90,8 @@ static int checkOwners(const char * urlfn)
     urlfn = rpmGetPath("%{_sourcedir}/", sp->source, NULL);
 
     args[0] = '\0';
+    if (silent)
+	strcat(args, " -s");
     if (db) {
 #if HAVE_OLDPATCH_21 == 0
 	strcat(args, "-b ");
@@ -146,14 +148,14 @@ static int checkOwners(const char * urlfn)
 
 	snprintf(buf, sizeof(buf),
 		"echo \"Patch #%d (%s):\"\n"
-		"%s %s %s |%s -p%d %s -s\n",
+		"%s %s %s |%s -p%d %s\n",
 		c, /*@-unrecog@*/ (const char *) basename(fn), /*@=unrecog@*/
 		zipper, zipper_opts, fn, patcher, strip, args);
 	zipper = _free(zipper);
     } else {
 	snprintf(buf, sizeof(buf),
 		"echo \"Patch #%d (%s):\"\n"
-		"%s -p%d %s -s < %s", c, (const char *) basename(fn),
+		"%s -p%d %s < %s", c, (const char *) basename(fn),
 		patcher, strip, args, fn);
     }
 
@@ -449,14 +451,14 @@ static int doPatchMacro(Spec spec, char *line)
 	/*@modifies spec->prep, rpmGlobalMacroContext, fileSystem @*/
 {
     char *opt_b;
-    int opt_P, opt_p, opt_R, opt_E;
+    int opt_P, opt_p, opt_R, opt_E, opt_s;
     char *s;
     char buf[BUFSIZ], *bp;
     int patch_nums[1024];  /* XXX - we can only handle 1024 patches! */
     int patch_index, x;
 
     memset(patch_nums, 0, sizeof(patch_nums));
-    opt_P = opt_p = opt_R = opt_E = 0;
+    opt_P = opt_p = opt_R = opt_E = opt_s = 0;
     opt_b = NULL;
     patch_index = 0;
 
@@ -479,6 +481,8 @@ static int doPatchMacro(Spec spec, char *line)
 	    opt_R = 1;
 	} else if (!strcmp(s, "-E")) {
 	    opt_E = 1;
+	} else if (!strcmp(s, "-s")) {
+	    opt_s = 1;
 	} else if (!strcmp(s, "-b")) {
 	    /* orig suffix */
 	    opt_b = strtok(NULL, " \t\n");
@@ -535,14 +539,14 @@ static int doPatchMacro(Spec spec, char *line)
     /* All args processed */
 
     if (! opt_P) {
-	s = doPatch(spec, 0, opt_p, opt_b, opt_R, opt_E);
+	s = doPatch(spec, 0, opt_p, opt_b, opt_R, opt_E, opt_s);
 	if (s == NULL)
 	    return RPMERR_BADSPEC;
 	appendLineStringBuf(spec->prep, s);
     }
 
     for (x = 0; x < patch_index; x++) {
-	s = doPatch(spec, patch_nums[x], opt_p, opt_b, opt_R, opt_E);
+	s = doPatch(spec, patch_nums[x], opt_p, opt_b, opt_R, opt_E, opt_s);
 	if (s == NULL)
 	    return RPMERR_BADSPEC;
 	appendLineStringBuf(spec->prep, s);
