@@ -147,6 +147,29 @@ static int countLinks(int_16 * fileRdevList, int_32 * fileInodeList, int nfiles,
     return nlink;
 }
 
+/**
+ */
+static void flushBuffer(char ** tp, char ** tep, int nonewline)
+	/*@ modifies *tp, *tep @*/
+{
+    char *t, *te;
+
+    t = *tp;
+    te = *tep;
+    if (te > t) {
+	if (!nonewline) {
+	    *te++ = '\n';
+	    *te = '\0';
+	}
+	rpmMessage(RPMMESS_NORMAL, "%s", t);
+	te = t;
+	*t = '\0';
+
+	*tp = t;
+	*tep = te;
+    }
+}
+
 int showQueryPackage(QVA_t qva, /*@unused@*/rpmdb rpmdb, Header h)
 {
     HGE_t hge = (HGE_t)headerGetEntryMinMemory;
@@ -174,7 +197,6 @@ int showQueryPackage(QVA_t qva, /*@unused@*/rpmdb rpmdb, Header h)
     uint_16 * fileRdevList;
     int_32 * dirIndexes;
     int rc = 0;		/* XXX FIXME: need real return code */
-    int nonewline = 0;
     int i;
 
     te = t = xmalloc(BUFSIZ);
@@ -191,7 +213,6 @@ int showQueryPackage(QVA_t qva, /*@unused@*/rpmdb rpmdb, Header h)
 
     if (queryFormat) {
 	const char * str = queryHeader(h, queryFormat);
-	nonewline = 1;
 	/*@-branchstate@*/
 	if (str) {
 	    size_t tb = (te - t);
@@ -205,6 +226,7 @@ int showQueryPackage(QVA_t qva, /*@unused@*/rpmdb rpmdb, Header h)
 	    te = stpcpy(te, str);
 	    /*@=usereleased@*/
 	    str = _free(str);
+	    flushBuffer(&t, &te, 1);
 	}
 	/*@=branchstate@*/
     }
@@ -371,25 +393,13 @@ if (S_ISDIR(fileModeList[i])) {
 
 	    filespec = _free(filespec);
 	}
-	if (te > t) {
-	    *te++ = '\n';
-	    *te = '\0';
-	    rpmMessage(RPMMESS_NORMAL, "%s", t);
-	    te = t;
-	    *t = '\0';
-	}
+	flushBuffer(&t, &te, 0);
     }
 	    
     rc = 0;
 
 exit:
-    if (te > t) {
-	if (!nonewline) {
-	    *te++ = '\n';
-	    *te = '\0';
-	}
-	rpmMessage(RPMMESS_NORMAL, "%s", t);
-    }
+    flushBuffer(&t, &te, 0);
     t = _free(t);
     dirNames = hfd(dirNames, dnt);
     baseNames = hfd(baseNames, bnt);
