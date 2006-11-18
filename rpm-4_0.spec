@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt68
+Release: alt69
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -522,6 +522,16 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Nov 19 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt69
+- GROUPS: New group: Graphical desktop/Rox (#10268).
+- Makefile.am: Link rpm.static with -pthread.
+- lib/query.c: Flush query format buffer before listing files (CVE-2006-5466).
+- build/parsePrep.c:
+  + Change %%patch to be more verbose by default, introduce -s option
+    to make %%patch as silent as before this change (#10261).
+  + Change %%setup to enable -q option by default, introduce -v option
+    to make %%setup as verbose as before this change.
+
 * Wed Oct 04 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt68
 - rpmio/rpmrpc.c (Glob): Override gl_stat to allow broken symlinks.
 - Implemented mono reqprov hooks and enabled them by default,
