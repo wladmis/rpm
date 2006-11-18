@@ -15,7 +15,7 @@
 /*@unchecked@*/
     static int leaveDirs, skipDefaultAction;
 /*@unchecked@*/
-    static int createDir, quietly;
+    static int createDir, quietly, verbosely;
 /*@unchecked@*/
 /*@observer@*/ /*@null@*/ static const char * dirName = NULL;
 /*@unchecked@*/
@@ -27,6 +27,7 @@
 	    { NULL, 'n', POPT_ARG_STRING, &dirName, 0,	NULL, NULL},
 	    { NULL, 'T', 0, &skipDefaultAction, 0,	NULL, NULL},
 	    { NULL, 'q', 0, &quietly, 0,		NULL, NULL},
+	    { NULL, 'v', 0, &verbosely, 0,		NULL, NULL},
 	    { 0, 0, 0, 0, 0,	NULL, NULL}
     };
 
@@ -308,7 +309,8 @@ static int doSetupMacro(Spec spec, char *line)
 
     /*@-mods@*/
     leaveDirs = skipDefaultAction = 0;
-    createDir = quietly = 0;
+    createDir = verbosely = 0;
+    quietly = 1;
     dirName = NULL;
     /*@=mods@*/
 
@@ -337,7 +339,7 @@ static int doSetupMacro(Spec spec, char *line)
 	    return RPMERR_BADSPEC;
 	}
 
-	{   const char *chptr = doUntar(spec, num, quietly);
+	{   const char *chptr = doUntar(spec, num, verbosely ? 0 : quietly);
 	    if (chptr == NULL)
 		return RPMERR_BADSPEC;
 
@@ -395,7 +397,7 @@ static int doSetupMacro(Spec spec, char *line)
 
     /* do the default action */
    if (!createDir && !skipDefaultAction) {
-	const char *chptr = doUntar(spec, 0, quietly);
+	const char *chptr = doUntar(spec, 0, verbosely ? 0 : quietly);
 	if (!chptr)
 	    return RPMERR_BADSPEC;
 	appendLineStringBuf(spec->prep, chptr);
@@ -410,7 +412,7 @@ static int doSetupMacro(Spec spec, char *line)
     }
 
     if (createDir && !skipDefaultAction) {
-	const char * chptr = doUntar(spec, 0, quietly);
+	const char * chptr = doUntar(spec, 0, verbosely ? 0 : quietly);
 	if (chptr == NULL)
 	    return RPMERR_BADSPEC;
 	appendLineStringBuf(spec->prep, chptr);
