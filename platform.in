@@ -415,6 +415,10 @@
 @alt@# RPM directory.
 @alt@%_rpmlibdir	%_prefix/lib/rpm
 @alt@
+@alt@# target libdir.
+@alt@%_target_libdir_noarch	/usr/lib
+@alt@%_target_libdir	%{expand:%%{?_target_libdir_%_target_cpu:%%_target_libdir_%_target_cpu}%%{!?_target_libdir_%_target_cpu:%%_libdir}}
+@alt@
 @alt@# Update Menus.
 @alt@%_update_menus_bin	%_bindir/update-menus
 @alt@%update_menus	[ -x %_update_menus_bin ] && %_update_menus_bin ||:
