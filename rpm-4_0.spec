@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt69
+Release: alt70
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -210,13 +210,13 @@ the Python programming language to use the interface supplied by RPM
 %setup -q -n %srcname
 
 find -type d -name CVS -print0 |
-	xargs -r0 %__rm -rf --
+	xargs -r0 rm -rf --
 find -type f \( -name .cvsignore -o -name \*~ -o -name \*.orig \) -print0 |
-	xargs -r0 %__rm -f --
+	xargs -r0 rm -f --
 
 %build
 gettextize --force --quiet
-%__install -pv -m644 /usr/share/gettext/intl/Makevars* po/Makevars
+install -pv -m644 /usr/share/gettext/intl/Makevars* po/Makevars
 autoreconf -fisv -I m4
 export \
 	ac_cv_path_CTAGS=/usr/bin/ctags \
@@ -233,38 +233,38 @@ export \
 
 # fix buggy requires if any
 find scripts -type f -print0 |
-	xargs -r0 %__grep -EZl '(/usr/ucb|/usr/local/bin/perl|/usr/local/lib/rpm/bash)' -- |
+	xargs -r0 grep -EZl '(/usr/ucb|/usr/local/bin/perl|/usr/local/lib/rpm/bash)' -- |
 	xargs -r0 subst 's|/usr/ucb|%_bindir|g;s|/usr/local/bin/perl|/usr/bin/perl|g;s|/usr/local/lib/rpm/bash|/bin/sh|g' --
 find -type f -print0 |
-	xargs -r0 %__grep -FZl /usr/sbin/lsattr -- |
+	xargs -r0 grep -FZl /usr/sbin/lsattr -- |
 	xargs -r0 subst 's|/usr/sbin/lsattr|/usr/bin/lsattr|g' --
 
 # fix vendor
 find -type f -print0 |
-	xargs -r0 %__grep -FZl '%_host_cpu-pc-%_host_os' -- |
+	xargs -r0 grep -FZl '%_host_cpu-pc-%_host_os' -- |
 	xargs -r0 subst 's/%_host_cpu-pc-%_host_os/%_host_cpu-alt-%_host_os/g' --
 find -type f -name config.\* -print0 |
-	xargs -r0 %__grep -FZl '=pc' -- |
+	xargs -r0 grep -FZl '=pc' -- |
 	xargs -r0 subst 's/=pc/=alt/g' --
 
 %make_build YACC='bison -y'
 %if_with apidocs
-%__rm -rf apidocs
+rm -rf apidocs
 make apidocs
 %endif #with apidocs
 
 %install
 %make_install DESTDIR='%buildroot' install
-%__chmod a-w %buildroot%_usrsrc/RPM{,/RPMS/*}
+chmod a-w %buildroot%_usrsrc/RPM{,/RPMS/*}
 
 # Save list of packages through cron.
-#%__mkdir_p %buildroot%_sysconfdir/cron.daily
-#%__install -p -m750 scripts/%name.daily %buildroot%_sysconfdir/cron.daily/%name
+#mkdir -p %buildroot%_sysconfdir/cron.daily
+#install -p -m750 scripts/%name.daily %buildroot%_sysconfdir/cron.daily/%name
 #
-#%__mkdir_p %buildroot%_sysconfdir/logrotate.d
-#%__install -p -m640 scripts/%name.log %buildroot%_sysconfdir/logrotate.d/%name
+#mkdir -p %buildroot%_sysconfdir/logrotate.d
+#install -p -m640 scripts/%name.log %buildroot%_sysconfdir/logrotate.d/%name
 
-%__mkdir_p %buildroot%_sysconfdir/%name/macros.d
+mkdir -p %buildroot%_sysconfdir/%name/macros.d
 touch %buildroot%_sysconfdir/%name/macros
 cat << E_O_F > %buildroot%_sysconfdir/%name/macros.db1
 %%_dbapi		1
@@ -273,7 +273,7 @@ cat << E_O_F > %buildroot%_sysconfdir/%name/macros.cdb
 %{?enable_cdb:#%%__dbi_cdb	%enable_cdb}
 E_O_F
 
-%__mkdir_p %buildroot%_localstatedir/%name
+mkdir -p %buildroot%_localstatedir/%name
 for dbi in \
 	Basenames Conflictname Dirnames Group Installtid Name Providename \
 	Provideversion Removetid Requirename Requireversion Triggername \
@@ -286,25 +286,25 @@ done
 
 # Prepare documentation.
 bzip2 -9 CHANGES ||:
-%__mkdir_p %buildroot%_docdir/%name-%rpm_version
-%__install -p -m644 CHANGES* CREDITS README README.ALT* RPM-GPG-KEY RPM-PGP-KEY \
+mkdir -p %buildroot%_docdir/%name-%rpm_version
+install -p -m644 CHANGES* CREDITS README README.ALT* RPM-GPG-KEY RPM-PGP-KEY \
 	%buildroot%_docdir/%name-%rpm_version/
-%__cp -a doc/manual %buildroot%_docdir/%name-%rpm_version/
-%__rm -f %buildroot%_docdir/%name-%rpm_version/manual/{Makefile*,buildroot}
+cp -a doc/manual %buildroot%_docdir/%name-%rpm_version/
+rm -f %buildroot%_docdir/%name-%rpm_version/manual/{Makefile*,buildroot}
 %if_with apidocs
-%__cp -a apidocs/man/man3 %buildroot%_mandir/
-%__cp -a apidocs/html %buildroot%_docdir/%name-%rpm_version/apidocs/
+cp -a apidocs/man/man3 %buildroot%_mandir/
+cp -a apidocs/html %buildroot%_docdir/%name-%rpm_version/apidocs/
 %endif #with apidocs
 
 # rpminit(1).
-%__install -pD -m755 rpminit %buildroot%_bindir/rpminit
-%__install -pD -m644 rpminit.1 %buildroot%_man1dir/rpminit.1
+install -pD -m755 rpminit %buildroot%_bindir/rpminit
+install -pD -m644 rpminit.1 %buildroot%_man1dir/rpminit.1
 
 # Valid groups.
-%__install -p -m644 GROUPS %buildroot%_rpmlibdir/
+install -p -m644 GROUPS %buildroot%_rpmlibdir/
 
 # buildreq ignore rules.
-%__install -pD -m644 rpm-build.buildreq %buildroot%_sysconfdir/buildreqs/files/ignore.d/rpm-build
+install -pD -m644 rpm-build.buildreq %buildroot%_sysconfdir/buildreqs/files/ignore.d/rpm-build
 
 chmod a+x scripts/find-lang
 # Manpages have been moved to their own packages.
@@ -313,14 +313,14 @@ RPMCONFIGDIR=./scripts ./scripts/find-lang %name rpm2cpio --output %name.lang
 
 pushd %buildroot%_rpmlibdir
 	for f in *-alt-%_target_os; do
-		n=`echo "$f" |%__sed -e 's/-alt//'`
-		[ -e "$n" ] || %__ln_s "$f" "$n"
+		n=`echo "$f" |sed -e 's/-alt//'`
+		[ -e "$n" ] || ln -s "$f" "$n"
 	done
 popd
 
 /bin/ls -1d %buildroot%_rpmlibdir/*-%_target_os |
-	%__grep -Fv /brp- |
-	%__sed -e "s|^%buildroot|%%attr(-,root,%name) |g" >>%name.lang
+	grep -Fv /brp- |
+	sed -e "s|^%buildroot|%%attr(-,root,%name) |g" >>%name.lang
 
 %pre
 if [ -f %_localstatedir/%name/Packages -a -f %_localstatedir/%name/packages.rpm ]; then
@@ -522,6 +522,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Nov 30 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt70
+- platform.in: Add %%_target_libdir macro.
+
 * Sun Nov 19 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt69
 - GROUPS: New group: Graphical desktop/Rox (#10268).
 - Makefile.am: Link rpm.static with -pthread.
