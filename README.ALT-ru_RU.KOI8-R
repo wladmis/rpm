@@ -136,10 +136,7 @@ BuildRoot.
           -ffast-math;
 
    %optflags_strict:
-          -fstrict-aliasing;
-
-   %optflags_kernel:
-          параметры, используемые при компиляции ядра и его модулей.
+          -fstrict-aliasing.
 
    По  умолчанию, стандартный набор %optflags состоит из ``%optflags_core
    %optflags_warnings %optflags_optimization''.
