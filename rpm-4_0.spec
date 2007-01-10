@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt70
+Release: alt71
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -522,6 +522,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Jan 11 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt71
+- platform.in: Changed %%optflags_kernel to %%nil.
+- rpmrc.in: Changed %%optflags_default to use -mtune=generic
+  instead of -mtune=pentium4 for i[3456]86 (Alexey Tourbin).
+
 * Thu Nov 30 2006 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt70
 - platform.in: Add %%_target_libdir macro.
 
