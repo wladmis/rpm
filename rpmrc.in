@@ -10,10 +10,10 @@
 #############################################################
 # Values for RPM_OPT_FLAGS for various platforms
 
-optflags: i386 %optflags_default -march=i386 -mtune=generic
-optflags: i486 %optflags_default -march=i486 -mtune=generic
-optflags: i586 %optflags_default -march=i586 -mtune=generic
-optflags: i686 %optflags_default -march=i686 -mtune=generic
+optflags: i386 %optflags_default -march=i386 -mtune=i686
+optflags: i486 %optflags_default -march=i486 -mtune=i686
+optflags: i586 %optflags_default -march=i586 -mtune=i686
+optflags: i686 %optflags_default -march=i686 -mtune=i686
 optflags: pentium2 %optflags_default -march=pentium2 -mtune=pentium4
 optflags: pentium3 %optflags_default -march=pentium3 -mtune=pentium4
 optflags: pentium4 %optflags_default -march=pentium4
