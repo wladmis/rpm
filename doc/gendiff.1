@@ -42,7 +42,27 @@ file will be created under your
 directory.
 .PP
 
-.PD
+.SH OPTIONS
+The following GNU diff options are recognized:
+.TP
+\fB\-i\fR  \fB\-\-ignore\-case\fR
+Ignore case differences in file contents.
+.TP
+\fB\-E\fR  \fB\-\-ignore\-tab\-expansion\fR
+Ignore changes due to tab expansion.
+.TP
+\fB\-b\fR  \fB\-\-ignore\-space\-change\fR
+Ignore changes in the amount of white space.
+.TP
+\fB\-w\fR  \fB\-\-ignore\-all\-space\fR
+Ignore all white space.
+.TP
+\fB\-B\fR  \fB\-\-ignore\-blank\-lines\fR
+Ignore changes whose lines are all blank.
+.TP
+\fB\-a\fR  \fB\-\-text\fR
+Treat all files as text.
+
 .SH "SEE ALSO"
 .BR diff (1),
 .BR patch (1)
