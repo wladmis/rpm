@@ -11,6 +11,7 @@ if [ -n "$3" ]; then
 fi
 
 find "$1" -mindepth 1 \( -name "*$2" -o -name ".*$2" \) -print |
+	LC_COLLATE=C sort -u |
 	while read fin; do
 		fou=`echo "$fin" |sed -e "s/$2\$//"`
 		[ -r "$fin" ] || fin="/dev/null"
