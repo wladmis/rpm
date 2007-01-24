@@ -64,4 +64,7 @@ find "$1" -mindepth 1 \( -name "*$2" -o -name ".*$2" \) -print |
 		fi
 	done
 
-[ -z "$patch" ] || ls -l "$patch"
+if [ -n "$patch" ]; then
+	echo
+	ls -l "$patch"
+fi
