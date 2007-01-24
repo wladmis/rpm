@@ -53,7 +53,7 @@ fi
 find "$1" -mindepth 1 \( -name "*$2" -o -name ".*$2" \) -print |
 	LC_COLLATE=C sort -u |
 	while read -r fin; do
-		fou=`echo "$fin" |sed -e "s/$2\$//"`
+		fou="${fin%$2}"
 		[ -r "$fin" ] || fin="/dev/null"
 		[ -r "$fou" ] || fou="/dev/null"
 		if [ -n "$patch" ]; then
