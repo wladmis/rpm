@@ -3,7 +3,7 @@
 Usage()
 {
 	[ $1 -gt 0 ] && exec >&2
-	echo "Usage: ${0##*/} [diff-options] <directory> <diff-extension> [patch-name]"
+	echo "Usage: ${0##*/} [diff-options] <directory> <diff-suffix> [patch-name]"
 	exit $1
 }
 
