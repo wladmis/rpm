@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -efu
 
 Usage()
 {
@@ -59,7 +59,7 @@ find "$1" -mindepth 1 \( -name "*$2" -o -name ".*$2" \) -print |
 		if [ -n "$patch" ]; then
 			diff $diff_options -- "$fin" "$fou" |tee -a "$patch"
 		else
-			diff $diff_options -- "$fin" "$fou"
+			diff $diff_options -- "$fin" "$fou" || [ $? = 1 ]
 		fi
 	done
 
