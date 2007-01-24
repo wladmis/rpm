@@ -1,5 +1,7 @@
 #!/bin/sh
 
+diff_options=-up
+
 if [ -z "$1" -o -z "$2" ]; then
 	echo "usage: ${0##*/} <directory> <diff-extension>" >&2
 	exit 1
@@ -17,9 +19,9 @@ find "$1" -mindepth 1 \( -name "*$2" -o -name ".*$2" \) -print |
 		[ -r "$fin" ] || fin="/dev/null"
 		[ -r "$fou" ] || fou="/dev/null"
 		if [ -n "$3" ]; then
-			diff -u "$fin" "$fou" |
+			diff $diff_options -- "$fin" "$fou" |
 				tee -a "$SOURCEDIR/$1-$3.patch"
 		else
-			diff -u "$fin" "$fou"
+			diff $diff_options -- "$fin" "$fou"
 		fi
 	done
