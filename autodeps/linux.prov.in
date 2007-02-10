@@ -64,6 +64,8 @@ ParseMethod()
 			nomono)
 				FIND_MONO=
 				;;
+			java|nojava)
+				;;
 			pam)
 				FIND_PAM=1
 				;;
