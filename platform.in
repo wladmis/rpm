@@ -454,8 +454,8 @@
 @alt@%_tcl_req_skip	""
 @alt@%_fixup_method	binconfig pkgconfig libtool
 @alt@%_strip_method	%{?_enable_debug:none}%{!?_enable_debug:executable shared}
-@alt@%_findreq_default_method	files lib mono pam perl pkgconfig python shell tcl
-@alt@%_findprov_default_method	lib mono pam perl pkgconfig python shell tcl
+@alt@%_findreq_default_method	files java lib mono pam perl pkgconfig python shell tcl
+@alt@%_findprov_default_method	java lib mono pam perl pkgconfig python shell tcl
 @alt@
 @alt@%_cleanup_topdir	%nil
 @alt@%_compress_topdir	%_usr

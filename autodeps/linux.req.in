@@ -36,6 +36,7 @@ exit_handler()
 trap exit_handler EXIT
 
 FIND_FILES=
+FIND_JAVA=
 FIND_LIBPERL=
 FIND_LIBS=
 FIND_MONO=
@@ -54,6 +55,7 @@ ParseMethod()
 		case "${t/%,}" in
 			no|none|off|false)
 				FIND_FILES=
+				FIND_JAVA=
 				FIND_LIBPERL=
 				FIND_LIBS=
 				FIND_MONO=
@@ -63,6 +65,12 @@ ParseMethod()
 				FIND_PYTHON=
 				FIND_SHELL=
 				FIND_TCL=
+				;;
+			java)
+				FIND_JAVA=1
+				;;
+			nojava)
+				FIND_JAVA=
 				;;
 			lib|library)
 				FIND_LIBS=1
@@ -131,6 +139,7 @@ ParseMethod()
 				FIND_LIBPERL=1
 				FIND_LIBS=1
 				FIND_MONO=1
+				FIND_JAVA=1
 				FIND_PAM=1
 				FIND_PERL=1
 				FIND_PKGCONFIG=1
@@ -159,6 +168,7 @@ if [ -n "$FIND_PAM" -o \
 fi
 
 if [ -z "$FIND_FILES" -a \
+     -z "$FIND_JAVA" -a \
      -z "$FIND_LIBPERL" -a \
      -z "$FIND_LIBS" -a \
      -z "$FIND_MONO" -a \
@@ -187,10 +197,22 @@ case "$LD_PRELOAD" in
 esac
 
 FOUND_REQS=
+LIST_JAVA=
 LIST_MONO=
 LIST_PERL=
 LIST_PYTHON=
 LIST_TCL=
+
+FindJavaReqs()
+{
+	[ -n "$FIND_JAVA" -a -n "$LIST_JAVA" -a -x "@RPMCONFIGDIR@/java.req" ] || return 0
+
+	local r
+	r="$(printf %s\\n "$LIST_JAVA" |
+	     @RPMCONFIGDIR@/java.req "$RPM_BUILD_DIR" "$RPM_BUILD_ROOT" "$RPM_LIBDIR")" || return 1
+	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
+$r"
+}
 
 FindMonoReqs()
 {
@@ -425,8 +447,15 @@ $f"
 	elif [ -z "${t##*MS Windows PE*}" ]; then
 		[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
 $f"
+	elif [ -z "${t##*Zip archive data*}" -a -z "${f##*.jar}" ] ||
+	     [ -z "${t##*compiled Java class data*}" ]; then
+		[ -z "$LIST_JAVA" ] && LIST_JAVA="$f" || LIST_JAVA="$LIST_JAVA
+$f"
 	fi
 done
+
+# Find requires in listed Java files, if any
+FindJavaReqs
 
 # Find requires in listed .Net files, if any
 FindMonoReqs

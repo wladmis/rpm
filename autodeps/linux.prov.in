@@ -52,6 +52,8 @@ ParseMethod()
 				FIND_SHELL=
 				FIND_TCL=
 				;;
+			java|nojava)
+				;;
 			lib)
 				FIND_LIBS=1
 				;;
