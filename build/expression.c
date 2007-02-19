@@ -346,6 +346,8 @@ static Value doPrimary(ParseState state)
       rpmError(RPMERR_BADSPEC, _("unmatched (\n"));
       return NULL;
     }
+    if (rdToken(state, 1))
+      return NULL;
     break;
 
   case TOK_INTEGER:
