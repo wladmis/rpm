@@ -1,6 +1,7 @@
-#!/bin/sh -ef
+#!/bin/sh -efu
 #
 # Copyright (C) 2000-2006  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2007       Alexey Tourbin <at@altlinux.org>
 #
 # find-requires - generate list of linux-specific package requires.
 # Inspired by tool with same name from RPM distribution.
@@ -23,15 +24,84 @@
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
+workdir=
 exit_handler()
 {
 	local rc=$?
 	trap - EXIT
-	cat >/dev/null 2>&1
+	[ -z "$workdir" ] || rm -rf "$workdir"
+	cat >/dev/null
 	exit $rc
 }
 
-trap exit_handler EXIT
+trap exit_handler EXIT HUP INT QUIT PIPE TERM
+
+methods=$(SetupMethods req "$RPM_FINDREQ_METHOD")
+if [ -z "$methods" ]; then
+	Info "AutoReq disabled, nothing to do"
+	exit 0
+fi
+
+workdir=$(mktemp -dt "$PROG".XXXXXXXX)
+
+# filter file list through TOPDIR and SKIPLIST patterns
+while IFS= read -r f; do
+	fname="${f#$RPM_BUILD_ROOT}"
+	if [ -n "${RPM_FINDREQ_TOPDIR-}" ] && [ -z "${fname%%$RPM_FINDREQ_TOPDIR/*}" ]; then
+		Debug "skip $f due to RPM_FINDREQ_TOPDIR=$RPM_FINDREQ_TOPDIR"
+		continue
+	fi
+	if [ -n "${RPM_FINDREQ_SKIPLIST-}" ]; then
+		for skip in $RPM_FINDREQ_SKIPLIST; do
+			if [ -z "${fname##$skip}" ]; then
+				Debug "skip $f due to RPM_FINDREQ_SKIPLIST pattern $skip"
+				continue 2
+			fi
+		done
+	fi
+	echo "$f"
+done >"$workdir"/files
+
+if ! [ -s "$workdir"/files ]; then
+	Info "empty file list, nothing to do"
+	exit 0
+fi
+
+# filter file list through file(1) to append types
+if ! file -NF$'\t' -f "$workdir"/files >"$workdir"/files+types; then
+	sed -n '/\t *ERROR:/p' "$workdir"/files+types >&2
+	exit 1
+fi
+
+found=
+RunMethod()
+{
+	local exe="$1"; shift
+	local filter="$exe".files
+	if ! [ -x "$filter" ]; then
+		# XXX should be Fatal
+		Info "$filter not available"
+		return
+	fi
+	local filelist="$workdir/${exe##*/}".files
+	local deplist="$workdir/${exe##*/}".deps
+	Debug "running $filter"
+	"$filter" <"$workdir"/files+types >"$filelist"
+	Verbose "$filter: $(wc -l <"$filelist") files"
+	[ -s "$filelist" ] || return 0
+	# XXX validate $filelist
+	Debug "running $exe"
+	"$exe" <"$filelist" >"$deplist"
+	Verbose "$exe: $(wc -l <"$deplist") dependencies"
+	[ -s "$deplist" ] || return 0
+	found=1
+}
+
+Info "running scripts ($methods)"
+RunMethods req "$methods" RunMethod
+[ -z "$found" ] || (set +f; LC_COLLATE=C sort -u "$workdir"/*.deps) || exit 1
+
+exit 0
 
 FIND_FILES=
 FIND_JAVA=
@@ -398,23 +468,7 @@ if [ -n "$RPM_SUBPACKAGE_NAME" ]; then
 	fi
 fi
 
-: ${RPM_FINDREQ_TOPDIR:=}
-: ${RPM_FINDREQ_SKIPLIST:=}
-
 while IFS= read -r f; do
-	fname="${f#$RPM_BUILD_ROOT}"
-	fname="${fname#.}"
-
-	if [ -n "$RPM_FINDREQ_TOPDIR" ] && [ -z "${fname%%$RPM_FINDREQ_TOPDIR/*}" ]; then
-		continue
-	fi
-	if [ -n "$RPM_FINDREQ_SKIPLIST" ]; then
-		for skip in $RPM_FINDREQ_SKIPLIST; do
-			if [ -z "${fname##$skip}" ]; then
-				continue 2
-			fi
-		done
-	fi
 	if [ -n "$FIND_FILES" ]; then
 		for p in $(grep '^[^#]' @RPMCONFIGDIR@/files.req.list); do
 			if [ -z "${fname%%$p/*}" ]; then
@@ -424,7 +478,6 @@ $p"
 			fi
 		done
 	fi
-	t="$(file -b "$f")"
 	if [ -z "${fname##/usr/share/pkgconfig/*.pc}" -o -z "${fname##$RPM_LIBDIR/pkgconfig/*.pc}" ]; then
 		[ -n "$FIND_PKGCONFIG" ] || continue
 		r="$(@RPMCONFIGDIR@/pkgconfig.req "$f")"
@@ -466,6 +519,3 @@ FindPythonReqs
 
 # Find requires in listed tcl scripts, if any
 FindTclReqs
-
-# Finally sort and print them.
-printf %s "$FOUND_REQS" |LC_COLLATE=C sort -u

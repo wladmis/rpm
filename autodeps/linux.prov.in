@@ -1,6 +1,7 @@
-#!/bin/sh -ef
+#!/bin/sh -efu
 #
 # Copyright (C) 2000-2006  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2007       Alexey Tourbin <at@altlinux.org>
 #
 # find-provides - generate list of linux-specific package provides.
 # Inspired by tool with same name from RPM distribution.
@@ -22,6 +23,90 @@
 
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
+
+workdir=
+exit_handler()
+{
+	local rc=$?
+	trap - EXIT
+	[ -z "$workdir" ] || rm -rf "$workdir"
+	cat >/dev/null
+	exit $rc
+}
+
+trap exit_handler EXIT HUP INT QUIT PIPE TERM
+
+methods=$(SetupMethods prov "$RPM_FINDPROV_METHOD")
+if [ -z "$methods" ]; then
+	Info "AutoProv disabled, nothing to do"
+	exit 0
+fi
+
+workdir=$(mktemp -dt "$PROG".XXXXXXXX)
+
+# filter file list through TOPDIR and SKIPLIST patterns
+while IFS= read -r f; do
+	fname="${f#$RPM_BUILD_ROOT}"
+	if [ -n "${RPM_FINDPROV_TOPDIR-}" ] && [ -z "${fname%%$RPM_FINDPROV_TOPDIR/*}" ]; then
+		Debug "skip $f due to RPM_FINDPROV_TOPDIR=$RPM_FINDPROV_TOPDIR"
+		continue
+	fi
+	if [ -n "${RPM_FINDPROV_SKIPLIST-}" ]; then
+		for skip in $RPM_FINDPROV_SKIPLIST; do
+			if [ -z "${fname##$skip}" ]; then
+				Debug "skip $f due to RPM_FINDPROV_SKIPLIST pattern $skip"
+				continue 2
+			fi
+		done
+	fi
+	echo "$f"
+done >"$workdir"/files
+
+if ! [ -s "$workdir"/files ]; then
+	Info "empty file list, nothing to do"
+	exit 0
+fi
+
+# filter file list through file(1) to append types (dereference symlinks)
+if ! file -L -NF$'\t' -f "$workdir"/files >"$workdir"/files+types; then
+	sed -n '/\t *ERROR:/p' "$workdir"/files+types >&2
+	sed -i '/\t *ERROR:/d' "$workdir"/files+types
+fi
+
+if ! [ -s "$workdir"/files+types ]; then
+	Info "empty file list, nothing to do"
+	exit 0
+fi
+
+found=
+RunMethod()
+{
+	local exe="$1"; shift
+	local filter="$exe".files
+	if ! [ -x "$filter" ]; then
+		# XXX should be Fatal
+		Info "$filter not available"
+		return
+	fi
+	local filelist="$workdir/${exe##*/}".files
+	local deplist="$workdir/${exe##*/}".deps
+	Debug "running $filter"
+	"$filter" <"$workdir"/files+types >"$filelist"
+	Verbose "$filter: $(wc -l <"$filelist") files"
+	[ -s "$filelist" ] || return 0
+	# XXX validate $filelist
+	Debug "running $exe"
+	"$exe" <"$filelist" >"$deplist"
+	Verbose "$exe: $(wc -l <"$deplist") dependencies"
+	[ -s "$deplist" ] || return 0
+	found=1
+}
+
+Info "running scripts ($methods)"
+RunMethods prov "$methods" RunMethod
+[ -z "$found" ] || (set +f; LC_COLLATE=C sort -u "$workdir"/*.deps) || exit 1
+
+exit 0
 
 # Normalize buildroot.
 real_buildroot="$(cd "$RPM_BUILD_ROOT" && /bin/pwd)" || exit 1
@@ -343,24 +428,7 @@ FindLibProvs()
 	fi
 }
 
-: ${RPM_FINDPROV_TOPDIR:=}
-: ${RPM_FINDPROV_SKIPLIST:=}
-
 while IFS= read -r f; do
-	fname="${f#$RPM_BUILD_ROOT}"
-	fname="${fname#.}"
-
-	if [ -n "$RPM_FINDPROV_TOPDIR" ] && [ -z "${fname%%$RPM_FINDPROV_TOPDIR/*}" ]; then
-		continue
-	fi
-	if [ -n "$RPM_FINDPROV_SKIPLIST" ]; then
-		for skip in $RPM_FINDPROV_SKIPLIST; do
-			if [ -z "${fname##$skip}" ]; then
-				continue 2
-			fi
-		done
-	fi
-	# Find out file type (dereference symlinks).
 	if t="$(file -bL "$f")"; then
 		if [ -z "${fname##/usr/share/pkgconfig/*.pc}" -o -z "${fname##$RPM_LIBDIR/pkgconfig/*.pc}" ]; then
 			[ -n "$FIND_PKGCONFIG" ] || continue
@@ -399,6 +467,3 @@ FindPythonProvs
 
 # Find provides in listed tcl index files, if any
 FindTclProvs
-
-# Finally sort and print them.
-printf %s "$FOUND_PROVS" |LC_COLLATE=C sort -u
