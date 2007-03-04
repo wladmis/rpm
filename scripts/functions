@@ -20,6 +20,12 @@
 unset CDPATH ||:
 PROG="${0##*/}"
 
+case "${RPM_SCRIPTS_DEBUG:-0}" in
+	0) unset RPM_SCRIPTS_DEBUG ||: ;;
+	1|2) ;;
+	*) RPM_SCRIPTS_DEBUG=3; set -x ;;
+esac
+
 Info()
 {
 	echo "${0##*/}: $*" >&2
@@ -29,6 +35,18 @@ Fatal()
 {
 	echo "${0##*/}: $*" >&2
 	exit 1
+}
+
+Verbose()
+{
+	[ "${RPM_SCRIPTS_DEBUG:-0}" -ge 1 ] || return 0
+	echo "${0##*/}: $*" >&2
+}
+
+Debug()
+{
+	[ "${RPM_SCRIPTS_DEBUG:-0}" -ge 2 ] || return 0
+	echo "${0##*/}: $*" >&2
 }
 
 ValidateBuildRoot()

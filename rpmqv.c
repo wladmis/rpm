@@ -942,7 +942,12 @@ int main(int argc, const char ** argv)
     case MODE_REBUILD:
     case MODE_RECOMPILE:
       { const char * pkg;
-        while (!rpmIsVerbose())
+	const char * scripts_debug = (rpmlogSetMask(0) >= RPMLOG_MASK(RPMMESS_DEBUG)<<1)
+			? "3" : rpmIsDebug() ? "2" : rpmIsVerbose() ? "1" : NULL;
+	if (scripts_debug)
+		addMacro(NULL, "_scripts_debug", NULL, scripts_debug, -1);
+
+	while (!rpmIsVerbose())
 	    rpmIncreaseVerbosity();
 
 	if (!poptPeekArg(optCon))
@@ -980,7 +985,12 @@ int main(int argc, const char ** argv)
       case MODE_BUILD:
       case MODE_TARBUILD:
       { const char * pkg;
-        while (!rpmIsVerbose())
+	const char * scripts_debug = (rpmlogSetMask(0) >= RPMLOG_MASK(RPMMESS_DEBUG)<<1)
+			? "3" : rpmIsDebug() ? "2" : rpmIsVerbose() ? "1" : NULL;
+	if (scripts_debug)
+		addMacro(NULL, "_scripts_debug", NULL, scripts_debug, -1);
+
+	while (!rpmIsVerbose())
 	    rpmIncreaseVerbosity();
 
 	switch (ba->buildChar) {
