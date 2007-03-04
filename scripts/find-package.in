@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -efu
 #
 # Copyright (C) 2002-2003  Dmitry V. Levin <ldv@altlinux.org>
 #
@@ -18,7 +18,6 @@
 #
 
 . @RPMCONFIGDIR@/functions
-ValidateBuildRoot
 
 FindPackage()
 {
@@ -32,14 +31,14 @@ FindPackage()
 			# Dependence name starts with `/'.
 
 			# Does it start with buildroot?
-			if [ -z "${r##$RPM_BUILD_ROOT*}" ]; then
+			if [ -n "${RPM_BUILD_ROOT-}" ] && [ -z "${r##$RPM_BUILD_ROOT*}" ]; then
 				Info "$f: invalid dependence: $r"
 				return 1
 			fi
 
 			rep="$r"
 			# Does it belong to buildroot?
-			if [ -e "$RPM_BUILD_ROOT$rep" ]; then
+			if [ -n "${RPM_BUILD_ROOT-}" ] && [ -e "$RPM_BUILD_ROOT$rep" ]; then
 				continue
 			fi
 
@@ -50,14 +49,14 @@ FindPackage()
 			fi
 
 			# Check for pkg contents complete index.
-			if [ -n "$RPM_PKG_CONTENTS_INDEX_ALL" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
+			if [ -n "${RPM_PKG_CONTENTS_INDEX_ALL-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
 				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_ALL")"
 				if [ -n "$package" ]; then
 					printf %s\\n "$package"
 					continue
 				fi
 			# Check for pkg contents binary index.
-			elif [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
+			elif [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
 				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
 				if [ -n "$package" ]; then
 					printf %s\\n "$package"
@@ -77,14 +76,16 @@ FindPackage()
 			printf %s\\n "$rep"
 		else
 			# Check buildroot first.
-			local RPATH
-			RPATH="$(printf %s "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
-			if [ -n "$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)" ]; then
-				continue
+			if [ -n "${RPM_BUILD_ROOT-}" ]; then
+				local RPATH
+				RPATH="$(printf %s "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
+				if [ -n "$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)" ]; then
+					continue
+				fi
 			fi
 
 			# Check for pkg contents binary index.
-			if [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
+			if [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
 				for location in /sbin /usr/sbin /bin /usr/bin /usr/X11R6/bin; do
 					package="$(awk -v "f=$location/$r" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
 					if [ -n "$package" ]; then
