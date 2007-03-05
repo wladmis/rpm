@@ -18,12 +18,13 @@
 #
 
 . @RPMCONFIGDIR@/functions
-ValidateBuildRoot
+[ $# -eq 1 ] && [ -n "$1" -a -z "${1##/*}" ] ||
+	{ ArgvFileAction "$0" "$@"; exit; }
 
 file="$1"
 
 head -1 "$file" |grep -qs '^# shell functions provides list' || exit 0
 
-fname="${file##$RPM_BUILD_ROOT}"
+fname="${file##${RPM_BUILD_ROOT-}}"
 dname="${fname%/*}"
-cat "$file" | sed -ne "s,^[^#]\+$,$dname(&),pg"
+sed -ne "s,^[^#]\+$,$dname(&),pg" "$file"

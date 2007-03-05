@@ -112,7 +112,6 @@ FIND_PAM=
 FIND_PERL=
 FIND_PKGCONFIG=
 FIND_PYTHON=
-FIND_SHELL=
 FIND_TCL=
 libperl_so=
 
@@ -131,7 +130,6 @@ ParseMethod()
 				FIND_PERL=
 				FIND_PKGCONFIG=
 				FIND_PYTHON=
-				FIND_SHELL=
 				FIND_TCL=
 				;;
 			java)
@@ -190,12 +188,6 @@ ParseMethod()
 			nopython)
 				FIND_PYTHON=
 				;;
-			sh|shell)
-				FIND_SHELL=1
-				;;
-			nosh|noshell)
-				FIND_SHELL=
-				;;
 			tcl)
 				FIND_TCL=1
 				;;
@@ -212,7 +204,6 @@ ParseMethod()
 				FIND_PERL=1
 				FIND_PKGCONFIG=1
 				FIND_PYTHON=1
-				FIND_SHELL=1
 				FIND_TCL=1
 				;;
 			default|yes|true)
@@ -230,7 +221,6 @@ FIND_SCRIPT=
 if [ -n "$FIND_PAM" -o \
      -n "$FIND_PERL" -o \
      -n "$FIND_PYTHON" -o \
-     -n "$FIND_SHELL" -o \
      -n "$FIND_TCL" ]; then
 	FIND_SCRIPT=1
 fi
@@ -306,14 +296,7 @@ ListScriptReqs()
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
 	fi
-	if [ -z "${t##*Bourne* shell script text*}" ]; then
-		if [ -n "$FIND_SHELL" -a -x "$f" ]; then
-			local r
-			r="$(@RPMCONFIGDIR@/shell.req "$f")" || return 1
-			[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
-$r"
-		fi
-	elif [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
+	if [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
 		if [ -n "$FIND_PAM" ]; then
 			local r
 			r="$(@RPMCONFIGDIR@/pam.req "$f")" || return 1

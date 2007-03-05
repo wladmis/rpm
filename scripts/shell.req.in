@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -efu
 #
 # Copyright (C) 2000,2003  Dmitry V. Levin <ldv@altlinux.org>
 #
@@ -17,17 +17,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
-. @RPMCONFIGDIR@/find-package
+. @RPMCONFIGDIR@/functions
+[ $# -eq 1 ] && [ -n "$1" -a -z "${1##/*}" ] ||
+	{ ArgvFileAction "$0" "$@"; exit; }
 
 file="$1"
-fname="${file##$RPM_BUILD_ROOT}"
+fname="${file##${RPM_BUILD_ROOT-}}"
 dname="${fname%/*}"
 #extra=
 
 t="$(file -b "$file")" || exit 1
 
 case "$(file -b "$file")" in
-	"Bourne-Again shell script text"*)
+	*"Bourne-Again shell script text"*)
+		FIND_REQ='/bin/bash --rpm-requires' ;;
+	*" bash script text"*)
 		FIND_REQ='/bin/bash --rpm-requires' ;;
 	*)
 		FIND_REQ='/bin/sh --rpm-requires' ;;
@@ -47,6 +51,8 @@ fi
 reqs="$(printf %s\\n "$reqs" |sed -e 's/^\(sh\|bash\|executable\)(\(.*\))$/\2/g' |LC_COLLATE=C sort -u)"
 [ -n "$reqs" ] || exit 0
 
+. @RPMCONFIGDIR@/find-package
+
 FindReqs()
 {
 	for r in "$@"; do
@@ -57,13 +63,12 @@ FindReqs()
 			alias|keyword|function|builtin)
 				continue ;;
 		esac
-		if ! grep -qs "^$r\$" "$RPM_BUILD_ROOT/$dname/.provides.sh"; then
-			local f
-			if f=`grep -qs "^$r\$" "/$dname/.provides.sh"`; then
-				printf %s\\n "$dname($r)"
-			else
-				FindPackage "$file" "$r"
-			fi
+		if grep -qs -Fx "$r" "${RPM_BUILD_ROOT-}$dname/.provides.sh"; then
+			printf %s\\n "$dname($r)"
+		elif grep -qs -Fx "$r" "$dname/.provides.sh"; then
+			printf %s\\n "$dname($r)"
+		else
+			FindPackage "$file" "$r"
 		fi
 	done
 }

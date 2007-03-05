@@ -13,7 +13,8 @@ EXTRA_DIST = \
 	functions files.req.list ldd magic.prov magic.req \
 	pam.prov pam.req pkgconfig.prov pkgconfig.req perl.prov perl.req \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
-	shell.req shell.prov shlib.req.awk sql.prov sql.req strip_files \
+	shell.req shell.req.files shell.prov shell.prov.files \
+	shlib.req.awk sql.prov sql.req strip_files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
 
 installprefix = $(DESTDIR)
@@ -32,5 +33,6 @@ config_SCRIPTS = \
 	functions files.req.list ldd magic.prov magic.req \
 	pam.prov pam.req pkgconfig.prov pkgconfig.req perl.prov perl.req \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
-	shell.req shell.prov shlib.req.awk sql.prov sql.req strip_files \
+	shell.req shell.req.files shell.prov shell.prov.files \
+	shlib.req.awk sql.prov sql.req strip_files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
