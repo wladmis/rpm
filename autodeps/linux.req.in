@@ -290,12 +290,6 @@ ListScriptReqs()
 	local f t
 	f="$1"
 	t="$2"
-	if [ -x "$f" ]; then
-		local r
-		r="$(FindPackage "$f" "$(head -1 "$f" |sed -n 's|^#![[:space:]]*\(/[^[:space:]]\+\).*|\1|p')")" || return 1
-		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
-$r"
-	fi
 	if [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
 		if [ -n "$FIND_PAM" ]; then
 			local r
@@ -466,8 +460,6 @@ $p"
 		r="$(@RPMCONFIGDIR@/pkgconfig.req "$f")"
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
 $r"
-	elif [ -z "${t##* text*}" ]; then
-		ListScriptReqs "$f" "$t"
 	elif [ -z "${t##*ELF* executable*dynamically linked*}" ]; then
 		r="$(FindExeReqs "$f")"
 		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS

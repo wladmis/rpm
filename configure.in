@@ -1000,6 +1000,7 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	scripts/pam.req
 	scripts/pkgconfig.prov
 	scripts/pkgconfig.req
+	scripts/shebang.req
 	scripts/shell.prov
 	scripts/shell.req
 	scripts/strip_files

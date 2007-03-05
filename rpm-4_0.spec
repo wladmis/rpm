@@ -474,6 +474,7 @@ fi
 %rpmattr %_rpmlibdir/pam.*
 %rpmattr %_rpmlibdir/pkgconfig.*
 %rpmattr %_rpmlibdir/shell.*
+%rpmattr %_rpmlibdir/shebang.*
 %rpmattr %_rpmlibdir/sql.*
 %rpmattr %_rpmlibdir/verify-elf
 %rpmattr %_rpmlibdir/Specfile.pm

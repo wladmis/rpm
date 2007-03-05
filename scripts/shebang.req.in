@@ -1,0 +1,20 @@
+#!/bin/sh -efu
+
+. @RPMCONFIGDIR@/functions
+. @RPMCONFIGDIR@/find-package
+
+ShebangReq()
+{
+	local f="$1" line=; shift
+	line=$(sed -n '1s|^#![[:space:]]*/|/|p' "$f")
+	[ -n "$line" ] || return 0
+	set -- $line
+	case "$#,$1" in
+		2,/usr/bin/env)
+			FindPackage "$f" "$1" "$2" ;;
+		*)
+			FindPackage "$f" "$1" ;;
+	esac
+}
+
+ArgvFileAction ShebangReq "$@"
