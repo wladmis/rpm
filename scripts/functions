@@ -54,3 +54,6 @@ ValidateBuildRoot()
 	[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ] ||
 		Fatal "invalid \$RPM_BUILD_ROOT"
 }
+
+[ -z "${RPM_BUILD_ROOT-}" ] || ValidateBuildRoot
+readonly RPM_BUILD_ROOT
