@@ -996,6 +996,8 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	scripts/fixup-libtool
 	scripts/fixup-pkgconfig
 	scripts/ldd
+	scripts/lib.prov
+	scripts/lib.req
 	scripts/pam.prov
 	scripts/pam.req
 	scripts/pkgconfig.prov

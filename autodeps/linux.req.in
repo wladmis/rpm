@@ -105,7 +105,6 @@ exit 0
 
 FIND_FILES=
 FIND_JAVA=
-FIND_LIBS=
 FIND_MONO=
 FIND_PAM=
 FIND_PERL=
@@ -120,7 +119,6 @@ ParseMethod()
 			no|none|off|false)
 				FIND_FILES=
 				FIND_JAVA=
-				FIND_LIBS=
 				FIND_MONO=
 				FIND_PAM=
 				FIND_PERL=
@@ -132,12 +130,6 @@ ParseMethod()
 				;;
 			nojava)
 				FIND_JAVA=
-				;;
-			lib|library)
-				FIND_LIBS=1
-				;;
-			nolib|nolibrary)
-				FIND_LIBS=
 				;;
 			files)
 				FIND_FILES=1
@@ -177,7 +169,6 @@ ParseMethod()
 				;;
 			all)
 				FIND_FILES=1
-				FIND_LIBS=1
 				FIND_MONO=1
 				FIND_JAVA=1
 				FIND_PAM=1
@@ -206,7 +197,6 @@ fi
 
 if [ -z "$FIND_FILES" -a \
      -z "$FIND_JAVA" -a \
-     -z "$FIND_LIBS" -a \
      -z "$FIND_MONO" -a \
      -z "$FIND_SCRIPT" ]; then
 	# Nothing to do
@@ -324,93 +314,6 @@ FindTclReqs()
 $r"
 }
 
-dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
-shlib_req='@RPMCONFIGDIR@/shlib.req.awk'
-elf_ldd='@RPMCONFIGDIR@/ldd'
-RPM_FINDREQ_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT")"
-RPM_FINDREQ_RPATH="$RPM_FINDREQ_RPATH /$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
-
-FindLibReqs()
-{
-	[ -n "$FIND_LIBS" ] || return 0
-
-	local braces canon_prefix deps dir dump f interp name pathname prefix rpath segments suffix v vers
-	f="$1"
-
-	if dump="$(objdump -p "$f")" &&
-	   segments="$(readelf -l "$f")"; then
-		interp="$(printf '%s\n' "$segments" |
-			  sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')"
-#		not yet, waiting for updated glibc...
-#		[ -z "$interp" ] ||
-#			printf '%s\n' "$interp"
-		if printf '%s\n' "$segments" |
-			egrep -qs '[[:space:]]\.gnu\.hash([[:space:]]|$)' &&
-		   ! printf '%s\n' "$segments" |
-			egrep -qs '[[:space:]]\.hash([[:space:]]|$)'; then
-			echo 'rtld(GNU_HASH)'
-		fi
-
-		suffix="$(printf '%s\n' "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')"
-		[ -z "$suffix" ] && braces= || braces='()'
-
-		rpath="$(printf %s "$dump" |
-			 awk '{if ($1=="RPATH") print $2}' |
-			 tr -s : ' ' |
-			 sed -e "s|\$ORIGIN|${fname%/*}|g")"
-		if [ -n "$rpath" ]; then
-			rpath="$rpath $RPM_FINDREQ_RPATH"
-		else
-			rpath="$RPM_FINDREQ_RPATH"
-		fi
-		rpath="$(printf %s "$rpath" |
-			tr -s '[:space:]' '\n' |
-			grep -v '^$' |
-			LANG=C uniq |
-			sed -e "s|^|$RPM_BUILD_ROOT&|" |
-			tr -s '[:space:]' : |
-			sed -e 's/^:\+//; s/:\+$//')"
-		deps="$("$elf_ldd" -- "$f" "$rpath")" || return 1
-		deps="$(printf %s "$deps" |sed -e "s|$RPM_BUILD_ROOT||g")"
-		# Shared library dependencies, version references.
-		for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
-			name="$(printf %s "$vers" |cut -d: -f1)"
-			vers="$(printf %s "$vers" |cut -d: -f2-)"
-			pathname="$(printf %s "$deps" |awk "-vname=$name" '
-NF>2 && $1==name && $2=="=>" && $3~/^/ {print $3}
-NF==2 && $2~/^\(.+\)$/ {lib=$1; sub("^/.*/","",lib); if (lib==name) print $1}
-				')"
-			prefix="${pathname%/*}"
-			canon_prefix="$(printf %s "$prefix/" |
-				sed -e 's|/tls/|/|' -e 's|/sse2/|/|' -e "s|/$RPM_ARCH/|/|" -e 's|/i[3-9]86/|/|' -e 's|/\+$||')"
-			if [ -z "$canon_prefix" -o -n "${canon_prefix##/*}" ]; then
-				Info "WARNING: $fname: library $name not found"
-				continue
-			fi
-			for dir in $RPM_FINDREQ_RPATH; do
-				if [ "$canon_prefix" = "$dir" ]; then
-					prefix=
-					break
-				fi
-			done
-			[ -z "$prefix" ] || prefix="$prefix/"
-			v=
-			for v in `printf %s "$vers" |tr : ' '`; do
-				printf '%s%s(%s)%s\n' "$prefix" "$name" "$v" "$suffix"
-			done
-			[ -n "$v" ] ||
-				printf '%s%s%s%s\n' "$prefix" "$name" "$braces" "$suffix"
-		done
-	fi
-}
-
-FindExeReqs()
-{
-	if [ -x "$1" ]; then
-		FindLibReqs "$1"
-	fi
-}
-
 if [ -n "$RPM_SUBPACKAGE_NAME" ]; then
 	if [ -n "${RPM_SUBPACKAGE_NAME%%glibc*}" -a -z "${RPM_SUBPACKAGE_NAME##*-devel-static}" ]; then
 		FOUND_REQS=glibc-devel-static
@@ -427,17 +330,7 @@ $p"
 			fi
 		done
 	fi
-	if [ -z "${t##*ELF* executable*dynamically linked*}" ]; then
-		r="$(FindExeReqs "$f")"
-		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
-$r"
-	elif [ -z "${t##*ELF* shared object*}" ]; then
-		r="$(FindLibReqs "$f")"
-		[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
-$r"
-		[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
-$f"
-	elif [ -z "${t##*MS Windows PE*}" ]; then
+	if [ -z "${t##*MS Windows PE*}" ]; then
 		[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
 $f"
 	elif [ -z "${t##*Zip archive data*}" -a -z "${f##*.jar}" ] ||

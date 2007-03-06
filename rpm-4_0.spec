@@ -471,6 +471,7 @@ fi
 %rpmattr %_rpmlibdir/fixup-*
 %rpmattr %_rpmlibdir/http.req
 %rpmattr %_rpmlibdir/files.*
+%rpmattr %_rpmlibdir/lib.*
 %rpmattr %_rpmlibdir/pam.*
 %rpmattr %_rpmlibdir/pkgconfig.*
 %rpmattr %_rpmlibdir/shell.*

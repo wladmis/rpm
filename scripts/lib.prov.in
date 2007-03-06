@@ -1,0 +1,109 @@
+#!/bin/sh -efu
+#
+# Copyright (C) 2000-2006  Dmitry V. Levin <ldv@altlinux.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+. @RPMCONFIGDIR@/functions
+
+dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
+
+[ -n "${RPM_LIBDIR-}" ] || RPM_LIBDIR=`rpm --eval %_libdir`
+[ -n "${RPM_LIB-}" ] || RPM_LIB=`rpm --eval %_lib`
+
+DEF_RPM_FINDPROV_LIB_PATH="/$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
+[ -z "${RPM_BUILD_ROOT-}" ] ||
+DEF_RPM_FINDPROV_LIB_PATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT") $DEF_RPM_FINDPROV_LIB_PATH"
+
+RPM_FINDPROV_LIB_PATH="$(IFS="$IFS:"; echo '' ${RPM_FINDPROV_LIB_PATH-} $DEF_RPM_FINDPROV_LIB_PATH '')"
+Debug "RPM_FINDPROV_LIB_PATH=$RPM_FINDPROV_LIB_PATH"
+
+# Normalize buildroot.
+[ -z "${RPM_BUILD_ROOT-}" ] && real_buildroot= ||
+real_buildroot="$(cd "$RPM_BUILD_ROOT" && /bin/pwd)" || exit 1
+
+# Note this works for both a.out and ELF executables.
+FindLibProvs()
+{
+	local braces dir dump f name suffix
+	f="$1"
+	local fname="${f#${RPM_BUILD_ROOT-}}"
+	dir="${fname%/*}"
+	[ -n "$dir" ] || return 0
+	name="${fname##*/}"
+	[ -n "$name" ] || return 0
+
+	[ "$dir" = "/$RPM_LIB/security" ] || [ -z "${RPM_FINDPROV_LIB_PATH##* $dir *}" ] || return 0
+
+	if dump="$(objdump -p "$f")"; then
+		if [ "$dir" = "/$RPM_LIB/security" ]; then
+			printf 'PAM(%s)\n' "$name"
+			return 0
+		fi
+		local soname
+		soname="$(printf %s\\n "$dump" |sed -ne 's/^[[:space:]]*SONAME[[:space:]]\+\([^[:space:]]\+\)[[:space:]]*$/\1/p')" || return 1
+		suffix="$(printf %s\\n "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
+		[ -z "$suffix" ] && braces= || braces='()'
+		while :; do
+			# For libraries with soname, ignore all but files named as soname.
+			[ -z "$soname" -o "$soname" = "$name" ] || break
+
+			# Treat symlinks specially.
+			if [ -L "$f" ]; then
+				[ -n "$soname" ] || break
+				local real realpath realdir
+				realpath=$(readlink -fv "$f") || break
+				real="${realpath#$real_buildroot}"
+				# Ignore symlinks leading out of buildroot.
+				[ -z "$real_buildroot" ] || [ "$real" != "$realpath" ] || break
+				realdir="${real%/*}"
+				# Ignore symlinks to shorter locations.
+				[ "${#dir}" -le "${#realdir}" ] || break
+			fi
+
+			# soname is either empty or equal to name
+			soname="$name"
+
+			# Check for non-default path.
+			local nondefdir=
+			[ -z "${DEF_RPM_FINDPROV_LIB_PATH##* $dir *}" ] || nondefdir="$dir"
+
+			# Output soname.
+			if [ -z "$nondefdir" ]; then
+				printf '%s\n' "$soname$braces$suffix"
+			else
+				printf '%s/%s\n' "$nondefdir" "$soname$braces$suffix"
+			fi
+
+			# Output version definitions.
+			printf %s\\n "$dump" | awk "-vsoname=$soname" "-vnondefdir=$nondefdir" "-vsuffix=$suffix" '
+				BEGIN {start=0;}
+				/^Version definitions:$/ {start=1;}
+				/^[0-9]/ && (start==1) && ($4!="") && ($4!=soname) {
+					if (nondefdir=="")
+						printf("%s(%s)%s\n",soname,$4,suffix)
+					else
+						printf("%s/%s(%s)%s\n",nondefdir,soname,$4,suffix)
+				}
+				/^$/ {start=0;}
+			' || return 1
+
+			break
+		done
+	fi
+}
+
+ArgvFileAction FindLibProvs "$@"

@@ -108,10 +108,6 @@ RunMethods prov "$methods" RunMethod
 
 exit 0
 
-# Normalize buildroot.
-real_buildroot="$(cd "$RPM_BUILD_ROOT" && /bin/pwd)" || exit 1
-
-FIND_LIBS=
 FIND_MONO=
 FIND_PAM=
 FIND_PERL=
@@ -124,7 +120,6 @@ ParseMethod()
 	for	t in "$@"; do
 		case "${t/%,}" in
 			no|none|off|false)
-				FIND_LIBS=
 				FIND_MONO=
 				FIND_PAM=
 				FIND_PERL=
@@ -132,12 +127,6 @@ ParseMethod()
 				FIND_TCL=
 				;;
 			java|nojava)
-				;;
-			lib)
-				FIND_LIBS=1
-				;;
-			nolib)
-				FIND_LIBS=
 				;;
 			mono)
 				FIND_MONO=1
@@ -170,7 +159,6 @@ ParseMethod()
 				FIND_TCL=
 				;;
 			all)
-				FIND_LIBS=1
 				FIND_MONO=1
 				FIND_PAM=1
 				FIND_PERL=1
@@ -188,8 +176,7 @@ ParseMethod()
 }
 ParseMethod $RPM_FINDPROV_METHOD
 
-if [ -z "$FIND_LIBS" -a \
-     -z "$FIND_MONO" -a \
+if [ -z "$FIND_MONO" -a \
      -z "$FIND_PAM" -a \
      -z "$FIND_PERL" -a \
      -z "$FIND_PYTHON" -a \
@@ -306,109 +293,10 @@ FindTclProvs()
 $r"
 }
 
-
-dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
-DEF_RPM_FINDPROV_LIB_PATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT" |tr -s '\n' :)"
-DEF_RPM_FINDPROV_LIB_PATH="$DEF_RPM_FINDPROV_LIB_PATH:/$RPM_LIB:$RPM_LIBDIR:$("$dump_ld_config" |tr -s '\n' :)"
-DEF_RPM_FINDPROV_LIB_PATH="$(printf %s "$DEF_RPM_FINDPROV_LIB_PATH" |sed -e 's/^:\+//; s/:\+$//')"
-RPM_FINDPROV_LIB_PATH="$RPM_FINDPROV_LIB_PATH:$DEF_RPM_FINDPROV_LIB_PATH"
-RPM_FINDPROV_LIB_PATH="$(printf %s "$RPM_FINDPROV_LIB_PATH" |sed -e 's/^:\+//; s/:\+$//')"
-
-lookup_path()
-{
-	local d dir path found=
-	dir="$1" && shift
-	path="$1" && shift
-	for d in $(printf %s "$path" |tr : ' '); do
-		[ "$d" = "$dir" ] || continue
-		found="$d"
-		break
-	done
-	[ -n "$found" ] && return 0 || return 1
-}
-
-# Note this works for both a.out and ELF executables.
-FindLibProvs()
-{
-	[ -n "$FIND_LIBS" ] || return 0
-
-	local braces dir dump f name suffix
-	f="$1"
-	dir="${fname%/*}"
-	[ -n "$dir" ] || return 0
-	name="${fname##*/}"
-	[ -n "$name" ] || return 0
-
-	[ "$dir" = "/$RPM_LIB/security" ] || lookup_path "$dir" "$RPM_FINDPROV_LIB_PATH" || return 0
-
-	if dump="$(objdump -p "$f")"; then
-		if [ "$dir" = "/$RPM_LIB/security" ]; then
-			printf 'PAM(%s)\n' "$name"
-			return 0
-		fi
-		local soname
-		soname="$(printf %s\\n "$dump" |sed -ne 's/^[[:space:]]*SONAME[[:space:]]\+\([^[:space:]]\+\)[[:space:]]*$/\1/p')" || return 1
-		suffix="$(printf %s\\n "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
-		[ -z "$suffix" ] && braces= || braces='()'
-		while :; do
-			# For libraries with soname, ignore all but files named as soname.
-			[ -z "$soname" -o "$soname" = "$name" ] || break
-
-			# Treat symlinks specially.
-			if [ -L "$f" ]; then
-				[ -n "$soname" ] || break
-				local real realpath realdir
-				realpath=$(readlink -fv "$f") || break
-				real="${realpath#$real_buildroot}"
-				# Ignore symlinks leading out of buildroot.
-				[ "$real" != "$realpath" ] || break
-				realdir="${real%/*}"
-				# Ignore symlinks to shorter locations.
-				[ "${#dir}" -le "${#realdir}" ] || break
-			fi
-
-			# soname is either empty or equal to name
-			soname="$name"
-
-			# Check for non-default path.
-			local nondefdir=
-			lookup_path "$dir" "$DEF_RPM_FINDPROV_LIB_PATH" || nondefdir="$dir"
-
-			# Output soname.
-			if [ -z "$nondefdir" ]; then
-				printf '%s\n' "$soname$braces$suffix"
-			else
-				printf '%s/%s\n' "$nondefdir" "$soname$braces$suffix"
-			fi
-
-			# Output version definitions.
-    			printf %s\\n "$dump" | awk "-vsoname=$soname" "-vnondefdir=$nondefdir" "-vsuffix=$suffix" '
-				BEGIN {start=0;}
-				/^Version definitions:$/ {start=1;}
-				/^[0-9]/ && (start==1) && ($4!="") && ($4!=soname) {
-					if (nondefdir=="")
-						printf("%s(%s)%s\n",soname,$4,suffix)
-					else
-						printf("%s/%s(%s)%s\n",nondefdir,soname,$4,suffix)
-				}
-				/^$/ {start=0;}
-			' || return 1
-
-			break
-		done
-	fi
-}
-
 while IFS= read -r f; do
 	if t="$(file -bL "$f")"; then
 		if [ -z "${t##* text*}" ]; then
 			ListScriptProvs "$f" "$t"
-		elif [ -z "${t##*ELF* shared object*}" ]; then
-			r="$(FindLibProvs "$f")"
-			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
-$r"
-			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
-$f"
 		elif [ -z "${t##*MS Windows PE*}" ]; then
 			[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
 $f"

@@ -1,0 +1,110 @@
+#!/bin/sh -efu
+#
+# Copyright (C) 2000-2006  Dmitry V. Levin <ldv@altlinux.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+. @RPMCONFIGDIR@/functions
+
+dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
+shlib_req='@RPMCONFIGDIR@/shlib.req.awk'
+elf_ldd='@RPMCONFIGDIR@/ldd'
+
+[ -n "${RPM_LIBDIR-}" ] || RPM_LIBDIR=`rpm --eval %_libdir`
+[ -n "${RPM_LIB-}" ] || RPM_LIB=`rpm --eval %_lib`
+[ -n "${RPM_ARCH-}" ] || RPM_ARCH=`rpm --eval %_arch`
+
+RPM_FINDREQ_RPATH="/$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
+[ -z "${RPM_BUILD_ROOT-}" ] ||
+RPM_FINDREQ_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT") $RPM_FINDREQ_RPATH"
+Debug "RPM_FINDREQ_RPATH=$RPM_FINDREQ_RPATH"
+
+FindLibReqs()
+{
+	local braces canon_prefix deps dir dump f interp name pathname prefix rpath segments suffix v vers
+	f="$1"
+
+	local fname="${f#${RPM_BUILD_ROOT-}}"
+
+	if dump="$(objdump -p "$f")" &&
+	   segments="$(readelf -l "$f")"; then
+		interp="$(printf '%s\n' "$segments" |
+			  sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')"
+#		not yet, waiting for updated glibc...
+#		[ -z "$interp" ] ||
+#			printf '%s\n' "$interp"
+		if printf '%s\n' "$segments" |
+			egrep -qs '[[:space:]]\.gnu\.hash([[:space:]]|$)' &&
+		   ! printf '%s\n' "$segments" |
+			egrep -qs '[[:space:]]\.hash([[:space:]]|$)'; then
+			echo 'rtld(GNU_HASH)'
+		fi
+
+		suffix="$(printf '%s\n' "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')"
+		[ -z "$suffix" ] && braces= || braces='()'
+
+		rpath="$(printf %s "$dump" |
+			 awk '{if ($1=="RPATH") print $2}' |
+			 tr -s : ' ' |
+			 sed -e "s|\$ORIGIN|${fname%/*}|g")"
+		if [ -n "$rpath" ]; then
+			rpath="$rpath $RPM_FINDREQ_RPATH"
+		else
+			rpath="$RPM_FINDREQ_RPATH"
+		fi
+		rpath="$(printf %s "$rpath" |
+			tr -s '[:space:]' '\n' |
+			grep -v '^$' |
+			LANG=C uniq |
+			sed -e "s|^|${RPM_BUILD_ROOT-}&|" |
+			tr -s '[:space:]' : |
+			sed -e 's/^:\+//; s/:\+$//')"
+		deps="$("$elf_ldd" -- "$f" "$rpath")" || return 1
+		[ -z "${RPM_BUILD_ROOT-}" ] ||
+		deps="$(printf %s "$deps" |sed -e "s|$RPM_BUILD_ROOT||g")"
+		# Shared library dependencies, version references.
+		for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
+			name="$(printf %s "$vers" |cut -d: -f1)"
+			vers="$(printf %s "$vers" |cut -d: -f2-)"
+			pathname="$(printf %s "$deps" |awk "-vname=$name" '
+NF>2 && $1==name && $2=="=>" && $3~/^/ {print $3}
+NF==2 && $2~/^\(.+\)$/ {lib=$1; sub("^/.*/","",lib); if (lib==name) print $1}
+				')"
+			prefix="${pathname%/*}"
+			canon_prefix="$(printf %s "$prefix/" |
+				sed -e 's|/tls/|/|' -e 's|/sse2/|/|' -e "s|/$RPM_ARCH/|/|" -e 's|/i[3-9]86/|/|' -e 's|/\+$||')"
+			if [ -z "$canon_prefix" -o -n "${canon_prefix##/*}" ]; then
+				Info "WARNING: $fname: library $name not found"
+				continue
+			fi
+			for dir in $RPM_FINDREQ_RPATH; do
+				if [ "$canon_prefix" = "$dir" ]; then
+					prefix=
+					break
+				fi
+			done
+			[ -z "$prefix" ] || prefix="$prefix/"
+			v=
+			for v in `printf %s "$vers" |tr : ' '`; do
+				printf '%s%s(%s)%s\n' "$prefix" "$name" "$v" "$suffix"
+			done
+			[ -n "$v" ] ||
+				printf '%s%s%s%s\n' "$prefix" "$name" "$braces" "$suffix"
+		done
+	fi
+}
+
+ArgvFileAction FindLibReqs "$@"

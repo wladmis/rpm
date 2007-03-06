@@ -10,13 +10,14 @@ EXTRA_DIST = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
-	functions files.req.list ldd magic.prov magic.req \
+	functions files.req.list magic.prov magic.req \
+	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.prov pam.req perl.prov perl.req \
 	pkgconfig.req pkgconfig.req.files pkgconfig.prov pkgconfig.prov.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
-	shlib.req.awk sql.prov sql.req strip_files \
+	sql.prov sql.req strip_files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
 
 installprefix = $(DESTDIR)
@@ -32,11 +33,12 @@ config_SCRIPTS = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
-	functions files.req.list ldd magic.prov magic.req \
+	functions files.req.list magic.prov magic.req \
+	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.prov pam.req perl.prov perl.req \
 	pkgconfig.req pkgconfig.req.files pkgconfig.prov pkgconfig.prov.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
-	shlib.req.awk sql.prov sql.req strip_files \
+	sql.prov sql.req strip_files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
