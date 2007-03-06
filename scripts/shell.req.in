@@ -48,7 +48,7 @@ if ! reqs="$($FIND_REQ "$file" 2>/dev/null)"; then
 		reqs="$($FIND_REQ "$file")"
 	fi
 fi
-reqs="$(printf %s\\n "$reqs" |sed -e 's/^\(sh\|bash\|executable\)(\(.*\))$/\2/g' |LC_COLLATE=C sort -u)"
+reqs="$(printf %s\\n "$reqs" |sed -n 's/^\(sh\|bash\|executable\)(\(.*\))$/\2/p' |LC_COLLATE=C sort -u)"
 [ -n "$reqs" ] || exit 0
 
 . @RPMCONFIGDIR@/find-package
