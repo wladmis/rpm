@@ -17,7 +17,6 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
 . @RPMCONFIGDIR@/functions
-ValidateBuildRoot
 
 undefined=
 while test $# -gt 0; do
@@ -61,7 +60,7 @@ if [ -z "$interp" ]; then
 		Fatal 'Unable to recognize ELF program interpreter'
 fi
 
-if [ -f "$RPM_BUILD_ROOT$interp" -a -x "$RPM_BUILD_ROOT$interp" ]; then
+if [ -n "${RPM_BUILD_ROOT-}" ] && [ -f "$RPM_BUILD_ROOT$interp" -a -x "$RPM_BUILD_ROOT$interp" ]; then
 	rtld="$RPM_BUILD_ROOT$interp"
 elif [ -f "$interp" -a -x "$interp" ]; then
 	rtld="$interp"
