@@ -1,6 +1,7 @@
 #!/bin/sh -e
 #
 # Copyright (C) 2003  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2007  Alexey Tourbin <at@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -57,3 +58,43 @@ ValidateBuildRoot()
 
 [ -z "${RPM_BUILD_ROOT-}" ] || ValidateBuildRoot
 readonly RPM_BUILD_ROOT
+
+SetupMethods()
+{
+	local suffix="$1" inm="$2"; shift 2
+	# do not stat(2) here so as to bypass buildreq
+	local allm=$(ls /usr/lib/rpm/ |sed -n "/^[^.]/s/[.]$suffix$//p")
+	[ -n "$allm" ] || Fatal "no $suffix methods available"
+	allm=$(echo '' $allm '')
+	local m= outm="$allm"
+	for m in $(IFS="$IFS,"; echo '' $inm); do
+		case "$m" in
+			*[^0-9A-Za-z_-]*)
+				Fatal "invalid $suffix method name $m"
+				;;
+			yes|auto|all)
+				outm=$allm
+				;;
+			no|none|off|false|skip)
+				outm=
+				;;
+			no*)
+				m=${m#no}
+				outm=$(echo "$outm" |sed "s/ $m / /g")
+				;;
+			*)
+				[ -z "${allm##* $m *}" ] || Fatal "$suffix method $m not available"
+				[ -n "$outm" -a -z "${outm##* $m *}" ] || outm=" $outm $m "
+				;;
+		esac
+	done
+	echo $outm |tr ' ' ','
+}
+
+RunMethods()
+{
+	local m_m= m_suffix="$1" m_inm="$2"; shift 2
+	for m_m in $(IFS="$IFS,"; echo $m_inm); do
+		${1+"$@"} /usr/lib/rpm/"$m_m.$m_suffix"
+	done
+}
