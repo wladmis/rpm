@@ -39,11 +39,13 @@ FindPackage()
 			rep="$r"
 			# Does it belong to buildroot?
 			if [ -n "${RPM_BUILD_ROOT-}" ] && [ -e "$RPM_BUILD_ROOT$rep" ]; then
+				Verbose "$f: $rep -> \$RPM_BUILD_ROOT$rep (skip)"
 				continue
 			fi
 
 			# Is it an alternative?
 			if readlink "$rep" |grep -qs '^/etc/alternatives/'; then
+				Verbose "$f: $rep -> $rep (alternative)"
 				printf %s\\n "$rep"
 				continue
 			fi
@@ -52,6 +54,7 @@ FindPackage()
 			if [ -n "${RPM_PKG_CONTENTS_INDEX_ALL-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
 				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_ALL")"
 				if [ -n "$package" ]; then
+					Verbose "$f: $rep -> $package (via content index)"
 					printf %s\\n "$package"
 					continue
 				fi
@@ -59,6 +62,7 @@ FindPackage()
 			elif [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
 				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
 				if [ -n "$package" ]; then
+					Verbose "$f: $rep -> $package (via content index)"
 					printf %s\\n "$package"
 					continue
 				fi
@@ -67,19 +71,22 @@ FindPackage()
 			# Check package database.
 			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
 				if [ -n "$package" ]; then
+					Verbose "$f: $rep -> $package (via rpmdb)"
 					printf %s\\n "$package"
 					continue
 				fi
 			fi
 
 			# Not found; output raw dependence.
+			Verbose "$f: $rep -> $rep (raw)"
 			printf %s\\n "$rep"
 		else
 			# Check buildroot first.
 			if [ -n "${RPM_BUILD_ROOT-}" ]; then
 				local RPATH
 				RPATH="$(printf %s "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
-				if [ -n "$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)" ]; then
+				if rep="$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)"; then
+					Verbose "$f: $r -> \$RPM_BUILD_ROOT${rep#$RPM_BUILD_ROOT} (skip)"
 					continue
 				fi
 			fi
@@ -89,24 +96,25 @@ FindPackage()
 				for location in /sbin /usr/sbin /bin /usr/bin /usr/X11R6/bin; do
 					package="$(awk -v "f=$location/$r" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
 					if [ -n "$package" ]; then
+						Verbose "$r -> $location/$r -> $package (via content index)"
 						printf %s\\n "$package"
 						continue 2
 					fi
 				done
 			fi
 
-			# Lookup in host system.
-			if ! rep="$(/usr/bin/which -- "$r" 2>/dev/null)"; then
-				continue
-			fi
-
-			# Check package database.
-			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
+			# Lookup in the host system and check rpm database.
+			if rep="$(/usr/bin/which -- "$r" 2>/dev/null)" &&
+			   package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
 				if [ -n "$package" ]; then
+					Verbose "$f: $r -> $rep -> $package (via rpmdb)"
 					printf %s\\n "$package"
 					continue
 				fi
 			fi
+
+			# Not found.
+			Verbose "$f: $r not found (skip)"
 		fi
 	done
 }
