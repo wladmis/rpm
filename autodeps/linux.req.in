@@ -105,14 +105,12 @@ exit 0
 
 FIND_FILES=
 FIND_JAVA=
-FIND_LIBPERL=
 FIND_LIBS=
 FIND_MONO=
 FIND_PAM=
 FIND_PERL=
 FIND_PYTHON=
 FIND_TCL=
-libperl_so=
 
 ParseMethod()
 {
@@ -122,7 +120,6 @@ ParseMethod()
 			no|none|off|false)
 				FIND_FILES=
 				FIND_JAVA=
-				FIND_LIBPERL=
 				FIND_LIBS=
 				FIND_MONO=
 				FIND_PAM=
@@ -139,14 +136,8 @@ ParseMethod()
 			lib|library)
 				FIND_LIBS=1
 				;;
-			libperl)
-				FIND_LIBPERL=1
-				;;
 			nolib|nolibrary)
 				FIND_LIBS=
-				;;
-			nolibperl)
-				FIND_LIBPERL=
 				;;
 			files)
 				FIND_FILES=1
@@ -168,11 +159,9 @@ ParseMethod()
 				;;
 			perl)
 				FIND_PERL=1
-				FIND_LIBPERL=1
 				;;
 			noperl)
 				FIND_PERL=
-				FIND_LIBPERL=
 				;;
 			python)
 				FIND_PYTHON=1
@@ -188,7 +177,6 @@ ParseMethod()
 				;;
 			all)
 				FIND_FILES=1
-				FIND_LIBPERL=1
 				FIND_LIBS=1
 				FIND_MONO=1
 				FIND_JAVA=1
@@ -218,7 +206,6 @@ fi
 
 if [ -z "$FIND_FILES" -a \
      -z "$FIND_JAVA" -a \
-     -z "$FIND_LIBPERL" -a \
      -z "$FIND_LIBS" -a \
      -z "$FIND_MONO" -a \
      -z "$FIND_SCRIPT" ]; then
@@ -414,11 +401,6 @@ NF==2 && $2~/^\(.+\)$/ {lib=$1; sub("^/.*/","",lib); if (lib==name) print $1}
 			[ -n "$v" ] ||
 				printf '%s%s%s%s\n' "$prefix" "$name" "$braces" "$suffix"
 		done
-
-		if [ -n "$FIND_LIBPERL" -a -z "$libperl_so" -a -z "${f##*/usr/lib/perl?/*/auto/*.so}" ]; then
-			libperl_so=`perl -MConfig -e 'print "$Config{libperl}\n"'`
-			printf %s\\n "$libperl_so$braces$suffix"
-		fi
 	fi
 }
 
