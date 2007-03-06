@@ -98,3 +98,44 @@ RunMethods()
 		${1+"$@"} /usr/lib/rpm/"$m_m.$m_suffix"
 	done
 }
+
+ArgvFileAction()
+{
+	local av_action="$1"; shift
+
+	if [ $# -gt 0 ]; then
+		local av_argv=
+		av_argv=$(getopt -n "$PROG" -o v -l help,verbose -- "$@")
+		eval set -- "$av_argv"
+		while :; do
+			case "$1" in
+				--help) type Usage >/dev/null 2>&1 && Usage 0 ||
+					echo "Usage: $PROG [-v|--verbose] [FILE...]"
+					exit 0 ;;
+				-v|--verbose)
+					export RPM_SCRIPTS_DEBUG=$((${RPM_SCRIPTS_DEBUG:-0}+1))
+					shift ;;
+				--)	shift
+					break ;;
+				*) Fatal "unrecognized option: $1"
+			esac
+		done
+		[ "${RPM_SCRIPTS_DEBUG:-0}" -lt 3 ] || set -x
+	fi
+
+	local av_f
+	if [ $# -gt 0 ]; then
+		for av_f; do
+			[ -n "$av_f" -a -z "${av_f##/*}" ] || av_f=$(readlink -vm -- "$av_f")
+			Debug "processing $av_f"
+			"$av_action" "$av_f"
+		done
+	else
+		[ -t 0 ] && Info "reading file list from standard input"
+		while IFS= read -r av_f; do
+			[ -n "$av_f" -a -z "${av_f##/*}" ] || av_f=$(readlink -vm -- "$av_f")
+			Debug "processing $av_f"
+			"$av_action" "$av_f"
+		done
+	fi
+}
