@@ -11,7 +11,8 @@ EXTRA_DIST = \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
 	functions files.req.list ldd magic.prov magic.req \
-	pam.prov pam.req pkgconfig.prov pkgconfig.req perl.prov perl.req \
+	pam.prov pam.req perl.prov perl.req \
+	pkgconfig.req pkgconfig.req.files pkgconfig.prov pkgconfig.prov.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
@@ -32,7 +33,8 @@ config_SCRIPTS = \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
 	functions files.req.list ldd magic.prov magic.req \
-	pam.prov pam.req pkgconfig.prov pkgconfig.req perl.prov perl.req \
+	pam.prov pam.req perl.prov perl.req \
+	pkgconfig.req pkgconfig.req.files pkgconfig.prov pkgconfig.prov.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \

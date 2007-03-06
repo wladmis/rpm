@@ -115,7 +115,6 @@ FIND_LIBS=
 FIND_MONO=
 FIND_PAM=
 FIND_PERL=
-FIND_PKGCONFIG=
 FIND_PYTHON=
 FIND_TCL=
 
@@ -129,7 +128,6 @@ ParseMethod()
 				FIND_MONO=
 				FIND_PAM=
 				FIND_PERL=
-				FIND_PKGCONFIG=
 				FIND_PYTHON=
 				FIND_TCL=
 				;;
@@ -159,12 +157,6 @@ ParseMethod()
 			noperl)
 				FIND_PERL=
 				;;
-			pkgconfig)
-				FIND_PKGCONFIG=1
-				;;
-			nopkgconfig)
-				FIND_PKGCONFIG=
-				;;
 			python)
 				FIND_PYTHON=1
 				;;
@@ -182,7 +174,6 @@ ParseMethod()
 				FIND_MONO=1
 				FIND_PAM=1
 				FIND_PERL=1
-				FIND_PKGCONFIG=1
 				FIND_PYTHON=1
 				FIND_TCL=1
 				;;
@@ -201,7 +192,6 @@ if [ -z "$FIND_LIBS" -a \
      -z "$FIND_MONO" -a \
      -z "$FIND_PAM" -a \
      -z "$FIND_PERL" -a \
-     -z "$FIND_PKGCONFIG" -a \
      -z "$FIND_PYTHON" -a \
      -z "$FIND_TCL" ]; then
 	# Nothing to do
@@ -411,12 +401,7 @@ FindLibProvs()
 
 while IFS= read -r f; do
 	if t="$(file -bL "$f")"; then
-		if [ -z "${fname##/usr/share/pkgconfig/*.pc}" -o -z "${fname##$RPM_LIBDIR/pkgconfig/*.pc}" ]; then
-			[ -n "$FIND_PKGCONFIG" ] || continue
-			r="$(@RPMCONFIGDIR@/pkgconfig.prov "$f")"
-			[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
-$r"
-		elif [ -z "${t##* text*}" ]; then
+		if [ -z "${t##* text*}" ]; then
 			ListScriptProvs "$f" "$t"
 		elif [ -z "${t##*ELF* shared object*}" ]; then
 			r="$(FindLibProvs "$f")"
