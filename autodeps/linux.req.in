@@ -314,12 +314,6 @@ FindTclReqs()
 $r"
 }
 
-if [ -n "$RPM_SUBPACKAGE_NAME" ]; then
-	if [ -n "${RPM_SUBPACKAGE_NAME%%glibc*}" -a -z "${RPM_SUBPACKAGE_NAME##*-devel-static}" ]; then
-		FOUND_REQS=glibc-devel-static
-	fi
-fi
-
 while IFS= read -r f; do
 	if [ -n "$FIND_FILES" ]; then
 		for p in $(grep '^[^#]' @RPMCONFIGDIR@/files.req.list); do

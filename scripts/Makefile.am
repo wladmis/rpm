@@ -18,6 +18,7 @@ EXTRA_DIST = \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
 	sql.prov sql.req strip_files \
+	static.req static.req.files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
 
 installprefix = $(DESTDIR)
@@ -41,4 +42,5 @@ config_SCRIPTS = \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
 	sql.prov sql.req strip_files \
+	static.req static.req.files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
