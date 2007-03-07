@@ -469,14 +469,12 @@ fi
 %rpmattr %_rpmlibdir/find-provides
 %rpmattr %_rpmlibdir/find-requires
 %rpmattr %_rpmlibdir/fixup-*
-%rpmattr %_rpmlibdir/http.req
 %rpmattr %_rpmlibdir/files.*
 %rpmattr %_rpmlibdir/lib.*
 %rpmattr %_rpmlibdir/pam.*
 %rpmattr %_rpmlibdir/pkgconfig.*
 %rpmattr %_rpmlibdir/shell.*
 %rpmattr %_rpmlibdir/shebang.*
-%rpmattr %_rpmlibdir/sql.*
 %rpmattr %_rpmlibdir/verify-elf
 %rpmattr %_rpmlibdir/Specfile.pm
 %rpmattr %_rpmlibdir/*.awk
