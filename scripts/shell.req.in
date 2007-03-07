@@ -26,9 +26,9 @@ fname="${file##${RPM_BUILD_ROOT-}}"
 dname="${fname%/*}"
 #extra=
 
-t="$(file -b "$file")" || exit 1
+t="$(file -b "$file")" || Fatal "${t:-$f: file type not available}"
 
-case "$(file -b "$file")" in
+case "$t" in
 	*"Bourne-Again shell script text"*)
 		FIND_REQ='/bin/bash --rpm-requires' ;;
 	*" bash script text"*)
