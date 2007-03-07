@@ -131,12 +131,6 @@ ParseMethod()
 			nojava)
 				FIND_JAVA=
 				;;
-			files)
-				FIND_FILES=1
-				;;
-			nofiles)
-				FIND_FILES=
-				;;
 			mono)
 				FIND_MONO=1
 				;;
@@ -168,7 +162,6 @@ ParseMethod()
 				FIND_TCL=
 				;;
 			all)
-				FIND_FILES=1
 				FIND_MONO=1
 				FIND_JAVA=1
 				FIND_PAM=1
@@ -195,8 +188,7 @@ if [ -n "$FIND_PAM" -o \
 	FIND_SCRIPT=1
 fi
 
-if [ -z "$FIND_FILES" -a \
-     -z "$FIND_JAVA" -a \
+if [ -z "$FIND_JAVA" -a \
      -z "$FIND_MONO" -a \
      -z "$FIND_SCRIPT" ]; then
 	# Nothing to do
@@ -315,15 +307,6 @@ $r"
 }
 
 while IFS= read -r f; do
-	if [ -n "$FIND_FILES" ]; then
-		for p in $(grep '^[^#]' @RPMCONFIGDIR@/files.req.list); do
-			if [ -z "${fname%%$p/*}" ]; then
-				[ -z "$FOUND_REQS" ] && FOUND_REQS="$p" || FOUND_REQS="$FOUND_REQS
-$p"
-				break
-			fi
-		done
-	fi
 	if [ -z "${t##*MS Windows PE*}" ]; then
 		[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
 $f"

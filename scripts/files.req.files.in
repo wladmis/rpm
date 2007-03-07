@@ -1,0 +1,2 @@
+#!/bin/sh -efu
+cut -f1 |grep -Ff @RPMCONFIGDIR@/files.req.list || [ $? = 1 ]

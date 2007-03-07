@@ -990,6 +990,8 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	scripts/brp-verify_elf
 	scripts/check-files
 	scripts/compress_files
+	scripts/files.req
+	scripts/files.req.files
 	scripts/find-lang
 	scripts/find-package
 	scripts/fixup-binconfig

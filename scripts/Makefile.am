@@ -10,7 +10,8 @@ EXTRA_DIST = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
-	functions files.req.list magic.prov magic.req \
+	files.req files.req.files files.req.list \
+	functions magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.prov pam.req perl.prov perl.req \
 	pkgconfig.req pkgconfig.req.files pkgconfig.prov pkgconfig.prov.files \
@@ -34,7 +35,8 @@ config_SCRIPTS = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
-	functions files.req.list magic.prov magic.req \
+	files.req files.req.files files.req.list \
+	functions magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.prov pam.req perl.prov perl.req \
 	pkgconfig.req pkgconfig.req.files pkgconfig.prov pkgconfig.prov.files \
