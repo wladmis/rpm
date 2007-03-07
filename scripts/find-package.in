@@ -69,12 +69,17 @@ FindPackage()
 			fi
 
 			# Check package database.
-			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
-				if [ -n "$package" ]; then
+			if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep")"; then
+				package="$(printf %s "$package" |LC_COLLATE=C sort -u)"
+				local n="$(IFS=$'\n'; set -- $package; echo $#)"
+				if [ "$n" = 1 ]; then
 					Verbose "$f: $rep -> $package (via rpmdb)"
 					printf %s\\n "$package"
 					continue
+				elif [ "$n" -gt 1 ]; then
+					Info "$f: $rep provided by:$(echo '' $package)"
 				fi
+				# fall through
 			fi
 
 			# Not found; output raw dependence.
