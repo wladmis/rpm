@@ -106,12 +106,17 @@ FindByName()
 		done
 	fi
 
-	# Lookup in the host system and check rpm database.
-	if rep="$(/usr/bin/which -- "$r" 2>/dev/null)" &&
-	   package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" |LC_COLLATE=C sort -u)"; then
-		if [ -n "$package" ]; then
-			Verbose "$f: $r -> $rep -> $package (via rpmdb)"
-			printf %s\\n "$package"
+	# Lookup in the host system.
+	if rep="$(/usr/bin/which --all --skip-tilde -- "$r" 2>/dev/null)"; then
+		local n="$(IFS=$'\n'; set -- $rep; echo $#)"
+		if [ "$n" -gt 1 ]; then
+			n="$(IFS=$'\n'; for f in $rep; do readlink -vm "$f"; done |sort -u |wc -l)"
+			[ "$n" = 1 ] || Info "$f: which $r:$(echo '' $rep)"
+			rep="$(IFS=$'\n'; set -- $rep; printf %s "$1")"
+		fi
+		if [ -n "$rep" ]; then
+			Verbose "$f: $r -> $rep -> ... (via which)"
+			FindByPath "$f" "$rep"
 			return
 		fi
 	fi
