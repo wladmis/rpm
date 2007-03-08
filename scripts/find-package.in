@@ -1,6 +1,7 @@
 #!/bin/sh -efu
 #
 # Copyright (C) 2002-2003  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2007       Alexey Tourbin <at@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,23 +44,23 @@ FindByPath()
 		return
 	fi
 
-	# Check for pkg contents complete index.
-	if [ -n "${RPM_PKG_CONTENTS_INDEX_ALL-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
-		package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_ALL")"
-		if [ -n "$package" ]; then
+	# Check for pkg contents complete index and pkg binary index.
+	local idx
+	for idx in "${RPM_PKG_CONTENTS_INDEX_ALL-}" "${RPM_PKG_CONTENTS_INDEX_BIN-}"; do
+		[ -n "$idx" ] && [ -s "$idx" ] && [ -r "$idx" ] || continue
+		package="$(awk -v "f=$rep" '($1 == f) {print $2}' "$idx" |sort -u)"
+		local n="$(IFS=$'\n'; set -- $package; echo $#)"
+		if [ "$n" = 1 ]; then
 			Verbose "$f: $rep -> $package (via content index)"
 			printf %s\\n "$package"
 			return
-		fi
-	# Check for pkg contents binary index.
-	elif [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
-		package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
-		if [ -n "$package" ]; then
-			Verbose "$f: $rep -> $package (via content index)"
-			printf %s\\n "$package"
+		elif [ "$n" -gt 1 ]; then
+			Info "$f: $rep indexed by:$(echo '' $package)"
+			Verbose "$f: $rep -> $rep (raw, ambiguous, via content index)"
+			printf %s\\n "$rep"
 			return
 		fi
-	fi
+	done
 
 	# Check package database.
 	if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep")"; then
@@ -71,12 +72,14 @@ FindByPath()
 			return
 		elif [ "$n" -gt 1 ]; then
 			Info "$f: $rep provided by:$(echo '' $package)"
+			Verbose "$f: $rep -> $rep (raw, ambiguous, via rpmdb)"
+			printf %s\\n "$rep"
+			return
 		fi
-		# fall through
 	fi
 
 	# Not found; output raw dependence.
-	Verbose "$f: $rep -> $rep (raw)"
+	Verbose "$f: $rep -> $rep (raw, not found)"
 	printf %s\\n "$rep"
 }
 
