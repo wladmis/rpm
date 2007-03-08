@@ -224,6 +224,7 @@
 @alt@	%{?_verify_elf_skiplist:export RPM_VERIFY_ELF_SKIPLIST=\"%_verify_elf_skiplist\"}\
 @alt@	%{?_findreq_skiplist:export RPM_FINDREQ_SKIPLIST=\"%_findreq_skiplist\"}\
 @alt@	%{?_findprov_skiplist:export RPM_FINDPROV_SKIPLIST=\"%_findprov_skiplist\"}\
+@alt@	%{?_findpackage_path:export RPM_FINDPACKAGE_PATH=\"%_findpackage_path\"}\
 @alt@	%{?_findprov_lib_path:export RPM_FINDPROV_LIB_PATH=\"%_findprov_lib_path\"}\
 @alt@	%{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%_perl_lib_path\"}\
 @alt@	%{?_perl_req_method:export RPM_PERL_REQ_METHOD=\"%_perl_req_method\"}\
@@ -469,6 +470,7 @@
 @alt@%_findreq_skiplist	%_docdir/*
 @alt@%_findprov_skiplist	%_docdir/*
 @alt@
+@alt@%_findpackage_path		%nil
 @alt@%_findprov_lib_path	%nil
 @alt@
 @alt@%set_cleanup_method()	%global _cleanup_method %*
@@ -497,6 +499,7 @@
 @alt@%set_findreq_skiplist()	%global _findreq_skiplist %*
 @alt@%set_findprov_skiplist()	%global _findprov_skiplist %*
 @alt@
+@alt@%set_findpackage_path()	%global _findpackage_path %*
 @alt@%set_findprov_lib_path()	%global _findprov_lib_path %*
 @alt@
 @alt@%add_cleanup_skiplist()	%global _cleanup_skiplist %_cleanup_skiplist %*
@@ -514,6 +517,7 @@
 @alt@%add_tcl_req_skip()	%global _tcl_req_skip %_tcl_req_skip %*
 @alt@%add_tcl_lib_path()	%global _tcl_lib_path %_tcl_lib_path %*
 @alt@
+@alt@%add_findpackage_path()	%global _findpackage_path %_findpackage_path %*
 @alt@%add_findprov_lib_path()	%global _findprov_lib_path %_findprov_lib_path %*
 @alt@
 @alt@%_buildrequires_build %nil

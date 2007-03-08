@@ -20,6 +20,10 @@
 
 . @RPMCONFIGDIR@/functions
 
+RPM_FINDPACKAGE_PATH="${RPM_FINDPACKAGE_PATH-}:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin"
+RPM_FINDPACKAGE_PATH="$(IFS="$IFS:"; set -f; echo '' $RPM_FINDPACKAGE_PATH |sed -e 's/  */:/g; s/^://')"
+Debug "RPM_FINDPACKAGE_PATH=$RPM_FINDPACKAGE_PATH"
+
 FindByPath()
 {
 	# Dependence name starts with `/'.
@@ -90,7 +94,7 @@ FindByName()
 	# Check buildroot first.
 	if [ -n "${RPM_BUILD_ROOT-}" ]; then
 		local RPATH
-		RPATH="$(printf %s "$PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
+		RPATH="$(printf %s "$RPM_FINDPACKAGE_PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
 		if rep="$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)"; then
 			Verbose "$f: $r -> \$RPM_BUILD_ROOT${rep#$RPM_BUILD_ROOT} (skip)"
 			return
@@ -99,11 +103,23 @@ FindByName()
 
 	# Check for pkg contents binary index.
 	if [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
-		local out="$(awk -v r="$r" '{p=$1}
-			sub("^/(bin|sbin|usr/bin|usr/sbin|usr/X11R6/bin)/","",$1) && $1==r {
-				# sort paths by length, which gives the above order
-				print length(p) "\t" p "\t" $2 }' "$RPM_PKG_CONTENTS_INDEX_BIN" |
-					sort -n |sort -u -k3 |sort -n |cut -f2-)"
+		local out="$(awk -v r="$r" -v RPM_FINDPACKAGE_PATH="$RPM_FINDPACKAGE_PATH" '
+			BEGIN {
+				n = split(RPM_FINDPACKAGE_PATH, ary, ":")
+				for (i = 1; i <= n; i++) {
+					dir = ary[i]
+					sub("/+$", "", dir)
+					if (dir && !(dir in DIR))
+						DIR[dir] = i
+				}
+			}
+			NF==2 && match($1, "^(/.+)/([^/]+)$", ary) {
+				dir = ary[1]; basename = ary[2]
+				if ((dir in DIR) && basename==r)
+					print DIR[dir] "\t" $1 "\t" $2
+			}
+			' "$RPM_PKG_CONTENTS_INDEX_BIN" |
+				sort -n |sort -u -k3 |sort -n |cut -f2-)"
 		local n="$(IFS=$'\n'; set -- $out; echo $#)"
 		if [ "$n" = 1 ]; then
 			rep="$(IFS=$'\t\n'; set -- $out; printf %s "$1")"
@@ -129,7 +145,7 @@ FindByName()
 	fi
 
 	# Lookup in the host system.
-	if rep="$(/usr/bin/which --all --skip-tilde -- "$r" 2>/dev/null)"; then
+	if rep="$(PATH="$RPM_FINDPACKAGE_PATH" /usr/bin/which --all -- "$r" 2>/dev/null)"; then
 		local n="$(IFS=$'\n'; set -- $rep; echo $#)"
 		if [ "$n" -gt 1 ]; then
 			n="$(IFS=$'\n'; for f in $rep; do readlink -vm "$f"; done |sort -u |wc -l)"
