@@ -102,6 +102,7 @@ FindByName()
 	fi
 
 	# Check for pkg contents binary index.
+	rep= package=
 	if [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
 		local out="$(awk -v r="$r" -v RPM_FINDPACKAGE_PATH="$RPM_FINDPACKAGE_PATH" '
 			BEGIN {
@@ -136,15 +137,12 @@ FindByName()
 				Verbose "$f: $r -> $rep -> $rep (raw, ambiguous, via content index)"
 				printf %s\\n "$rep"
 				return
-			else
-				Verbose "$f: $r -> $rep -> $package (via content index)"
-				printf %s\\n "$package"
-				return
 			fi
 		fi
 	fi
 
 	# Lookup in the host system.
+	local irep="$rep"
 	if rep="$(PATH="$RPM_FINDPACKAGE_PATH" /usr/bin/which --all -- "$r" 2>/dev/null)"; then
 		local n="$(IFS=$'\n'; set -- $rep; echo $#)"
 		if [ "$n" -gt 1 ]; then
@@ -157,6 +155,14 @@ FindByName()
 			FindByPath "$f" "$rep"
 			return
 		fi
+	fi
+
+	# Reconsult pkg contents binary index.
+	if [ -n "$irep" ] && [ -n "$package" ]; then
+		rep="$irep"
+		Verbose "$f: $r -> $rep -> $package (via content index)"
+		printf %s\\n "$package"
+		return
 	fi
 
 	# Not found.
