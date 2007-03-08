@@ -59,6 +59,16 @@ while IFS= read -r f; do
 			fi
 		done
 	fi
+	if [ -L "$f" ]; then
+		to="$(readlink "$f")"
+		if [ -n "$to" -a -z "${to##/*}" ]; then
+			Info "absolute symbolic link $f -> $to is not going to provide anything"
+			continue
+		elif ! [ -e "$f" ]; then
+			Info "broken symbolic link $f -> $to is not going to provide anything"
+			continue
+		fi
+	fi
 	echo "$f"
 done >"$workdir"/files
 
@@ -70,12 +80,7 @@ fi
 # filter file list through file(1) to append types (dereference symlinks)
 if ! file -L -NF$'\t' -f "$workdir"/files >"$workdir"/files+types; then
 	sed -n '/\t *ERROR:/p' "$workdir"/files+types >&2
-	sed -i '/\t *ERROR:/d' "$workdir"/files+types
-fi
-
-if ! [ -s "$workdir"/files+types ]; then
-	Info "empty file list, nothing to do"
-	exit 0
+	exit 1
 fi
 
 found=
