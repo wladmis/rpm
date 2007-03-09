@@ -476,6 +476,7 @@ fi
 %rpmattr %_rpmlibdir/shell.*
 %rpmattr %_rpmlibdir/shebang.*
 %rpmattr %_rpmlibdir/static.*
+%rpmattr %_rpmlibdir/symlinks.*
 %rpmattr %_rpmlibdir/verify-elf
 %rpmattr %_rpmlibdir/Specfile.pm
 %rpmattr %_rpmlibdir/*.awk

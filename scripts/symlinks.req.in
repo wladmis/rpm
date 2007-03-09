@@ -1,0 +1,22 @@
+#!/bin/sh -efu
+
+. @RPMCONFIGDIR@/functions
+. @RPMCONFIGDIR@/find-package
+[ -n "${RPM_BUILD_ROOT-}" ] || Fatal "I do need RPM_BUILD_ROOT"
+real_buildroot=$(cd "$RPM_BUILD_ROOT" && /bin/pwd) || exit 1
+
+SymlinkReq()
+{
+	local f="$1"; shift
+	[ -L "$f" ] || return 0
+	local to=; to=$(readlink -v "$f")
+	if [ -n "$to" -a -z "${to##/*}" ]; then
+		FindPackage "$f" "$to"
+	elif ! [ -e "$f" ]; then
+		to=$(readlink -vm "$f")
+		to=${to#$real_buildroot}
+		FindPackage "$f" "$to"
+	fi
+}
+
+ArgvFileAction SymlinkReq "$@"

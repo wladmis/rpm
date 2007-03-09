@@ -20,6 +20,7 @@ EXTRA_DIST = \
 	shell.req shell.req.files shell.prov shell.prov.files \
 	sql.prov sql.req strip_files \
 	static.req static.req.files \
+	symlinks.req symlinks.req.files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
 
 installprefix = $(DESTDIR)
@@ -45,4 +46,5 @@ config_SCRIPTS = \
 	shell.req shell.req.files shell.prov shell.prov.files \
 	sql.prov sql.req strip_files \
 	static.req static.req.files \
+	symlinks.req symlinks.req.files \
 	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
