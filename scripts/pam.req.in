@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -efu
 #
 # Copyright (C) 2001, 2003, 2005, 2006  Dmitry V. Levin <ldv@altlinux.org>
 #
@@ -18,25 +18,26 @@
 #
 
 . @RPMCONFIGDIR@/functions
-ValidateBuildRoot
+[ $# -eq 1 ] && [ -n "$1" -a -z "${1##/*}" ] ||
+	{ ArgvFileAction "$0" "$@"; exit; }
 
 file="$1"
 
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
-if [ -n "$PAM_SO_SUFFIX" -a -z "${PAM_SO_SUFFIX##%*}" ]; then
+if [ -n "${PAM_SO_SUFFIX-}" ] && [ -z "${PAM_SO_SUFFIX##%*}" ]; then
 	Fatal "invalid PAM_SO_SUFFIX: build system provides no valid libpam-devel package"
 fi
 
-if [ -n "$PAM_NAME_SUFFIX" -a -z "${PAM_NAME_SUFFIX##%*}" ]; then
+if [ -n "${PAM_NAME_SUFFIX-}" ] && [ -z "${PAM_NAME_SUFFIX##%*}" ]; then
 	Fatal "invalid PAM_NAME_SUFFIX: build system provides no valid libpam-devel package"
 fi
 
 # hack for "buildreq -bi".
-[ -f "$RPM_LIBDIR/libpam.so" ] ||:
+[ -f "${RPM_LIBDIR-}/libpam.so" ] ||:
 
 # pam_module.so
-sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib[0-9]*/security/\)\?\([^.[:space:]]\+\.so\)\($\|[[:space:]].*\)#PAM(\4'$PAM_SO_SUFFIX')#pg' <"$file" |sort -u
+sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib[0-9]*/security/\)\?\([^.[:space:]]\+\.so\)\($\|[[:space:]].*\)#PAM(\4'${PAM_SO_SUFFIX-}')#pg' <"$file" |sort -u
 
 # pam_module.so*
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib[0-9]*/security/\)\?\([^.[:space:]]\+\.so[^[:space:]]\+\).*#PAM(\4)#pg' <"$file" |sort -u
@@ -45,7 +46,7 @@ sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|requir
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+include[[:space:]].*#libpam(include)#pg' <"$file" |sort -u
 
 # pam(config) via include
-sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+include[[:space:]]\+\(/etc/pam\.d/\)\?\([^[:space:]]\+\).*#pam'$PAM_NAME_SUFFIX'(\3)#pg' <"$file" |sort -u
+sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+include[[:space:]]\+\(/etc/pam\.d/\)\?\([^[:space:]]\+\).*#pam'${PAM_NAME_SUFFIX-}'(\3)#pg' <"$file" |sort -u
 
 # pam(config) via pam_stack
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib[0-9]*/security/\)\?pam_stack\.so[[:space:]]\+service=\([^[:space:]]\+\).*#pam(\4)#pg' <"$file" |sort -u

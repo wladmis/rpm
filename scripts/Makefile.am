@@ -13,7 +13,7 @@ EXTRA_DIST = \
 	files.req files.req.files files.req.list \
 	functions magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
-	pam.prov pam.req perl.prov perl.req \
+	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
 	pkgconfig.req pkgconfig.req.files pkgconfig.prov pkgconfig.prov.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
@@ -38,7 +38,7 @@ config_SCRIPTS = \
 	files.req files.req.files files.req.list \
 	functions magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
-	pam.prov pam.req perl.prov perl.req \
+	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
 	pkgconfig.req pkgconfig.req.files pkgconfig.prov pkgconfig.prov.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \

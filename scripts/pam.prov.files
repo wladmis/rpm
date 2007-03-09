@@ -1,0 +1,5 @@
+#!/bin/sh -efu
+while IFS=$'\t' read -r f t; do
+	[ -z "${t##*ASCII *text*}" -a -z "${f%%${RPM_BUILD_ROOT-}/etc/pam.d/*}" ] &&
+		echo "$f" ||:
+done

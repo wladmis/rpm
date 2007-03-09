@@ -114,7 +114,6 @@ RunMethods prov "$methods" RunMethod
 exit 0
 
 FIND_MONO=
-FIND_PAM=
 FIND_PERL=
 FIND_PYTHON=
 FIND_TCL=
@@ -126,7 +125,6 @@ ParseMethod()
 		case "${t/%,}" in
 			no|none|off|false)
 				FIND_MONO=
-				FIND_PAM=
 				FIND_PERL=
 				FIND_PYTHON=
 				FIND_TCL=
@@ -138,12 +136,6 @@ ParseMethod()
 				;;
 			nomono)
 				FIND_MONO=
-				;;
-			pam)
-				FIND_PAM=1
-				;;
-			nopam)
-				FIND_PAM=
 				;;
 			perl)
 				FIND_PERL=1
@@ -165,7 +157,6 @@ ParseMethod()
 				;;
 			all)
 				FIND_MONO=1
-				FIND_PAM=1
 				FIND_PERL=1
 				FIND_PYTHON=1
 				FIND_TCL=1
@@ -182,7 +173,6 @@ ParseMethod()
 ParseMethod $RPM_FINDPROV_METHOD
 
 if [ -z "$FIND_MONO" -a \
-     -z "$FIND_PAM" -a \
      -z "$FIND_PERL" -a \
      -z "$FIND_PYTHON" -a \
      -z "$FIND_TCL" ]; then
@@ -213,22 +203,6 @@ ListScriptProvs()
 	local f t
 	f="$1"
 	t="$2"
-
-	if [ -z "${t##ASCII *text*}" ]; then
-		if [ -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
-			if [ -n "$FIND_PAM" ]; then
-				local r
-				r="$(@RPMCONFIGDIR@/pam.prov "$f")" || return 1
-				[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
-$r"
-			fi
-			return 0
-		fi
-
-		# Ignore symlinks for non-PAM scripts.
-		[ ! -L "$f" ] || return 0
-
-	fi
 
 	# Ignore symlinks for non-PAM scripts.
 	[ ! -L "$f" ] || return 0

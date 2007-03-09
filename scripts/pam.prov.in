@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -efu
 #
 # Copyright (C) 2001,2003  Dmitry V. Levin <ldv@altlinux.org>
 #
@@ -18,14 +18,15 @@
 #
 
 . @RPMCONFIGDIR@/functions
-ValidateBuildRoot
+[ $# -eq 1 ] && [ -n "$1" -a -z "${1##/*}" ] ||
+	{ ArgvFileAction "$0" "$@"; exit; }
 
 file="$1"
 
 head -1 "$file" |grep -qs '^#%PAM' || exit 0
 
-if [ -n "$PAM_NAME_SUFFIX" -a -z "${PAM_NAME_SUFFIX##%*}" ]; then
+if [ -n "${PAM_NAME_SUFFIX-}" ] && [ -z "${PAM_NAME_SUFFIX##%*}" ]; then
 	Fatal "invalid PAM_NAME_SUFFIX: build system provides no valid libpam-devel package"
 fi
 
-echo "pam$PAM_NAME_SUFFIX(${file##*/})"
+echo "pam${PAM_NAME_SUFFIX-}(${file##*/})"

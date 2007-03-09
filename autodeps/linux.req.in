@@ -106,7 +106,6 @@ exit 0
 FIND_FILES=
 FIND_JAVA=
 FIND_MONO=
-FIND_PAM=
 FIND_PERL=
 FIND_PYTHON=
 FIND_TCL=
@@ -120,7 +119,6 @@ ParseMethod()
 				FIND_FILES=
 				FIND_JAVA=
 				FIND_MONO=
-				FIND_PAM=
 				FIND_PERL=
 				FIND_PYTHON=
 				FIND_TCL=
@@ -136,12 +134,6 @@ ParseMethod()
 				;;
 			nomono)
 				FIND_MONO=
-				;;
-			pam)
-				FIND_PAM=1
-				;;
-			nopam)
-				FIND_PAM=
 				;;
 			perl)
 				FIND_PERL=1
@@ -164,7 +156,6 @@ ParseMethod()
 			all)
 				FIND_MONO=1
 				FIND_JAVA=1
-				FIND_PAM=1
 				FIND_PERL=1
 				FIND_PYTHON=1
 				FIND_TCL=1
@@ -181,8 +172,7 @@ ParseMethod()
 ParseMethod $RPM_FINDREQ_METHOD
 
 FIND_SCRIPT=
-if [ -n "$FIND_PAM" -o \
-     -n "$FIND_PERL" -o \
+if [ -n "$FIND_PERL" -o \
      -n "$FIND_PYTHON" -o \
      -n "$FIND_TCL" ]; then
 	FIND_SCRIPT=1
@@ -249,14 +239,7 @@ ListScriptReqs()
 	local f t
 	f="$1"
 	t="$2"
-	if [ -z "${t##ASCII *text*}" -a -z "${f%%$RPM_BUILD_ROOT/etc/pam.d/*}" ]; then
-		if [ -n "$FIND_PAM" ]; then
-			local r
-			r="$(@RPMCONFIGDIR@/pam.req "$f")" || return 1
-			[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
-$r"
-		fi
-	elif [ -z "${t##*perl script text*}" -o -z "${f%%*.p[lmh]}" ]; then
+	if [ -z "${t##*perl script text*}" -o -z "${f%%*.p[lmh]}" ]; then
 		if [ -n "$FIND_PERL" ]; then
 			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
 $f"
