@@ -4,6 +4,7 @@ while IFS=$'\t' read -r f t; do
 		*ELF*" shared object"*)
 			echo "$f" ;;
 		*ELF*" executable"*"dynamically linked"*)
-			[ -x "$f" ] && echo "$f" ||: ;;
+			[ -x "$f" ] && echo "$f" ||
+			echo "${0##*/}: ELF executable $f not executable" >&2 ;;
 	esac
 done
