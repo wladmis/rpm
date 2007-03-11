@@ -110,14 +110,13 @@ FindByName()
 				for (i = 1; i <= n; i++) {
 					dir = ary[i]
 					sub("/+$", "", dir)
-					if (dir && !(dir in DIR))
-						DIR[dir] = i
+					file = dir "/" r
+					if (dir && !(file in FILES))
+						FILES[file] = i
 				}
 			}
-			NF==2 && match($1, "^(/.+)/([^/]+)$", ary) {
-				dir = ary[1]; basename = ary[2]
-				if ((dir in DIR) && basename==r)
-					print DIR[dir] "\t" $1 "\t" $2
+			NF==2 && ($1 in FILES) {
+				print FILES[$1] "\t" $1 "\t" $2
 			}
 			' "$RPM_PKG_CONTENTS_INDEX_BIN" |
 				sort -n |sort -u -k3 |sort -n |cut -f2-)"
