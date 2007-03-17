@@ -377,7 +377,7 @@ $r"
 $r"
 			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
 $f"
-		elif [ -z "${t##*MS Windows PE*}" ]; then
+		elif [ -z "${t##*Mono/.Net assembly*}" -o -z "${t##*MS Windows PE*}" ]; then
 			[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
 $f"
 		elif [ "${f##*/}" = '__init__.py' ]; then
