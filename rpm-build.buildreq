@@ -1,2 +1,4 @@
 # rpm-build buildreq filter.
 ^/etc/rpm/macros\.d/.*
+^/usr/lib/rpm/.*\.req\.files$
+^/usr/lib/rpm/.*\.prov\.files$
