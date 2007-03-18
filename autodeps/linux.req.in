@@ -290,7 +290,7 @@ $r"
 }
 
 while IFS= read -r f; do
-	if [ -z "${t##*MS Windows PE*}" ]; then
+	if [ -z "${t##*Mono/.Net assembly*}" -o -z "${t##*MS Windows PE*}" ]; then
 		[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
 $f"
 	elif [ -z "${t##*Zip archive data*}" -a -z "${f##*.jar}" ] ||

@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt73
+Release: alt74
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -524,6 +524,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Mar 17 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt74
+- find-provides, find-requires:
+  + Added support for files of type "Mono/.Net assembly" to repair
+    Mono support when new file(1) is installed (#11088, ildar@).
+
 * Thu Feb 22 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt73
 - Updated gendiff utility (Alexey Tourbin).
 - Added hooks for Java autoreq facility (Damir Shayhutdinov).
