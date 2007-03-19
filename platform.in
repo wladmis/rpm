@@ -277,6 +277,8 @@
 @alt@	\
 @alt@	export MAKEFLAGS=\"-w PAM_SO_SUFFIX=%{?_pam_so_suffix}\"\
 @alt@	\
+@alt@	%{expand:%(cat @SYSCONFIGDIR@/macros.d/*.env)}\
+@alt@	\
 @alt@	%{verbose:set -x}%{!verbose:exec > /dev/null}\
 @alt@	umask 022\
 @alt@	%__mkdir_p %{u2p:%_builddir}\
