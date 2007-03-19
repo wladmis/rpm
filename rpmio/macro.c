@@ -1690,8 +1690,12 @@ rpmInitMacrofileGlob (const char *macrofile)
 						continue;
 
 					for (; *p; ++p)
-						if (!xisalnum (*p) && ('_' != *p) && ('-' != *p))
-							break;
+						if (!xisalnum (*p)) {
+							if (('_' != *p) && ('-' != *p))
+								break;
+							if (p[1] == '\0')
+								break;
+						}
 					if (!*p)
 						rpmInitMacrofile (gl.gl_pathv[i]);
 				}
