@@ -228,17 +228,6 @@
 @alt@	%{?_findprov_lib_path:export RPM_FINDPROV_LIB_PATH=\"%_findprov_lib_path\"}\
 @alt@	%{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%_perl_lib_path\"}\
 @alt@	%{?_perl_req_method:export RPM_PERL_REQ_METHOD=\"%_perl_req_method\"}\
-@alt@	%{?_python_lib_path:export RPM_PYTHON_LIB_PATH=\"%_python_lib_path\"}\
-@alt@	%{?_python_module_declared:export RPM_PYTHON_MODULE_DECLARED=\"%_python_module_declared\"}\
-@alt@	%{?_python_req_hier:export RPM_PYTHON_REQ_HIER=\"%_python_req_hier\"}\
-@alt@	%{?_python_req_method:export RPM_PYTHON_REQ_METHOD=\"%_python_req_method\"}\
-@alt@	%{?_python_req_skip:export RPM_PYTHON_REQ_SKIP=\"%_python_req_skip\"}\
-@alt@	%{?_python_compile_method:export RPM_PYTHON_COMPILE_METHOD=\"%_python_compile_method\"}\
-@alt@	%{?_python_compile_exclude:export RPM_PYTHON_COMPILE_EXCLUDE=\"%_python_compile_exclude\"}\
-@alt@	%{?_python_compile_include:export RPM_PYTHON_COMPILE_INCLUDE=\"%_python_compile_include\"}\
-@alt@	%{?_python_compile_deep:export RPM_PYTHON_COMPILE_DEEP=\"%_python_compile_deep\"}\
-@alt@	%{?_python_compile_skip_x:export RPM_PYTHON_COMPILE_SKIP_X=\"%_python_compile_skip_x\"}\
-@alt@	%{?_python_compile_clean:export RPM_PYTHON_COMPILE_CLEAN=\"%_python_compile_clean\"}\
 @alt@	%{?_tcl_lib_path:export RPM_TCL_LIB_PATH=\"%_tcl_lib_path\"}\
 @alt@	%{?_tcl_req_method:export RPM_TCL_REQ_METHOD=\"%_tcl_req_method\"}\
 @alt@	%{?_tcl_req_skip:export RPM_TCL_REQ_SKIP=\"%_tcl_req_skip\"}\
@@ -246,7 +235,6 @@
 @alt@	%{?_pkg_contents_index_bin:export RPM_PKG_CONTENTS_INDEX_BIN=\"%_pkg_contents_index_bin\"}\
 @alt@	%{?_scripts_debug:export RPM_SCRIPTS_DEBUG=\"%_scripts_debug\"}\
 @alt@	%{?_keep_libtool_files:export RPM_KEEP_LIBTOOL_FILES=\"%_keep_libtool_files\"}\
-@alt@	%{?__python:export RPM_PYTHON=\"%__python\"}\
 @alt@	%{?__tclsh:export RPM_TCLSH=\"%__tclsh\"}\
 @alt@	\
 @alt@	unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
