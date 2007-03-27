@@ -9,6 +9,7 @@
 /etc/cron.monthly
 /etc/cron.weekly
 /etc/emacs/site-start.d
+/etc/hooks
 /etc/logrotate.d
 /etc/pam.d
 /etc/ppp/ip-down.d
