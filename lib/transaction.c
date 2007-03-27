@@ -39,9 +39,6 @@ extern const char * chroot_prefix;
 
 #include "debug.h"
 
-#define	MNT_DEV_PREFIX	"/mnt/"
-#define	MNT_DEV_PREFIX_LENGTH	(sizeof(MNT_DEV_PREFIX)-1)
-
 /*@access FD_t@*/		/* XXX compared with NULL */
 /*@access Header@*/		/* XXX compared with NULL */
 /*@access dbiIndexSet@*/
@@ -1585,8 +1582,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 	ts->di = _free(ts->di);
 	dip = ts->di = xcalloc(sizeof(*ts->di), ts->filesystemCount + 1);
 
-	for (i = 0; (i < ts->filesystemCount) && dip; i++)
-	if (strncmp(ts->filesystems[i], MNT_DEV_PREFIX, MNT_DEV_PREFIX_LENGTH)) {
+	for (i = 0; (i < ts->filesystemCount) && dip; i++) {
 #if STATFS_IN_SYS_STATVFS
 	    struct statvfs sfb;
 	    memset(&sfb, 0, sizeof(sfb));
@@ -1609,7 +1605,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 	    {
 		dip = NULL;
 	    } else {
-		ts->di[i].bsize = sfb.f_bsize;
+		ts->di[i].bsize = sfb.f_bsize ?: 1024;
 		ts->di[i].bneeded = 0;
 		ts->di[i].ineeded = 0;
 #ifdef STATFS_HAS_F_BAVAIL
