@@ -226,8 +226,6 @@
 @alt@	%{?_findprov_skiplist:export RPM_FINDPROV_SKIPLIST=\"%_findprov_skiplist\"}\
 @alt@	%{?_findpackage_path:export RPM_FINDPACKAGE_PATH=\"%_findpackage_path\"}\
 @alt@	%{?_findprov_lib_path:export RPM_FINDPROV_LIB_PATH=\"%_findprov_lib_path\"}\
-@alt@	%{?_perl_lib_path:export RPM_PERL_LIB_PATH=\"%_perl_lib_path\"}\
-@alt@	%{?_perl_req_method:export RPM_PERL_REQ_METHOD=\"%_perl_req_method\"}\
 @alt@	%{?_tcl_lib_path:export RPM_TCL_LIB_PATH=\"%_tcl_lib_path\"}\
 @alt@	%{?_tcl_req_method:export RPM_TCL_REQ_METHOD=\"%_tcl_req_method\"}\
 @alt@	%{?_tcl_req_skip:export RPM_TCL_REQ_SKIP=\"%_tcl_req_skip\"}\
@@ -428,7 +426,6 @@
 @alt@%_cleanup_method	auto
 @alt@%_compress_method	auto
 @alt@%_verify_elf_method	arch=normal,fhs=normal,rpath=normal,stack=normal,textrel=normal,unresolved=normal
-@alt@%_perl_req_method	normal
 @alt@%_tcl_lib_path	""
 @alt@%_tcl_req_method	normal
 @alt@%_tcl_req_skip	""
@@ -459,7 +456,6 @@
 @alt@%set_fixup_method()	%global _fixup_method %*
 @alt@%set_strip_method()	%global _strip_method %*
 @alt@%set_verify_elf_method()	%global _verify_elf_method %*
-@alt@%set_perl_req_method()	%global _perl_req_method %*
 @alt@%set_tcl_req_method()	%global _tcl_req_method %1
 @alt@
 @alt@%set_cleanup_topdir()	%global _cleanup_topdir %*
