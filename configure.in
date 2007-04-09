@@ -860,6 +860,7 @@ elif echo "$build_os" | grep sunos > /dev/null; then
 	AC_LIBOBJ(myrealloc)
 fi
 
+RPMCANONGNU="-gnu"
 #
 # get rid of the 4-th tuple, if config.guess returned "linux-gnu" for build_os
 #
@@ -868,6 +869,10 @@ if echo "$build_os" | grep '.*-gnulibc1' > /dev/null ; then
 fi
 if echo "$build_os" | grep '.*-gnu' > /dev/null ; then
 	build_os=`echo "${build_os}" | sed 's/-gnu$//'`
+fi
+if echo "$build_os" | grep '.*-gnueabi' > /dev/null ; then
+	build_os=`echo "${build_os}" | sed 's/-gnueabi$//'`
+	RPMCANONGNU="-gnueabi"
 fi
 
 changequote(<, >)
@@ -911,6 +916,7 @@ RPMCANONOS="$build_os_noversion"
 AC_SUBST(RPMCANONARCH)
 AC_SUBST(RPMCANONVENDOR)
 AC_SUBST(RPMCANONOS)
+AC_SUBST(RPMCANONGNU)
 
 if test X"$prefix" = XNONE ; then
     usrprefix="$ac_default_prefix"

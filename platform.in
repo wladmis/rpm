@@ -6,8 +6,8 @@
 %_arch			@RPMRC_ARCH@
 %_vendor		@RPMCANONVENDOR@
 %_os			@RPMCANONOS@
-%_gnu			-gnu
-%_target_platform	%{_target_cpu}-%{_vendor}-%{_target_os}
+%_gnu			@RPMCANONGNU@
+%_target_platform	%{_target_cpu}-%{_vendor}-%{_target_os}%{_gnu}
 %optflags		@RPMRC_OPTFLAGS@
 
 #==============================================================================
