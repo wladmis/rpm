@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt75
+Release: alt76
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -524,6 +524,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Apr 10 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt76
+- rpmRunTransactions:
+  Ignore unavailable mount points instead of bailing out.
+
 * Wed Mar 28 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt75
 - Changed /mnt/* mountpoints handling to behave the same way
   as other mountpoints.

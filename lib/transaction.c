@@ -1586,7 +1586,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 #if STATFS_IN_SYS_STATVFS
 	    struct statvfs sfb;
 	    memset(&sfb, 0, sizeof(sfb));
-	    if (statvfs(ts->filesystems[i], &sfb))
+	    if (!statvfs(ts->filesystems[i], &sfb))
 #else
 	    struct statfs sfb;
 #  if STAT_STATFS4
@@ -1596,16 +1596,14 @@ int rpmRunTransactions(	rpmTransactionSet ts,
  * filesystem, as we're doing.
  */
 	    memset(&sfb, 0, sizeof(sfb));
-	    if (statfs(ts->filesystems[i], &sfb, sizeof(sfb), 0))
+	    if (!statfs(ts->filesystems[i], &sfb, sizeof(sfb), 0))
 #  else
 	    memset(&sfb, 0, sizeof(sfb));
-	    if (statfs(ts->filesystems[i], &sfb))
+	    if (!statfs(ts->filesystems[i], &sfb))
 #  endif
 #endif
 	    {
-		dip = NULL;
-	    } else {
-		ts->di[i].bsize = sfb.f_bsize ?: 1024;
+		ts->di[i].bsize = sfb.f_bsize;
 		ts->di[i].bneeded = 0;
 		ts->di[i].ineeded = 0;
 #ifdef STATFS_HAS_F_BAVAIL
@@ -1621,9 +1619,11 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 		ts->di[i].iavail = !(sfb.f_ffree == 0 && sfb.f_files == 0)
 				? sfb.f_ffree : -1;
 
-		(void) stat(ts->filesystems[i], &sb);
-		ts->di[i].dev = sb.st_dev;
 	    }
+	    if (!ts->di[i].bsize)
+		ts->di[i].bsize = 1024;
+	    if (!stat(ts->filesystems[i], &sb))
+		ts->di[i].dev = sb.st_dev;
 	}
 
 	if (dip) ts->di[i].bsize = 0;
