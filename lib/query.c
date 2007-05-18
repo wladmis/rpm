@@ -174,6 +174,8 @@ int showQueryPackage(QVA_t qva, /*@unused@*/rpmdb rpmdb, Header h)
 {
     HGE_t hge = (HGE_t)headerGetEntryMinMemory;
     HFD_t hfd = headerFreeData;
+    size_t tb = 2 * BUFSIZ;
+    size_t sb;
     char * t, * te;
     rpmQueryFlags queryFlags = qva->qva_flags;
     const char * queryFormat = qva->qva_queryFormat;
@@ -199,7 +201,7 @@ int showQueryPackage(QVA_t qva, /*@unused@*/rpmdb rpmdb, Header h)
     int rc = 0;		/* XXX FIXME: need real return code */
     int i;
 
-    te = t = xmalloc(BUFSIZ);
+    te = t = xmalloc(tb);
     *te = '\0';
 
     if (queryFormat == NULL && queryFlags == QUERY_FOR_DEFAULT) {
@@ -215,12 +217,13 @@ int showQueryPackage(QVA_t qva, /*@unused@*/rpmdb rpmdb, Header h)
 	const char * str = queryHeader(h, queryFormat);
 	/*@-branchstate@*/
 	if (str) {
-	    size_t tb = (te - t);
-	    size_t sb = strlen(str);
+	    size_t tx = (te - t);
 
-	    if (sb >= (BUFSIZ - tb)) {
-		t = xrealloc(t, BUFSIZ+sb);
-		te = t + tb;
+	    sb = strlen(str);
+	    if (sb) {
+		tb += sb;
+		t = xrealloc(t, tb);
+		te = t + tx;
 	    }
 	    /*@-usereleased@*/
 	    te = stpcpy(te, str);
