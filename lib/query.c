@@ -205,12 +205,7 @@ int showQueryPackage(QVA_t qva, /*@unused@*/rpmdb rpmdb, Header h)
     *te = '\0';
 
     if (queryFormat == NULL && queryFlags == QUERY_FOR_DEFAULT) {
-	const char * name, * version, * release;
-	(void) headerNVR(h, &name, &version, &release);
-	te = stpcpy(te, name);
-	te = stpcpy( stpcpy(te, "-"), version);
-	te = stpcpy( stpcpy(te, "-"), release);
-	goto exit;
+	queryFormat = "%{name}-%{version}-%{release}\n";
     }
 
     if (queryFormat) {
