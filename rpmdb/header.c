@@ -1367,6 +1367,10 @@ guess_category_value (int category)
   const char *language;
   const char *retval;
 
+  language = getenv ("RPM_LANGUAGE_I18NSTRING");
+  if (language && *language)
+    return language;
+
   /* The highest priority value is the `LANGUAGE' environment
      variable.  But we don't use the value if the currently selected
      locale is the C locale.  This is a GNU extension.  */
