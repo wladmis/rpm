@@ -112,7 +112,7 @@ Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
 Requires: rpm-build-perl >= 0.6.2
 Requires: rpm-build-python >= 0.31
-Requires: rpm-build-tcl
+Requires: rpm-build-tcl >= 0.2.1
 
 %package build-topdir
 Summary: RPM package installation and build directory tree
