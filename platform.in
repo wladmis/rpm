@@ -226,14 +226,10 @@
 @alt@	%{?_findprov_skiplist:export RPM_FINDPROV_SKIPLIST=\"%_findprov_skiplist\"}\
 @alt@	%{?_findpackage_path:export RPM_FINDPACKAGE_PATH=\"%_findpackage_path\"}\
 @alt@	%{?_findprov_lib_path:export RPM_FINDPROV_LIB_PATH=\"%_findprov_lib_path\"}\
-@alt@	%{?_tcl_lib_path:export RPM_TCL_LIB_PATH=\"%_tcl_lib_path\"}\
-@alt@	%{?_tcl_req_method:export RPM_TCL_REQ_METHOD=\"%_tcl_req_method\"}\
-@alt@	%{?_tcl_req_skip:export RPM_TCL_REQ_SKIP=\"%_tcl_req_skip\"}\
 @alt@	%{?_pkg_contents_index_all:export RPM_PKG_CONTENTS_INDEX_ALL=\"%_pkg_contents_index_all\"}\
 @alt@	%{?_pkg_contents_index_bin:export RPM_PKG_CONTENTS_INDEX_BIN=\"%_pkg_contents_index_bin\"}\
 @alt@	%{?_scripts_debug:export RPM_SCRIPTS_DEBUG=\"%_scripts_debug\"}\
 @alt@	%{?_keep_libtool_files:export RPM_KEEP_LIBTOOL_FILES=\"%_keep_libtool_files\"}\
-@alt@	%{?__tclsh:export RPM_TCLSH=\"%__tclsh\"}\
 @alt@	\
 @alt@	unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
 @alt@	%{?_build_lang:export LANG=\"%_build_lang\"\
