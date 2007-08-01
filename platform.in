@@ -395,10 +395,6 @@
 @alt@# Directory for emacs lisp modules.
 @alt@%_emacslispdir	%{_datadir}/emacs/site-lisp
 @alt@
-@alt@# TCL directories.
-@alt@%_tcllibdir	%_libdir/tcl
-@alt@%_tcldatadir	%_datadir/tcl
-@alt@
 @alt@# RPM directory.
 @alt@%_rpmlibdir	%_prefix/lib/rpm
 @alt@
@@ -426,9 +422,6 @@
 @alt@%_cleanup_method	auto
 @alt@%_compress_method	auto
 @alt@%_verify_elf_method	arch=normal,fhs=normal,rpath=normal,stack=normal,textrel=normal,unresolved=normal
-@alt@%_tcl_lib_path	""
-@alt@%_tcl_req_method	normal
-@alt@%_tcl_req_skip	""
 @alt@%_fixup_method	binconfig pkgconfig libtool
 @alt@%_strip_method	%{?_enable_debug:none}%{!?_enable_debug:executable shared}
 @alt@
@@ -456,7 +449,6 @@
 @alt@%set_fixup_method()	%global _fixup_method %*
 @alt@%set_strip_method()	%global _strip_method %*
 @alt@%set_verify_elf_method()	%global _verify_elf_method %*
-@alt@%set_tcl_req_method()	%global _tcl_req_method %1
 @alt@
 @alt@%set_cleanup_topdir()	%global _cleanup_topdir %*
 @alt@%set_compress_topdir()	%global _compress_topdir %*
@@ -485,8 +477,6 @@
 @alt@%add_findreq_skiplist()	%global _findreq_skiplist %_findreq_skiplist %*
 @alt@%add_findprov_skiplist()	%global _findprov_skiplist %_findprov_skiplist %*
 @alt@
-@alt@%add_tcl_req_skip()	%global _tcl_req_skip %_tcl_req_skip %*
-@alt@%add_tcl_lib_path()	%global _tcl_lib_path %_tcl_lib_path %*
 @alt@
 @alt@%add_findpackage_path()	%global _findpackage_path %_findpackage_path %*
 @alt@%add_findprov_lib_path()	%global _findprov_lib_path %_findprov_lib_path %*
