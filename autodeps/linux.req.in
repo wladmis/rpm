@@ -106,9 +106,6 @@ exit 0
 FIND_FILES=
 FIND_JAVA=
 FIND_MONO=
-FIND_PERL=
-FIND_PYTHON=
-FIND_TCL=
 
 ParseMethod()
 {
@@ -119,9 +116,6 @@ ParseMethod()
 				FIND_FILES=
 				FIND_JAVA=
 				FIND_MONO=
-				FIND_PERL=
-				FIND_PYTHON=
-				FIND_TCL=
 				;;
 			java)
 				FIND_JAVA=1
@@ -135,30 +129,9 @@ ParseMethod()
 			nomono)
 				FIND_MONO=
 				;;
-			perl)
-				FIND_PERL=1
-				;;
-			noperl)
-				FIND_PERL=
-				;;
-			python)
-				FIND_PYTHON=1
-				;;
-			nopython)
-				FIND_PYTHON=
-				;;
-			tcl)
-				FIND_TCL=1
-				;;
-			notcl)
-				FIND_TCL=
-				;;
 			all)
 				FIND_MONO=1
 				FIND_JAVA=1
-				FIND_PERL=1
-				FIND_PYTHON=1
-				FIND_TCL=1
 				;;
 			default|yes|true)
 				ParseMethod $RPM_FINDREQ_DEFAULT_METHOD
@@ -170,13 +143,6 @@ ParseMethod()
 	done
 }
 ParseMethod $RPM_FINDREQ_METHOD
-
-FIND_SCRIPT=
-if [ -n "$FIND_PERL" -o \
-     -n "$FIND_PYTHON" -o \
-     -n "$FIND_TCL" ]; then
-	FIND_SCRIPT=1
-fi
 
 if [ -z "$FIND_JAVA" -a \
      -z "$FIND_MONO" -a \
@@ -206,9 +172,6 @@ esac
 FOUND_REQS=
 LIST_JAVA=
 LIST_MONO=
-LIST_PERL=
-LIST_PYTHON=
-LIST_TCL=
 
 FindJavaReqs()
 {
@@ -232,63 +195,6 @@ FindMonoReqs()
 $r"
 }
 
-ListScriptReqs()
-{
-	[ -n "$FIND_SCRIPT" ] || return 0
-
-	local f t
-	f="$1"
-	t="$2"
-	if [ -z "${t##*perl script text*}" -o -z "${f%%*.p[lmh]}" ]; then
-		if [ -n "$FIND_PERL" ]; then
-			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
-$f"
-		fi
-	elif [ -z "${f%%*.py}" ]; then
-		if [ -n "$FIND_PYTHON" ]; then
-			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
-$f"
-		fi
-	elif [ -z "${f%%*.tcl}" ]; then
-		if [ -n "$FIND_TCL" ]; then
-			[ -z "$LIST_TCL" ] && LIST_TCL="$f" || LIST_TCL="$LIST_TCL
-$f"
-		fi
-	fi
-}
-
-FindPerlReqs()
-{
-	[ -n "$LIST_PERL" ] || return 0
-
-	local r
-	r="$(printf %s\\n "$LIST_PERL" |@RPMCONFIGDIR@/perl.req)" || return 1
-	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
-$r"
-}
-
-FindPythonReqs()
-{
-	[ -n "$LIST_PYTHON" ] || return 0
-	[ -x "$RPM_PYTHON" ] || return 0
-
-	local r
-	r="$(printf %s\\n "$LIST_PYTHON" |"$RPM_PYTHON" @RPMCONFIGDIR@/python.req.py)" || return 1
-	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
-$r"
-}
-
-FindTclReqs()
-{
-	[ -n "$LIST_TCL" ] || return 0
-	[ -x "$RPM_TCLSH" ] || return 0
-
-	local r
-	r="$(printf %s\\n "$LIST_TCL" |@RPMCONFIGDIR@/tcl.req)" || return 1
-	[ -z "$FOUND_REQS" ] && FOUND_REQS="$r" || FOUND_REQS="$FOUND_REQS
-$r"
-}
-
 while IFS= read -r f; do
 	if [ -z "${t##*Mono/.Net assembly*}" -o -z "${t##*MS Windows PE*}" ]; then
 		[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
@@ -305,12 +211,3 @@ FindJavaReqs
 
 # Find requires in listed .Net files, if any
 FindMonoReqs
-
-# Find requires in listed perl scripts, if any
-FindPerlReqs
-
-# Find requires in listed python scripts, if any
-FindPythonReqs
-
-# Find requires in listed tcl scripts, if any
-FindTclReqs

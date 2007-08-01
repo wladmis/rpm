@@ -114,9 +114,6 @@ RunMethods prov "$methods" RunMethod
 exit 0
 
 FIND_MONO=
-FIND_PERL=
-FIND_PYTHON=
-FIND_TCL=
 
 ParseMethod()
 {
@@ -125,9 +122,6 @@ ParseMethod()
 		case "${t/%,}" in
 			no|none|off|false)
 				FIND_MONO=
-				FIND_PERL=
-				FIND_PYTHON=
-				FIND_TCL=
 				;;
 			java|nojava)
 				;;
@@ -136,24 +130,6 @@ ParseMethod()
 				;;
 			nomono)
 				FIND_MONO=
-				;;
-			perl)
-				FIND_PERL=1
-				;;
-			noperl)
-				FIND_PERL=
-				;;
-			python)
-				FIND_PYTHON=1
-				;;
-			nopython)
-				FIND_PYTHON=
-				;;
-			tcl)
-				FIND_TCL=1
-				;;
-			notcl)
-				FIND_TCL=
 				;;
 			all)
 				FIND_MONO=1
@@ -172,15 +148,6 @@ ParseMethod()
 }
 ParseMethod $RPM_FINDPROV_METHOD
 
-if [ -z "$FIND_MONO" -a \
-     -z "$FIND_PERL" -a \
-     -z "$FIND_PYTHON" -a \
-     -z "$FIND_TCL" ]; then
-	# Nothing to do
-	cat >/dev/null 2>&1
-	exit 0
-fi
-
 ulimit -c 0
 
 case "$LD_PRELOAD" in
@@ -194,40 +161,6 @@ esac
 
 FOUND_PROVS=
 LIST_MONO=
-LIST_PERL=
-LIST_PYTHON=
-LIST_TCL=
-
-ListScriptProvs()
-{
-	local f t
-	f="$1"
-	t="$2"
-
-	# Ignore symlinks for non-PAM scripts.
-	[ ! -L "$f" ] || return 0
-
-	if [ -z "${t##perl script text*}" -o -z "${t##Perl5 module source text}" -o -z "${f%%*.p[lmh]}" ]; then
-		if [ -n "$FIND_PERL" ]; then
-			[ -z "$LIST_PERL" ] && LIST_PERL="$f" || LIST_PERL="$LIST_PERL
-$f"
-		fi
-	fi
-
-	if [ -z "${f%%*.py}" -o -z "${f%%*.pyo}" -o -z "${f%%*.pyc}" -o -z "${f%%*.pth}" ]; then
-		if [ -n "$FIND_PYTHON" ]; then
-			[ -z "$LIST_PYTHON" ] && LIST_PYTHON="$f" || LIST_PYTHON="$LIST_PYTHON
-$f"
-		fi
-	fi
-
-	if [ "${f##*/}" = "pkgIndex.tcl" ]; then
-		if [ -n "$FIND_TCL" ]; then
-			[ -z "$LIST_TCL" ] && LIST_TCL="$f" || LIST_TCL="$LIST_TCL
-$f"
-		fi
-	fi
-}
 
 FindMonoProvs()
 {
@@ -241,42 +174,9 @@ FindMonoProvs()
 $r"
 }
 
-FindPerlProvs()
-{
-	[ -n "$FIND_PERL" -a -n "$LIST_PERL" ] || return 0
-	local r
-	r="$(printf %s\\n "$LIST_PERL" |@RPMCONFIGDIR@/perl.prov)" || return 1
-	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
-$r"
-}
-
-FindPythonProvs()
-{
-	[ -n "$FIND_PYTHON" -a -n "$LIST_PYTHON" ] || return 0
-	[ -x "$RPM_PYTHON" ] || return 0
-
-	local r
-	r="$(printf %s\\n "$LIST_PYTHON" |"$RPM_PYTHON" @RPMCONFIGDIR@/python.prov.py)" || return 1
-	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
-$r"
-}
-
-FindTclProvs()
-{
-	[ -n "$FIND_TCL" -a -n "$LIST_TCL" ] || return 0
-	[ -x "$RPM_TCLSH" ] || return 0
-
-	local r
-	r="$(printf %s\\n "$LIST_TCL" |@RPMCONFIGDIR@/tcl.prov)" || return 1
-	[ -z "$FOUND_PROVS" ] && FOUND_PROVS="$r" || FOUND_PROVS="$FOUND_PROVS
-$r"
-}
-
 while IFS= read -r f; do
 	if t="$(file -bL "$f")"; then
-		if [ -z "${t##* text*}" ]; then
-			ListScriptProvs "$f" "$t"
-		elif [ -z "${t##*Mono/.Net assembly*}" -o -z "${t##*MS Windows PE*}" ]; then
+		if [ -z "${t##*Mono/.Net assembly*}" -o -z "${t##*MS Windows PE*}" ]; then
 			[ -z "$LIST_MONO" ] && LIST_MONO="$f" || LIST_MONO="$LIST_MONO
 $f"
 		elif [ "${f##*/}" = '__init__.py' ]; then
@@ -291,12 +191,3 @@ done
 
 # Find provides in listed .Net executables and shared libraries, if any
 FindMonoProvs
-
-# Find provides in listed perl scripts, if any
-FindPerlProvs
-
-# Find provides in listed python scripts and shared libraries, if any
-FindPythonProvs
-
-# Find provides in listed tcl index files, if any
-FindTclProvs
