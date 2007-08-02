@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt76
+Release: alt77
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -524,6 +524,16 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri May 18 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77
+- rpmio/macro.c (doFoo):
+  Fixed potential buffer overflow in %%homedir macro processing.
+- lib/formats.c (i18nTag):
+  Fixed potential null dereference on header without RPMTAG_NAME (RH#239557).
+- lib/package.c (readPackageHeaders):
+  Removed insecure legacy providePackageNVR() call.
+- lib/query.c (showQueryPackage):
+  Fixed potential null dereference in QUERY_FOR_DEFAULT mode.
+
 * Tue Apr 10 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt76
 - rpmRunTransactions:
   Ignore unavailable mount points instead of bailing out.

@@ -227,9 +227,6 @@ static rpmRC readPackageHeaders(FD_t fd,
 	    if (!headerIsEntry(*hdr, RPMTAG_SOURCEPACKAGE))
 	    	(void)headerAddEntry(*hdr, RPMTAG_SOURCEPACKAGE, RPM_INT32_TYPE,
 				&one, 1);
-	} else if (lead->major < 4) {
-	    /* Retrofit "Provide: name = EVR" for binary packages. */
-	    providePackageNVR(*hdr);
 	}
 	break;
 

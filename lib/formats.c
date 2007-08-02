@@ -630,9 +630,12 @@ static int i18nTag(Header h, int_32 tag, /*@out@*/ rpmTagType * type,
 	{   const char * tn = tagName(tag);
 	    const char * n;
 	    char * mk;
-	    (void) headerNVR(h, &n, NULL, NULL);
-	    mk = alloca(strlen(n) + strlen(tn) + sizeof("()"));
-	    sprintf(mk, "%s(%s)", n, tn);
+	    size_t nb = sizeof("()");
+	    int xx = headerNVR(h, &n, NULL, NULL);
+	    if (tn)	nb += strlen(tn);
+	    if (n)	nb += strlen(n);
+	    mk = alloca(nb);
+	    sprintf(mk, "%s(%s)", (n?n:""), (tn?tn:""));
 	    msgkey = mk;
 	}
 

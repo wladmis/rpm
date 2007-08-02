@@ -1148,7 +1148,7 @@ doFoo(MacroBuf mb, int negate, const char * f, size_t fn,
 
 	buf[0] = '\0';
 	if (pw && pw->pw_dir) {
-	    strncat (buf, pw->pw_dir, sizeof buf);
+	    strncat (buf, pw->pw_dir, sizeof(buf) - 1);
 	    b = buf;
 	}
     }
