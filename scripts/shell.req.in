@@ -63,9 +63,9 @@ FindReqs()
 			alias|keyword|function|builtin)
 				continue ;;
 		esac
-		if grep -qs -Fx "$r" "${RPM_BUILD_ROOT-}$dname/.provides.sh"; then
+		if grep -qs -Fx -- "$r" "${RPM_BUILD_ROOT-}$dname/.provides.sh"; then
 			printf %s\\n "$dname($r)"
-		elif grep -qs -Fx "$r" "$dname/.provides.sh"; then
+		elif grep -qs -Fx -- "$r" "$dname/.provides.sh"; then
 			printf %s\\n "$dname($r)"
 		else
 			FindPackage "$file" "$r"
