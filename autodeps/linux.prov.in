@@ -148,17 +148,6 @@ ParseMethod()
 }
 ParseMethod $RPM_FINDPROV_METHOD
 
-ulimit -c 0
-
-case "$LD_PRELOAD" in
-	*libfakeroot*)
-		unset LD_PRELOAD
-		;;
-	*libbuildreq.so*)
-		unset LD_PRELOAD
-		;;
-esac
-
 FOUND_PROVS=
 LIST_MONO=
 

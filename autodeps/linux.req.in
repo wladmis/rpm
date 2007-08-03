@@ -158,17 +158,6 @@ fi
 
 . @RPMCONFIGDIR@/find-package
 
-ulimit -c 0
-
-case "$LD_PRELOAD" in
-	*libfakeroot*)
-		unset LD_PRELOAD
-		;;
-	*libbuildreq.so*)
-		unset LD_PRELOAD
-		;;
-esac
-
 FOUND_REQS=
 LIST_JAVA=
 LIST_MONO=
