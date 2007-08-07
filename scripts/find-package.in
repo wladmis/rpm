@@ -48,23 +48,50 @@ FindByPath()
 		return
 	fi
 
-	# Check for pkg contents complete index and pkg binary index.
-	local idx
-	for idx in "${RPM_PKG_CONTENTS_INDEX_ALL-}" "${RPM_PKG_CONTENTS_INDEX_BIN-}"; do
-		[ -n "$idx" ] && [ -s "$idx" ] && [ -r "$idx" ] || continue
-		package="$(awk -v "f=$rep" '($1 == f) {print $2}' "$idx" |sort -u)"
+	# Always try package binary index.
+	local idx_bin="${RPM_PKG_CONTENTS_INDEX_BIN-}" try_idx_bin=1
+	[ -n "$idx_bin" ] && [ -s "$idx_bin" ] && [ -r "$idx_bin" ] || try_idx_bin=
+	if [ -n "$try_idx_bin" ]; then
+		package="$(awk -v "f=$rep" '($1 == f) {print $2}' "$idx_bin" |sort -u)"
 		local n="$(IFS=$'\n'; set -- $package; echo $#)"
 		if [ "$n" = 1 ]; then
-			Verbose "$f: $rep -> $package (via content index)"
+			Verbose "$f: $rep -> $package (via contents_index_bin)"
 			printf %s\\n "$package"
 			return
 		elif [ "$n" -gt 1 ]; then
 			Info "$f: $rep indexed by:$(echo '' $package)"
-			Verbose "$f: $rep -> $rep (raw, ambiguous, via content index)"
+			Verbose "$f: $rep -> $rep (raw, ambiguous, via contents_index_bin)"
 			printf %s\\n "$rep"
 			return
 		fi
-	done
+	fi
+
+	# Maybe try pkg complete index.
+	local idx_all="${RPM_PKG_CONTENTS_INDEX_ALL-}" try_idx_all=1
+	[ -n "$idx_all" ] && [ -s "$idx_all" ] && [ -r "$idx_all" ] || try_idx_all=
+	case "$try_idx_bin$rep" in
+		1/bin/* | 1/sbin/* | 1/usr/bin/* | 1/usr/sbin/* )
+			# Binary index already checked for standard *bin/* entries.
+			# No need to check complete index.
+			try_idx_all=
+	esac
+	if [ -n "$try_idx_all" ]; then
+		# Checking complete index is expensive.
+		Info "$f: checking contents_index_all for $rep"
+		# Complete package index is possibly gzipped.
+		package="$(gzip -cdfq "$idx_all" |awk -v "f=$rep" '($1 == f) {print $2}' |sort -u)"
+		local n="$(IFS=$'\n'; set -- $package; echo $#)"
+		if [ "$n" = 1 ]; then
+			Info "$f: $rep -> $package (via contents_index_all)"
+			printf %s\\n "$package"
+			return
+		elif [ "$n" -gt 1 ]; then
+			Info "$f: $rep indexed by:$(echo '' $package)"
+			Info "$f: $rep -> $rep (raw, ambiguous, via contents_index_all)"
+			printf %s\\n "$rep"
+			return
+		fi
+	fi
 
 	# Check package database.
 	if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep")"; then
@@ -83,7 +110,7 @@ FindByPath()
 	fi
 
 	# Not found; output raw dependence.
-	Verbose "$f: $rep -> $rep (raw, not found)"
+	Info "$f: $rep -> $rep (raw, not found)"
 	printf %s\\n "$rep"
 }
 
@@ -124,7 +151,7 @@ FindByName()
 		if [ "$n" = 1 ]; then
 			rep="$(IFS=$'\t\n'; set -- $out; printf %s "$1")"
 			package="$(IFS=$'\t\n'; set -- $out; printf %s "$2")"
-			Verbose "$r -> $rep -> $package (via content index)"
+			Verbose "$r -> $rep -> $package (via contents_index_bin)"
 			printf %s\\n "$package"
 			return
 		elif [ "$n" -gt 1 ]; then
@@ -133,7 +160,7 @@ FindByName()
 			package="$(IFS=$'\t\n'; set -- $out; printf %s "$2")"
 			local rep2="$(IFS=$'\t\n'; set -- $out; printf %s "$3")"
 			if [ "$rep" = "$rep2" ]; then
-				Verbose "$f: $r -> $rep -> $rep (raw, ambiguous, via content index)"
+				Verbose "$f: $r -> $rep -> $rep (raw, ambiguous, via contents_index_bin)"
 				printf %s\\n "$rep"
 				return
 			fi
