@@ -1,5 +1,18 @@
 #!/bin/sh -efu
 #
+# This file provides FindPackage() function which maps paths and
+# commands, such as found in shell scripts, to rpm dependencies.
+#
+# Usage:
+#	. /usr/lib/rpm/find-package
+#	FindPackage src [path...] [command...]
+#
+# Arguments:
+#	src - the file being processed, used only for diagnostics
+#	path - absolute path to file, e.g. /bin/cat
+#	command - executable expected to reside under standard
+#		PATH directories, e.g. cat
+#
 # Copyright (C) 2002-2003  Dmitry V. Levin <ldv@altlinux.org>
 # Copyright (C) 2007       Alexey Tourbin <at@altlinux.org>
 #
