@@ -198,15 +198,18 @@ FindByName()
 FindPackage()
 {
 	local f="$1" r; shift || return
-
 	for r; do
-		[ -n "$r" ] || continue
-		if [ -z "${r##/*}" ]; then
-			FindByPath "$f" "$r"
-		elif [ -n "${r##*/*}" ]; then
-			FindByName "$f" "$r"
-		else
-			Verbose "$f: invalid pathname $r"
-		fi
+		case "$r" in
+			/*)
+				FindByPath "$f" "$r" ;;
+			*/*)
+				Info "$f: invalid pathname $r" ;;
+			-*)
+				Info "$f: invalid command $r" ;;
+			'')
+				;;
+			*)
+				FindByName "$f" "$r" ;;
+		esac
 	done
 }
