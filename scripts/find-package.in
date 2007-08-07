@@ -161,7 +161,14 @@ FindByName()
 				print FILES[$1] "\t" $1 "\t" $2
 			}
 			' "$RPM_PKG_CONTENTS_INDEX_BIN" |
-				sort -n |sort -u -k3 |sort -n |cut -f2-)"
+				# Best paths go first:
+				sort -n |
+				# For each package, keep only the best path:
+				sort -u -k3 |
+				# Best paths still go first:
+				sort -n |
+				# Well done, discard numbers.
+				cut -f2-)"
 		local n="$(IFS=$'\n'; set -- $out; echo $#)"
 		if [ "$n" = 1 ]; then
 			rep="$(IFS=$'\t\n'; set -- $out; printf %s "$1")"
