@@ -24,6 +24,9 @@ RPM_FINDPACKAGE_PATH="${RPM_FINDPACKAGE_PATH-}:/bin:/sbin:/usr/bin:/usr/sbin:/us
 RPM_FINDPACKAGE_PATH="$(IFS="$IFS:"; set -f; echo '' $RPM_FINDPACKAGE_PATH |sed -e 's/  */:/g; s/^://')"
 Debug "RPM_FINDPACKAGE_PATH=$RPM_FINDPACKAGE_PATH"
 
+# Below we use 'local Verbose=Info' to increase per-case verbosity.
+Verbose=Verbose
+
 FindByPath()
 {
 	# Dependence name starts with `/'.
@@ -37,13 +40,13 @@ FindByPath()
 
 	# Does it belong to buildroot?
 	if [ -n "${RPM_BUILD_ROOT-}" ] && [ -e "$RPM_BUILD_ROOT$rep" ]; then
-		Verbose "$f: $rep -> \$RPM_BUILD_ROOT$rep (skip)"
+		$Verbose "$f: $rep -> \$RPM_BUILD_ROOT$rep (skip)"
 		return
 	fi
 
 	# Is it an alternative?
 	if readlink "$rep" |grep -qs '^/etc/alternatives/'; then
-		Verbose "$f: $rep -> $rep (alternative)"
+		$Verbose "$f: $rep -> $rep (alternative)"
 		printf %s\\n "$rep"
 		return
 	fi
@@ -55,12 +58,12 @@ FindByPath()
 		package="$(awk -v "f=$rep" '($1 == f) {print $2}' "$idx_bin" |sort -u)"
 		local n="$(IFS=$'\n'; set -- $package; echo $#)"
 		if [ "$n" = 1 ]; then
-			Verbose "$f: $rep -> $package (via contents_index_bin)"
+			$Verbose "$f: $rep -> $package (via contents_index_bin)"
 			printf %s\\n "$package"
 			return
 		elif [ "$n" -gt 1 ]; then
 			Info "$f: $rep indexed by:$(echo '' $package)"
-			Verbose "$f: $rep -> $rep (raw, ambiguous, via contents_index_bin)"
+			Info "$f: $rep -> $rep (raw, ambiguous, via contents_index_bin)"
 			printf %s\\n "$rep"
 			return
 		fi
@@ -77,6 +80,7 @@ FindByPath()
 	esac
 	if [ -n "$try_idx_all" ]; then
 		# Checking complete index is expensive.
+		local Verbose=Info
 		Info "$f: checking contents_index_all for $rep"
 		# Complete package index is possibly gzipped.
 		package="$(gzip -cdfq "$idx_all" |awk -v "f=$rep" '($1 == f) {print $2}' |sort -u)"
@@ -98,12 +102,12 @@ FindByPath()
 		package="$(printf %s "$package" |LC_COLLATE=C sort -u)"
 		local n="$(IFS=$'\n'; set -- $package; echo $#)"
 		if [ "$n" = 1 ]; then
-			Verbose "$f: $rep -> $package (via rpmdb)"
+			$Verbose "$f: $rep -> $package (via rpmdb)"
 			printf %s\\n "$package"
 			return
 		elif [ "$n" -gt 1 ]; then
 			Info "$f: $rep provided by:$(echo '' $package)"
-			Verbose "$f: $rep -> $rep (raw, ambiguous, via rpmdb)"
+			Info "$f: $rep -> $rep (raw, ambiguous, via rpmdb)"
 			printf %s\\n "$rep"
 			return
 		fi
@@ -123,7 +127,7 @@ FindByName()
 		local RPATH
 		RPATH="$(printf %s "$RPM_FINDPACKAGE_PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
 		if rep="$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)"; then
-			Verbose "$f: $r -> \$RPM_BUILD_ROOT${rep#$RPM_BUILD_ROOT} (skip)"
+			$Verbose "$f: $r -> \$RPM_BUILD_ROOT${rep#$RPM_BUILD_ROOT} (skip)"
 			return
 		fi
 	fi
@@ -151,16 +155,17 @@ FindByName()
 		if [ "$n" = 1 ]; then
 			rep="$(IFS=$'\t\n'; set -- $out; printf %s "$1")"
 			package="$(IFS=$'\t\n'; set -- $out; printf %s "$2")"
-			Verbose "$r -> $rep -> $package (via contents_index_bin)"
+			$Verbose "$r -> $rep -> $package (via contents_index_bin)"
 			printf %s\\n "$package"
 			return
 		elif [ "$n" -gt 1 ]; then
+			local Verbose=Info
 			Info "$f: $r indexed by:$(printf %s "$out" |sed -e 's/\t/ -> /; s/$/,/; $s/,$//' |xargs echo '')"
 			rep="$(IFS=$'\t\n'; set -- $out; printf %s "$1")"
 			package="$(IFS=$'\t\n'; set -- $out; printf %s "$2")"
 			local rep2="$(IFS=$'\t\n'; set -- $out; printf %s "$3")"
 			if [ "$rep" = "$rep2" ]; then
-				Verbose "$f: $r -> $rep -> $rep (raw, ambiguous, via contents_index_bin)"
+				Info "$f: $r -> $rep -> $rep (raw, ambiguous, via contents_index_bin)"
 				printf %s\\n "$rep"
 				return
 			fi
@@ -173,11 +178,14 @@ FindByName()
 		local n="$(IFS=$'\n'; set -- $rep; echo $#)"
 		if [ "$n" -gt 1 ]; then
 			n="$(IFS=$'\n'; for f in $rep; do readlink -vm "$f"; done |sort -u |wc -l)"
-			[ "$n" = 1 ] || Info "$f: which $r:$(echo '' $rep)"
+			if [ "$n" -gt 1 ]; then
+				local Verbose=Info
+				Info "$f: which $r:$(echo '' $rep)"
+			fi
 			rep="$(IFS=$'\n'; set -- $rep; printf %s "$1")"
 		fi
 		if [ -n "$rep" ]; then
-			Verbose "$f: $r -> $rep -> ... (via which)"
+			$Verbose "$f: $r -> $rep -> ... (via which)"
 			FindByPath "$f" "$rep"
 			return
 		fi
@@ -186,19 +194,20 @@ FindByName()
 	# Reconsult pkg contents binary index.
 	if [ -n "$irep" ] && [ -n "$package" ]; then
 		rep="$irep"
-		Verbose "$f: $r -> $rep -> $package (via content index)"
+		$Verbose "$f: $r -> $rep -> $package (via contents_index_bin)"
 		printf %s\\n "$package"
 		return
 	fi
 
 	# Not found.
-	Verbose "$f: $r not found (skip)"
+	Info "$f: $r not found (skip)"
 }
 
 FindPackage()
 {
 	local f="$1" r; shift || return
 	for r; do
+		local Verbose=Verbose
 		case "$r" in
 			/*)
 				FindByPath "$f" "$r" ;;
