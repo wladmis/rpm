@@ -133,7 +133,7 @@ FindByName()
 	fi
 
 	# Check for pkg contents binary index.
-	rep= package=
+	local save_rep= save_package=
 	if [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
 		local out="$(awk -v r="$r" -v RPM_FINDPACKAGE_PATH="$RPM_FINDPACKAGE_PATH" '
 			BEGIN {
@@ -177,6 +177,13 @@ FindByName()
 			printf %s\\n "$package"
 			return
 		elif [ "$n" -gt 1 ]; then
+			# Content index search produced a confict: we have 2 or more paths
+			# from different packages.  Consider this case:
+			#	/usr/bin/r	pkgA
+			#	/usr/bin/r	pkgB
+			#	/usr/sbin/r	pkgC
+			# Remeber that best paths go first, and each package has only the best path.
+			# Now if the first two paths are the same, we produce raw dependency on /usr/bin/r.
 			local Verbose=Info
 			Info "$f: $r indexed by:$(printf %s "$out" |sed -e 's/\t/ -> /; s/$/,/; $s/,$//' |xargs echo '')"
 			rep="$(IFS=$'\t\n'; set -- $out; printf %s "$1")"
@@ -187,19 +194,31 @@ FindByName()
 				printf %s\\n "$rep"
 				return
 			fi
+			# However, consdier yet worse real-life case:
+			#	/usr/bin/arpsend	arpsend
+			#	/usr/sbin/arpsend	vzctl
+			# In this case, we perfer to put aside the conflict for a while, and query
+			# the host system first.  There's a good chance that the right package, either
+			# arpsend or vzctl, IS installed, and other unrelated packages are NOT installed.
+			# However, if /usr/bin/which cannot find any candidate, we have to produce the
+			# dependency on /usr/bin/arpsend -> arpsend.
+			save_rep="$rep" save_package="$package"
 		fi
 	fi
 
 	# Lookup in the host system.
-	local irep="$rep"
 	if rep="$(PATH="$RPM_FINDPACKAGE_PATH" /usr/bin/which --all -- "$r" 2>/dev/null)"; then
 		local n="$(IFS=$'\n'; set -- $rep; echo $#)"
 		if [ "$n" -gt 1 ]; then
+			# If '/usr/bin/which --all' yields a few paths,
+			# e.g. '/usr/bin/which --all awk' -> {/bin/awk,/usr/bin/awk},
+			# we check if all paths really point to the same file.
 			n="$(IFS=$'\n'; for f in $rep; do readlink -vm "$f"; done |sort -u |wc -l)"
 			if [ "$n" -gt 1 ]; then
 				local Verbose=Info
 				Info "$f: which $r:$(echo '' $rep)"
 			fi
+			# But we select the first path, which is the best, anyway.
 			rep="$(IFS=$'\n'; set -- $rep; printf %s "$1")"
 		fi
 		if [ -n "$rep" ]; then
@@ -209,9 +228,9 @@ FindByName()
 		fi
 	fi
 
-	# Reconsult pkg contents binary index.
-	if [ -n "$irep" ] && [ -n "$package" ]; then
-		rep="$irep"
+	# Reconsult package binary index.
+	if [ -n "$save_rep" ] && [ -n "$save_package" ]; then
+		rep="$save_rep" package="$save_package"
 		$Verbose "$f: $r -> $rep -> $package (via contents_index_bin)"
 		printf %s\\n "$package"
 		return
