@@ -137,6 +137,8 @@ FindByName()
 	if [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
 		local out="$(awk -v r="$r" -v RPM_FINDPACKAGE_PATH="$RPM_FINDPACKAGE_PATH" '
 			BEGIN {
+				# Here we enumerate all possible paths to keep the order;
+				# later we sort the result with "sort -n".
 				n = split(RPM_FINDPACKAGE_PATH, ary, ":")
 				for (i = 1; i <= n; i++) {
 					dir = ary[i]
@@ -145,8 +147,17 @@ FindByName()
 					if (dir && !(file in FILES))
 						FILES[file] = i
 				}
+				# By now FILES is normally something like this:
+				#	/bin/r		1
+				#	/sbin/r		2
+				#	/usr/bin/r	3
+				#	/usr/sbin/r	4
+				#	...
 			}
 			NF==2 && ($1 in FILES) {
+				# Possible output is like this:
+				#	3	/usr/bin/r	pkgA
+				#	1	/bin/r		pkgB
 				print FILES[$1] "\t" $1 "\t" $2
 			}
 			' "$RPM_PKG_CONTENTS_INDEX_BIN" |
