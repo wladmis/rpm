@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77
+Release: alt78
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -525,6 +525,12 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Aug 11 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt78
+- implemented modular subsystem for find-requires and find-provides;
+  there's no separate doc yet, except for my protva2007-ru-short.pdf;
+  see also git changelog, especially commit 9717c128
+- improved /usr/lib/rpm/find-package algorithms
+
 * Fri May 18 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77
 - rpmio/macro.c (doFoo):
   Fixed potential buffer overflow in %%homedir macro processing.
