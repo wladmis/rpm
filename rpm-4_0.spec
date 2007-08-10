@@ -113,6 +113,7 @@ Requires: %_bindir/subst
 Requires: rpm-build-perl >= 0.6.2
 Requires: rpm-build-python >= 0.31
 Requires: rpm-build-tcl >= 0.2.1
+Conflicts: rpm-build-mono <= 1.0
 
 %package build-topdir
 Summary: RPM package installation and build directory tree
