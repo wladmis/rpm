@@ -195,19 +195,30 @@ FindByName()
 			#	/usr/bin/r	pkgA
 			#	/usr/bin/r	pkgB
 			#	/usr/sbin/r	pkgC
-			# Remeber that best paths go first, and each package has only the best path.
+			# Remember that best paths go first, and each package has only the best path.
 			# Now if the first two paths are the same, we produce raw dependency on /usr/bin/r.
 			local Verbose=Info
 			Info "$f: $r indexed by:$(printf %s "$out" |sed -e 's/\t/ -> /; s/$/,/; $s/,$//' |xargs echo '')"
 			rep="$(IFS=$'\t\n'; set -- $out; printf %s "$1")"
 			package="$(IFS=$'\t\n'; set -- $out; printf %s "$2")"
+			# Actually our contents_index generator already handles path dups,
+			# so the above example is likely to transform into this:
+			#	/usr/bin/r	/usr/bin/r
+			#	/usr/sbin/r	pkgC
+			# So we first check if path = package.
+			if [ "$rep" = "$package" ]; then
+				Info "$f: $r -> $rep -> $rep (ambiguous, via contents_index_bin)"
+				printf %s\\n "$rep"
+				return
+			fi
+			# And then we check if the first two paths are the same.
 			local rep2="$(IFS=$'\t\n'; set -- $out; printf %s "$3")"
 			if [ "$rep" = "$rep2" ]; then
 				Info "$f: $r -> $rep -> $rep (raw, ambiguous, via contents_index_bin)"
 				printf %s\\n "$rep"
 				return
 			fi
-			# However, consdier yet worse real-life case:
+			# However, consider yet worse real-life case:
 			#	/usr/bin/arpsend	arpsend
 			#	/usr/sbin/arpsend	vzctl
 			# In this case, we perfer to put aside the conflict for a while, and query
