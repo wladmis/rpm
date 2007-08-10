@@ -102,11 +102,15 @@ RunMethod()
 	# XXX validate $filelist
 	Debug "running $exe"
 	"$exe" <"$filelist" >"$deplist"
-	Verbose "$exe: $(wc -l <"$deplist") dependencies"
-	[ -s "$deplist" ] || return 0
-	found=1
+	if [ -s "$deplist" ]; then
+		LC_COLLATE=C sort -u -o "$deplist" "$deplist"
+		Verbose "$exe: $(wc -l <"$deplist") dependencies"
+		found=1
+	else
+		rm -f "$deplist"
+	fi
 }
 
 Info "running scripts ($methods)"
 RunMethods prov "$methods" RunMethod
-[ -z "$found" ] || (set +f; LC_COLLATE=C sort -u "$workdir"/*.deps) || exit 1
+[ -z "$found" ] || (set +f; LC_COLLATE=C sort -u -m "$workdir"/*.deps) || exit 1
