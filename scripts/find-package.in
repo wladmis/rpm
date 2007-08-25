@@ -49,16 +49,22 @@ FindPackage()
 				continue
 			fi
 
-			# Check for pkg contents complete index.
-			if [ -n "$RPM_PKG_CONTENTS_INDEX_ALL" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
-				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_ALL")"
+			# Check for pkg contents binary index.
+			if [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] &&
+			   [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] &&
+			   [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
+				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
 				if [ -n "$package" ]; then
 					printf %s\\n "$package"
 					continue
 				fi
-			# Check for pkg contents binary index.
-			elif [ -n "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ]  && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
-				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_BIN")"
+			fi
+
+			# Check for pkg contents complete index.
+			if [ -n "$RPM_PKG_CONTENTS_INDEX_ALL" ] &&
+			   [ -s "$RPM_PKG_CONTENTS_INDEX_ALL" ] &&
+			   [ -r "$RPM_PKG_CONTENTS_INDEX_ALL" ]; then
+				package="$(awk -v "f=$rep" '{if ($1 == f) {print $2; exit}}' "$RPM_PKG_CONTENTS_INDEX_ALL")"
 				if [ -n "$package" ]; then
 					printf %s\\n "$package"
 					continue
