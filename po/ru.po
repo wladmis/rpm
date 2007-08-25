@@ -3795,6 +3795,9 @@ msgstr "Система/Ядро и оборудование"
 msgid "System/Libraries"
 msgstr "Система/Библиотеки"
 
+msgid "System/Legacy libraries"
+msgstr "Система/Устаревшие библиотеки"
+
 msgid "System/Servers"
 msgstr "Система/Серверы"
 

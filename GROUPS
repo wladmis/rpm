@@ -98,6 +98,7 @@ System/Fonts/X11 bitmap
 System/Internationalization
 System/Kernel and hardware
 System/Libraries
+System/Legacy libraries
 System/Servers
 System/Servers/ZProducts
 System/X11
