@@ -26,7 +26,7 @@ ShellReq()
 	local f="$1"; shift
 
 	local t sh
-	t=$(file -b "$f") || Fatal "${t:-$f: file type not available}"
+	t=$(file -bL "$f") || Fatal "${t:-$f: file type not available}"
 	case "$t" in
 		*"Bourne-Again shell script text"*)
 			sh=/bin/bash ;;
