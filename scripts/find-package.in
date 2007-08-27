@@ -64,6 +64,9 @@ FindByPath()
 		return
 	fi
 
+	# XXX Cleanup pathname.
+	rep=$(CanonPath "$rep")
+
 	# Always try package binary index.
 	local idx_bin="${RPM_PKG_CONTENTS_INDEX_BIN-}" try_idx_bin=1
 	[ -n "$idx_bin" ] && [ -s "$idx_bin" ] && [ -r "$idx_bin" ] || try_idx_bin=
