@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77
+Release: alt77.M40.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -522,6 +522,15 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Aug 28 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77.M40.1
+- rpmdb/header.c (guess_category_value):
+  Allowed overriding locale using $RPM_LANGUAGE_I18NSTRING for header FindI18NString.
+- build.c (buildForTarget):
+  Changed to pass --wildcards to tar on build from tarball (RH#206841).
+- GROUPS: Added "System/Legacy libraries" (#12629).
+- scripts/find-package.in (FindPackage):
+  Speedup index processing order by checking binary index prior to complete index.
+
 * Fri May 18 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77
 - rpmio/macro.c (doFoo):
   Fixed potential buffer overflow in %%homedir macro processing.
