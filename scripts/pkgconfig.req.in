@@ -95,7 +95,7 @@ PkgconfigLibReq()
 				Info "$f: $lib -> $libdir/$lib (raw, ambiguous)"
 				printf '%s\n' "$libdir/$lib"
 			else
-				Info "$f: cannot map $lib to rpm dependency (skip)"
+				Info "$f: cannot map $libdir/$lib to rpm dependency (skip)"
 			fi
 			continue 2
 		done
