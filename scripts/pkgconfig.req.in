@@ -41,4 +41,23 @@ PkgconfigReq()
 	done
 }
 
-ArgvFileAction PkgconfigReq "$@"
+PkgconfigProv()
+{
+	local f="$1" out=; shift
+	out=$(pkg-config --print-errors --print-provides "$f")
+	[ -n "$out" ] || return 0
+	echo "$out" |while read -r line; do
+		set -- $line
+		case $# in
+			1) echo "pkgconfig($1)" ;;
+			3) echo "pkgconfig($1) $2 $3" ;;
+			*) Fatal "$f: invalid pkg-config output: $line"
+		esac
+	done
+}
+
+case "${0##*/}" in
+	pkgconfig.req*) ArgvFileAction PkgconfigReq "$@" ;;
+	pkgconfig.prov*) ArgvFileAction PkgconfigProv "$@" ;;
+	*) Fatal "req/prov method not recognized" ;;
+esac
