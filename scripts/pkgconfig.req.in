@@ -70,7 +70,6 @@ PkgconfigLibReq()
 		lib=lib$lib.so
 		if [ -n "${RPM_BUILD_ROOT-}" ]; then
 			for libdir in $L "$RPM_LIBDIR"; do
-				libdir=${libdir%/}
 				[ -f "$RPM_BUILD_ROOT$libdir/$lib" ] || continue
 				# The library is under RPM_BUILD_ROOT.
 				# Nothing is required.  Do next lib.
@@ -79,10 +78,10 @@ PkgconfigLibReq()
 			done
 		fi
 		for libdir in $L "$RPM_LIBDIR"; do
-			libdir=${libdir%/}
 			[ -f "$libdir/$lib" ] || continue
 			# The library is found in the host system.
 			# Generate rpm dependency and do next lib.
+			libdir=$(CanonPath "$libdir")
 			local pkg n
 			pkg=$(rpmquery --whatprovides --queryformat='%{NAME}\n' "$libdir/$lib" |sort -u)
 			n=$(set -- $pkg; echo $#)
