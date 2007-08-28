@@ -29,7 +29,8 @@ export PKG_CONFIG_PATH
 PkgconfigReq()
 {
 	local f="$1" out=; shift
-	out=$(pkg-config --print-errors --print-requires "$f")
+	out=$(pkg-config --print-errors --print-requires "$f") ||
+		Fatal "failed to process $f"
 	[ -n "$out" ] || return 0
 	echo "$out" |while read -r line; do
 		set -- $line
@@ -44,7 +45,8 @@ PkgconfigReq()
 PkgconfigProv()
 {
 	local f="$1" out=; shift
-	out=$(pkg-config --print-errors --print-provides "$f")
+	out=$(pkg-config --print-errors --print-provides "$f") ||
+		Fatal "failed to process $f"
 	[ -n "$out" ] || return 0
 	echo "$out" |while read -r line; do
 		set -- $line
