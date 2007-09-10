@@ -272,15 +272,21 @@ FindPackage()
 	local f="$1" r; shift || return
 	for r; do
 		local Verbose=Verbose
+		# Only these characters are allowed for pathnames or commands:
+		valid='A-Za-z0-9/@=.,:_+-'
 		case "$r" in
+			/*[!"$valid"]*)
+				Info "$f: invalid pathname: $r" ;;
 			/*)
 				FindByPath "$f" "$r" ;;
 			*/*)
-				Info "$f: invalid pathname $r" ;;
+				Info "$f: invalid pathname: $r" ;;
 			-*)
-				Info "$f: invalid command $r" ;;
+				Info "$f: invalid command: $r" ;;
+			*[!"$valid"]*)
+				Info "$f: invalid command: $r" ;;
 			'')
-				;;
+				Verbose "$f: empty command?"
 			*)
 				FindByName "$f" "$r" ;;
 		esac

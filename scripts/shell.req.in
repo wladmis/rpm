@@ -61,9 +61,6 @@ ShellReq()
 	dname=${f#${RPM_BUILD_ROOT-}}
 	dname=${dname%/*}
 	for r in $reqs; do
-		if [ -z "${r/*\$*}" ]; then
-			continue
-		fi
 		case "$(type -t -- "$r")" in
 			alias|keyword|function|builtin)
 				continue ;;
