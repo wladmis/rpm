@@ -57,13 +57,13 @@ optflags: hppa2.0 %optflags_default -mpa-risc-1-0
 optflags: mips %optflags_default
 optflags: mipsel %optflags_default
 
-optflags: armv3l %optflags_default -fsigned-char -fomit-frame-pointer -march=armv3
-optflags: arm %optflags_default -fsigned-char -march=armv4 -mno-thumb-interwork
-optflags: armv4l %optflags_default -fsigned-char -fomit-frame-pointer -march=armv4
-optflags: armv5l %optflags_default -fsigned-char -fomit-frame-pointer -march=armv5
-optflags: armeb %optflags_default -fsigned-char -march=armv4 -mno-thumb-interwork
-optflags: armv4l %optflags_default -fsigned-char -fomit-frame-pointer -march=armv4
-optflags: armv5l %optflags_default -fsigned-char -fomit-frame-pointer -march=armv5
+optflags: armv3l %optflags_default -fomit-frame-pointer -march=armv3
+optflags: arm %optflags_default -march=armv4 -mno-thumb-interwork
+optflags: armv4l %optflags_default -fomit-frame-pointer -march=armv4
+optflags: armv5l %optflags_default -fomit-frame-pointer -march=armv5
+optflags: armeb %optflags_default -march=armv4 -mno-thumb-interwork
+optflags: armv4l %optflags_default -fomit-frame-pointer -march=armv4
+optflags: armv5l %optflags_default -fomit-frame-pointer -march=armv5
 
 optflags: atarist %optflags_default -fomit-frame-pointer
 optflags: atariste %optflags_default -fomit-frame-pointer
