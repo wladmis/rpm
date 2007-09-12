@@ -275,7 +275,7 @@ FindPackage()
 		# Only these characters are allowed for pathnames or commands:
 		valid='A-Za-z0-9/@=.,:_+-'
 		case "$r" in
-			/*[!"$valid"]*)
+			/*[!$valid]*)
 				Info "$f: invalid pathname: $r" ;;
 			/*)
 				FindByPath "$f" "$r" ;;
@@ -283,7 +283,7 @@ FindPackage()
 				Info "$f: invalid pathname: $r" ;;
 			-*)
 				Info "$f: invalid command: $r" ;;
-			*[!"$valid"]*)
+			*[!$valid]*)
 				Info "$f: invalid command: $r" ;;
 			'')
 				Verbose "$f: empty command?" ;;
