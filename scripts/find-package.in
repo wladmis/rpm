@@ -189,7 +189,7 @@ FindByName()
 		if [ "$n" = 1 ]; then
 			rep="$(IFS=$'\t\n'; set -- $out; printf %s "$1")"
 			package="$(IFS=$'\t\n'; set -- $out; printf %s "$2")"
-			$Verbose "$r -> $rep -> $package (via contents_index_bin)"
+			$Verbose "$f: $r -> $rep -> $package (via contents_index_bin)"
 			printf %s\\n "$package"
 			return
 		elif [ "$n" -gt 1 ]; then
