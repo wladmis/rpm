@@ -286,7 +286,7 @@ FindPackage()
 			*[!"$valid"]*)
 				Info "$f: invalid command: $r" ;;
 			'')
-				Verbose "$f: empty command?"
+				Verbose "$f: empty command?" ;;
 			*)
 				FindByName "$f" "$r" ;;
 		esac
