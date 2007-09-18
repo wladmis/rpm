@@ -8,7 +8,10 @@
 #	FindPackage src [path...] [command...]
 #
 # Arguments:
-#	src - the file being processed, used only for diagnostics
+#	src - the file being processed, used for diagnostics;
+#		also, if the file appears to reside under */sbin/
+#		directory, the PATH search order is adjusted
+#		so as to better match root code
 #	path - absolute path to file, e.g. /bin/cat
 #	command - executable expected to reside under standard
 #		PATH directories, e.g. cat
@@ -33,9 +36,24 @@
 
 . @RPMCONFIGDIR@/functions
 
-RPM_FINDPACKAGE_PATH="${RPM_FINDPACKAGE_PATH-}:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin"
-RPM_FINDPACKAGE_PATH="$(IFS="$IFS:"; set -f; echo '' $RPM_FINDPACKAGE_PATH |sed -e 's/  */:/g; s/^://')"
-Debug "RPM_FINDPACKAGE_PATH=$RPM_FINDPACKAGE_PATH"
+# We use different PATHs for */sbin/ and non-/sbin scripts.  However,
+# the distinction is not quite reliable -- there is simply no easy way
+# to discriminate between root-only and user-capable shell code.  Thus
+# we must use rather conservative path adjustment: 1) the set of user
+# and root directories is the same, it is only the order that differs;
+# 2) / has main priority over /usr, while as "bin vs sbin" distinction has
+# only secondary priority.  The reason is that / has only "most important"
+# contents, and /usr is used virtually "for everything else", whatever it is.
+# Now that / has a boost, there are simply less chances to end up with
+# unrelated dependencies.
+DEF_RPM_FINDPACKAGE_USER_PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/games
+DEF_RPM_FINDPACKAGE_ROOT_PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin:/usr/games
+
+# RPM_FINDPACKAGE_PATH is exported by rpm-build
+RPM_FINDPACKAGE_USER_PATH="$(IFS="$IFS:"; set -f; echo '' ${RPM_FINDPACKAGE_PATH-} $DEF_RPM_FINDPACKAGE_USER_PATH |sed -e 's/  */:/g; s/^://')"
+RPM_FINDPACKAGE_ROOT_PATH="$(IFS="$IFS:"; set -f; echo '' ${RPM_FINDPACKAGE_PATH-} $DEF_RPM_FINDPACKAGE_ROOT_PATH |sed -e 's/  */:/g; s/^://')"
+Debug "RPM_FINDPACKAGE_USER_PATH=$RPM_FINDPACKAGE_USER_PATH"
+Debug "RPM_FINDPACKAGE_ROOT_PATH=$RPM_FINDPACKAGE_ROOT_PATH"
 
 # Below we use 'local Verbose=Info' to increase per-case verbosity.
 Verbose=Verbose
@@ -138,10 +156,15 @@ FindByName()
 {
 	local f="$1" r="$2" rep package; shift 2 || return
 
+	local findpackage_path="$RPM_FINDPACKAGE_USER_PATH"
+	case "${f%/*}" in
+		*/sbin) findpackage_path="$RPM_FINDPACKAGE_ROOT_PATH" ;;
+	esac
+
 	# Check buildroot first.
 	if [ -n "${RPM_BUILD_ROOT-}" ]; then
 		local RPATH
-		RPATH="$(printf %s "$RPM_FINDPACKAGE_PATH" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
+		RPATH="$(printf %s "$findpackage_path" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
 		if rep="$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)"; then
 			$Verbose "$f: $r -> \$RPM_BUILD_ROOT${rep#$RPM_BUILD_ROOT} (skip)"
 			return
@@ -151,11 +174,11 @@ FindByName()
 	# Check for pkg contents binary index.
 	local save_rep= save_package=
 	if [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
-		local out="$(awk -v r="$r" -v RPM_FINDPACKAGE_PATH="$RPM_FINDPACKAGE_PATH" '
+		local out="$(awk -v r="$r" -v findpackage_path="$findpackage_path" '
 			BEGIN {
 				# Here we enumerate all possible paths to keep the order;
 				# later we sort the result with "sort -n".
-				n = split(RPM_FINDPACKAGE_PATH, ary, ":")
+				n = split(findpackage_path, ary, ":")
 				for (i = 1; i <= n; i++) {
 					dir = ary[i]
 					sub("/+$", "", dir)
@@ -234,7 +257,7 @@ FindByName()
 	fi
 
 	# Lookup in the host system.
-	if rep="$(PATH="$RPM_FINDPACKAGE_PATH" /usr/bin/which --all -- "$r" 2>/dev/null)"; then
+	if rep="$(PATH="$findpackage_path" /usr/bin/which --all -- "$r" 2>/dev/null)"; then
 		local n="$(IFS=$'\n'; set -- $rep; echo $#)"
 		if [ "$n" -gt 1 ]; then
 			# If '/usr/bin/which --all' yields a few paths,
