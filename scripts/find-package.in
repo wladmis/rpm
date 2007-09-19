@@ -299,7 +299,16 @@ FindByName()
 	fi
 
 	# Not found.
-	Info "$f: $r not found (skip)"
+	local maybe_function=
+	case "$r" in
+		*[-.]*) ;;
+		*[A-Z_]*) maybe_function=1 ;;
+	esac
+	if [ -n "$maybe_function" ]; then
+		$Verbose "$f: $r not found (skip, maybe function)"
+	else
+		Info "$f: $r not found (skip)"
+	fi
 }
 
 FindPackage()
