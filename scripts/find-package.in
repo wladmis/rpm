@@ -156,10 +156,22 @@ FindByName()
 {
 	local f="$1" r="$2" rep package; shift 2 || return
 
+	local dir="${f%/*}"; dir="${dir#${RPM_BUILD_ROOT-}}"
 	local findpackage_path="$RPM_FINDPACKAGE_USER_PATH"
-	case "${f%/*}" in
-		*/sbin) findpackage_path="$RPM_FINDPACKAGE_ROOT_PATH" ;;
+	case "$dir" in
+		*/sbin)
+			findpackage_path="$RPM_FINDPACKAGE_ROOT_PATH" ;;
+		/etc/*)
+			dir="${dir#/etc/}"; dir="${dir%%/*}"
+			case "$dir" in
+				# The sbin-ish places.  WARNING: Explicit Content!
+				rc.d | init.d | control.d | chroot.d | net | ppp | cron* | hotplug* )
+					Debug "$f: root PATH on"
+					findpackage_path="$RPM_FINDPACKAGE_ROOT_PATH" ;;
+			esac
+			;;
 	esac
+	unset dir
 
 	# Check buildroot first.
 	if [ -n "${RPM_BUILD_ROOT-}" ]; then
