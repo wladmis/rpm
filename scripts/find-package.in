@@ -70,7 +70,7 @@ FindByPath()
 	fi
 
 	# Does it belong to buildroot?
-	if [ -n "${RPM_BUILD_ROOT-}" ] && [ -e "$RPM_BUILD_ROOT$rep" ]; then
+	if [ -n "${RPM_BUILD_ROOT-}" ] && [ -e "$RPM_BUILD_ROOT$rep" -o -L "$RPM_BUILD_ROOT$rep" ]; then
 		$Verbose "$f: $rep -> \$RPM_BUILD_ROOT$rep (skip)"
 		return
 	fi
