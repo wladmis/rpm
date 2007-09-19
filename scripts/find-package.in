@@ -175,10 +175,17 @@ FindByName()
 
 	# Check buildroot first.
 	if [ -n "${RPM_BUILD_ROOT-}" ]; then
-		local RPATH
-		RPATH="$(printf %s "$findpackage_path" |sed -e "s|[^:]\+|$RPM_BUILD_ROOT&|g")"
-		if rep="$(PATH="$RPATH" /usr/bin/which -- "$r" 2>/dev/null)"; then
-			$Verbose "$f: $r -> \$RPM_BUILD_ROOT${rep#$RPM_BUILD_ROOT} (skip)"
+		rep=$(IFS="$IFS:"; set -f
+			for dir in $findpackage_path; do
+				rep="$dir/$r"
+				BR_rep="$RPM_BUILD_ROOT/$rep"
+				if [ -f "$BR_rep" -o -L "$BR_rep" ]; then
+					printf '%s\n' "$rep"
+					break
+				fi
+			done)
+		if [ -n "$rep" ]; then
+			$Verbose "$f: $r -> \$RPM_BUILD_ROOT$rep (skip)"
 			return
 		fi
 	fi
@@ -262,29 +269,35 @@ FindByName()
 			# In this case, we perfer to put aside the conflict for a while, and query
 			# the host system first.  There's a good chance that the right package, either
 			# arpsend or vzctl, IS installed, and other unrelated packages are NOT installed.
-			# However, if /usr/bin/which cannot find any candidate, we have to produce the
-			# dependency on /usr/bin/arpsend -> arpsend.
+			# However, if the host system does not provide any candidate, we have to produce
+			# the dependency on /usr/bin/arpsend -> arpsend.
 			save_rep="$rep" save_package="$package"
 		fi
 	fi
 
 	# Lookup in the host system.
-	if rep="$(PATH="$findpackage_path" /usr/bin/which --all -- "$r" 2>/dev/null)"; then
+	rep=$(IFS="$IFS:"; set -f
+		for dir in $findpackage_path; do
+			rep="$dir/$r"
+			if [ -f "$rep" ]; then
+				printf '%s\n' "$rep"
+			fi
+		done)
+	if [ -n "$rep" ]; then
 		local n="$(IFS=$'\n'; set -- $rep; echo $#)"
 		if [ "$n" -gt 1 ]; then
-			# If '/usr/bin/which --all' yields a few paths,
-			# e.g. '/usr/bin/which --all awk' -> {/bin/awk,/usr/bin/awk},
+			# We've got a few paths, e.g. awk -> {/bin/awk,/usr/bin/awk};
 			# we check if all paths really point to the same file.
 			n="$(IFS=$'\n'; for f in $rep; do readlink -vm "$f"; done |sort -u |wc -l)"
 			if [ "$n" -gt 1 ]; then
 				local Verbose=Info
-				Info "$f: which $r:$(echo '' $rep)"
+				Info "$f: host_env $r:$(echo '' $rep)"
 			fi
 			# But we select the first path, which is the best, anyway.
 			rep="$(IFS=$'\n'; set -- $rep; printf %s "$1")"
 		fi
 		if [ -n "$rep" ]; then
-			$Verbose "$f: $r -> $rep -> ... (via which)"
+			$Verbose "$f: $r -> $rep -> ... (via host_env)"
 			FindByPath "$f" "$rep"
 			return
 		fi
