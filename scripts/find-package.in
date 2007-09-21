@@ -63,9 +63,13 @@ FindByPath()
 	# Dependence name starts with `/'.
 	local f="$1" rep="$2" package; shift 2 || return
 
-	# Does it start with buildroot?
+	# Does it start with %_builddir or %buildroot?
+	if [ -n "${RPM_BUILD_DIR-}" ] && [ -z "${rep##$RPM_BUILD_DIR*}" ]; then
+		Info "$f: invalid dependency: $rep"
+		return 1
+	fi
 	if [ -n "${RPM_BUILD_ROOT-}" ] && [ -z "${rep##$RPM_BUILD_ROOT*}" ]; then
-		Info "$f: invalid dependence: $rep"
+		Info "$f: invalid dependency: $rep"
 		return 1
 	fi
 
