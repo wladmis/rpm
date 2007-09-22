@@ -89,6 +89,15 @@ FindByPath()
 	# XXX Cleanup pathname.
 	rep=$(CanonPath "$rep")
 
+	# Ignore pseudo-filesystem dependencies.
+	local dir="${rep#/}"; dir="${dir%%/*}"
+	case "$dir" in
+		dev | proc | sys )
+			$Verbose "$f: $rep -> /$dir (skip)"
+			return ;;
+	esac
+	unset dir
+
 	# Always try package binary index.
 	local idx_bin="${RPM_PKG_CONTENTS_INDEX_BIN-}" try_idx_bin=1
 	[ -n "$idx_bin" ] && [ -s "$idx_bin" ] && [ -r "$idx_bin" ] || try_idx_bin=
