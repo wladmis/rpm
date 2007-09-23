@@ -69,7 +69,7 @@ SetupMethods()
 	local m= outm="$allm"
 	for m in $(IFS="$IFS,"; echo '' $inm); do
 		case "$m" in
-			*[^0-9A-Za-z_-]*)
+			*[!0-9A-Za-z_-]*)
 				Fatal "invalid $suffix method name $m"
 				;;
 			yes|auto|all)
