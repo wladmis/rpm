@@ -530,6 +530,12 @@ fi
   there's no separate doc yet, except for my protva2007-ru-short.pdf;
   see also git changelog, especially commit 9717c128
 - improved /usr/lib/rpm/find-package algorithms
+- shell.req: non-executable scripts are now processed as well as executable
+  ones; also, more shebang variants are recognized, e.g. "#!/usr/bin/env bash"
+- symlinks.req: new dependency generator for external symbolic links
+- pkgconfig.req: pkg-config(1) errors no longer silently ignored
+- pkgconfiglib.req: new dependency analyzer for "Libs" field in *.pc files;
+  maps e.g. "-lfoo" -> /usr/lib/libfoo.so -> libfoo-devel
 
 * Tue Aug 28 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77.M40.1
 - rpmdb/header.c (guess_category_value):
