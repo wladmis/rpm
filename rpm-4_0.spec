@@ -480,7 +480,6 @@ fi
 %rpmattr %_rpmlibdir/static.*
 %rpmattr %_rpmlibdir/symlinks.*
 %rpmattr %_rpmlibdir/verify-elf
-%rpmattr %_rpmlibdir/Specfile.pm
 %rpmattr %_rpmlibdir/*.awk
 
 %_mandir/man?/gendiff.*
