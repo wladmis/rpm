@@ -112,7 +112,7 @@ Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
 Requires: rpm-build-perl >= 0.6.2
 Requires: rpm-build-python >= 0.31
-Requires: rpm-build-tcl >= 0.2.1
+Conflicts: rpm-build-tcl <= 0.2
 Conflicts: rpm-build-mono <= 1.0
 
 %package build-topdir
