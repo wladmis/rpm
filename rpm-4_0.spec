@@ -525,11 +525,20 @@ fi
 %endif #with contrib
 
 %changelog
-* Sat Aug 11 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt78
+* Mon Sep 24 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt78
 - implemented modular subsystem for find-requires and find-provides;
   there's no separate doc yet, except for my protva2007-ru-short.pdf;
   see also git changelog, especially commit 9717c128
 - improved /usr/lib/rpm/find-package algorithms
+
+* Tue Aug 28 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77.M40.1
+- rpmdb/header.c (guess_category_value):
+  Allowed overriding locale using $RPM_LANGUAGE_I18NSTRING for header FindI18NString.
+- build.c (buildForTarget):
+  Changed to pass --wildcards to tar on build from tarball (RH#206841).
+- GROUPS: Added "System/Legacy libraries" (#12629).
+- scripts/find-package.in (FindPackage):
+  Speedup index processing order by checking binary index prior to complete index.
 
 * Fri May 18 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77
 - rpmio/macro.c (doFoo):
