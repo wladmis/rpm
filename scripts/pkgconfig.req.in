@@ -70,7 +70,9 @@ PkgconfigLibReq()
 		lib=lib$lib.so
 		if [ -n "${RPM_BUILD_ROOT-}" ]; then
 			for libdir in $L "$RPM_LIBDIR"; do
-				[ -f "$RPM_BUILD_ROOT$libdir/$lib" ] || continue
+				[ -f "$RPM_BUILD_ROOT$libdir/$lib" ] ||
+				# ... allow absolute symbolic links:
+				[ -L "$RPM_BUILD_ROOT$libdir/$lib" ] || continue
 				# The library is under RPM_BUILD_ROOT.
 				# Nothing is required.  Do next lib.
 				Verbose "$f: $lib -> \$RPM_BUILD_ROOT$libdir/$lib (skip)"
