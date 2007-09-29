@@ -3,6 +3,6 @@ while IFS=$'\t' read -r f t; do
 	case "$t" in
 		*'script text executable'*)
 			[ -x "$f" ] && echo "$f" ||
-			echo "${0##*/}: executable script $f not executable" >&2 ;;
+			echo "${0##*/}: executable script $f is not executable" >&2 ;;
 	esac
 done

@@ -5,6 +5,6 @@ while IFS=$'\t' read -r f t; do
 			echo "$f" ;;
 		*ELF*' executable'*'dynamically linked'*)
 			[ -x "$f" ] && echo "$f" ||
-			echo "${0##*/}: ELF executable $f not executable" >&2 ;;
+			echo "${0##*/}: ELF executable $f is not executable" >&2 ;;
 	esac
 done
