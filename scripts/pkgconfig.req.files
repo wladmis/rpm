@@ -8,6 +8,7 @@ while IFS=$'\t' read -r f t; do
 	esac
 	case "$t" in
 		*" text"*) echo "$f" ;;
+		*"symbolic link to "*) ;;
 		*) echo "${0##*/}: $f: $t" >&2 ;;
 	esac
 done
