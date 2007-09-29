@@ -34,26 +34,26 @@ Info()
 
 Fatal()
 {
-	echo "${0##*/}: $*" >&2
+	Info "$@"
 	exit 1
 }
 
 Verbose()
 {
 	[ "${RPM_SCRIPTS_DEBUG:-0}" -ge 1 ] || return 0
-	echo "${0##*/}: $*" >&2
+	Info "$@"
 }
 
 Debug()
 {
 	[ "${RPM_SCRIPTS_DEBUG:-0}" -ge 2 ] || return 0
-	echo "${0##*/}: $*" >&2
+	Info "$@"
 }
 
 ValidateBuildRoot()
 {
 	[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ] ||
-		Fatal "invalid \$RPM_BUILD_ROOT"
+		Fatal 'invalid $RPM_BUILD_ROOT'
 }
 
 [ -z "${RPM_BUILD_ROOT-}" ] || ValidateBuildRoot
@@ -66,7 +66,7 @@ SetupMethods()
 	local allm=$(ls /usr/lib/rpm/ |sed -n "/^[^.]/s/[.]$suffix$//p")
 	[ -n "$allm" ] || Fatal "no $suffix methods available"
 	allm=$(echo '' $allm '')
-	local m= outm="$allm"
+	local m outm="$allm"
 	for m in $(IFS="$IFS,"; echo '' $inm); do
 		case "$m" in
 			*[!0-9A-Za-z_-]*)
@@ -88,14 +88,14 @@ SetupMethods()
 				;;
 		esac
 	done
-	echo $outm |tr ' ' ','
+	echo $outm |tr -s ' ' ','
 }
 
 RunMethods()
 {
-	local m_m= m_suffix="$1" m_inm="$2"; shift 2
-	for m_m in $(IFS="$IFS,"; echo $m_inm); do
-		${1+"$@"} /usr/lib/rpm/"$m_m.$m_suffix"
+	local m_m m_suffix="$1" m_inm="$2"; shift 2
+	for m_m in $(IFS="$IFS,"; echo '' $m_inm); do
+		"$@" /usr/lib/rpm/"$m_m.$m_suffix"
 	done
 }
 
@@ -121,7 +121,7 @@ ArgvFileAction()
 	local av_action="$1"; shift
 
 	if [ $# -gt 0 ]; then
-		local av_argv=
+		local av_argv
 		av_argv=$(getopt -n "$PROG" -o v -l help,verbose -- "$@")
 		eval set -- "$av_argv"
 		while :; do
