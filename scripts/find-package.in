@@ -4,7 +4,7 @@
 # commands, such as found in shell scripts, to rpm dependencies.
 #
 # Usage:
-#	. /usr/lib/rpm/find-package
+#	. @RPMCONFIGDIR@/find-package
 #	FindPackage src [path...] [command...]
 #
 # Arguments:
