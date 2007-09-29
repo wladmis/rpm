@@ -1,9 +1,9 @@
 #!/bin/sh -efu
 while IFS=$'\t' read -r f t; do
 	case "$t" in
-		*ELF*" shared object"*)
+		*ELF*' shared object'*)
 			echo "$f" ;;
-		*ELF*" executable"*"dynamically linked"*)
+		*ELF*' executable'*'dynamically linked'*)
 			[ -x "$f" ] && echo "$f" ||
 			echo "${0##*/}: ELF executable $f not executable" >&2 ;;
 	esac
