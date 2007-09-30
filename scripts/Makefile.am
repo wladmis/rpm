@@ -51,6 +51,4 @@ config_SCRIPTS = \
 
 install-data-local:
 	@LN_S@ pkgconfig.req $(DESTDIR)$(configdir)/pkgconfig.prov
-	@LN_S@ pkgconfig.req $(DESTDIR)$(configdir)/pkgconfiglib.req
 	@LN_S@ pkgconfig.req.files $(DESTDIR)$(configdir)/pkgconfig.prov.files
-	@LN_S@ pkgconfig.req.files $(DESTDIR)$(configdir)/pkgconfiglib.req.files

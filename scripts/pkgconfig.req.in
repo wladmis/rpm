@@ -58,56 +58,8 @@ PkgconfigProv()
 	done
 }
 
-PkgconfigLibReq()
-{
-	local f="$1" l L; shift
-	l=$(pkg-config --print-errors --libs-only-l "$f") || Fatal "failed to process $f"
-	L=$(pkg-config --print-errors --libs-only-L "$f") || Fatal "failed to process $f"
-	l=$(echo '' $l |sed -e 's/ -l/ /g')
-	L=$(echo '' $L |sed -e 's/ -L/ /g')
-	local lib libdir
-	for lib in $l; do
-		lib=lib$lib.so
-		if [ -n "${RPM_BUILD_ROOT-}" ]; then
-			for libdir in $L "$RPM_LIBDIR"; do
-				[ -f "$RPM_BUILD_ROOT$libdir/$lib" ] ||
-				# ... allow absolute symbolic links:
-				[ -L "$RPM_BUILD_ROOT$libdir/$lib" ] || continue
-				# The library is under RPM_BUILD_ROOT.
-				# Nothing is required.  Do next lib.
-				Verbose "$f: $lib -> \$RPM_BUILD_ROOT$libdir/$lib (skip)"
-				continue 2
-			done
-		fi
-		for libdir in $L "$RPM_LIBDIR"; do
-			[ -f "$libdir/$lib" ] || continue
-			# The library is found in the host system.
-			# Generate rpm dependency and do next lib.
-			libdir=$(CanonPath "$libdir")
-			local pkg n
-			pkg=$(rpmquery --whatprovides --queryformat='%{NAME}\n' "$libdir/$lib" |sort -u)
-			n=$(set -- $pkg; echo $#)
-			if [ "$pkg" = glibc-devel ]; then
-				Verbose "$f: $lib -> $pkg (skip)"
-			elif [ $n -eq 1 ]; then
-				Verbose "$f: $lib -> $pkg"
-				printf '%s\n' "$pkg"
-			elif [ $n -gt 1 ]; then
-				Info "$f: $libdir/$lib provided by:$(echo '' $pkg)"
-				Info "$f: $lib -> $libdir/$lib (raw, ambiguous)"
-				printf '%s\n' "$libdir/$lib"
-			else
-				Info "$f: cannot map $libdir/$lib to rpm dependency (skip)"
-			fi
-			continue 2
-		done
-		Info "$f: cannot find $lib library path (skip)"
-	done
-}
-
 case "${0##*/}" in
 	pkgconfig.req*) ArgvFileAction PkgconfigReq "$@" ;;
 	pkgconfig.prov*) ArgvFileAction PkgconfigProv "$@" ;;
-	pkgconfiglib.req*) ArgvFileAction PkgconfigLibReq "$@" ;;
 	*) Fatal "req/prov method not recognized" ;;
 esac
