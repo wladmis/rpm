@@ -524,7 +524,7 @@ fi
 %endif #with contrib
 
 %changelog
-* Mon Sep 24 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt78
+* Sun Sep 30 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt78
 - implemented modular subsystem for find-requires and find-provides;
   there's no separate doc yet, except for my protva2007-ru-short.pdf;
   see also git changelog, especially commit 9717c128
@@ -533,8 +533,7 @@ fi
   ones; also, more shebang variants are recognized, e.g. "#!/usr/bin/env bash"
 - symlinks.req: new dependency generator for external symbolic links
 - pkgconfig.req: pkg-config(1) errors no longer silently ignored
-- pkgconfiglib.req: new dependency analyzer for "Libs" field in *.pc files;
-  maps e.g. "-lfoo" -> /usr/lib/libfoo.so -> libfoo-devel
+- rpm-build: decoupled rpm-build-tcl from the base build environment
 
 * Tue Aug 28 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77.M40.1
 - rpmdb/header.c (guess_category_value):
