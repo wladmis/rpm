@@ -64,6 +64,7 @@ optflags: armv5l %optflags_default -fomit-frame-pointer -march=armv5
 optflags: armeb %optflags_default -march=armv4 -mno-thumb-interwork
 optflags: armv4l %optflags_default -fomit-frame-pointer -march=armv4
 optflags: armv5l %optflags_default -fomit-frame-pointer -march=armv5
+optflags: armv5tejl %optflags_default -fomit-frame-pointer -march=armv5
 
 optflags: atarist %optflags_default -fomit-frame-pointer
 optflags: atariste %optflags_default -fomit-frame-pointer
@@ -123,6 +124,7 @@ arch_canon:	sparc64:sparc64 10
 arch_canon:	sun4u:	sparc64 10
 arch_canon:	mipsel:	mipsel	11
 
+arch_canon:	armv5tejl:	arm 	12
 arch_canon:	armv5l:	arm 	12
 arch_canon:	armv4l:	arm 	12
 arch_canon:	armv3l: armv3l  12
@@ -288,6 +290,7 @@ arch_compat: hppa1.1: hppa1.0
 arch_compat: hppa1.0: parisc
 arch_compat: parisc: noarch
 
+arch_compat: armv5tejl: armv5l
 arch_compat: armv5l: armv4l
 arch_compat: armv4l: arm
 arch_compat: arm: armv3l
@@ -385,6 +388,7 @@ buildarch_compat: ppc64: noarch
 buildarch_compat: mips: noarch
 buildarch_compat: mipsel: noarch
 
+buildarch_compat: armv5tejl: armv5l
 buildarch_compat: armv5l: armv4l
 buildarch_compat: armv4l: arm
 buildarch_compat: arm: armv3l
