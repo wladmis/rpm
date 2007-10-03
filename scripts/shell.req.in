@@ -79,7 +79,14 @@ ShellReq()
 	fi
 
 	[ -n "$reqs" ] || return 0
-	reqs=$(printf '%s\n' "$reqs" |LC_COLLATE=C sort -u)
+
+	# Self-requires elimination: first pass.
+	# Consider e.g. /etc/rc.d/init.d/functions has both
+	# executable(failure) and function(failure).
+	# This means that failure() is used before being defined.
+	# This is okay since it is actually used in another function.
+	# We want to keep only the function(failure).
+	reqs=$(printf '%s\n' "$reqs" |sort -t'(' -k1,1r |LC_COLLATE=C sort -t'(' -u -k2)
 
 	init_workdir
 
