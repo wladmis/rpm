@@ -21,6 +21,24 @@
 . @RPMCONFIGDIR@/functions
 . @RPMCONFIGDIR@/find-package
 
+workdir=
+clean_workdir()
+{
+	local rc=$?
+	trap - EXIT
+	[ -z "$workdir" ] || rm -rf "$workdir"
+	exit $rc
+}
+
+init_workdir()
+{
+	[ -z "$workdir" ] || return 0
+	workdir=$(mktemp -dt "$PROG".XXXXXXXX)
+	trap clean_workdir EXIT HUP INT QUIT PIPE TERM
+	: >"$workdir"/req
+	: >"$workdir"/prov
+}
+
 ShellReq()
 {
 	local f="$1"; shift
@@ -60,16 +78,41 @@ ShellReq()
 		Fatal "$f: $sh --rpm-requires failed"
 	fi
 
-	reqs="$(printf %s\\n "$reqs" |sed -n 's/^\(sh\|bash\|executable\)(\(.*\))$/\2/p' |LC_COLLATE=C sort -u)"
+	[ -n "$reqs" ] || return 0
+	reqs=$(printf '%s\n' "$reqs" |LC_COLLATE=C sort -u)
 
-	local dname r
-	dname=${f#${RPM_BUILD_ROOT-}}
-	dname=${dname%/*}
-	for r in $reqs; do
+	init_workdir
+
+	printf %s "$reqs" |
+	while IFS='()' read -r t r; do
 		case "$(type -t -- "$r")" in
 			alias|keyword|function|builtin)
 				continue ;;
 		esac
+		case "$t" in
+			executable) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/req ;;
+			function) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/prov ;;
+			*) Info "invalid $sh --rpm-requires output: $req" ;;
+		esac
+	done
+}
+
+ShellReqEND()
+{
+	[ -n "$workdir" ] || return 0
+	local f r
+	while IFS=$'\t' read -r f r; do
+		local self_req=
+		while IFS=$'\t' read -r f2 r2; do
+			if [ "$r" = "$r2" ]; then
+				Verbose "$f: $r() is possibly defined in $f2"
+				self_req=1
+			fi
+		done <"$workdir"/prov
+		[ -z "$self_req" ] || continue
+		local dname
+		dname=${f#${RPM_BUILD_ROOT-}}
+		dname=${dname%/*}
 		if grep -qs -Fx -- "$r" "${RPM_BUILD_ROOT-}$dname/.provides.sh"; then
 			printf %s\\n "$dname($r)"
 		elif grep -qs -Fx -- "$r" "$dname/.provides.sh"; then
@@ -77,7 +120,8 @@ ShellReq()
 		else
 			FindPackage "$f" "$r"
 		fi
-	done
+	done <"$workdir"/req
 }
 
 ArgvFileAction ShellReq "$@"
+ShellReqEND
