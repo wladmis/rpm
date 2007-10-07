@@ -99,8 +99,12 @@ ShellReq()
 			esac
 			set -- $(IFS="($IFS)"; echo $line)
 			case $# in
-				2) printf '%s\t%s\n' "$1" "$2" ;;
-				*) Info "$f: invalid $sh --rpm-requires output: $line" ;;
+				2) ;;
+				*) Info "$f: invalid $sh --rpm-requires output: $line"; continue ;;
+			esac
+			case "$(type -t -- "$2")" in
+				alias|keyword|function|builtin) continue ;;
+				*) printf '%s\t%s\n' "$1" "$2" ;;
 			esac
 		done
 	}
@@ -118,10 +122,6 @@ ShellReq()
 
 	printf %s "$reqs" |
 	while read -r t r; do
-		case "$(type -t -- "$r")" in
-			alias|keyword|function|builtin)
-				continue ;;
-		esac
 		case "$t" in
 			executable) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/req ;;
 			function) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/prov ;;
