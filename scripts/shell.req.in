@@ -125,7 +125,7 @@ ShellReq()
 
 	init_workdir
 
-	printf %s "$out" |
+	printf '%s\n' "$out" |
 	while read -r t r; do
 		case "$t" in
 			executable) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/req ;;
