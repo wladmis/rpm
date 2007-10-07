@@ -108,6 +108,11 @@ ShellReq()
 		done
 	}
 	reqs=$(CleanupRpmRequires)
+	[ -n "$reqs" ] || return 0
+
+	# Now that the output is sane I can fold dups.
+	# Functions go before executables (see below).
+	reqs=$(printf '%s\n' "$reqs" |LC_COLLATE=C sort -u -k1,1r -k2)
 
 	# Self-requires elimination: first pass.
 	# Consider e.g. /etc/rc.d/init.d/functions has both
