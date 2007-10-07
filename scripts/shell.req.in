@@ -178,13 +178,21 @@ ShellReqEND()
 			done
 			continue
 		fi
-		local dname
-		dname=${f#${RPM_BUILD_ROOT-}}
-		dname=${dname%/*}
-		if grep -qs -Fx -- "$r" "${RPM_BUILD_ROOT-}$dname/.provides.sh"; then
-			printf %s\\n "$dname($r)"
-		elif grep -qs -Fx -- "$r" "$dname/.provides.sh"; then
-			printf %s\\n "$dname($r)"
+
+		local dir
+		dir=${f#${RPM_BUILD_ROOT-}}
+		dir=${dir%/*}
+		CheckDirProv()
+		{
+			fgrep -qs -x -e "$r" "$1/.provides.sh" || return
+		}
+		if [ -n "${RPM_BUILD_ROOT-}" ] && CheckDirProv "$RPM_BUILD_ROOT$dir"; then
+			# I think that .provides.sh must provide this thingy.
+			# Otherwise we get an unmet depedency, which is good --
+			# one has to fix the .provides.sh early.
+			printf '%s(%s)\n' "$dir" "$r"
+		elif CheckDirProv "$dir"; then
+			printf '%s(%s)\n' "$dir" "$r"
 		else
 			FindPackage "$f" "$r"
 		fi
