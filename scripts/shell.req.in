@@ -87,9 +87,7 @@ ShellReq()
 	CleanupRpmRequires()
 	{
 		printf '%s\n' "$reqs" |
-		# I do not use 'read -r' here deliberately:
-		# I want to transform e.g. 'executable(\ls)' -> 'executable(ls)'
-		while read line; do
+		while read -r line; do
 			# NB: grep and sed are expensive here.
 			case "$line" in
 				# Basic sanity check for --rpm-requires output.
@@ -97,7 +95,8 @@ ShellReq()
 				'executable('*[A-Za-z0-9]*')' | 'function('*[A-Za-z0-9]*')' ) ;;
 				*) Info "$f: invalid $sh --rpm-requires output: $line"; continue ;;
 			esac
-			set -- $(IFS="($IFS)"; echo $line)
+			# Allow e.g. executable(\ls) and executable("ls").
+			set -- $(IFS="($IFS\\'\")"; echo $line)
 			case $# in
 				2) ;;
 				*) Info "$f: invalid $sh --rpm-requires output: $line"; continue ;;
