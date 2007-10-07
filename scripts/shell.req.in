@@ -102,6 +102,7 @@ ShellReq()
 				*) Info "$f: invalid $sh --rpm-requires output: $line"; continue ;;
 			esac
 			case "$(type -t -- "$2")" in
+				# XXX remove "function"?
 				alias|keyword|function|builtin) continue ;;
 				*) printf '%s\t%s\n' "$1" "$2" ;;
 			esac
