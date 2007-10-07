@@ -56,8 +56,8 @@ ShellReq()
 	$sh --rpm-requires </dev/null >/dev/null ||
 		Fatal "$sh interpreter does not support --rpm-requires feature"
 
-	local reqs line1
-	if ! reqs="$($sh --rpm-requires "$f")"; then
+	local out line1
+	if ! out=$($sh --rpm-requires "$f"); then
 		# sh --rpm-requires failed, and stderr is already there.
 		# We are almost dead.  The last chance to escape is to see
 		# if the shell is used only to re-exec another interpreter, e.g.
@@ -78,7 +78,7 @@ ShellReq()
 		Fatal "$f: $sh --rpm-requires failed"
 	fi
 
-	[ -n "$reqs" ] || return 0
+	[ -n "$out" ] || return 0
 
 	# This function is a "closure": parent variables are available without
 	# explicit argument passing.  I checked that it works at least with some
@@ -86,7 +86,7 @@ ShellReq()
 	# is not as perfect as to provide decent syntax highlight for subshells.
 	CleanupRpmRequires()
 	{
-		printf '%s\n' "$reqs" |
+		printf '%s\n' "$out" |
 		while read -r line; do
 			# NB: grep and sed are expensive here.
 			case "$line" in
@@ -108,12 +108,12 @@ ShellReq()
 			esac
 		done
 	}
-	reqs=$(CleanupRpmRequires)
-	[ -n "$reqs" ] || return 0
+	out=$(CleanupRpmRequires)
+	[ -n "$out" ] || return 0
 
 	# Now that the output is sane I can fold dups.
 	# Functions go before executables (see below).
-	reqs=$(printf '%s\n' "$reqs" |LC_COLLATE=C sort -u -k1,1r -k2)
+	out=$(printf '%s\n' "$out" |LC_COLLATE=C sort -u -k1,1r -k2)
 
 	# Self-requires elimination: first pass.
 	# Consider e.g. /etc/rc.d/init.d/functions has both
@@ -121,11 +121,11 @@ ShellReq()
 	# This means that failure() is used before being defined.
 	# This is okay since it is actually used in another function.
 	# We want to keep only the function(failure).
-	reqs=$(printf '%s\n' "$reqs" |sort -k1,1r |LC_COLLATE=C sort -u -k2)
+	out=$(printf '%s\n' "$out" |sort -k1,1r |LC_COLLATE=C sort -u -k2)
 
 	init_workdir
 
-	printf %s "$reqs" |
+	printf %s "$out" |
 	while read -r t r; do
 		case "$t" in
 			executable) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/req ;;
