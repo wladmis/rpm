@@ -21,24 +21,7 @@
 . @RPMCONFIGDIR@/functions
 . @RPMCONFIGDIR@/find-package
 
-workdir=
-clean_workdir()
-{
-	local rc=$?
-	trap - EXIT
-	[ -z "$workdir" ] || rm -rf "$workdir"
-	exit $rc
-}
-
-init_workdir()
-{
-	[ -z "$workdir" ] || return 0
-	workdir=$(mktemp -dt "$PROG".XXXXXXXX)
-	trap clean_workdir EXIT HUP INT QUIT PIPE TERM
-	: >"$workdir"/req
-	: >"$workdir"/prov
-}
-
+shREQ= shPROV=
 ShellReq()
 {
 	local f="$1"; shift
@@ -112,8 +95,7 @@ ShellReq()
 	[ -n "$out" ] || return 0
 
 	# Now that the output is sane I can fold dups.
-	# Functions go before executables (see below).
-	out=$(printf '%s\n' "$out" |LC_COLLATE=C sort -u -k1,1r -k2)
+	out=$(printf '%s\n' "$out" |LC_COLLATE=C sort -u)
 
 	# Self-requires elimination: first pass.
 	# Consider e.g. /etc/rc.d/init.d/functions has both
@@ -121,32 +103,81 @@ ShellReq()
 	# This means that failure() is used before being defined.
 	# This is okay since it is actually used in another function.
 	# We want to keep only the function(failure).
-	out=$(printf '%s\n' "$out" |sort -k1,1r |LC_COLLATE=C sort -u -k2)
+	GetProv()
+	{
+		printf '%s\n' "$out" |
+		while read -r t r; do
+			[ "$t" = function ] || continue
+			printf '%s\n' "$r"
+		done
+	}
+	local prov
+	prov=$(GetProv)
 
-	init_workdir
+	GetReq()
+	{
+		printf '%s\n' "$out" |
+		while read -r t r; do
+			[ "$t" = executable ] || continue
+			if [ -n "$prov" ] && printf '%s\n' "$prov" |fgrep -qs -x -e "$r"; then
+				Verbose "$f: $r() is possibly used before its definition"
+				continue
+			fi
+			printf '%s\n' "$r"
+		done
+	}
+	local req
+	req=$(GetReq)
 
-	printf '%s\n' "$out" |
-	while read -r t r; do
-		case "$t" in
-			executable) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/req ;;
-			function) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/prov ;;
-		esac
-	done
+	AddReq()
+	{
+		[ -z "$shREQ" ] || printf '%s\n' "$shREQ"
+		[ -n "$req" ] || return 0
+		printf '%s\n' "$req" |
+		while read -r r; do
+			printf '%s\t%s\n' "$f" "$r"
+		done
+	}
+	shREQ=$(AddReq)
+
+	AddProv()
+	{
+		[ -z "$shPROV" ] || printf '%s\n' "$shPROV"
+		[ -n "$prov" ] || return 0
+		printf '%s\n' "$prov" |
+		while read -r r; do
+			printf '%s\t%s\n' "$f" "$r"
+		done
+	}
+	shPROV=$(AddProv)
 }
 
 ShellReqEND()
 {
-	[ -n "$workdir" ] || return 0
-	local f r
+	[ -n "$shREQ" ] || return 0
+	Debug "shREQ=$shREQ"
+	Debug "shProv=$shPROV"
+	printf '%s\n' "$shREQ" |
 	while IFS=$'\t' read -r f r; do
-		local self_req=
-		while IFS=$'\t' read -r f2 r2; do
-			if [ "$r" = "$r2" ]; then
+		CheckSelfReq()
+		{
+			[ -n "$shPROV" ] || return 0
+			printf '%s\n' "$shPROV" |
+			while IFS=$'\t' read -r f2 r2; do
+				if [ "$r" = "$r2" ]; then
+					printf '%s\n' "$f2"
+				fi
+			done
+		}
+		local self_req
+		self_req=$(CheckSelfReq)
+		if [ -n "$self_req" ]; then
+			printf '%s\n' "$self_req" |
+			while read -r f2; do
 				Verbose "$f: $r() is possibly defined in $f2"
-				self_req=1
-			fi
-		done <"$workdir"/prov
-		[ -z "$self_req" ] || continue
+			done
+			continue
+		fi
 		local dname
 		dname=${f#${RPM_BUILD_ROOT-}}
 		dname=${dname%/*}
@@ -157,7 +188,7 @@ ShellReqEND()
 		else
 			FindPackage "$f" "$r"
 		fi
-	done <"$workdir"/req
+	done
 }
 
 ArgvFileAction ShellReq "$@"
