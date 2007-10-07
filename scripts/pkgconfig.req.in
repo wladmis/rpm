@@ -36,10 +36,30 @@ PkgconfigReqProv()
 	echo "$out" |while read -r line; do
 		set -- $line
 		case $# in
-			1) echo "pkgconfig($1)" ;;
-			3) echo "pkgconfig($1) $2 $3" ;;
-			*) Fatal "$f: invalid pkg-config output: $line"
+			1 | 3 ) ;;
+			*) Fatal "$f: invalid pkg-config output: $line" ;;
 		esac
+		case "$1" in
+			*[!A-Za-z0-9_.+-]*)
+			   Fatal "$f: invalid pkg-config output: $line" ;;
+			[A-Za-z0-9_]*) ;;
+			*) Fatal "$f: invalid pkg-config output: $line" ;;
+		esac
+		if [ $# = 1 ]; then
+			echo "pkgconfig($1)"
+			continue
+		fi
+		case "$2" in
+			[\<\>=] | [\<\>]= ) ;;
+			*) Fatal "$f: invalid pkg-config output: $line" ;;
+		esac
+		case "$3" in
+			*[!A-Za-z0-9_.+-]*)
+			   Fatal "$f: invalid pkg-config output: $line" ;;
+			[0-9]*) ;;
+			*) Fatal "$f: invalid pkg-config output: $line" ;;
+		esac
+		echo "pkgconfig($1) $2 $3"
 	done
 }
 
