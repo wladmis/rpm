@@ -80,18 +80,44 @@ ShellReq()
 
 	[ -n "$reqs" ] || return 0
 
+	# This function is a "closure": parent variables are available without
+	# explicit argument passing.  I checked that it works at least with some
+	# modern shells.  Why I ever need a separate function is because my $EDITOR
+	# is not as perfect as to provide decent syntax highlight for subshells.
+	CleanupRpmRequires()
+	{
+		printf '%s\n' "$reqs" |
+		# I do not use 'read -r' here deliberately:
+		# I want to transform e.g. 'executable(\ls)' -> 'executable(ls)'
+		while read line; do
+			# NB: grep and sed are expensive here.
+			case "$line" in
+				# Basic sanity check for --rpm-requires output.
+				# Better command/path validation is performed in FindPackage.
+				'executable('*[A-Za-z0-9]*')' | 'function('*[A-Za-z0-9]*')' ) ;;
+				*) Info "$f: invalid $sh --rpm-requires output: $line"; continue ;;
+			esac
+			set -- $(IFS="($IFS)"; echo $line)
+			case $# in
+				2) printf '%s\t%s\n' "$1" "$2" ;;
+				*) Info "$f: invalid $sh --rpm-requires output: $line" ;;
+			esac
+		done
+	}
+	reqs=$(CleanupRpmRequires)
+
 	# Self-requires elimination: first pass.
 	# Consider e.g. /etc/rc.d/init.d/functions has both
 	# executable(failure) and function(failure).
 	# This means that failure() is used before being defined.
 	# This is okay since it is actually used in another function.
 	# We want to keep only the function(failure).
-	reqs=$(printf '%s\n' "$reqs" |sort -t'(' -k1,1r |LC_COLLATE=C sort -t'(' -u -k2)
+	reqs=$(printf '%s\n' "$reqs" |sort -k1,1r |LC_COLLATE=C sort -u -k2)
 
 	init_workdir
 
 	printf %s "$reqs" |
-	while IFS='()' read -r t r; do
+	while read -r t r; do
 		case "$(type -t -- "$r")" in
 			alias|keyword|function|builtin)
 				continue ;;
@@ -99,7 +125,6 @@ ShellReq()
 		case "$t" in
 			executable) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/req ;;
 			function) printf '%s\t%s\n' "$f" "$r" >>"$workdir"/prov ;;
-			*) Info "invalid $sh --rpm-requires output: $req" ;;
 		esac
 	done
 }
