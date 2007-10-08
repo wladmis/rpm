@@ -129,27 +129,17 @@ ShellReq()
 	local req
 	req=$(GetReq)
 
-	AddReq()
+	AddReqProv()
 	{
-		[ -z "$shREQ" ] || printf '%s\n' "$shREQ"
-		[ -n "$req" ] || return 0
-		printf '%s\n' "$req" |
+		[ -z "$1" ] || printf '%s\n' "$1"
+		[ -n "$2" ] || return 0
+		printf '%s\n' "$2" |
 		while read -r r; do
 			printf '%s\t%s\n' "$f" "$r"
 		done
 	}
-	shREQ=$(AddReq)
-
-	AddProv()
-	{
-		[ -z "$shPROV" ] || printf '%s\n' "$shPROV"
-		[ -n "$prov" ] || return 0
-		printf '%s\n' "$prov" |
-		while read -r r; do
-			printf '%s\t%s\n' "$f" "$r"
-		done
-	}
-	shPROV=$(AddProv)
+	shREQ=$(AddReqProv "$shREQ" "$req")
+	shPROV=$(AddReqProv "$shPROV" "$prov")
 }
 
 ShellReqEND()
