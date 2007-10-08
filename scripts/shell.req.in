@@ -146,7 +146,10 @@ ShellReqEND()
 {
 	[ -n "$shREQ" ] || return 0
 	Debug "shREQ=$shREQ"
-	Debug "shProv=$shPROV"
+	Debug "shPROV=$shPROV"
+
+	# Self-requires elimination: second pass.
+	# If ANY file has function(foo), skip all dependencies on execuatable(foo).
 	printf '%s\n' "$shREQ" |
 	while IFS=$'\t' read -r f r; do
 		CheckSelfReq()
