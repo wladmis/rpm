@@ -165,10 +165,19 @@ ShellReqEND()
 		local self_req
 		self_req=$(CheckSelfReq)
 		if [ -n "$self_req" ]; then
+			# Still check if executable candidates are available.
+			local exe="$(FindPackage "$f" "$r" 2>/dev/null)"
+			local Verbose=Verbose
+			if [ -n "$exe" ]; then
+				Verbose=Info
+			fi
 			printf '%s\n' "$self_req" |
 			while read -r f2; do
-				Verbose "$f: $r() is possibly defined in $f2"
+				$Verbose "$f: $r() is possibly defined in $f2"
 			done
+			if [ -n "$exe" ]; then
+				Info "$f: $r() has execuatable candidate: $r -> $exe (skip)"
+			fi
 			continue
 		fi
 
