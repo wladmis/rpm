@@ -327,7 +327,8 @@ FindByName()
 	# Not found.
 	local maybe_function=
 	case "$r" in
-		*[-.]*) ;;
+		*[!A-Za-z0-9_]*) ;;
+		[!A-Za-z_]*) ;;
 		*[A-Z_]*) maybe_function=1 ;;
 	esac
 	if [ -n "$maybe_function" ]; then
