@@ -15,9 +15,38 @@ PKG_CONFIG_PATH=$RPM_LIBDIR/pkgconfig:/usr/share/pkgconfig
 PKG_CONFIG_PATH=$RPM_BUILD_ROOT$RPM_LIBDIR/pkgconfig:$RPM_BUILD_ROOT/usr/share/pkgconfig:$PKG_CONFIG_PATH
 export PKG_CONFIG_PATH
 
+gcc= gcc_libdirs=
 PkgconfigLibReq()
 {
 	local f="$1" l L; shift
+
+	local srpm="${RPM_PACKAGE_NAME-}"
+	[ -n "$srpm" ] || srpm=$(rpmquery --qf='%{SOURCERPM}' -f "$f" 2>/dev/null) || srpm=foo
+	case "$srpm" in
+		# Below we use "gcc -print-search-dirs" to determine library
+		# search path.  If we build gcc itself, then e.g. libgcj.pc
+		# (with -lgcj inside) cannot be processed reliably.
+		gcc | gcc-* | gcc[1-9]* | *-gcc | *-gcc-* | *-gcc[1-9]* )
+			Verbose "$f: $PROG disabled for gcc"
+			return 0 ;;
+	esac
+
+	if [ -z "$gcc" ]; then
+		gcc=/usr/bin/${RPM_ARCH:-noarch}-alt-linux-gcc
+		[ -x "$gcc" ] || gcc=/usr/bin/gcc
+		[ -z "${GCC_VERSION-}" ] || gcc=$gcc-$GCC_VERSION
+		Verbose "gcc=$gcc"
+		gcc_libdirs=$("$gcc" -print-search-dirs |sed -n 's/^libraries: =//p')
+		[ -n "$gcc_libdirs" ] || Fatal "$gcc -print-search-dirs failed"
+		gcc_libdirs=$(IFS="$IFS:"
+			for dir in $gcc_libdirs; do
+				[ -d "$dir" ] || continue
+				CanonPath "$dir"
+			done)
+		gcc_libdirs=$(printf '%s\n' "$gcc_libdirs" |cat -n |sort -u -k2 |sort -n |cut -f2-)
+		Verbose "gcc_libdirs=$(echo $gcc_libdirs)"
+	fi
+
 	l=$(pkg-config --print-errors --libs-only-l "$f") || Fatal "failed to process $f"
 	L=$(pkg-config --print-errors --libs-only-L "$f") || Fatal "failed to process $f"
 	l=$(echo '' $l |sed -e 's/ -l/ /g')
