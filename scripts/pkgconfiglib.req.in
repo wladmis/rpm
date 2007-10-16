@@ -60,41 +60,54 @@ PkgconfigLibReq()
 
 	local lib libdir
 	for lib in $libs; do
-		lib=lib$lib.so
+		local rep
 		if [ -n "${RPM_BUILD_ROOT-}" ]; then
 			for libdir in $libdirs $gcc_libdirs; do
-				[ -f "$RPM_BUILD_ROOT$libdir/$lib" ] ||
-				# ... allow absolute symbolic links:
-				[ -L "$RPM_BUILD_ROOT$libdir/$lib" ] || continue
+				rep=$libdir/lib$lib
+				# Allow absolute symbolic links.
+				if [ -f "$RPM_BUILD_ROOT$rep.so" -o -L "$RPM_BUILD_ROOT$rep.so" ]; then
+					rep=$rep.so
+				elif [ -f "$RPM_BUILD_ROOT$rep.a" -o -L "$RPM_BUILD_ROOT$rep.a" ]; then
+					rep=$rep.a
+				else
+					continue
+				fi
 				# The library is under RPM_BUILD_ROOT.
 				# Nothing is required.  Do next lib.
-				Verbose "$f: $lib -> \$RPM_BUILD_ROOT$libdir/$lib (skip)"
+				Verbose "$f: -l$lib -> \$RPM_BUILD_ROOT$rep (skip)"
 				continue 2
 			done
 		fi
 		for libdir in $libdirs $gcc_libdirs; do
-			[ -f "$libdir/$lib" ] || continue
+			rep=$libdir/lib$lib
+			if [ -f "$rep.so" ]; then
+				rep=$rep.so
+			elif [ -f "$rep.a" ]; then
+				rep=$rep.a
+			else
+				continue
+			fi
 			# The library is found in the host system.
 			# Generate rpm dependency and do next lib.
-			libdir=$(CanonPath "$libdir")
+			rep=$(CanonPath "$rep")
 			local pkg n
-			pkg=$(rpmquery --whatprovides --queryformat='%{NAME}\n' "$libdir/$lib" |sort -u)
+			pkg=$(rpmquery --whatprovides --queryformat='%{NAME}\n' "$rep" |sort -u)
 			n=$(set -- $pkg; echo $#)
 			if [ "$pkg" = glibc-devel ]; then
-				Verbose "$f: $lib -> $pkg (skip)"
+				Verbose "$f: -l$lib -> $rep -> $pkg (skip)"
 			elif [ $n -eq 1 ]; then
-				Verbose "$f: $lib -> $pkg"
+				Verbose "$f: -l$lib -> $rep -> $pkg"
 				printf '%s\n' "$pkg"
 			elif [ $n -gt 1 ]; then
-				Info "$f: $libdir/$lib provided by:$(echo '' $pkg)"
-				Info "$f: $lib -> $libdir/$lib (raw, ambiguous)"
-				printf '%s\n' "$libdir/$lib"
+				Info "$f: $rep provided by:$(echo '' $pkg)"
+				Info "$f: -l$lib -> $rep (raw, ambiguous)"
+				printf '%s\n' "$rep"
 			else
-				Info "$f: cannot map $libdir/$lib to rpm dependency (skip)"
+				Info "$f: cannot map $rep to rpm dependency (skip)"
 			fi
 			continue 2
 		done
-		Info "$f: cannot find $lib library path (skip)"
+		Info "$f: cannot find -l$lib library path (skip)"
 	done
 }
 
