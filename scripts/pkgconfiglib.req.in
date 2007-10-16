@@ -18,7 +18,7 @@ export PKG_CONFIG_PATH
 gcc= gcc_libdirs=
 PkgconfigLibReq()
 {
-	local f="$1" l L; shift
+	local f="$1"; shift
 
 	local srpm="${RPM_PACKAGE_NAME-}"
 	[ -n "$srpm" ] || srpm=$(rpmquery --qf='%{SOURCERPM}' -f "$f" 2>/dev/null) || srpm=foo
@@ -30,6 +30,10 @@ PkgconfigLibReq()
 			Verbose "$f: $PROG disabled for gcc"
 			return 0 ;;
 	esac
+
+	local pcLibs
+	pcLibs=$(pkg-config --print-errors --libs "$f") || Fatal "failed to process $f"
+	[ -n "$pcLibs" ] || return 0
 
 	if [ -z "$gcc" ]; then
 		gcc=/usr/bin/${RPM_ARCH:-noarch}-alt-linux-gcc
@@ -47,15 +51,35 @@ PkgconfigLibReq()
 		Verbose "gcc_libdirs=$(echo $gcc_libdirs)"
 	fi
 
-	l=$(pkg-config --print-errors --libs-only-l "$f") || Fatal "failed to process $f"
-	L=$(pkg-config --print-errors --libs-only-L "$f") || Fatal "failed to process $f"
-	l=$(echo '' $l |sed -e 's/ -l/ /g')
-	L=$(echo '' $L |sed -e 's/ -L/ /g')
+	GetLibs()
+	{
+		for arg in $pcLibs; do
+			case "$arg" in
+				-l?*) printf '%s\n' "${arg#-l}" ;;
+			esac
+		done
+	}
+	GetLibdirs()
+	{
+		for arg in $pcLibs; do
+			case "$arg" in
+				-L/?*) printf '%s\n' "${arg#-L}" ;;
+				*-rpath[=,]/?*) printf '%s\n' "${arg#*-rpath[=,]}" ;;
+			esac
+		done
+	}
+
+	local libs libdirs
+	libs=$(GetLibs)
+	[ -n "$libs" ] || return 0
+	libdirs=$(GetLibdirs)
+	[ -z "$libdirs" ] || Verbose "$f: libdirs=$(echo $libdirs)"
+
 	local lib libdir
-	for lib in $l; do
+	for lib in $libs; do
 		lib=lib$lib.so
 		if [ -n "${RPM_BUILD_ROOT-}" ]; then
-			for libdir in $L "$RPM_LIBDIR"; do
+			for libdir in $libdirs $gcc_libdirs; do
 				[ -f "$RPM_BUILD_ROOT$libdir/$lib" ] ||
 				# ... allow absolute symbolic links:
 				[ -L "$RPM_BUILD_ROOT$libdir/$lib" ] || continue
@@ -65,7 +89,7 @@ PkgconfigLibReq()
 				continue 2
 			done
 		fi
-		for libdir in $L "$RPM_LIBDIR"; do
+		for libdir in $libdirs $gcc_libdirs; do
 			[ -f "$libdir/$lib" ] || continue
 			# The library is found in the host system.
 			# Generate rpm dependency and do next lib.
