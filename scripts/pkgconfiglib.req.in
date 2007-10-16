@@ -31,9 +31,16 @@ PkgconfigLibReq()
 			return 0 ;;
 	esac
 
-	local pcLibs
-	pcLibs=$(pkg-config --print-errors --libs "$f") || Fatal "failed to process $f"
-	[ -n "$pcLibs" ] || return 0
+	local libs
+	libs=$(pkg-config --print-errors --libs-only-l "$f") || Fatal "failed to process $f"
+	libs=$(echo '' $libs |sed -e 's/ -l/ /g' -e 's/^ //')
+	[ -n "$libs" ] || return 0
+	Verbose "$f: libs=$libs"
+
+	local libdirs
+	libdirs=$(pkg-config --print-errors --libs-only-L "$f") || Fatal "failed to process $f"
+	libdirs=$(echo '' $libdirs |sed -e 's/ -L/ /g' -e 's/^ //')
+	[ -z "$libdirs" ] || Verbose "$f: libdirs=$libdirs"
 
 	if [ -z "$gcc" ]; then
 		gcc=/usr/bin/${RPM_ARCH:-noarch}-alt-linux-gcc
@@ -50,30 +57,6 @@ PkgconfigLibReq()
 		gcc_libdirs=$(printf '%s\n' "$gcc_libdirs" |cat -n |sort -u -k2 |sort -n |cut -f2-)
 		Verbose "gcc_libdirs=$(echo $gcc_libdirs)"
 	fi
-
-	GetLibs()
-	{
-		for arg in $pcLibs; do
-			case "$arg" in
-				-l?*) printf '%s\n' "${arg#-l}" ;;
-			esac
-		done
-	}
-	GetLibdirs()
-	{
-		for arg in $pcLibs; do
-			case "$arg" in
-				-L/?*) printf '%s\n' "${arg#-L}" ;;
-				*-rpath[=,]/?*) printf '%s\n' "${arg#*-rpath[=,]}" ;;
-			esac
-		done
-	}
-
-	local libs libdirs
-	libs=$(GetLibs)
-	[ -n "$libs" ] || return 0
-	libdirs=$(GetLibdirs)
-	[ -z "$libdirs" ] || Verbose "$f: libdirs=$(echo $libdirs)"
 
 	local lib libdir
 	for lib in $libs; do
