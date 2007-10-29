@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt78
+Release: alt79
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -525,6 +525,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Oct 29 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt79
+- shell.req: implemented strong self-requires elimination within
+  a package; if ANY shell script defines function "foo", dependencies
+  on "foo" are discarded in all shell scripts throughout the package;
+  a warning is issued if e.g. /usr/bin/foo executable is available
+- pkgconfiglib.req: new dependency generator for "Libs" field in *.pc
+  files; maps e.g. "-lfoo" -> /usr/lib/libfoo.so -> libfoo-devel
+
 * Sun Sep 30 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt78
 - implemented modular subsystem for find-requires and find-provides;
   there's no separate doc yet, except for my protva2007-ru-short.pdf;
