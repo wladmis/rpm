@@ -32,13 +32,13 @@ PkgconfigLibReq()
 	esac
 
 	local libs
-	libs=$(pkg-config --print-errors --libs-only-l "$f") || Fatal "failed to process $f"
+	libs=$(pkg-config --disable-recursion --print-errors --libs-only-l "$f") || Fatal "failed to process $f"
 	libs=$(echo '' $libs |sed -e 's/ -l/ /g' -e 's/^ //')
 	[ -n "$libs" ] || return 0
 	Verbose "$f: libs=$libs"
 
 	local libdirs
-	libdirs=$(pkg-config --print-errors --libs-only-L "$f") || Fatal "failed to process $f"
+	libdirs=$(pkg-config --disable-recursion --print-errors --libs-only-L "$f") || Fatal "failed to process $f"
 	libdirs=$(echo '' $libdirs |sed -e 's/ -L/ /g' -e 's/^ //')
 	[ -z "$libdirs" ] || Verbose "$f: libdirs=$libdirs"
 

@@ -107,7 +107,7 @@ Requires: gzip >= 0:1.3.3-alt2
 Requires: info-install >= 0:4.5-alt2
 Requires: mktemp >= 1:1.3.1
 Requires: patch >= 2.5
-Requires: pkgconfig-reqprov
+Requires: pkgconfig-reqprov pkgconfig-recursion
 Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
 Requires: rpm-build-perl >= 0.6.2
