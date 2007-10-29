@@ -35,18 +35,18 @@ PkgconfigLibReq()
 	libs=$(pkg-config --disable-recursion --print-errors --libs-only-l "$f") || Fatal "failed to process $f"
 	libs=$(echo '' $libs |sed -e 's/ -l/ /g' -e 's/^ //')
 	[ -n "$libs" ] || return 0
-	Verbose "$f: libs=$libs"
+	Debug "$f: libs=$libs"
 
 	local libdirs
 	libdirs=$(pkg-config --disable-recursion --print-errors --libs-only-L "$f") || Fatal "failed to process $f"
 	libdirs=$(echo '' $libdirs |sed -e 's/ -L/ /g' -e 's/^ //')
-	[ -z "$libdirs" ] || Verbose "$f: libdirs=$libdirs"
+	[ -z "$libdirs" ] || Debug "$f: libdirs=$libdirs"
 
 	if [ -z "$gcc" ]; then
 		gcc=/usr/bin/${RPM_ARCH:-noarch}-alt-linux-gcc
 		[ -x "$gcc" ] || gcc=/usr/bin/gcc
 		[ -z "${GCC_VERSION-}" ] || gcc=$gcc-$GCC_VERSION
-		Verbose "gcc=$gcc"
+		Debug "gcc=$gcc"
 		gcc_libdirs=$("$gcc" -print-search-dirs |sed -n 's/^libraries: =//p')
 		[ -n "$gcc_libdirs" ] || Fatal "$gcc -print-search-dirs failed"
 		gcc_libdirs=$(IFS="$IFS:"
@@ -55,6 +55,7 @@ PkgconfigLibReq()
 				CanonPath "$dir"
 			done)
 		gcc_libdirs=$(printf '%s\n' "$gcc_libdirs" |cat -n |sort -u -k2 |sort -n |cut -f2-)
+		# XXX Can't use Debug here since CanonPath is Verbose.
 		Verbose "gcc_libdirs=$(echo $gcc_libdirs)"
 	fi
 
