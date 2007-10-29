@@ -120,7 +120,16 @@ ShellReq()
 		while read -r t r; do
 			[ "$t" = executable ] || continue
 			if [ -n "$prov" ] && printf '%s\n' "$prov" |fgrep -qs -x -e "$r"; then
-				Verbose "$f: $r() is possibly used before its definition"
+				# Still check if executable candidates are available.
+				local exe="$(FindPackage "$f" "$r" 2>/dev/null)"
+				local Verbose=Verbose
+				if [ -n "$exe" ]; then
+					Verbose=Info
+				fi
+				$Verbose "$f: $r() is possibly used before its definition"
+				if [ -n "$exe" ]; then
+					Info "$f: $r() has execuatable candidate: $r -> $exe (skip)"
+				fi
 				continue
 			fi
 			printf '%s\n' "$r"
