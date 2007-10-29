@@ -14,7 +14,7 @@ EXTRA_DIST = \
 	functions magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
-	pkgconfig.req pkgconfig.req.files \
+	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
@@ -40,7 +40,7 @@ config_SCRIPTS = \
 	functions magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
-	pkgconfig.req pkgconfig.req.files \
+	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
@@ -52,3 +52,4 @@ config_SCRIPTS = \
 install-data-local:
 	@LN_S@ pkgconfig.req $(DESTDIR)$(configdir)/pkgconfig.prov
 	@LN_S@ pkgconfig.req.files $(DESTDIR)$(configdir)/pkgconfig.prov.files
+	@LN_S@ pkgconfig.req.files $(DESTDIR)$(configdir)/pkgconfiglib.req.files

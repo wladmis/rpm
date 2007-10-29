@@ -1003,6 +1003,7 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	scripts/pam.prov
 	scripts/pam.req
 	scripts/pkgconfig.req
+	scripts/pkgconfiglib.req
 	scripts/shebang.req
 	scripts/shell.prov
 	scripts/shell.req
