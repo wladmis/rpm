@@ -102,6 +102,10 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	esac
 done
 
+# No stack verification available on arm*
+[ -z "$RPM_TARGET_ARCH" -o -n "${RPM_TARGET_ARCH##arm*}" ] ||
+	VERIFY_ELF_STACK=no
+
 [ "$VERIFY_ELF_ARCH" != no ] || VERIFY_ELF_ARCH=
 [ -z "$RPM_VERIFY_ELF_ARCH" ] || VERIFY_ELF_ARCH="$RPM_VERIFY_ELF_ARCH"
 [ "$VERIFY_ELF_FHS" != no ] || VERIFY_ELF_FHS=
