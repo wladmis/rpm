@@ -7,7 +7,8 @@
 %_vendor		@RPMCANONVENDOR@
 %_os			@RPMCANONOS@
 %_gnu			@RPMCANONGNU@
-%_target_platform	%{_target_cpu}-%{_vendor}-%{_target_os}%{_gnu}
+%_gnueabi		@RPMCANONGNUEABI@
+%_target_platform	%{_target_cpu}-%{_vendor}-%{_target_os}%{_gnueabi}
 %optflags		@RPMRC_OPTFLAGS@
 
 #==============================================================================
