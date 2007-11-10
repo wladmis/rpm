@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt79
+Release: alt80
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -525,6 +525,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Nov 10 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt80
+- Merged ARM support changes made by Kirill Shutemov.
+- Minor scripts/* cleanup.
+
 * Mon Oct 29 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt79
 - shell.req: implemented strong self-requires elimination within
   a package; if ANY shell script defines function "foo", dependencies
