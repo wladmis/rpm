@@ -99,20 +99,27 @@ RunMethods()
 	done
 }
 
+# Canonicalize each path component with respect to symbolic links, except
+# for the last.  E.g. /etc/init.d/functions -> /etc/rc.d/init.d/functions.
 CanonPath()
 {
-	local f="$1" f2; shift
-	if [ -d "$f" ]; then
-		f2=$(readlink -vm -- "$f")
-	elif [ -L "$f" ]; then
+	local f0="${1:?}" f1 f2; shift
+	[ -z "${f0##/*}" ] || f0=$PWD/$f0
+	# First pass: "blind" cleanup-only canonicalization.
+	f1=$(readlink -vm "/-$$-/$f0")
+	f1=${f1##/-$$-}
+	[ "$f0" = "$f1" ] || Verbose "CanonPath1: $f0 -> $f1"
+	# Second pass: adjust parent directory.
+	# Note that -L test was not reliable before the first pass.
+	if [ -L "$f1" ]; then
 		local d
-		d=$(dirname -- "$f")
+		d=$(dirname -- "$f1")
 		d=$(readlink -vm -- "$d")
-		f2="$d/${f##*/}"
+		f2="${d%/}/${f1##*/}"
 	else
-		f2=$(readlink -vm -- "$f")
+		f2=$(readlink -vm -- "$f1")
 	fi
-	[ "$f" = "$f2" ] || Verbose "CanonPath: $f -> $f2"
+	[ "$f1" = "$f2" ] || Verbose "CanonPath2: $f1 -> $f2"
 	echo "$f2"
 }
 
