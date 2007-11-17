@@ -79,15 +79,41 @@ FindByPath()
 		return
 	fi
 
-	# Is it an alternative?
-	if readlink "$rep" |grep -qs '^/etc/alternatives/'; then
-		$Verbose "$f: $rep -> $rep (alternative)"
-		printf %s\\n "$rep"
-		return
-	fi
+	# Prepare canonical path name.  Each path component is canonicalized w.r.t symlinks,
+	# except for the last (however, if the last component is symlink to a directory,
+	# it is canonicalized as well).
+	local rep2
+	rep2=$(CanonPath "$rep")
 
-	# XXX Cleanup pathname.
-	rep=$(CanonPath "$rep")
+	# Is it an alternative?  Path components can be alternatives, too.
+	local p="$rep" alt1 alt2 alt_break=
+	while [ -n "$p" ]; do
+		if [ -L "$p" ] && readlink -v "$p" |grep -qs '^/etc/alternatives/'; then
+			# We need "blind" canonicalization of alternative path, without any
+			# symlink reslolution.  I use non-existend directory for that.
+			alt1=$(readlink -vm "/-$$-/$p")
+			alt1=${alt1##/-$$-}
+			Verbose "$f: $rep -> $p -> $alt1 (alternative)"
+			printf '%s\n' "$alt1"
+			# Now we have to decide if this alternative should ultimately
+			# prevent final $rep resolution.
+			alt2=$(CanonPath "$p")
+			case "$rep2" in
+				"$alt2")
+					# alternative and $rep are more or less the same
+					alt_break=1 ;;
+				"$alt2"/*)
+					# $rep is under alternative dir, too bad
+					Info "$f: alternative $alt1 prevents $rep resolution"
+					alt_break=1 ;;
+			esac
+		fi
+		p=${p%/*}
+	done
+	[ -z "$alt_break" ] || return 0
+
+	# All we now need is canonical path.
+	rep=$rep2
 
 	# Ignore pseudo-filesystem dependencies.
 	local dir="${rep#/}"; dir="${dir%%/*}"
