@@ -63,7 +63,7 @@ SetupMethods()
 {
 	local suffix="$1" inm="$2"; shift 2
 	# do not stat(2) here so as to bypass buildreq
-	local allm=$(ls /usr/lib/rpm/ |sed -n "/^[^.]/s/[.]$suffix$//p")
+	local allm=$(ls "$(dirname "$0")"/ |sed -n "/^[^.]/s/[.]$suffix$//p")
 	[ -n "$allm" ] || Fatal "no $suffix methods available"
 	allm=$(echo '' $allm '')
 	local m outm="$allm"
@@ -93,9 +93,10 @@ SetupMethods()
 
 RunMethods()
 {
-	local m_m m_suffix="$1" m_inm="$2"; shift 2
+	local m_m m_dir m_suffix="$1" m_inm="$2"; shift 2
+	m_dir=$(dirname "$0")
 	for m_m in $(IFS="$IFS,"; echo '' $m_inm); do
-		"$@" /usr/lib/rpm/"$m_m.$m_suffix"
+		"$@" "$m_dir/$m_m.$m_suffix"
 	done
 }
 
