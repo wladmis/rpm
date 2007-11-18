@@ -23,6 +23,27 @@
 #include <errno.h>
 #include <sys/param.h>
 
+static void *
+xmalloc(size_t size)
+{
+	void   *r = malloc(size);
+
+	if (!r)
+		error(EXIT_FAILURE, errno, "malloc: allocating %lu bytes",
+		      (unsigned long) size);
+	return r;
+}
+
+static char *
+xstrdup(const char *s)
+{
+	size_t  len = strlen(s);
+	char   *r = xmalloc(len + 1);
+
+	memcpy(r, s, len + 1);
+	return r;
+}
+
 static void __attribute__ ((noreturn))
 result(const char *str)
 {
@@ -82,7 +103,12 @@ lookup_back(const char *str, const char sym, const char *pos)
 int
 main(int ac, char *av[])
 {
+	unsigned reslen;
 	const char *orig_what;
+	char   *what_p, *to_p;
+
+	char   *what = xstrdup(av[1]);
+	char   *to = xstrdup(av[2]);
 
 	if (ac < 3)
 	{
@@ -94,65 +120,54 @@ main(int ac, char *av[])
 	orig_what = normalize(av[1]);
 	normalize(av[2]);
 
+	what = xstrdup(av[1]);
+	to = xstrdup(av[2]);
+
+	if ('/' != *what)
+		result(what);
+
+	if ('/' != *to)
+		error(EXIT_FAILURE, 0,
+		      "destination must be absolute filename");
+
+	reslen = PATH_MAX + strlen(what) + strlen(to);
+
+	strip_trailing(what, '/');
+	strip_trailing(to, '/');
+
+	for (what_p = what, to_p = to; *what_p && *to_p; ++what_p, ++to_p)
+		if (*what_p != *to_p)
+			break;
+
+	if (!*what_p && !*to_p)
+		result(base_name(orig_what));
+	else
 	{
-		unsigned reslen;
-		char   *what_p, *to_p;
+		char    res[reslen];
 
-		char    what[1 + strlen(av[1])], to[1 + strlen(av[2])];
+		if (('/' == *what_p) && !*to_p)
+			result(orig_what + (++what_p - what));
 
-		memcpy(what, av[1], sizeof(what));
-		memcpy(to, av[2], sizeof(to));
-
-		if ('/' != *what)
-			result(what);
-
-		if ('/' != *to)
+		if ('/' != *to_p || *what_p)
 		{
-			fputs("relative: <to> must be absolute filename\n",
-			      stderr);
-			return 1;
+			what_p = lookup_back(what, '/', what_p - 1);
+			strcpy(res, "..");
+		} else {
+			res[0] = '\0';
 		}
 
-		reslen = PATH_MAX + strlen(what) + strlen(to);
-
-		strip_trailing(what, '/');
-		strip_trailing(to, '/');
-
-		for (what_p = what, to_p = to; *what_p && *to_p;
-		     ++what_p, ++to_p)
-			if (*what_p != *to_p)
-				break;
-
-		if (!*what_p && !*to_p)
-			result(base_name(orig_what));
-		else
+		for (; *to_p; ++to_p)
 		{
-			char    res[reslen];
-
-			memset(res, 0, sizeof(res));
-
-			if (('/' == *what_p) && !*to_p)
-				result(orig_what + (++what_p - what));
-
-			if ('/' != *to_p || *what_p)
+			if ('/' == *to_p)
 			{
-				what_p = lookup_back(what, '/', what_p - 1);
-				strcpy(res, "..");
+				if (*res)
+					strcat(res, "/..");
+				else
+					strcpy(res, "..");
 			}
-
-			for (; *to_p; ++to_p)
-			{
-				if ('/' == *to_p)
-				{
-					if (*res)
-						strcat(res, "/..");
-					else
-						strcpy(res, "..");
-				}
-			}
-
-			strcat(res, orig_what + (what_p - what));
-			result(res);
 		}
+
+		strcat(res, orig_what + (what_p - what));
+		result(res);
 	}
 }
