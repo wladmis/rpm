@@ -79,48 +79,36 @@ FindByPath()
 		return
 	fi
 
-	# Pathname canonicalization: first "blind" pass.
-	# Get rid of "/./", "/../" etc. without any symlink resolution.
-	# I use non-existent directory for that.
-	local rep1
-	rep1=$(readlink -vm "/-$$-/$rep")
-	rep1=${rep1##/-$$-}
-	[ "$rep" = "$rep1" ] || Verbose "$f: canon1: $rep -> $rep1"
-
 	# Is it an alternative?  Path components can be alternatives, too.
-	local p="$rep" alt1 alt_break=
+	local p="$rep" alt_break= alt xalt xrep
+	xrep=$(readlink -vm "$rep")
 	while [ -n "$p" ]; do
 		# Check each path component whether it is an alternative.
 		if [ -L "$p" ] && readlink -v "$p" |grep -qs '^/etc/alternatives/'; then
-			# The same "blind" canonicalization technique applies to alternative dir.
-			alt1=$(readlink -vm "/-$$-/$p")
-			alt1=${alt1##/-$$-}
-			Verbose "$f: $rep -> $p -> $alt1 (alternative)"
-			printf '%s\n' "$alt1"
-			# Now we have to decide if this alternative should ultimately
-			# prevent final $rep1 dependency resolution.
-			case "$rep1" in
-				"$alt1")
-					# alternative and $rep1 are more or less the same
+			alt=$(CanonPath "$p")
+			Verbose "$f: $rep -> $p -> $alt (alternative)"
+			printf '%s\n' "$alt"
+			# Now we have to decide if this alternative should eventually
+			# prevent final $rep dependency resolution.
+			xalt=$(readlink -vm "$p")
+			case "$xrep" in
+				"$xalt")
+					# alternative and $rep are more or less the same
 					alt_break=1 ;;
-				"$alt1"/*)
-					# $rep1 is under alternative dir, too bad
-					Info "$f: alternative $alt1 prevents $rep1 dependency resolution"
+				"$xalt"/*)
+					# $rep is under alternative dir, too bad
+					Info "$f: alternative $alt prevents $rep dependency resolution"
 					alt_break=1 ;;
 			esac
 		fi
 		p=${p%/*}
 	done
 	[ -z "$alt_break" ] || return 0
+	unset p alt_break alt xalt xrep ||:
 
-	# Pathname canonicalization: second pass.  Each path component,
-	# except for the last, is canonicalized with respect to symbolic links.
-	# E.g. /etc/init.d/functions -> /etc/rc.d/init.d/functions.
-	local rep2
-	rep2=$(dir=`dirname "$rep1"`; dir=`readlink -vm "$dir"`; echo "${dir%/}/${rep1##*/}")
-	[ "$rep1" = "$rep2" ] || Verbose "$f: canon2: $rep1 -> $rep2"
-	rep=$rep2
-	unset rep1 rep2
+	# Hard time checking $rep path components is over.
+	# Now we are ready to apply our know-how.
+	rep=$(CanonPath "$rep")
 
 	# Ignore pseudo-filesystem dependencies.
 	local dir="${rep#/}"; dir="${dir%%/*}"
