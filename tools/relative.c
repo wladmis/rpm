@@ -105,7 +105,7 @@ int
 main(int ac, char *av[])
 {
 	const char *orig_what;
-	char   *what_p, *to_p;
+	char   *what_p, *to_p, *res;
 
 	char   *what = xstrdup(av[1]);
 	char   *to = xstrdup(av[2]);
@@ -139,33 +139,32 @@ main(int ac, char *av[])
 
 	if (!*what_p && !*to_p)
 		result(base_name(orig_what));
-	else
+
+	res = xmalloc(strlen(what) + strlen(to) * 3 / 2 + 3);
+
+	if (('/' == *what_p) && !*to_p)
+		result(orig_what + (++what_p - what));
+
+	if ('/' != *to_p || *what_p)
 	{
-		char    *res = xmalloc(strlen(what) + strlen(to) * 3 / 2 + 3);
-
-		if (('/' == *what_p) && !*to_p)
-			result(orig_what + (++what_p - what));
-
-		if ('/' != *to_p || *what_p)
-		{
-			what_p = lookup_back(what, '/', what_p - 1);
-			strcpy(res, "..");
-		} else {
-			res[0] = '\0';
-		}
-
-		for (; *to_p; ++to_p)
-		{
-			if ('/' == *to_p)
-			{
-				if (*res)
-					strcat(res, "/..");
-				else
-					strcpy(res, "..");
-			}
-		}
-
-		strcat(res, orig_what + (what_p - what));
-		result(res);
+		what_p = lookup_back(what, '/', what_p - 1);
+		strcpy(res, "..");
+	} else
+	{
+		res[0] = '\0';
 	}
+
+	for (; *to_p; ++to_p)
+	{
+		if ('/' == *to_p)
+		{
+			if (*res)
+				strcat(res, "/..");
+			else
+				strcpy(res, "..");
+		}
+	}
+
+	strcat(res, orig_what + (what_p - what));
+	result(res);
 }
