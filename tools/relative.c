@@ -34,7 +34,7 @@ static const char *
 normalize(char *str)
 {
 	char   *p;
-	size_t  len = strlen(str);
+	size_t  len;
 
 	for (p = strstr(str, "//"); p; p = strstr(str, "//"))
 		memmove(p, p + 1, strlen(p));
@@ -42,6 +42,7 @@ normalize(char *str)
 	for (p = strstr(str, "/./"); p; p = strstr(str, "/./"))
 		memmove(p, p + 2, strlen(p + 1));
 
+	len = strlen(str);
 	if ((len >= 2) && ('/' == str[len - 2]) && ('.' == str[len - 1]))
 		str[len - 1] = '\0';
 
