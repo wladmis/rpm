@@ -22,127 +22,136 @@
 #include <unistd.h>
 #include <sys/param.h>
 
-static	void	result( const char *str ) __attribute__ ((noreturn));
-
-static	const char*	normalize( char *str )
+static void __attribute__ ((noreturn))
+result(const char *str)
 {
-	char *p;
-	size_t	len = strlen( str );
+	puts(str);
+	exit(0);
+}
 
-	for ( p = strstr( str, "//" ); p; p = strstr( str, "//" ) )
-		memmove( p, p + 1, strlen( p ) );
+static const char *
+normalize(char *str)
+{
+	char   *p;
+	size_t  len = strlen(str);
 
-	for ( p = strstr( str, "/./" ); p; p = strstr( str, "/./" ) )
-		memmove( p, p + 2, strlen( p + 1 ) );
+	for (p = strstr(str, "//"); p; p = strstr(str, "//"))
+		memmove(p, p + 1, strlen(p));
 
-	if ( (len >= 2) && ('/' == str[len-2]) && ('.' == str[len-1]) )
-		str[len-1] = '\0';
+	for (p = strstr(str, "/./"); p; p = strstr(str, "/./"))
+		memmove(p, p + 2, strlen(p + 1));
+
+	if ((len >= 2) && ('/' == str[len - 2]) && ('.' == str[len - 1]))
+		str[len - 1] = '\0';
 
 	return str;
 }
 
-static	void	result( const char *str )
+static void
+strip_trailing(char *str, const char sym)
 {
-	puts( str );
-	exit( 0 );
-}
+	char   *p;
 
-static	void	strip_trailing( char *str, const char sym )
-{
-	char *p;
-	for ( p = strrchr( str, sym ); p && (p >= str) && (sym == *p); --p )
+	for (p = strrchr(str, sym); p && (p >= str) && (sym == *p); --p)
 		*p = '\0';
 }
 
-static	const char*	base_name( const char *name )
+static const char *
+base_name(const char *name)
 {
-	const char*	p = strrchr( name, '/' );
-	if ( p )
+	const char *p = strrchr(name, '/');
+
+	if (p)
 		return p + 1;
 	else
 		return name;
 }
 
-static	char* lookup_back( const char *str, const char sym, const char *pos )
+static char *
+lookup_back(const char *str, const char sym, const char *pos)
 {
-	for ( ; pos >= str ; --pos )
-		if ( sym == *pos )
-			return (char *)pos;
+	for (; pos >= str; --pos)
+		if (sym == *pos)
+			return (char *) pos;
 
 	return 0;
 }
 
 extern const char *__progname;
 
-int	main( int ac, char *av[] )
+int
+main(int ac, char *av[])
 {
-	if ( ac < 3 )
+	if (ac < 3)
 	{
-		fprintf( stderr, "Usage: %s <what> <to>\n", __progname );
+		fprintf(stderr, "Usage: %s <what> <to>\n", __progname);
 		return 1;
-	}
-	else
+	} else
 	{
-		const char	*orig_what = normalize( av[1] );
-		normalize( av[2] );
+		const char *orig_what = normalize(av[1]);
+
+		normalize(av[2]);
 
 		{
-			unsigned	reslen;
-			char	*what_p, *to_p;
+			unsigned reslen;
+			char   *what_p, *to_p;
 
-			char	what[ 1 + strlen( av[1] ) ],
-					to[ 1 + strlen( av[2] ) ];
+			char    what[1 + strlen(av[1])],
+				to[1 + strlen(av[2])];
 
-			memcpy( what, av[1], sizeof(what) );
-			memcpy( to, av[2], sizeof(to) );
+			memcpy(what, av[1], sizeof(what));
+			memcpy(to, av[2], sizeof(to));
 
-			if ( '/' != *what )
-				result( what );
+			if ('/' != *what)
+				result(what);
 
-			if ( '/' != *to )
+			if ('/' != *to)
 			{
-				fputs( "relative: <to> must be absolute filename\n", stderr );
+				fputs("relative: <to> must be absolute filename\n", stderr);
 				return 1;
 			}
 
-			reslen = PATH_MAX + strlen( what ) + strlen( to );
+			reslen = PATH_MAX + strlen(what) + strlen(to);
 
-			strip_trailing( what, '/' );
-			strip_trailing( to, '/' );
+			strip_trailing(what, '/');
+			strip_trailing(to, '/');
 
-			for ( what_p = what, to_p = to; *what_p && *to_p ; ++what_p, ++to_p )
-				if ( *what_p != *to_p )
+			for (what_p = what, to_p = to; *what_p && *to_p;
+			     ++what_p, ++to_p)
+				if (*what_p != *to_p)
 					break;
 
-			if ( !*what_p && !*to_p )
-				result( base_name( orig_what ) );
+			if (!*what_p && !*to_p)
+				result(base_name(orig_what));
 			else
 			{
-				char	res[ reslen ];
-				memset( res, 0, sizeof(res) );
+				char    res[reslen];
 
-				if ( ('/' == *what_p) && !*to_p )
-					result( orig_what + (++what_p - what) );
+				memset(res, 0, sizeof(res));
 
-				if ( '/' != *to_p || *what_p )
+				if (('/' == *what_p) && !*to_p)
+					result(orig_what + (++what_p - what));
+
+				if ('/' != *to_p || *what_p)
 				{
-					what_p = lookup_back( what, '/', what_p - 1 );
-					strcpy( res, ".." );
+					what_p = lookup_back(what, '/',
+							     what_p - 1);
+					strcpy(res, "..");
 				}
 
-				for ( ; *to_p; ++to_p )
+				for (; *to_p; ++to_p)
 				{
-					if ( '/' == *to_p )
+					if ('/' == *to_p)
 					{
-						if ( *res )
-							strcat( res, "/.." );
+						if (*res)
+							strcat(res, "/..");
 						else
-							strcpy( res, ".." );
+							strcpy(res, "..");
 					}
 				}
 
-				strcat( res, orig_what + (what_p - what) );
-				result( res );
+				strcat(res, orig_what + (what_p - what));
+				result(res);
 			}
 		}
 	}
