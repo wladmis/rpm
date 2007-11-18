@@ -21,6 +21,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <error.h>
 #include <sys/param.h>
 
 static void *
@@ -103,7 +104,6 @@ lookup_back(const char *str, const char sym, const char *pos)
 int
 main(int ac, char *av[])
 {
-	unsigned reslen;
 	const char *orig_what;
 	char   *what_p, *to_p;
 
@@ -130,8 +130,6 @@ main(int ac, char *av[])
 		error(EXIT_FAILURE, 0,
 		      "destination must be absolute filename");
 
-	reslen = PATH_MAX + strlen(what) + strlen(to);
-
 	strip_trailing(what, '/');
 	strip_trailing(to, '/');
 
@@ -143,7 +141,7 @@ main(int ac, char *av[])
 		result(base_name(orig_what));
 	else
 	{
-		char    res[reslen];
+		char    *res = xmalloc(strlen(what) + strlen(to) * 3 / 2 + 3);
 
 		if (('/' == *what_p) && !*to_p)
 			result(orig_what + (++what_p - what));
