@@ -126,7 +126,7 @@ int	main( int ac, char *av[] )
 
 				if ( '/' != *to_p || *what_p )
 				{
-					what_p = lookup_back( what, '/', what_p );
+					what_p = lookup_back( what, '/', what_p - 1 );
 					strcpy( res, ".." );
 				}
 
