@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/param.h>
 
 static void __attribute__ ((noreturn))
@@ -77,14 +78,13 @@ lookup_back(const char *str, const char sym, const char *pos)
 	return 0;
 }
 
-extern const char *__progname;
-
 int
 main(int ac, char *av[])
 {
 	if (ac < 3)
 	{
-		fprintf(stderr, "Usage: %s <what> <to>\n", __progname);
+		fprintf(stderr, "Usage: %s <what> <to>\n",
+			program_invocation_short_name);
 		return 1;
 	} else
 	{
