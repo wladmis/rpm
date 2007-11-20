@@ -3,15 +3,16 @@
 AUTOMAKE_OPTIONS = 1.4 foreign
 
 EXTRA_DIST = \
+	functions find-package .provides.sh \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
 	compress_files check-files convertrpmrc.sh cross-build \
-	delayed_rebuilddb find-lang find-package find-prov.pl find-req.pl \
+	delayed_rebuilddb find-lang find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
 	files.req files.req.files files.req.list \
-	functions magic.prov magic.req \
+	magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
@@ -28,16 +29,18 @@ installprefix = $(DESTDIR)
 all:
 
 configdir = ${prefix}/lib/rpm
+config_DATA = .provides.sh
 config_SCRIPTS = \
+	functions find-package \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
 	compress_files check-files convertrpmrc.sh cross-build \
-	delayed_rebuilddb find-lang find-package find-prov.pl find-req.pl \
+	delayed_rebuilddb find-lang find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
 	files.req files.req.files files.req.list \
-	functions magic.prov magic.req \
+	magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
