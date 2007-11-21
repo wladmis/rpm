@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt80
+Release: alt81
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -537,6 +537,17 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Nov 21 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt81
+- symlinks.req: do only one single step of symlink resolution;
+  find-package (FindByPath): check each path component for alternatives;
+  this fixes the case of e.g. dependency on /usr/share/libtool/config.sub,
+  where '/usr/share/libtool -> libtool-1.5/' is an alternative;
+  we now stop at alternative directory and simply yield the dependency
+  on /usr/share/libtool, instead of libtool_1.5 (see also #13374)
+- moved /usr/lib/rpm/functions and /usr/lib/rpm/find-package from rpm-build
+  to rpm, to relax e.g. rpm-build-mono dependencies
+- relative.c: various fixes by Alex V. Myltsev and Dmitry V. Levin
+
 * Sat Nov 10 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt80
 - Merged ARM support changes made by Kirill Shutemov.
 - Minor scripts/* cleanup.
