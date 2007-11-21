@@ -323,6 +323,16 @@ popd
 	grep -Fv /brp- |
 	sed -e "s|^%buildroot|%%attr(-,root,%name) |g" >>%name.lang
 
+%ifdef add_findreq_skiplist
+# These shell libraries hopefully do not require anything special,
+# but we want to keep the "rpm" package dependencies to bare minimum.
+%add_findreq_skiplist %_rpmlibdir/functions
+%add_findreq_skiplist %_rpmlibdir/find-package
+%endif
+# However, syntax check is still a good idea.
+sh -n %buildroot%_rpmlibdir/functions
+sh -n %buildroot%_rpmlibdir/find-package
+
 %pre
 if [ -f %_localstatedir/%name/Packages -a -f %_localstatedir/%name/packages.rpm ]; then
     echo "
