@@ -387,8 +387,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	    && (nametag == RPMTAG_REQUIRENAME)
 	    && !isLegacyPreReq (depFlags)
 	    && !(depFlags & _notpre (RPMSENSE_RPMLIB | RPMSENSE_KEYRING |
-				     RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN))
-	    && hge (h, RPMTAG_PROVIDENAME, &dnt, (void **) &names, &len))
+				     RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN)))
 	{
 
 		int     skip = 0;
@@ -396,10 +395,12 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		const char **versions = 0;
 		rpmTagType dvt = RPM_STRING_ARRAY_TYPE;
 
+		names = NULL;
+		hge (h, RPMTAG_PROVIDENAME, &dnt, (void **) &names, &len);
 		hge (h, RPMTAG_PROVIDEVERSION, &dvt, (void **) &versions, NULL);
 		hge (h, RPMTAG_PROVIDEFLAGS, NULL, (void **) &flags, NULL);
 
-		while (flags && versions && (len > 0))
+		while (names && flags && versions && (len > 0))
 		{
 			--len;
 
