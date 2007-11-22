@@ -428,6 +428,35 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		names = hfd (names, dnt);
 		if (skip)
 			return 0;
+
+		if (*depName == '/' && !(depFlags & RPMSENSE_SENSEMASK))
+		{
+			const char **bn = NULL, **dn = NULL;
+			const int_32 *di = NULL;
+			rpmTagType bnt = 0, dnt = 0, dit = 0;
+			int_32 bnc = 0;
+			int i;
+			(void) (hge(h, RPMTAG_DIRNAMES, &dnt, (void**)&dn, NULL) &&
+				hge(h, RPMTAG_DIRINDEXES, &dit, (void**)&di, NULL) &&
+				hge(h, RPMTAG_BASENAMES, &bnt, (void**)&bn, &bnc));
+			for (i = 0; i < bnc; i++) {
+				const char *d = dn[di[i]], *b = bn[i];
+				size_t dl = strlen(d);
+				if (strncmp(depName, d, dl) ||
+				    strcmp(depName + dl, b))
+					continue;
+				rpmMessage (RPMMESS_DEBUG,
+					    "new dep \"%s\" is packaged file, optimized out\n",
+					    depName);
+				skip = 1;
+				break;
+			}
+			hfd(dn, dnt);
+			hfd(di, dit);
+			hfd(bn, bnt);
+			if (skip)
+				return 0;
+		}
 	}
 
 	/* Remove OLD provided requires. */
