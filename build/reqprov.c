@@ -454,9 +454,34 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 			hfd(dn, dnt);
 			hfd(di, dit);
 			hfd(bn, bnt);
-			if (skip)
-				return 0;
 		}
+		else {
+			const char *N = NULL, *V = NULL, *R = NULL;
+			headerNVR(h, &N, &V, &R);
+			if (N && strcmp(depName, N) == 0) {
+				if (!(depFlags & RPMSENSE_SENSEMASK))
+					skip = 1;
+				else if (V && R) {
+					int_32 *E = NULL;
+					char EVR[BUFSIZ];
+					hge(h, RPMTAG_EPOCH, NULL, (void**) &E, NULL);
+					if (E)
+						snprintf(EVR, sizeof(EVR), "%d:%s-%s", *E, V, R);
+					else
+						snprintf(EVR, sizeof(EVR), "%s-%s", V, R);
+					if (rpmRangesOverlap("", EVR, RPMSENSE_EQUAL,
+							     "", depEVR, depFlags))
+						skip = 1;
+				}
+				if (skip)
+				rpmMessage (RPMMESS_DEBUG,
+					    "new dep \"%s\" is the package name, optimized out\n",
+					    depName);
+			}
+		}
+
+		if (skip)
+			return 0;
 	}
 
 	/* Remove OLD provided requires. */
