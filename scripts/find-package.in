@@ -369,7 +369,7 @@ FindPackage()
 		case "$r" in
 			/*[!$valid]*)
 				Info "$f: invalid pathname: $r" ;;
-			/*)
+			/*[!/.]*)
 				FindByPath "$f" "$r" ;;
 			*/*)
 				Info "$f: invalid pathname: $r" ;;
