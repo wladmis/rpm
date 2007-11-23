@@ -109,6 +109,7 @@ CanonPath()
 	# First pass: "blind" cleanup-only canonicalization.
 	f1=$(readlink -vm "/-$$-/$f0")
 	f1=${f1##/-$$-}
+	[ -n "$f1" ] || f1=/
 	[ "$f0" = "$f1" ] || Verbose "CanonPath1: $f0 -> $f1"
 	# Second pass: adjust parent directory.
 	# Note that -L test was not reliable before the first pass.
