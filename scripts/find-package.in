@@ -58,6 +58,12 @@ Debug "RPM_FINDPACKAGE_ROOT_PATH=$RPM_FINDPACKAGE_ROOT_PATH"
 # Below we use 'local Verbose=Info' to increase per-case verbosity.
 Verbose=Verbose
 
+if [ -n "${RPM_BUILD_ROOT-}" ]; then
+	findpackage_xbroot=$(readlink -ve "$RPM_BUILD_ROOT")
+else
+	unset findpackage_xbroot ||:
+fi
+
 FindByPath()
 {
 	# Dependence name starts with `/'.
@@ -74,9 +80,32 @@ FindByPath()
 	fi
 
 	# Does it belong to buildroot?
-	if [ -n "${RPM_BUILD_ROOT-}" ] && [ -e "$RPM_BUILD_ROOT$rep" -o -L "$RPM_BUILD_ROOT$rep" ]; then
-		$Verbose "$f: $rep -> \$RPM_BUILD_ROOT$rep (skip)"
-		return
+	if [ -n "${RPM_BUILD_ROOT-}" ]; then
+		local xbrep
+		xbrep=$(CanonPath "$RPM_BUILD_ROOT$rep")
+		if [ -n "$xbrep" -a -z "${xbrep##$findpackage_xbroot/*}" ]; then
+			# Good.  The path was canonicalized against buildroot.
+			if [ -e "$xbrep" -o -L "$xbrep" ]; then
+				# The file is under buildroot.  We emit file-level dependency.
+				# If the file is in the same package, rpm-build will optimize
+				# out the dependency.  Otherwise, the file is to be packaged
+				# into another subpackage, and we get something like more strict
+				# dependencies between subpackages.
+				xbrep=${xbrep##$findpackage_xbroot}
+				$Verbose "$f: $rep -> \$RPM_BUILD_ROOT$xbrep"
+				printf '%s\n' "$xbrep"
+				return 0
+			fi
+		elif [ "$xbrep" = "$findpackage_xbroot" ]; then
+			# Still okay.  Probably nothing is required.
+			return 0
+		else
+			# Too bad.  The path was canonicalized outside buildroot.
+			# Some path component seems to be evil symbolic link...
+			Info "$f: $rep cannot be canonicalized under RPM_BUILD_ROOT"
+			# Don't know what to do.  Maybe just proceed.
+		fi
+		unset xbrep
 	fi
 
 	# Is it an alternative?  Path components can be alternatives, too.
