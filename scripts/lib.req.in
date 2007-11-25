@@ -73,8 +73,6 @@ FindLibReqs()
 			tr -s '[:space:]' : |
 			sed -e 's/^:\+//; s/:\+$//')"
 		deps="$("$elf_ldd" -- "$f" "$rpath")" || return 1
-		[ -z "${RPM_BUILD_ROOT-}" ] ||
-		deps="$(printf %s "$deps" |sed -e "s|$RPM_BUILD_ROOT||g")"
 		# Shared library dependencies, version references.
 		for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
 			name="$(printf %s "$vers" |cut -d: -f1)"
@@ -83,6 +81,11 @@ FindLibReqs()
 NF>2 && $1==name && $2=="=>" && $3~/^/ {print $3}
 NF==2 && $2~/^\(.+\)$/ {lib=$1; sub("^/.*/","",lib); if (lib==name) print $1}
 				')"
+			local under_buildroot=
+			if [ -n "${RPM_BUILD_ROOT-}" ] && [ -z "${pathname##$RPM_BUILD_ROOT*}" ]; then
+				pathname=${pathname#$RPM_BUILD_ROOT}
+				under_buildroot=1
+			fi
 			prefix="${pathname%/*}"
 			canon_prefix="$(printf %s "$prefix/" |
 				sed -e 's|/tls/|/|' -e 's|/sse2/|/|' -e "s|/$RPM_ARCH/|/|" -e 's|/i[3-9]86/|/|' -e 's|/\+$||')"
@@ -97,6 +100,18 @@ NF==2 && $2~/^\(.+\)$/ {lib=$1; sub("^/.*/","",lib); if (lib==name) print $1}
 				fi
 			done
 			[ -z "$prefix" ] || prefix="$prefix/"
+			local filedep=
+			if [ -n "$prefix" ]; then
+				if [ -n "$under_buildroot" ]; then
+					filedep=1
+				elif [ -z "$vers" ]; then
+					filedep=1
+				fi
+			fi
+			if [ -n "$filedep" ]; then
+				printf '%s%s\n' "$prefix" "$name"
+				continue
+			fi
 			v=
 			for v in `printf %s "$vers" |tr : ' '`; do
 				printf '%s%s(%s)%s\n' "$prefix" "$name" "$v" "$suffix"
