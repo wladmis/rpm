@@ -1,6 +1,7 @@
 # shell functions provides list
 # functions:
 Info
+Warning
 Fatal
 Verbose
 Debug

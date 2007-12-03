@@ -32,6 +32,11 @@ Info()
 	echo "${0##*/}: $*" >&2
 }
 
+Warning()
+{
+	echo "${0##*/}: WARNING: $*" >&2
+}
+
 Fatal()
 {
 	Info "$@"
