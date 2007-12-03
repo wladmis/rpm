@@ -52,11 +52,10 @@ PkgconfigLibReq()
 		gcc_libdirs=$(IFS="$IFS:"
 			for dir in $gcc_libdirs; do
 				[ -d "$dir" ] || continue
-				CanonPath "$dir"
+				readlink -ve "$dir"
 			done)
 		gcc_libdirs=$(printf '%s\n' "$gcc_libdirs" |cat -n |sort -u -k2 |sort -n |cut -f2-)
-		# XXX Can't use Debug here since CanonPath is Verbose.
-		Verbose "gcc_libdirs=$(echo $gcc_libdirs)"
+		Debug "gcc_libdirs=$(echo $gcc_libdirs)"
 	fi
 
 	local lib libdir
