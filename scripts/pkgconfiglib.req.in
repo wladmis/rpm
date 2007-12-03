@@ -8,6 +8,7 @@
 # (at your option) any later version.
 
 . @RPMCONFIGDIR@/functions
+. @RPMCONFIGDIR@/find-package
 
 [ -n "${RPM_LIBDIR-}" ] || RPM_LIBDIR=`rpm --eval %_libdir`
 PKG_CONFIG_PATH=$RPM_LIBDIR/pkgconfig:/usr/share/pkgconfig
@@ -73,8 +74,10 @@ PkgconfigLibReq()
 					continue
 				fi
 				# The library is under RPM_BUILD_ROOT.
-				# Nothing is required.  Do next lib.
-				Verbose "$f: -l$lib -> \$RPM_BUILD_ROOT$rep (skip)"
+				# FindPackage will emit file-level dependency.
+				Verbose "$f: -l$lib -> \$RPM_BUILD_ROOT$rep"
+				FindPackage "$f" "$rep"
+				# Do next lib.
 				continue 2
 			done
 		fi
