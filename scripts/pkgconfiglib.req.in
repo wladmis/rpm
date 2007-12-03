@@ -104,11 +104,11 @@ PkgconfigLibReq()
 				Info "$f: -l$lib -> $rep (raw, ambiguous)"
 				printf '%s\n' "$rep"
 			else
-				Info "$f: cannot map $rep to rpm dependency (skip)"
+				Warning "$f: cannot map $rep to rpm dependency (skip)"
 			fi
 			continue 2
 		done
-		Info "$f: cannot find -l$lib library path (skip)"
+		Warning "$f: cannot find -l$lib library path (skip)"
 	done
 }
 
