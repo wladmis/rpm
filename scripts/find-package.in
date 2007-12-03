@@ -248,7 +248,8 @@ FindByName()
 				fi
 			done)
 		if [ -n "$rep" ]; then
-			$Verbose "$f: $r -> \$RPM_BUILD_ROOT$rep (skip)"
+			$Verbose "$f: $r -> \$RPM_BUILD_ROOT$rep"
+			printf '%s\n' "$rep"
 			return
 		fi
 	fi
