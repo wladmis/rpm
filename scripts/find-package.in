@@ -102,7 +102,7 @@ FindByPath()
 		else
 			# Too bad.  The path was canonicalized outside buildroot.
 			# Some path component seems to be evil symbolic link...
-			Info "$f: $rep cannot be canonicalized under RPM_BUILD_ROOT"
+			Warning "$f: $rep cannot be canonicalized under RPM_BUILD_ROOT"
 			# Don't know what to do.  Maybe just proceed.
 		fi
 		unset xbrep
