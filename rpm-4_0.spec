@@ -110,6 +110,7 @@ Requires: patch >= 2.5
 Requires: pkgconfig-reqprov pkgconfig-recursion
 Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
+Requires: alternatives >= 0.3.2
 Requires: rpm-build-perl >= 0.6.2
 Requires: rpm-build-python >= 0.31
 Conflicts: rpm-build-tcl <= 0.2
