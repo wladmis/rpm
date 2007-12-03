@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt81
+Release: alt82
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -538,6 +538,19 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Dec 03 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt82
+- reqprov.c (addReqProv): implemented optimization of "self-requires"
+  dependencies on packaged files
+- find-package, shell.req, pkgconfiglib.req, symlinks.req: do not
+  completely ignore dependencies on files which are under RPM_BUILD_ROOT;
+  that is, emit "file-level" dependencies which will be optimized out by
+  addReqProv() within a single subpackage, but will protect from unpackaged
+  files between subpackages; works best with apt-utils >= 0.5.15lorg2-alt17
+- lib.req: try to emit file-level dependencies instead of "soname-level"
+  dependencies on private libraries (see git log for details); this can
+  largely reduce the need for %%add_findprov_lib_path which is "public
+  provides for private libraries"
+
 * Wed Nov 21 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt81
 - symlinks.req: do only one single step of symlink resolution;
   find-package (FindByPath): check each path component for alternatives;
