@@ -311,6 +311,9 @@
 @alt@%add_optflags(a:f:t:p:w:W:d:g:O:A:C:D:E:H:i:M:n:P:U:u:l:s:X:B:I:L:b:V:m:x:c:S:E:o:v:)	\
 @alt@%global optflags %{optflags} %{**}
 @alt@
+@alt@%warning() %{warn:WARNING: %*\
+@alt@}
+@alt@
 @alt@# Make
 @alt@%_make_bin make
 @alt@
