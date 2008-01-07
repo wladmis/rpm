@@ -326,11 +326,10 @@
 @alt@# Compatibility.
 @alt@%make_compile	%make_build
 @alt@%make	%_make_bin
+@alt@%__autoreconf		%{warning %%__autoreconf is obsolete, use %%autoreconf instead}%autoreconf
 @alt@
 @alt@# Autotools.
 @alt@%autoreconf		autoreconf -fisv
-@alt@# for backwards compatibility
-@alt@%__autoreconf		autoreconf -fisv
 @alt@
 @alt@# Library cache update (ldconfig) macros.
 @alt@%post_ldconfig_lib /sbin/ldconfig
