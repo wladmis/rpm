@@ -539,7 +539,7 @@ fi
 %endif #with contrib
 
 %changelog
-* Mon Dec 03 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt82
+* Mon Jan 14 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt82
 - reqprov.c (addReqProv): implemented optimization of "self-requires"
   dependencies on packaged files
 - find-package, shell.req, pkgconfiglib.req, symlinks.req: do not
@@ -549,8 +549,7 @@ fi
   files between subpackages; works best with apt-utils >= 0.5.15lorg2-alt17
 - lib.req: try to emit file-level dependencies instead of "soname-level"
   dependencies on private libraries (see git log for details); this can
-  largely reduce the need for %%add_findprov_lib_path which is "public
-  provides for private libraries"
+  largely reduce the need for %%add_findprov_lib_path
 
 * Wed Nov 21 2007 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt81
 - symlinks.req: do only one single step of symlink resolution;
