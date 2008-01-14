@@ -214,6 +214,7 @@ find -type f \( -name .cvsignore -o -name \*~ -o -name \*.orig \) -print0 |
 	xargs -r0 rm -f --
 
 %build
+touch config.rpath
 gettextize --force --quiet
 install -pv -m644 /usr/share/gettext/intl/Makevars* po/Makevars
 autoreconf -fisv -I m4
