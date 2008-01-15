@@ -110,7 +110,7 @@ NF==2 && ($1==name || basename($1)==name) && $1~"^/" && $2~"^[(]0x" {print $1}
 				fi
 			fi
 			if [ -n "$filedep" ]; then
-				printf '%s%s\n' "$prefix" "$name"
+				printf '%s\n' "$pathname"
 				continue
 			fi
 			v=
