@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt82
+Release: alt83
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -539,6 +539,12 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Jan 15 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt83
+- platform.in:
+  + Added %%warning macro.
+  + Added %%autoreconf macro to replace %%__autoreconf;
+  + Added deprecation warning to %%__autoreconf macro.
+
 * Mon Jan 14 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt82
 - reqprov.c (addReqProv): implemented optimization of "self-requires"
   dependencies on packaged files
