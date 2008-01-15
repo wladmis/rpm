@@ -294,6 +294,9 @@
 @alt@%add_optflags(a:f:t:p:w:W:d:g:O:A:C:D:E:H:i:M:n:P:U:u:l:s:X:B:I:L:b:V:m:x:c:S:E:o:v:)	\
 @alt@%global optflags %{optflags} %{**}
 @alt@
+@alt@%warning() %{warn:WARNING: %*\
+@alt@}
+@alt@
 @alt@# Make
 @alt@%_make_bin make
 @alt@
@@ -306,9 +309,10 @@
 @alt@# Compatibility.
 @alt@%make_compile	%make_build
 @alt@%make	%_make_bin
+@alt@%__autoreconf		%{warning %%__autoreconf is obsolete, use %%autoreconf instead}%autoreconf
 @alt@
 @alt@# Autotools.
-@alt@%__autoreconf		autoreconf -fisv
+@alt@%autoreconf		autoreconf -fisv
 @alt@
 @alt@# Library cache update (ldconfig) macros.
 @alt@%post_ldconfig_lib /sbin/ldconfig
