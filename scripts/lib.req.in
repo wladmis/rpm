@@ -78,8 +78,9 @@ FindLibReqs()
 			name="$(printf %s "$vers" |cut -d: -f1)"
 			vers="$(printf %s "$vers" |cut -d: -f2-)"
 			pathname="$(printf %s "$deps" |awk "-vname=$name" '
-NF>2 && $1==name && $2=="=>" && $3~/^/ {print $3}
-NF==2 && $2~/^\(.+\)$/ {lib=$1; sub("^/.*/","",lib); if (lib==name) print $1}
+function basename(f) { sub("^.*/","",f); return f; }
+NF>=3 && ($1==name || basename($1)==name) && $2=="=>" && $3~"^/" {print $3}
+NF==2 && ($1==name || basename($1)==name) && $1~"^/" && $2~"^[(]0x" {print $1}
 				')"
 			local under_buildroot=
 			if [ -n "${RPM_BUILD_ROOT-}" ] && [ -z "${pathname##$RPM_BUILD_ROOT*}" ]; then
