@@ -106,9 +106,7 @@ main(int ac, char *av[])
 {
 	const char *orig_what;
 	char   *what_p, *to_p, *res;
-
-	char   *what = xstrdup(av[1]);
-	char   *to = xstrdup(av[2]);
+	char   *what, *to;
 
 	if (ac < 3)
 	{
@@ -116,6 +114,9 @@ main(int ac, char *av[])
 			program_invocation_short_name);
 		return 1;
 	}
+
+	what = xstrdup(av[1]);
+	to = xstrdup(av[2]);
 
 	orig_what = normalize(av[1]);
 	normalize(av[2]);
