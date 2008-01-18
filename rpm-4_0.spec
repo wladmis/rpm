@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt83
+Release: alt84
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -539,6 +539,12 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri Jan 18 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt84
+- lib.req:
+  + Fixed awk script for ldd output (at@).
+  + Fixed file-level dependencies output (at@).
+- relative: Fixed potential NULL dereference introduced by -alt81 (#14067).
+
 * Tue Jan 15 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt83
 - platform.in:
   + Added %%warning macro.
