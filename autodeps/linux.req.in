@@ -59,8 +59,9 @@ while IFS= read -r f; do
 			fi
 		done
 	fi
-	echo "$f"
-done >"$workdir"/files
+	printf '%s\n' "$f"
+	printf '%s\n' "$fname" >&3
+done >"$workdir"/files 3>"$RPM_BUILD_ROOT/.packaged-files:$RPM_SUBPACKAGE_NAME"
 
 if ! [ -s "$workdir"/files ]; then
 	Info "empty file list, nothing to do"
