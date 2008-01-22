@@ -10,6 +10,7 @@ SetupMethods
 RunMethods
 CanonPath
 ArgvFileAction
+PackagedFiles
 # find-package:
 FindByPath
 FindByName
