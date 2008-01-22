@@ -64,6 +64,31 @@ else
 	unset findpackage_xbroot ||:
 fi
 
+FindByPathUnderBuildroot()
+{
+	local f="$1" rep="$2" xbrep; shift 2 || return
+	[ -n "${RPM_BUILD_ROOT-}" ] || return 0
+	xbrep=$(CanonPath "$RPM_BUILD_ROOT$rep")
+	if [ -n "$xbrep" -a -z "${xbrep##$findpackage_xbroot/*}" ]; then
+		# Good.  The path was canonicalized against buildroot.
+		:
+	elif [ "$xbrep" = "$findpackage_xbroot" ]; then
+		# Still okay.  Probably nothing is required.
+		return 0
+	else
+		# Too bad.  The path was canonicalized outside buildroot.
+		Warning "$f: $rep cannot be canonicalized under RPM_BUILD_ROOT"
+		# Consider this: RPM_BUILD_ROOT/A/B/C -> /D/C
+		#				  `-> /D
+		# It still makes sense to check /D/C under RPM_BUILD_ROOT.
+		xbrep=$findpackage_xbroot$xbrep
+	fi
+	if [ -e "$xbrep" -o -L "$xbrep" ]; then
+		xbrep=${xbrep##$findpackage_xbroot}
+		printf '%s\n' "$xbrep"
+	fi
+}
+
 FindByPath()
 {
 	# Dependence name starts with `/'.
@@ -80,32 +105,32 @@ FindByPath()
 	fi
 
 	# Does it belong to buildroot?
-	if [ -n "${RPM_BUILD_ROOT-}" ]; then
-		local xbrep
-		xbrep=$(CanonPath "$RPM_BUILD_ROOT$rep")
-		if [ -n "$xbrep" -a -z "${xbrep##$findpackage_xbroot/*}" ]; then
-			# Good.  The path was canonicalized against buildroot.
-			if [ -e "$xbrep" -o -L "$xbrep" ]; then
-				# The file is under buildroot.  We emit file-level dependency.
-				# If the file is in the same package, rpm-build will optimize
-				# out the dependency.  Otherwise, the file is to be packaged
-				# into another subpackage, and we get something like more strict
-				# dependencies between subpackages.
-				xbrep=${xbrep##$findpackage_xbroot}
-				$Verbose "$f: $rep -> \$RPM_BUILD_ROOT$xbrep"
-				printf '%s\n' "$xbrep"
+	local xbrep
+	xbrep=$(FindByPathUnderBuildroot "$f" "$rep")
+	if [ -n "$xbrep" ]; then
+		# The file is under buildroot.  We emit file-level dependency.
+		# If the file is in the same package, rpm-build will optimize
+		# out the dependency.  Otherwise, the file is to be packaged
+		# into another subpackage, and we get something like more strict
+		# dependencies between subpackages.
+		if [ ! -L "$RPM_BUILD_ROOT$xbrep" -a -d "$RPM_BUILD_ROOT$xbrep" ]; then
+			# They require a directory.  Here we do only "weak" directory
+			# dependencies (i.e. sometimes we prefer to omit such dependencies).
+			# We only need to make sure that the directory actually exists after
+			# install, which is the case if there are packaged files under the
+			# directory.
+			local dirfiles
+			if dirfiles=$(PackagedFiles |fgrep "$xbrep") &&
+			   dirfiles=$(echo '' $dirfiles '') &&
+			   [ -n "${dirfiles##* $xbrep *}" ] &&
+			   [ -z "${dirfiles##* $xbrep/*}" ]; then
+				Warning "$f: directory $xbrep not owned by the package"
 				return 0
 			fi
-		elif [ "$xbrep" = "$findpackage_xbroot" ]; then
-			# Still okay.  Probably nothing is required.
-			return 0
-		else
-			# Too bad.  The path was canonicalized outside buildroot.
-			# Some path component seems to be evil symbolic link...
-			Warning "$f: $rep cannot be canonicalized under RPM_BUILD_ROOT"
-			# Don't know what to do.  Maybe just proceed.
 		fi
-		unset xbrep
+		$Verbose "$f: $rep -> \$RPM_BUILD_ROOT$xbrep"
+		printf '%s\n' "$xbrep"
+		return 0
 	fi
 
 	# Is it an alternative?  Path components can be alternatives, too.

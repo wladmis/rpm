@@ -12,6 +12,7 @@ CanonPath
 ArgvFileAction
 PackagedFiles
 # find-package:
+FindByPathUnderBuildroot
 FindByPath
 FindByName
 FindPackage
