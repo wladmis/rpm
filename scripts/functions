@@ -27,9 +27,10 @@ case "${RPM_SCRIPTS_DEBUG:-0}" in
 	*) RPM_SCRIPTS_DEBUG=3; set -x ;;
 esac
 
-Info()
+Fatal()
 {
-	echo "${0##*/}: $*" >&2
+	echo "${0##*/}: ERROR: $*" >&2
+	exit 1
 }
 
 Warning()
@@ -37,10 +38,9 @@ Warning()
 	echo "${0##*/}: WARNING: $*" >&2
 }
 
-Fatal()
+Info()
 {
-	Info "$@"
-	exit 1
+	echo "${0##*/}: $*" >&2
 }
 
 Verbose()
