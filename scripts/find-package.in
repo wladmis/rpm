@@ -68,25 +68,41 @@ FindByPathUnderBuildroot()
 {
 	local f="$1" rep="$2" xbrep; shift 2 || return
 	[ -n "${RPM_BUILD_ROOT-}" ] || return 0
+
+	MatchBuildroot()
+	{
+		[ -n "$1" ] &&
+		[ -z "${1##$findpackage_xbroot/*}" ]
+	}
+	StatPrint()
+	{
+		[ -e "$1" -o -L "$1" ] &&
+		printf '%s\n' "${1#$findpackage_xbroot}"
+	}
+
 	xbrep=$(CanonPath "$RPM_BUILD_ROOT$rep")
-	if [ -n "$xbrep" -a -z "${xbrep##$findpackage_xbroot/*}" ]; then
+	if MatchBuildroot "$xbrep"; then
 		# Good.  The path was canonicalized against buildroot.
-		:
-	elif [ "$xbrep" = "$findpackage_xbroot" ]; then
-		# Still okay.  Probably nothing is required.
-		return 0
+		StatPrint "$xbrep" && return 0
 	else
 		# Too bad.  The path was canonicalized outside buildroot.
+		# They should fix their symbolic links.
 		Warning "$f: $rep cannot be canonicalized under RPM_BUILD_ROOT"
 		# Consider this: RPM_BUILD_ROOT/A/B/C -> /D/C
 		#				  `-> /D
 		# It still makes sense to check /D/C under RPM_BUILD_ROOT.
-		xbrep=$findpackage_xbroot$xbrep
+		xbrep=$(CanonPath "$RPM_BUILD_ROOT$xbrep")
+		MatchBuildroot "$xbrep" && StatPrint "$xbrep" && return 0
 	fi
-	if [ -e "$xbrep" -o -L "$xbrep" ]; then
-		xbrep=${xbrep##$findpackage_xbroot}
-		printf '%s\n' "$xbrep"
-	fi
+
+	# They might also ask if /etc/init.d/foo is under RPM_BUILD_ROOT.
+	# That would be /etc/rc.d/init.d/foo.
+	xbrep=$(CanonPath "$rep")
+	xbrep=$(CanonPath "$RPM_BUILD_ROOT$xbrep")
+	MatchBuildroot "$xbrep" && StatPrint "$xbrep" && return 0
+
+	# Not there.  Not now.
+	:
 }
 
 FindByPath()
