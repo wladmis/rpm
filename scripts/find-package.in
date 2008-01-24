@@ -275,6 +275,13 @@ FindByName()
 {
 	local f="$1" r="$2" rep package; shift 2 || return
 
+	# Opimize out bulk dependencies.
+	case "$r" in
+		sh | cat | rm | mv | cp | mkdir | ln )
+			$Verbose "$f: $r (skip, bulk)"
+			return ;;
+	esac
+
 	local dir="${f%/*}"; dir="${dir#${RPM_BUILD_ROOT-}}"
 	local findpackage_path="$RPM_FINDPACKAGE_USER_PATH"
 	case "$dir" in
