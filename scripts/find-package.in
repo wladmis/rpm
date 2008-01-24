@@ -189,6 +189,14 @@ FindByPath()
 	esac
 	unset dir
 
+	# APT can handle certain file-level dependencies as is.
+	case "$rep" in
+		*/bin/* | */sbin/* | */etc/* )
+			$Verbose "$f: $rep -> $rep (raw, APT-firendly)"
+			printf %s\\n "$rep"
+			return ;;
+	esac
+
 	# Always try package binary index.
 	local idx_bin="${RPM_PKG_CONTENTS_INDEX_BIN-}" try_idx_bin=1
 	[ -n "$idx_bin" ] && [ -s "$idx_bin" ] && [ -r "$idx_bin" ] || try_idx_bin=
