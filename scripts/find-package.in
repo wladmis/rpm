@@ -189,6 +189,13 @@ FindByPath()
 	esac
 	unset dir
 
+	# Opimize out bulk dependencies.
+	case "${rep#/bin/}" in
+		sh | cat | rm | mv | cp | mkdir | ln )
+			$Verbose "$f: $rep (skip, bulk)"
+			return ;;
+	esac
+
 	# APT can handle certain file-level dependencies as is.
 	case "$rep" in
 		*/bin/* | */sbin/* | */etc/* )
