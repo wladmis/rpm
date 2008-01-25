@@ -1,0 +1,28 @@
+#!/bin/sh -efu
+#
+# Copyright (C) 2008  Alexey Tourbin <at@altlinux.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+. @RPMCONFIGDIR@/functions
+
+script="$1"
+
+RunMethod()
+{
+	local exe="$1"; shift
+	local filter="$exe".files
+	[ -x "$filter" ] || return 0
+	local file_and_type
+	file_and_type=$(file -L -NF$'\t' "$script")
+	local filtered
+	filtered=$(printf '%s\n' "$file_and_type" |"$filter")
+	[ -n "$filtered" ] || return 0
+	printf '%s\n' "$script" |"$exe"
+}
+
+methods=$(SetupMethods req all)
+RunMethods req "$methods" RunMethod

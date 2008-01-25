@@ -113,6 +113,7 @@
 #
 %__find_provides	@FINDPROVIDES@
 %__find_requires	@FINDREQUIRES@
+%__find_scriptlet_requires	@RPMCONFIGDIR@/find-scriptlet-requires
 #%__find_prereq		???
 #%__find_conflicts	???
 #%__find_obsoletes	???

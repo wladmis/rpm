@@ -4,6 +4,7 @@ AUTOMAKE_OPTIONS = 1.4 foreign
 
 EXTRA_DIST = \
 	functions find-package .provides.sh \
+	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
 	compress_files check-files convertrpmrc.sh cross-build \
@@ -32,6 +33,7 @@ configdir = ${prefix}/lib/rpm
 config_DATA = .provides.sh
 config_SCRIPTS = \
 	functions find-package \
+	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
 	compress_files check-files convertrpmrc.sh cross-build \
