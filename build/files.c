@@ -2685,6 +2685,8 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	    if (!*pkg->autoReq && !instScript)
 		continue;
 	    tagflags = RPMSENSE_FIND_REQUIRES;
+	    if (instScript) /* XXX this just works */
+		tagflags |= dm->mask | RPMSENSE_PREREQ;
 	    /*@switchbreak@*/ break;
 	default:
 	    continue;
