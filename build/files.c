@@ -2482,6 +2482,16 @@ ScriptDep_t scriptDeps[] = {
     { NULL,	0, 0 }
 };
 
+static
+const char *hasSomeInstScript(Package pkg)
+{
+    ScriptDep_t *sd;
+    for (sd = scriptDeps; sd->scriptname; sd++)
+	if (headerIsEntry(pkg->header, sd->scriptTag))
+	    return sd->scriptname;
+    return NULL;
+}
+
 /* Save script conents in a file under buildroot.  */
 static
 const char *saveInstScript(Spec spec, Package pkg, const char *scriptname)
