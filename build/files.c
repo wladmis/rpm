@@ -2468,6 +2468,98 @@ DepMsg_t depMsgs[] = {
 };
 /*@=exportlocal =exportheadervar@*/
 
+typedef struct {
+    char *scriptname;
+    int progTag;
+    int scriptTag;
+} ScriptDep_t;
+
+ScriptDep_t scriptDeps[] = {
+    { "pre",	RPMTAG_PREINPROG, RPMTAG_PREIN },
+    { "preun",	RPMTAG_PREUNPROG, RPMTAG_PREUN },
+    { "post",	RPMTAG_POSTINPROG, RPMTAG_POSTIN },
+    { "postun",	RPMTAG_POSTUNPROG, RPMTAG_POSTUN },
+    { NULL,	0, 0 }
+};
+
+/* Save script conents in a file under buildroot.  */
+static
+const char *saveInstScript(Spec spec, Package pkg, const char *scriptname)
+{
+    ScriptDep_t *sd;
+    int progTag = 0, scriptTag = 0;
+
+    for (sd = scriptDeps; sd->scriptname; sd++)
+	if (strcmp(scriptname, sd->scriptname) == 0) {
+	    progTag = sd->progTag;
+	    scriptTag = sd->scriptTag;
+	    break;
+	}
+    if (!scriptTag)
+	return NULL;
+
+    /* similar to runInstScript() */
+    rpmTagType stt;
+    const char *script = NULL;
+    HGE_t hge = headerGetEntry;
+    HFD_t hfd = headerFreeData;
+
+    hge(pkg->header, scriptTag, &stt, (void**)&script, NULL);
+    if (!script)
+	return NULL;
+
+    rpmTagType ptt;
+    int argc;
+    const char **hdrArgv = NULL;
+    const char **argv = NULL;
+    const char *argv1[1];
+
+    hge(pkg->header, progTag, &ptt, (void**)&hdrArgv, &argc);
+    if (hdrArgv && ptt == RPM_STRING_TYPE) {
+	*argv1 = (const char *) hdrArgv;
+	argv = argv1;
+    } else if (argv) {
+	argv = hdrArgv;
+    } else {
+	*argv1 = "/bin/sh";
+	argv = argv1;
+	argc = 1;
+    }
+
+    const char *buildroot = NULL;
+    urlPath(spec->buildRootURL, &buildroot);
+    assert(buildroot);
+
+    const char *N = NULL;
+    headerNVR(pkg->header, &N, NULL, NULL);
+    assert(N);
+
+    const char *path = NULL;
+    asprintf(&path, "%s/.%s:%s", buildroot, scriptname, N);
+    assert(path);
+
+    FILE *fp = fopen(path, "w");
+    if (!fp) {
+	rpmMessage(RPMMESS_ERROR, _("cannon write %s\n"), path);
+	path = _free(path);
+	goto done;
+    }
+
+    fchmod(fileno(fp), 0755);
+
+    fprintf(fp, "#!%s", argv[0]);
+    while (--argc > 0)
+	fprintf(fp, " %s", *++argv);
+    fprintf(fp, "\n%s\n", script);
+    fclose(fp);
+
+done:
+    hfd(script, stt);
+    hfd(hdrArgv, ptt);
+
+    return path;
+}
+
 /**
  */
 static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
