@@ -2579,8 +2579,6 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 		fileSystem, internalState @*/
 {
     TFI_t fi = cpioList;
-    StringBuf writeBuf;
-    int writeBytes;
     StringBuf readBuf;
     DepMsg_t *dm;
     int failnonzero = 1;
@@ -2599,12 +2597,6 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
     const char	*mPost = "%{?__spec_autodep_post}";
     urlinfo	u = NULL;
 
-    if (!(fi && fi->fc > 0))
-	return 0;
-
-    if ( !*pkg->autoReq && !*pkg->autoProv )
-	return 0;
-    
     if ( *pkg->autoProv )
 	addMacro(spec->macros, "_findprov_method", NULL, pkg->autoProv, RMIL_SPEC);
 
@@ -2638,19 +2630,21 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	runTemplate = rpmExpand(mTemplate, NULL);
 	runPost = rpmExpand(mPost, NULL);
 
-    writeBuf = newStringBuf();
-    for (i = 0, writeBytes = 0; i < fi->fc; i++) {
-
-	if (fi->fmapflags && multiLib == 2) {
-	    if (!(fi->fmapflags[i] & CPIO_MULTILIB))
-		continue;
-	    fi->fmapflags[i] &= ~CPIO_MULTILIB;
+    StringBuf fileListBuf = NULL;
+    int fileListBytes = 0;
+    if (fi && fi->fc > 0) {
+	fileListBuf = newStringBuf();
+	for (i = 0, fileListBytes = 0; i < fi->fc; i++) {
+	    if (fi->fmapflags && multiLib == 2) {
+		if (!(fi->fmapflags[i] & CPIO_MULTILIB))
+		    continue;
+		fi->fmapflags[i] &= ~CPIO_MULTILIB;
+	    }
+	    appendStringBuf(fileListBuf, fi->dnl[fi->dil[i]]);
+	    fileListBytes += strlen(fi->dnl[fi->dil[i]]);
+	    appendLineStringBuf(fileListBuf, fi->bnl[i]);
+	    fileListBytes += strlen(fi->bnl[i]) + 1;
 	}
-
-	appendStringBuf(writeBuf, fi->dnl[fi->dil[i]]);
-	writeBytes += strlen(fi->dnl[fi->dil[i]]);
-	appendLineStringBuf(writeBuf, fi->bnl[i]);
-	writeBytes += strlen(fi->bnl[i]) + 1;
     }
 
     for (dm = depMsgs; dm->msg != NULL; dm++) {
@@ -2662,8 +2656,24 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	FILE *fp = 0;
 	char *runBody = 0;
 
-	if ( !dm->argv || !dm->argv[0] )
+	/* This will indicate whether we're doing a scriptlet or a filelist */
+	const char *instScript = NULL;
+
+	if (!dm->argv)
+	    continue;
+	if (dm->argv[0]) {
+	    /* filelist slot */
+	    if (!fileListBuf)
 		continue;
+	} else if (dm->argv[1]) {
+	    /* scriptlet slot */
+	    instScript = saveInstScript(spec, pkg, dm->argv[1]);
+	    if (!instScript)
+		continue;
+	} else {
+	    /* neither-nor */
+	    continue;
+	}
 
 	switch(tag) {
 	case RPMTAG_PROVIDEFLAGS:
@@ -2672,7 +2682,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	    tagflags = RPMSENSE_FIND_PROVIDES;
 	    /*@switchbreak@*/ break;
 	case RPMTAG_REQUIREFLAGS:
-	    if (!*pkg->autoReq)
+	    if (!*pkg->autoReq && !instScript)
 		continue;
 	    tagflags = RPMSENSE_FIND_REQUIRES;
 	    /*@switchbreak@*/ break;
@@ -2681,7 +2691,10 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	    /*@notreached@*/ /*@switchbreak@*/ break;
 	}
 
-	runBody = rpmExpand( dm->argv[0], NULL );
+	if (instScript)
+	    runBody = rpmExpand("%{?__find_scriptlet_requires}", NULL);
+	else
+	    runBody = rpmExpand( dm->argv[0], NULL );
 
 	if ( !runBody || !*runBody || '%' == *runBody )
 	{
@@ -2689,7 +2702,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 		continue;
 	}
 
-	{
+	if (!instScript) {
 		const char **av;
 		for ( av = dm->argv + 1; av[0]; ++av )
 		{
@@ -2700,6 +2713,13 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	}
 
 	rpmMessage(RPMMESS_NORMAL, _("Finding %s (using %s)\n"), dm->msg, runBody);
+
+	if (instScript) {
+	    /* pass extra argument, the script filename */
+	    const char *p = xstrdup( runBody );
+	    asprintf( &runBody, "%s %s", p, instScript);
+	    p = _free( p );
+	}
 
 	if (makeTempFile(rootURL, &scriptName, &fd) || fd == NULL || Ferror(fd)) {
 		rc = RPMERR_SCRIPT;
@@ -2759,7 +2779,10 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	rpmMessage(RPMMESS_NORMAL, _("Executing(%s): %s\n"), dm->msg, runCmd);
 
 	readBuf = getOutputFrom(NULL, argv, envp,
-			getStringBuf(writeBuf), writeBytes, failnonzero);
+			instScript ? NULL : getStringBuf(fileListBuf),
+			instScript ? 0 : fileListBytes,
+			failnonzero);
+
 
 	/* Free expanded args */
 	envp[0] = _free(envp[0]);
@@ -2792,6 +2815,11 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 
 	Unlink(scriptName);
 	scriptName = _free(scriptName);
+
+	if (instScript) {
+	    /* unlink(instScript); */
+	    instScript = _free(instScript);
+	}
     }
 
 	if (u) {
@@ -2810,7 +2838,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
     runPost = _free(runPost);
     runTemplate = _free(runTemplate);
     runDirURL = _free(runDirURL);
-    writeBuf = freeStringBuf(writeBuf);
+    fileListBuf = freeStringBuf(fileListBuf);
     return rc;
 }
 
@@ -3057,15 +3085,20 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 
     for (pkg = spec->packages; pkg != NULL; pkg = pkg->next) {
 	const char *n, *v, *r;
+	const char *script = hasSomeInstScript(pkg);
 
-	if (pkg->fileList == NULL)
+	if (!(pkg->fileList || script))
 	    continue;
 
 	(void) headerNVR(pkg->header, &n, &v, &r);
 	rpmMessage(RPMMESS_NORMAL, _("Processing files: %s-%s-%s\n"), n, v, r);
-		   
-	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
-	if (rc) break;
+
+	if (pkg->fileList) {
+	    rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
+	    if (rc) break;
+	} else if (script) {
+	    rpmMessage(RPMMESS_WARNING, _("package with no files has %%%s-script"), script);
+	}
 
     /* XXX This should be added always so that packages look alike.
      * XXX However, there is logic in files.c/depends.c that checks for
