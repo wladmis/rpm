@@ -2482,16 +2482,6 @@ ScriptDep_t scriptDeps[] = {
     { NULL,	0, 0 }
 };
 
-static
-const char *hasSomeInstScript(Package pkg)
-{
-    ScriptDep_t *sd;
-    for (sd = scriptDeps; sd->scriptname; sd++)
-	if (headerIsEntry(pkg->header, sd->scriptTag))
-	    return sd->scriptname;
-    return NULL;
-}
-
 /* Save script conents in a file under buildroot.  */
 static
 const char *saveInstScript(Spec spec, Package pkg, const char *scriptname)
@@ -2517,6 +2507,10 @@ const char *saveInstScript(Spec spec, Package pkg, const char *scriptname)
     hge(pkg->header, scriptTag, &stt, (void**)&script, NULL);
     if (!script)
 	return NULL;
+
+    TFI_t fi = pkg->cpioList;
+    if (!(fi && fi->fc > 0)) /* possibly a packaging bug */
+	rpmMessage(RPMMESS_WARNING, _("package with no files has %%%s-script\n"), scriptname);
 
     rpmTagType ptt;
     int argc;
@@ -3087,20 +3081,15 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 
     for (pkg = spec->packages; pkg != NULL; pkg = pkg->next) {
 	const char *n, *v, *r;
-	const char *script = hasSomeInstScript(pkg);
 
-	if (!(pkg->fileList || script))
+	if (pkg->fileList == NULL)
 	    continue;
 
 	(void) headerNVR(pkg->header, &n, &v, &r);
 	rpmMessage(RPMMESS_NORMAL, _("Processing files: %s-%s-%s\n"), n, v, r);
 
-	if (pkg->fileList) {
-	    rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
-	    if (rc) break;
-	} else if (script) {
-	    rpmMessage(RPMMESS_WARNING, _("package with no files has %%%s-script"), script);
-	}
+	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
+	if (rc) break;
 
     /* XXX This should be added always so that packages look alike.
      * XXX However, there is logic in files.c/depends.c that checks for
