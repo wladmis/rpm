@@ -196,6 +196,11 @@ FindByPath()
 			return ;;
 	esac
 
+	# Ideally, we'd like to output all file-level dependencies here just as the are.
+	# However, due to current Sisyphus design (separate $arch and noarch repos),
+	# this can result in cross-arch "semi-unmet" dependencies.  For now, we check
+	# if the dependency is "safe enough" to put it as is.
+
 	# APT can handle certain file-level dependencies as is.
 	case "$rep" in
 		*/bin/* | */sbin/* | */etc/* )
