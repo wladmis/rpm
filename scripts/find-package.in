@@ -209,6 +209,18 @@ FindByPath()
 			return ;;
 	esac
 
+	# Check if this path is explicitly provided.
+	local prov n1 n2
+	if prov=$(rpmquery --queryformat='%{NAME}\n' --whatprovides "$rep" 2>/dev/null) &&
+	   n1=$(echo "$prov" |wc -l) &&
+	   n2=$(rpmquery --queryformat='%{NAME}\n' -f "$rep" 2>/dev/null |wc -l) &&
+	   [ "$n1" -gt "$n2" ]; then
+		prov=$(echo "$prov" |LC_COLLATE=C sort -u)
+		$Verbose "$f: $rep -> $rep (raw, provided by$(echo '' $prov))"
+		printf %s\\n "$rep"
+		return
+	fi
+
 	# Always try package binary index.
 	local idx_bin="${RPM_PKG_CONTENTS_INDEX_BIN-}" try_idx_bin=1
 	[ -n "$idx_bin" ] && [ -s "$idx_bin" ] && [ -r "$idx_bin" ] || try_idx_bin=
