@@ -311,7 +311,7 @@ FindByName()
 	local dir="${f%/*}"; dir="${dir#${RPM_BUILD_ROOT-}}"
 	local findpackage_path="$RPM_FINDPACKAGE_USER_PATH"
 	case "$dir" in
-		*/sbin)
+		*/sbin | "" ) # %buildroot dir is used to save scriptlets
 			findpackage_path="$RPM_FINDPACKAGE_ROOT_PATH" ;;
 		/etc/*)
 			dir="${dir#/etc/}"; dir="${dir%%/*}"
