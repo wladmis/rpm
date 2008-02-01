@@ -39,7 +39,7 @@ Source: %srcname.tar
 Provides: %_sysconfdir/%name/macros.d
 
 PreReq: lib%name = %version-%release, librpmbuild = %version-%release
-PreReq: alt-gpgkeys, coreutils
+PreReq: alt-gpgkeys, coreutils, /bin/sh
 
 # XXX glibc-2.1.92 has incompatible locale changes that affect statically
 # XXX linked binaries like /bin/rpm.
