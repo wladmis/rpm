@@ -221,6 +221,15 @@ FindByPath()
 		return
 	fi
 
+	# The path is also "safe enough" if it is already required by someone.
+	local req
+	if req=$(rpmquery --queryformat='%{NAME}\n' --whatrequires "$rep" 2>/dev/null); then
+		req=$(echo "$req" |LC_COLLATE=C sort -u)
+		$Verbose "$f: $rep -> $rep (raw, required by$(echo '' $req))"
+		printf %s\\n "$rep"
+		return
+	fi
+
 	# Always try package binary index.
 	local idx_bin="${RPM_PKG_CONTENTS_INDEX_BIN-}" try_idx_bin=1
 	[ -n "$idx_bin" ] && [ -s "$idx_bin" ] && [ -r "$idx_bin" ] || try_idx_bin=
