@@ -57,6 +57,9 @@ FindLibReqs()
 			echo 'rtld(GNU_HASH)'
 		fi
 
+		# That could be "statically linked (uses shared libs)".
+		printf '%s\n' "$dump" |grep -qs '^Dynamic Section:$' || return 0
+
 		suffix="$(printf '%s\n' "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')"
 		[ -z "$suffix" ] && braces= || braces='()'
 
