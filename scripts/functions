@@ -175,7 +175,7 @@ PackagedFiles()
 {
 	if [ -n "${RPM_BUILD_ROOT-}" ]; then
 		[ -z "${RPM_SUBPACKAGE_NAME-}" ] ||
-		cat "$RPM_BUILD_ROOT/.packaged-files:$RPM_SUBPACKAGE_NAME" 2>/dev/null ||:
+		cat "$RPM_BUILD_ROOT/.files:$RPM_SUBPACKAGE_NAME" 2>/dev/null ||:
 	else
 		rpmquery --list -f -- "$@" 2>/dev/null ||:
 	fi
