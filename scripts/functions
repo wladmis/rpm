@@ -57,8 +57,16 @@ Debug()
 
 ValidateBuildRoot()
 {
+	[ -n "${RPM_BUILD_ROOT-}" ] ||
+		Fatal 'RPM_BUILD_ROOT not set'
 	[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ] ||
-		Fatal 'invalid $RPM_BUILD_ROOT'
+		Fatal "bogus RPM_BUILD_ROOT=$RPM_BUILD_ROOT"
+	local real_buildroot
+	# There could be simply no %install section...
+	# I pretend that non-existent buildroot is just canonical enough.
+	real_buildroot=$(readlink -vm -- "$RPM_BUILD_ROOT")
+	[ "$RPM_BUILD_ROOT" = "$real_buildroot" ] ||
+		Fatal "non-canonical RPM_BUILD_ROOT=$RPM_BUILD_ROOT real_buildroot=$real_buildroot"
 }
 
 [ -z "${RPM_BUILD_ROOT-}" ] || ValidateBuildRoot
