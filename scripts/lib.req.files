@@ -3,8 +3,14 @@ while IFS=$'\t' read -r f t; do
 	case "$t" in
 		*ELF*' shared object'*)
 			echo "$f" ;;
-		*ELF*' executable'*'dynamically linked'*)
-			[ -x "$f" ] && echo "$f" ||
-			echo "${0##*/}: ELF executable $f is not executable" >&2 ;;
+		*ELF*' executable'*)
+			[ -x "$f" ] ||
+			echo "${0##*/}: ELF executable $f is not executable" >&2
+			case "$t" in
+				*'dynamically linked'*) echo "$f" ;;
+				# klibc binaries are "statically linked (uses shared libs)"
+				*'uses shared libs'*) echo "$f" ;;
+			esac
+			;;
 	esac
 done
