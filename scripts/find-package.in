@@ -58,12 +58,6 @@ Debug "RPM_FINDPACKAGE_ROOT_PATH=$RPM_FINDPACKAGE_ROOT_PATH"
 # Below we use 'local Verbose=Info' to increase per-case verbosity.
 Verbose=Verbose
 
-if [ -n "${RPM_BUILD_ROOT-}" ]; then
-	findpackage_xbroot=$(readlink -ve "$RPM_BUILD_ROOT")
-else
-	unset findpackage_xbroot ||:
-fi
-
 FindByPathUnderBuildroot()
 {
 	local f="$1" rep="$2" xbrep; shift 2 || return
@@ -72,12 +66,12 @@ FindByPathUnderBuildroot()
 	MatchBuildroot()
 	{
 		[ -n "$1" ] &&
-		[ -z "${1##$findpackage_xbroot/*}" ]
+		[ -z "${1##$RPM_BUILD_ROOT/*}" ]
 	}
 	StatPrint()
 	{
 		[ -e "$1" -o -L "$1" ] &&
-		printf '%s\n' "${1#$findpackage_xbroot}"
+		printf '%s\n' "${1#$RPM_BUILD_ROOT}"
 	}
 
 	xbrep=$(CanonPath "$RPM_BUILD_ROOT$rep")
