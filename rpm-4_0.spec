@@ -193,7 +193,7 @@ This package contains extra scripts and executable programs which arent
 currently used.
 
 %if_with python
-%package python
+%package -n python-module-rpm
 Version: %{rpm_version}_%__python_version
 Summary: Python bindings for apps which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Интерфейс для разработки Python-приложений, взаимодействующих с RPM-пакетами
@@ -201,8 +201,10 @@ License: GPL/LGPL
 Group: Development/Python
 PreReq: lib%name = %rpm_version-%release
 Requires: python = %__python_version
+Provides: rpm-python = %{rpm_version}_%__python_version-%release
+Obsoletes: rpm-python
 
-%description python
+%description -n python-module-rpm
 This package contains a module which permits applications written in
 the Python programming language to use the interface supplied by RPM
 (RPM Package Manager) libraries.
@@ -511,7 +513,7 @@ fi
 %endif #with build_topdir
 
 %if_with python
-%files python
+%files -n python-module-rpm
 %_libdir/python*/site-packages/*module.so
 %endif #with python
 
