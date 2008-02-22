@@ -874,106 +874,6 @@ static PyObject * setVerbosity (PyObject * self, PyObject * args) {
 
 /**
  */
-typedef struct FDlist_t FDlist;
-
-/**
- */
-struct FDlist_t {
-    FILE *f;
-    FD_t fd;
-    char *note;
-    FDlist *next;
-} ;
-
-/**
- */
-static FDlist *fdhead = NULL;
-
-/**
- */
-static int closeCallback(FILE * f) {
-    FDlist *node, *last;
-
-    printf ("close callback on %p\n", f);
-    
-    node = fdhead;
-    last = NULL;
-    while (node) {
-        if (node->f == f)
-            break;
-        last = node;
-        node = node->next;
-    }
-    if (node) {
-        if (last)
-            last->next = node->next;
-        else
-            fdhead = node->next;
-        printf ("closing %s %p\n", node->note, node->fd);
-	free (node->note);
-        node->fd = fdLink(node->fd, "closeCallback");
-        Fclose (node->fd);
-        while (node->fd)
-            node->fd = fdFree(node->fd, "closeCallback");
-        free (node);
-    }
-    return 0; 
-}
-
-#if 0
-/**
- */
-static PyObject * doFopen(PyObject * self, PyObject * args) {
-    char * path, * mode;
-    FDlist *node;
-    
-    if (!PyArg_ParseTuple(args, "ss", &path, &mode))
-	return NULL;
-    
-    node = malloc (sizeof(FDlist));
-    
-    node->fd = Fopen(path, mode);
-    node->fd = fdLink(node->fd, "doFopen");
-    node->note = strdup (path);
-
-    if (!node->fd) {
-	PyErr_SetFromErrno(pyrpmError);
-        free (node);
-	return NULL;
-    }
-    
-    if (Ferror(node->fd)) {
-	const char *err = Fstrerror(node->fd);
-        free(node);
-	if (err) {
-	    PyErr_SetString(pyrpmError, err);
-	    return NULL;
-	}
-    }
-    node->f = fdGetFp(node->fd);
-    printf ("opening %s fd = %p f = %p\n", node->note, node->fd, node->f);
-    if (!node->f) {
-	PyErr_SetString(pyrpmError, "FD_t has no FILE*");
-        free(node);
-	return NULL;
-    }
-
-    node->next = NULL;
-    if (!fdhead) {
-	fdhead = fdtail = node;
-    } else if (fdtail) {
-        fdtail->next = node;
-    } else {
-        fdhead = node;
-    }
-    fdtail = node;
-    
-    return PyFile_FromFile (node->f, path, mode, closeCallback);
-}
-#endif
-
-/**
- */
 static PyMethodDef rpmModuleMethods[] = {
     { "TransactionSet", (PyCFunction) rpmtransCreate, METH_VARARGS, NULL },
     { "addMacro", (PyCFunction) doAddMacro, METH_VARARGS, NULL },
@@ -995,7 +895,6 @@ static PyMethodDef rpmModuleMethods[] = {
     { "labelCompare", (PyCFunction) labelCompare, METH_VARARGS, NULL },
     { "checksig", (PyCFunction) checkSig, METH_VARARGS, NULL },
     { "getTransactionCallbackHeader", (PyCFunction) getTsHeader, METH_VARARGS, NULL },
-/*      { "Fopen", (PyCFunction) doFopen, METH_VARARGS, NULL }, */
     { "setVerbosity", (PyCFunction) setVerbosity, METH_VARARGS, NULL },
     { NULL }
 } ;
