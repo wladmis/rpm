@@ -87,29 +87,23 @@ static PyObject * __poptOptionValue2PyObject(const struct poptOption *option)
     return NULL;
 }
 
-static PyObject * ctxReset(poptContextObject *self, PyObject *args)
+static PyObject * ctxReset(poptContextObject *self)
 {
-    if (!PyArg_ParseTuple(args, ""))
-        return NULL;
     poptResetContext(self->ctx);
     self->opt = -1;
     Py_INCREF(Py_None);
     return Py_None;
 }
 
-static PyObject * ctxGetNextOpt(poptContextObject *self, PyObject *args)
+static PyObject * ctxGetNextOpt(poptContextObject *self)
 {
-    if (!PyArg_ParseTuple(args, ""))
-        return NULL;
     self->opt = poptGetNextOpt(self->ctx);
     return PyInt_FromLong(self->opt);
 }
 
-static PyObject * ctxGetOptArg(poptContextObject *self, PyObject *args)
+static PyObject * ctxGetOptArg(poptContextObject *self)
 {
     const char *opt;
-    if (!PyArg_ParseTuple(args, ""))
-        return NULL;
     opt = poptGetOptArg(self->ctx);
     if (opt == NULL) {
 	Py_INCREF(Py_None);
@@ -118,11 +112,9 @@ static PyObject * ctxGetOptArg(poptContextObject *self, PyObject *args)
     return PyString_FromString(opt);
 }
 
-static PyObject * ctxGetArg(poptContextObject *self, PyObject *args)
+static PyObject * ctxGetArg(poptContextObject *self)
 {
     const char *arg;
-    if (!PyArg_ParseTuple(args, ""))
-        return NULL;
     arg = poptGetArg(self->ctx);
     if (arg == NULL) {
 	Py_INCREF(Py_None);
@@ -131,11 +123,9 @@ static PyObject * ctxGetArg(poptContextObject *self, PyObject *args)
     return PyString_FromString(arg);
 }
 
-static PyObject * ctxPeekArg(poptContextObject *self, PyObject *args)
+static PyObject * ctxPeekArg(poptContextObject *self)
 {
     const char *arg;
-    if (!PyArg_ParseTuple(args, ""))
-        return NULL;
     arg = poptPeekArg(self->ctx);
     if (arg == NULL) {
 	Py_INCREF(Py_None);
@@ -144,13 +134,11 @@ static PyObject * ctxPeekArg(poptContextObject *self, PyObject *args)
     return PyString_FromString(arg);
 }
 
-static PyObject * ctxGetArgs(poptContextObject *self, PyObject *argsFoo)
+static PyObject * ctxGetArgs(poptContextObject *self)
 {
     const char **args;
     PyObject *list;
     int size, i;
-    if (!PyArg_ParseTuple(argsFoo, ""))
-        return NULL;
     args = poptGetArgs(self->ctx);
     if (args == NULL) {
 	Py_INCREF(Py_None);
@@ -245,12 +233,10 @@ static PyObject * ctxPrintUsage(poptContextObject *self, PyObject *args)
 /* Added ctxGetOptValues */
 /*******************************/
 /* Builds a list of values corresponding to each option */
-static PyObject * ctxGetOptValues(poptContextObject *self, PyObject *args)
+static PyObject * ctxGetOptValues(poptContextObject *self)
 {
     PyObject *list;
     int i;
-    if (!PyArg_ParseTuple(args, ""))
-	return NULL;
     /* Create the list */
     list = PyList_New(self->optionsNo);
     if (list == NULL) 
@@ -266,11 +252,9 @@ static PyObject * ctxGetOptValues(poptContextObject *self, PyObject *args)
     return list;
 }
 
-static PyObject * ctxGetOptValue(poptContextObject *self, PyObject *args)
+static PyObject * ctxGetOptValue(poptContextObject *self)
 {
     int i;
-    if (!PyArg_ParseTuple(args, ""))
-	return NULL;
     if (self->opt < 0) {
         /* No processing */
         Py_INCREF(Py_None);
@@ -288,12 +272,12 @@ static PyObject * ctxGetOptValue(poptContextObject *self, PyObject *args)
 }
 
 static struct PyMethodDef ctxMethods[] = {
-    {"reset", (PyCFunction)ctxReset, METH_VARARGS},
-    {"getNextOpt", (PyCFunction)ctxGetNextOpt, METH_VARARGS},
-    {"getOptArg", (PyCFunction)ctxGetOptArg, METH_VARARGS},
-    {"getArg", (PyCFunction)ctxGetArg, METH_VARARGS},
-    {"peekArg", (PyCFunction)ctxPeekArg, METH_VARARGS},
-    {"getArgs", (PyCFunction)ctxGetArgs, METH_VARARGS},
+    {"reset", (PyCFunction)ctxReset, METH_NOARGS},
+    {"getNextOpt", (PyCFunction)ctxGetNextOpt, METH_NOARGS},
+    {"getOptArg", (PyCFunction)ctxGetOptArg, METH_NOARGS},
+    {"getArg", (PyCFunction)ctxGetArg, METH_NOARGS},
+    {"peekArg", (PyCFunction)ctxPeekArg, METH_NOARGS},
+    {"getArgs", (PyCFunction)ctxGetArgs, METH_NOARGS},
     {"badOption", (PyCFunction)ctxBadOption, METH_VARARGS},
     {"readDefaultConfig", (PyCFunction)ctxReadDefaultConfig, METH_VARARGS},
     {"readConfigFile", (PyCFunction)ctxReadConfigFile, METH_VARARGS},
@@ -305,8 +289,8 @@ static struct PyMethodDef ctxMethods[] = {
     {"stuffArgs", (PyCFunction)ctxStuffArgs},
     {"callbackType", (PyCFunction)ctxCallbackType},
     */
-    {"getOptValues", (PyCFunction)ctxGetOptValues, METH_VARARGS},
-    {"getOptValue", (PyCFunction)ctxGetOptValue, METH_VARARGS},
+    {"getOptValues", (PyCFunction)ctxGetOptValues, METH_NOARGS},
+    {"getOptValue", (PyCFunction)ctxGetOptValue, METH_NOARGS},
     {NULL, NULL}
 };
 

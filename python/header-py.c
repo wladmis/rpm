@@ -35,12 +35,10 @@ struct hdrObject_s {
 
 /** \ingroup python
  */
-static PyObject * hdrKeyList(hdrObject * s, PyObject * args) {
+static PyObject * hdrKeyList(hdrObject * s) {
     PyObject * list, *o;
     HeaderIterator iter;
     int tag, type;
-
-    if (!PyArg_ParseTuple(args, "")) return NULL;
 
     list = PyList_New(0);
 
@@ -310,7 +308,7 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 
 /** \ingroup python
  */
-static PyObject * hdrExpandFilelist(hdrObject * s, PyObject * args) {
+static PyObject * hdrExpandFilelist(hdrObject * s) {
     expandFilelist (s->h);
 
     Py_INCREF(Py_None);
@@ -319,7 +317,7 @@ static PyObject * hdrExpandFilelist(hdrObject * s, PyObject * args) {
 
 /** \ingroup python
  */
-static PyObject * hdrCompressFilelist(hdrObject * s, PyObject * args) {
+static PyObject * hdrCompressFilelist(hdrObject * s) {
     compressFilelist (s->h);
 
     Py_INCREF(Py_None);
@@ -413,10 +411,7 @@ static PyObject * rhnUnload(hdrObject * s, PyObject * args) {
 
 /** \ingroup python
  */
-static PyObject * hdrFullFilelist(hdrObject * s, PyObject * args) {
-    if (!PyArg_ParseTuple(args, ""))
-        return NULL;
-
+static PyObject * hdrFullFilelist(hdrObject * s) {
     mungeFilelist (s->h);
 
     Py_INCREF(Py_None);
@@ -450,12 +445,12 @@ static PyObject * hdrSprintf(hdrObject * s, PyObject * args) {
 /** \ingroup python
  */
 static struct PyMethodDef hdrMethods[] = {
-	{"keys",	(PyCFunction) hdrKeyList,	1 },
+	{"keys",	(PyCFunction) hdrKeyList,	METH_NOARGS },
 	{"unload",	(PyCFunction) hdrUnload,	METH_VARARGS|METH_KEYWORDS },
 	{"verifyFile",	(PyCFunction) hdrVerifyFile,	1 },
-	{"expandFilelist",	(PyCFunction) hdrExpandFilelist,	1 },
-	{"compressFilelist",	(PyCFunction) hdrCompressFilelist,	1 },
-	{"fullFilelist",	(PyCFunction) hdrFullFilelist,	1 },
+	{"expandFilelist",	(PyCFunction) hdrExpandFilelist,	METH_NOARGS },
+	{"compressFilelist",	(PyCFunction) hdrCompressFilelist,	METH_NOARGS },
+	{"fullFilelist",	(PyCFunction) hdrFullFilelist,	METH_NOARGS },
 	{"rhnUnload",	(PyCFunction) rhnUnload, METH_VARARGS },
 	{"sprintf",	(PyCFunction) hdrSprintf, METH_VARARGS },
 	{NULL,		NULL}		/* sentinel */
