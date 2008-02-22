@@ -371,9 +371,9 @@ static void rpmdbDealloc(rpmdbObject * s) {
 #ifndef DYINGSOON	/* XXX OK, when? */
 /**
  */
-static int
+static Py_ssize_t
 rpmdbLength(rpmdbObject * s) {
-    int count = 0;
+    Py_ssize_t count = 0;
 
     {	rpmdbMatchIterator mi;
 
@@ -418,7 +418,7 @@ rpmdbSubscript(rpmdbObject * s, PyObject * key) {
 /**
  */
 static PyMappingMethods rpmdbAsMapping = {
-	(inquiry) rpmdbLength,		/* mp_length */
+	(lenfunc) rpmdbLength,		/* mp_length */
 	(binaryfunc) rpmdbSubscript,	/* mp_subscript */
 	(objobjargproc)0,		/* mp_ass_subscript */
 };

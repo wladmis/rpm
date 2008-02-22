@@ -891,10 +891,6 @@ static FDlist *fdhead = NULL;
 
 /**
  */
-static FDlist *fdtail = NULL;
-
-/**
- */
 static int closeCallback(FILE * f) {
     FDlist *node, *last;
 
@@ -1010,7 +1006,6 @@ void initrpm(void) {
     PyObject * m, * d, *o, * tag = NULL, * dict;
     int i;
     const struct headerSprintfExtension_s * extensions = rpmHeaderFormats;
-    struct headerSprintfExtension_s * ext;
 
     m = Py_InitModule("rpm", rpmModuleMethods);
 
@@ -1043,6 +1038,7 @@ void initrpm(void) {
 
     while (extensions->name) {
 	if (extensions->type == HEADER_EXT_TAG) {
+            const struct headerSprintfExtension_s * ext;
             ext = extensions;
             PyDict_SetItemString(d, extensions->name, o=PyCObject_FromVoidPtr(ext, NULL));
 	    Py_DECREF(o);

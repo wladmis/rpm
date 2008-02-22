@@ -38,16 +38,6 @@ typedef struct poptContext_s {
 static PyObject *pypoptError;
 
 /* Misc functions */
-void __printPopt(struct poptOption *opts)
-{
-    printf("+++++++++++\n");
-    printf("Long name: %s\n", opts->longName);
-    printf("Short name: %c\n", opts->shortName);
-    printf("argInfo: %d\n", opts->argInfo);
-    printf("Val: %d\n", opts->val);
-    printf("-----------\n");
-}
-
 static PyObject * __poptOptionValue2PyObject(const struct poptOption *option)
 {
     if (option == NULL) {
@@ -341,7 +331,7 @@ static const struct poptOption __autohelp[] = {
 };
 
 /* Misc functions */
-int __setPoptOption(PyObject *list, struct poptOption *opt)
+static int __setPoptOption(PyObject *list, struct poptOption *opt)
 {
     int listSize;
     PyObject *o;
@@ -493,7 +483,7 @@ int __setPoptOption(PyObject *list, struct poptOption *opt)
     return 1;
 }
 
-struct poptOption * __getPoptOptions(PyObject *list, int *count)
+static struct poptOption * __getPoptOptions(PyObject *list, int *count)
 {
     int listSize, item, totalmem;
     struct poptOption *opts;
@@ -520,7 +510,6 @@ struct poptOption * __getPoptOptions(PyObject *list, int *count)
 	    /* Presumably we pass the error from the previous level */
 	    return NULL;
 	}
-        //__printPopt(opts + item);
     }
     /* Sentinel */
     opts[listSize] = sentinel;
@@ -528,7 +517,7 @@ struct poptOption * __getPoptOptions(PyObject *list, int *count)
     return opts;
 }
 
-char ** __getArgv(PyObject *list, int *argc)
+static char ** __getArgv(PyObject *list, int *argc)
 {
     int listSize, item, totalmem;
     char **argv;
