@@ -108,7 +108,6 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
     PyObject * list, * tuple, * attrName;
     int type, count;
     struct stat sb;
-    char buf[2048];
     int i;
     time_t timeInt;
     struct tm * timeStruct;
@@ -144,7 +143,8 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 		     &count);
 	}
 
-	if (mdfile(s->fileList[fileNumber], buf)) {
+	char buf[2048];
+	if (mdfile(s->fileList[fileNumber], (unsigned char *) buf)) {
 	    strcpy(buf, "(unknown)");
 	}
 
@@ -168,10 +168,8 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	attrName = PyString_FromString("size");
 	PyTuple_SetItem(tuple, 0, attrName);
 
-	sprintf(buf, "%d", 100);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "%ld", (long)sb.st_size);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1, PyString_FromString("100"));
+	PyTuple_SetItem(tuple, 2, PyString_FromFormat("%ld", (long)sb.st_size));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -182,7 +180,8 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 		     &count);
 	}
 
-	i = readlink(s->fileList[fileNumber], buf, sizeof(buf));
+	char buf[2048];
+	i = readlink(s->fileList[fileNumber], buf, sizeof(buf) - 1);
 	if (i <= 0)
 	    strcpy(buf, "(unknown)");
 	else
@@ -209,6 +208,7 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 
 	timeInt = sb.st_mtime;
 	timeStruct = localtime(&timeInt);
+	char buf[2048];
 	strftime(buf, sizeof(buf) - 1, "%c", timeStruct);
 	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
 
@@ -232,10 +232,10 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	attrName = PyString_FromString("device");
 
 	PyTuple_SetItem(tuple, 0, attrName);
-	sprintf(buf, "0x%-4x", s->rdevs[fileNumber]);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "0x%-4x", (unsigned int) sb.st_rdev);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1,
+			PyString_FromFormat("0x%-4x", s->rdevs[fileNumber]));
+	PyTuple_SetItem(tuple, 2,
+			PyString_FromFormat("0x%-4x", (unsigned) sb.st_rdev));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -257,10 +257,10 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	tuple = PyTuple_New(3);
 	attrName = PyString_FromString("uid");
 	PyTuple_SetItem(tuple, 0, attrName);
-	sprintf(buf, "%d", s->uids[fileNumber]);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "%d", sb.st_uid);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1,
+			PyString_FromFormat("%d", s->uids[fileNumber]));
+	PyTuple_SetItem(tuple, 2,
+			PyString_FromFormat("%d", sb.st_uid));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -278,10 +278,10 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	tuple = PyTuple_New(3);
 	attrName = PyString_FromString("gid");
 	PyTuple_SetItem(tuple, 0, attrName);
-	sprintf(buf, "%d", s->gids[fileNumber]);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "%d", sb.st_gid);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1,
+			PyString_FromFormat("%d", s->gids[fileNumber]));
+	PyTuple_SetItem(tuple, 2,
+			PyString_FromFormat("%d", sb.st_gid));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -295,10 +295,10 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	tuple = PyTuple_New(3);
 	attrName = PyString_FromString("permissions");
 	PyTuple_SetItem(tuple, 0, attrName);
-	sprintf(buf, "0%-4o", s->modes[fileNumber]);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "0%-4o", sb.st_mode);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1,
+			PyString_FromFormat("0%-4o", s->modes[fileNumber]));
+	PyTuple_SetItem(tuple, 2,
+			PyString_FromFormat("0%-4o", sb.st_mode));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -654,7 +654,7 @@ static PyObject * hdrSubscript(hdrObject * s, PyObject * item) {
 /** \ingroup python
  */
 static PyMappingMethods hdrAsMapping = {
-	(inquiry) 0,			/* mp_length */
+	(lenfunc) 0,			/* mp_length */
 	(binaryfunc) hdrSubscript,	/* mp_subscript */
 	(objobjargproc)0,		/* mp_ass_subscript */
 };
