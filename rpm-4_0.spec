@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt84
+Release: alt85
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -539,6 +539,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri Feb 22 2008 Alex V. Myltsev <avm@altlinux.ru> 4.0.4-alt85
+- rpm-python: fix segfaults with Python 2.5.
+
 * Fri Jan 18 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt84
 - lib.req:
   + Fixed awk script for ldd output (at@).
