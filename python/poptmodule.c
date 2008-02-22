@@ -312,7 +312,7 @@ static void ctxDealloc(poptContextObject *self, PyObject *args)
         self->options = NULL;
     }
     poptFreeContext(self->ctx);
-    PyMem_DEL(self);
+    PyObject_Del(self);
 }
 
 static PyTypeObject poptContextType = {
@@ -581,7 +581,7 @@ static PyObject * getContext(PyObject *self, PyObject *args)
 	/* Presumably they've set the exception at a previous level */
 	return NULL;
     /* Parse argv */
-    c = PyObject_NEW(poptContextObject, &poptContextType);
+    c = PyObject_New(poptContextObject, &poptContextType);
     c->options = opts;
     c->optionsNo = count;
     c->opt = -1;

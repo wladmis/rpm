@@ -498,7 +498,7 @@ static void rpmtransDealloc(PyObject * o) {
     /* this will free the keyList, and decrement the ref count of all
        the items on the list as well :-) */
     Py_DECREF(trans->keyList);
-    PyMem_DEL(o);
+    PyObject_Del(o);
 }
 
 /** \ingroup python
@@ -563,7 +563,7 @@ static PyObject * rpmtransCreate(PyObject * self, PyObject * args) {
 	return NULL;
     }
 
-    o = (void *) PyObject_NEW(rpmtransObject, &rpmtransType);
+    o = (void *) PyObject_New(rpmtransObject, &rpmtransType);
 
     Py_XINCREF(db);
     o->dbo = db;

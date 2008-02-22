@@ -467,10 +467,10 @@ static PyObject * hdrGetAttr(hdrObject * s, char * name) {
 static void hdrDealloc(hdrObject * s) {
     if (s->h) headerFree(s->h);
     if (s->sigs) headerFree(s->sigs);
-    if (s->md5list) free(s->md5list);
-    if (s->fileList) free(s->fileList);
-    if (s->linkList) free(s->linkList);
-    PyMem_DEL(s);
+    free(s->md5list);
+    free(s->fileList);
+    free(s->linkList);
+    PyObject_Del(s);
 }
 
 /** \ingroup python
@@ -681,7 +681,7 @@ PyTypeObject hdrType = {
 hdrObject * createHeaderObject(Header h) {
     hdrObject * ho;
 
-    ho = PyObject_NEW(hdrObject, &hdrType);
+    ho = PyObject_New(hdrObject, &hdrType);
     ho->h = headerLink(h);
     ho->sigs = NULL;
     ho->fileList = ho->linkList = ho->md5list = NULL;
@@ -715,7 +715,7 @@ PyObject * rpmHeaderFromPackage(PyObject * self, PyObject * args) {
     switch (rc) {
     case RPMRC_BADSIZE:
     case RPMRC_OK:
-	h = (hdrObject *) PyObject_NEW(PyObject, &hdrType);
+	h = (hdrObject *) PyObject_New(PyObject, &hdrType);
 	h->h = header;
 	h->sigs = sigs;
 	h->fileList = h->linkList = h->md5list = NULL;
@@ -767,7 +767,7 @@ PyObject * hdrLoad(PyObject * self, PyObject * args) {
     compressFilelist (hdr);
     providePackageNVR (hdr);
 
-    h = (hdrObject *) PyObject_NEW(PyObject, &hdrType);
+    h = (hdrObject *) PyObject_New(PyObject, &hdrType);
     h->h = hdr;
     h->sigs = NULL;
     h->fileList = h->linkList = h->md5list = NULL;
@@ -856,7 +856,7 @@ PyObject * rpmReadHeaders (FD_t fd) {
     while (header) {
 	compressFilelist (header);
 	providePackageNVR (header);
-	h = (hdrObject *) PyObject_NEW(PyObject, &hdrType);
+	h = (hdrObject *) PyObject_New(PyObject, &hdrType);
 	h->h = header;
 	h->sigs = NULL;
 	h->fileList = h->linkList = h->md5list = NULL;
@@ -952,9 +952,9 @@ int rpmMergeHeaders(PyObject * list, FD_t fd, int matchTag) {
 	}
 
 	if (ho->sigs) headerFree(ho->sigs);
-	if (ho->md5list) free(ho->md5list);
-	if (ho->fileList) free(ho->fileList);
-	if (ho->linkList) free(ho->linkList);
+	free(ho->md5list);
+	free(ho->fileList);
+	free(ho->linkList);
 
 	ho->sigs = NULL;
 	ho->md5list = NULL;
