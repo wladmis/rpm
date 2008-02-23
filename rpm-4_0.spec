@@ -550,6 +550,9 @@ fi
 * Fri Feb 22 2008 Alex V. Myltsev <avm@altlinux.ru> 4.0.4-alt85
 - rpm-python: fix segfaults with Python 2.5.
 
+* Sat Jan 26 2008 Grigory Batalov <bga@altlinux.ru> 4.0.4-alt84.1
+- Rebuilt with python-2.5.
+
 * Fri Jan 18 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt84
 - lib.req:
   + Fixed awk script for ldd output (at@).
