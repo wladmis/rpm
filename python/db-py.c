@@ -107,7 +107,7 @@ static void rpmdbMIDealloc(rpmdbMIObject * s) {
 	rpmdbFreeIterator(s->mi);
     }
     Py_DECREF (s->db);
-    PyMem_DEL(s);
+    PyObject_Del(s);
 }
 
 /** \ingroup python
@@ -327,7 +327,7 @@ py_rpmdbInitIterator (rpmdbObject * s, PyObject * args) {
 	return NULL;
     }
     
-    mio = (rpmdbMIObject *) PyObject_NEW(rpmdbMIObject, &rpmdbMIType);
+    mio = (rpmdbMIObject *) PyObject_New(rpmdbMIObject, &rpmdbMIType);
     if (mio == NULL) {
 	PyErr_SetString(pyrpmError, "out of memory creating rpmdbMIObject");
 	return NULL;
@@ -361,21 +361,19 @@ static PyObject * rpmdbGetAttr(rpmdbObject * s, char * name) {
 /**
  */
 static void rpmdbDealloc(rpmdbObject * s) {
-    if (s->offsets) {
-	free(s->offsets);
-    }
+    free(s->offsets);
     if (s->db) {
 	rpmdbClose(s->db);
     }
-    PyMem_DEL(s);
+    PyObject_Del(s);
 }
 
 #ifndef DYINGSOON	/* XXX OK, when? */
 /**
  */
-static int
+static Py_ssize_t
 rpmdbLength(rpmdbObject * s) {
-    int count = 0;
+    Py_ssize_t count = 0;
 
     {	rpmdbMatchIterator mi;
 
@@ -420,7 +418,7 @@ rpmdbSubscript(rpmdbObject * s, PyObject * key) {
 /**
  */
 static PyMappingMethods rpmdbAsMapping = {
-	(inquiry) rpmdbLength,		/* mp_length */
+	(lenfunc) rpmdbLength,		/* mp_length */
 	(binaryfunc) rpmdbSubscript,	/* mp_subscript */
 	(objobjargproc)0,		/* mp_ass_subscript */
 };
@@ -464,7 +462,7 @@ rpmdbObject * rpmOpenDB(PyObject * self, PyObject * args) {
 
     if (!PyArg_ParseTuple(args, "|is", &forWrite, &root)) return NULL;
 
-    o = PyObject_NEW(rpmdbObject, &rpmdbType);
+    o = PyObject_New(rpmdbObject, &rpmdbType);
     o->db = NULL;
     o->offx = 0;
     o->noffs = 0;

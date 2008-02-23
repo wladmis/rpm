@@ -35,12 +35,10 @@ struct hdrObject_s {
 
 /** \ingroup python
  */
-static PyObject * hdrKeyList(hdrObject * s, PyObject * args) {
+static PyObject * hdrKeyList(hdrObject * s) {
     PyObject * list, *o;
     HeaderIterator iter;
     int tag, type;
-
-    if (!PyArg_ParseTuple(args, "")) return NULL;
 
     list = PyList_New(0);
 
@@ -110,7 +108,6 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
     PyObject * list, * tuple, * attrName;
     int type, count;
     struct stat sb;
-    char buf[2048];
     int i;
     time_t timeInt;
     struct tm * timeStruct;
@@ -146,7 +143,8 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 		     &count);
 	}
 
-	if (mdfile(s->fileList[fileNumber], buf)) {
+	char buf[2048];
+	if (mdfile(s->fileList[fileNumber], (unsigned char *) buf)) {
 	    strcpy(buf, "(unknown)");
 	}
 
@@ -170,10 +168,8 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	attrName = PyString_FromString("size");
 	PyTuple_SetItem(tuple, 0, attrName);
 
-	sprintf(buf, "%d", 100);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "%ld", (long)sb.st_size);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1, PyString_FromString("100"));
+	PyTuple_SetItem(tuple, 2, PyString_FromFormat("%ld", (long)sb.st_size));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -184,7 +180,8 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 		     &count);
 	}
 
-	i = readlink(s->fileList[fileNumber], buf, sizeof(buf));
+	char buf[2048];
+	i = readlink(s->fileList[fileNumber], buf, sizeof(buf) - 1);
 	if (i <= 0)
 	    strcpy(buf, "(unknown)");
 	else
@@ -211,6 +208,7 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 
 	timeInt = sb.st_mtime;
 	timeStruct = localtime(&timeInt);
+	char buf[2048];
 	strftime(buf, sizeof(buf) - 1, "%c", timeStruct);
 	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
 
@@ -234,10 +232,10 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	attrName = PyString_FromString("device");
 
 	PyTuple_SetItem(tuple, 0, attrName);
-	sprintf(buf, "0x%-4x", s->rdevs[fileNumber]);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "0x%-4x", (unsigned int) sb.st_rdev);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1,
+			PyString_FromFormat("0x%-4x", s->rdevs[fileNumber]));
+	PyTuple_SetItem(tuple, 2,
+			PyString_FromFormat("0x%-4x", (unsigned) sb.st_rdev));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -259,10 +257,10 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	tuple = PyTuple_New(3);
 	attrName = PyString_FromString("uid");
 	PyTuple_SetItem(tuple, 0, attrName);
-	sprintf(buf, "%d", s->uids[fileNumber]);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "%d", sb.st_uid);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1,
+			PyString_FromFormat("%d", s->uids[fileNumber]));
+	PyTuple_SetItem(tuple, 2,
+			PyString_FromFormat("%d", sb.st_uid));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -280,10 +278,10 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	tuple = PyTuple_New(3);
 	attrName = PyString_FromString("gid");
 	PyTuple_SetItem(tuple, 0, attrName);
-	sprintf(buf, "%d", s->gids[fileNumber]);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "%d", sb.st_gid);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1,
+			PyString_FromFormat("%d", s->gids[fileNumber]));
+	PyTuple_SetItem(tuple, 2,
+			PyString_FromFormat("%d", sb.st_gid));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -297,10 +295,10 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 	tuple = PyTuple_New(3);
 	attrName = PyString_FromString("permissions");
 	PyTuple_SetItem(tuple, 0, attrName);
-	sprintf(buf, "0%-4o", s->modes[fileNumber]);
-	PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
-	sprintf(buf, "0%-4o", sb.st_mode);
-	PyTuple_SetItem(tuple, 2, PyString_FromString(buf));
+	PyTuple_SetItem(tuple, 1,
+			PyString_FromFormat("0%-4o", s->modes[fileNumber]));
+	PyTuple_SetItem(tuple, 2,
+			PyString_FromFormat("0%-4o", sb.st_mode));
 	PyList_Append(list, tuple);
 	Py_DECREF(tuple);
     }
@@ -310,7 +308,7 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 
 /** \ingroup python
  */
-static PyObject * hdrExpandFilelist(hdrObject * s, PyObject * args) {
+static PyObject * hdrExpandFilelist(hdrObject * s) {
     expandFilelist (s->h);
 
     Py_INCREF(Py_None);
@@ -319,7 +317,7 @@ static PyObject * hdrExpandFilelist(hdrObject * s, PyObject * args) {
 
 /** \ingroup python
  */
-static PyObject * hdrCompressFilelist(hdrObject * s, PyObject * args) {
+static PyObject * hdrCompressFilelist(hdrObject * s) {
     compressFilelist (s->h);
 
     Py_INCREF(Py_None);
@@ -413,10 +411,7 @@ static PyObject * rhnUnload(hdrObject * s, PyObject * args) {
 
 /** \ingroup python
  */
-static PyObject * hdrFullFilelist(hdrObject * s, PyObject * args) {
-    if (!PyArg_ParseTuple(args, ""))
-        return NULL;
-
+static PyObject * hdrFullFilelist(hdrObject * s) {
     mungeFilelist (s->h);
 
     Py_INCREF(Py_None);
@@ -450,12 +445,12 @@ static PyObject * hdrSprintf(hdrObject * s, PyObject * args) {
 /** \ingroup python
  */
 static struct PyMethodDef hdrMethods[] = {
-	{"keys",	(PyCFunction) hdrKeyList,	1 },
+	{"keys",	(PyCFunction) hdrKeyList,	METH_NOARGS },
 	{"unload",	(PyCFunction) hdrUnload,	METH_VARARGS|METH_KEYWORDS },
 	{"verifyFile",	(PyCFunction) hdrVerifyFile,	1 },
-	{"expandFilelist",	(PyCFunction) hdrExpandFilelist,	1 },
-	{"compressFilelist",	(PyCFunction) hdrCompressFilelist,	1 },
-	{"fullFilelist",	(PyCFunction) hdrFullFilelist,	1 },
+	{"expandFilelist",	(PyCFunction) hdrExpandFilelist,	METH_NOARGS },
+	{"compressFilelist",	(PyCFunction) hdrCompressFilelist,	METH_NOARGS },
+	{"fullFilelist",	(PyCFunction) hdrFullFilelist,	METH_NOARGS },
 	{"rhnUnload",	(PyCFunction) rhnUnload, METH_VARARGS },
 	{"sprintf",	(PyCFunction) hdrSprintf, METH_VARARGS },
 	{NULL,		NULL}		/* sentinel */
@@ -472,10 +467,10 @@ static PyObject * hdrGetAttr(hdrObject * s, char * name) {
 static void hdrDealloc(hdrObject * s) {
     if (s->h) headerFree(s->h);
     if (s->sigs) headerFree(s->sigs);
-    if (s->md5list) free(s->md5list);
-    if (s->fileList) free(s->fileList);
-    if (s->linkList) free(s->linkList);
-    PyMem_DEL(s);
+    free(s->md5list);
+    free(s->fileList);
+    free(s->linkList);
+    PyObject_Del(s);
 }
 
 /** \ingroup python
@@ -659,7 +654,7 @@ static PyObject * hdrSubscript(hdrObject * s, PyObject * item) {
 /** \ingroup python
  */
 static PyMappingMethods hdrAsMapping = {
-	(inquiry) 0,			/* mp_length */
+	(lenfunc) 0,			/* mp_length */
 	(binaryfunc) hdrSubscript,	/* mp_subscript */
 	(objobjargproc)0,		/* mp_ass_subscript */
 };
@@ -686,7 +681,7 @@ PyTypeObject hdrType = {
 hdrObject * createHeaderObject(Header h) {
     hdrObject * ho;
 
-    ho = PyObject_NEW(hdrObject, &hdrType);
+    ho = PyObject_New(hdrObject, &hdrType);
     ho->h = headerLink(h);
     ho->sigs = NULL;
     ho->fileList = ho->linkList = ho->md5list = NULL;
@@ -720,7 +715,7 @@ PyObject * rpmHeaderFromPackage(PyObject * self, PyObject * args) {
     switch (rc) {
     case RPMRC_BADSIZE:
     case RPMRC_OK:
-	h = (hdrObject *) PyObject_NEW(PyObject, &hdrType);
+	h = (hdrObject *) PyObject_New(PyObject, &hdrType);
 	h->h = header;
 	h->sigs = sigs;
 	h->fileList = h->linkList = h->md5list = NULL;
@@ -772,7 +767,7 @@ PyObject * hdrLoad(PyObject * self, PyObject * args) {
     compressFilelist (hdr);
     providePackageNVR (hdr);
 
-    h = (hdrObject *) PyObject_NEW(PyObject, &hdrType);
+    h = (hdrObject *) PyObject_New(PyObject, &hdrType);
     h->h = hdr;
     h->sigs = NULL;
     h->fileList = h->linkList = h->md5list = NULL;
@@ -861,7 +856,7 @@ PyObject * rpmReadHeaders (FD_t fd) {
     while (header) {
 	compressFilelist (header);
 	providePackageNVR (header);
-	h = (hdrObject *) PyObject_NEW(PyObject, &hdrType);
+	h = (hdrObject *) PyObject_New(PyObject, &hdrType);
 	h->h = header;
 	h->sigs = NULL;
 	h->fileList = h->linkList = h->md5list = NULL;
@@ -957,9 +952,9 @@ int rpmMergeHeaders(PyObject * list, FD_t fd, int matchTag) {
 	}
 
 	if (ho->sigs) headerFree(ho->sigs);
-	if (ho->md5list) free(ho->md5list);
-	if (ho->fileList) free(ho->fileList);
-	if (ho->linkList) free(ho->linkList);
+	free(ho->md5list);
+	free(ho->fileList);
+	free(ho->linkList);
 
 	ho->sigs = NULL;
 	ho->md5list = NULL;

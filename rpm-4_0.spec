@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt84
+Release: alt86
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -194,7 +194,7 @@ This package contains extra scripts and executable programs which arent
 currently used.
 
 %if_with python
-%package python
+%package -n python-module-rpm
 Version: %{rpm_version}_%__python_version
 Summary: Python bindings for apps which will manipulate RPM packages
 Summary(ru_RU.KOI8-R): Интерфейс для разработки Python-приложений, взаимодействующих с RPM-пакетами
@@ -202,8 +202,10 @@ License: GPL/LGPL
 Group: Development/Python
 PreReq: lib%name = %rpm_version-%release
 Requires: python = %__python_version
+Provides: rpm-python = %{rpm_version}_%__python_version-%release
+Obsoletes: rpm-python
 
-%description python
+%description -n python-module-rpm
 This package contains a module which permits applications written in
 the Python programming language to use the interface supplied by RPM
 (RPM Package Manager) libraries.
@@ -513,7 +515,7 @@ fi
 %endif #with build_topdir
 
 %if_with python
-%files python
+%files -n python-module-rpm
 %_libdir/python*/site-packages/*module.so
 %endif #with python
 
@@ -541,6 +543,13 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri Feb 22 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt86
+- pam.req: Added substack support.
+- Renamed rpm-python subpackage to python-module-rpm.
+
+* Fri Feb 22 2008 Alex V. Myltsev <avm@altlinux.ru> 4.0.4-alt85
+- rpm-python: fix segfaults with Python 2.5.
+
 * Fri Jan 18 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt84
 - lib.req:
   + Fixed awk script for ldd output (at@).
