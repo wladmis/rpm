@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt86
+Release: alt87
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -543,6 +543,17 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Feb 24 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt87
+- implemented automatic dependencies for %%pre, %%preun, %%post,
+  and %%postun scriptlets (#7409)
+- find-package: when possible, keep file-level dependencies as is,
+  without mapping them to package names
+- find-package: relax file-level dependencies on unpackaged directories
+- find-package: optimize out bulk dependencies on sh, cat, rm, mv etc.
+- build/parseScript.c: optimize out RPMSENSE_INTERP dependencies on /bin/sh
+- lib.req: enabled ELF_INTERP dependencies except for standard /lib/ld-linux.so.2
+- functions (ValidateBuildRoot): require RPM_BUILD_ROOT path be canonical
+
 * Fri Feb 22 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt86
 - pam.req: Added substack support.
 - Renamed rpm-python subpackage to python-module-rpm.
