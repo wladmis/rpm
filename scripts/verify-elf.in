@@ -129,11 +129,14 @@ for f in "$@"; do
 	fi
 
 	if [ -n "$VERIFY_ELF_TEXTREL" ]; then
-		textrel="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*TEXTREL[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
-		if [ -n "$textrel" ]; then
-			[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR
-			[ "$VERIFY_ELF_TEXTREL" = relaxed ] || rc=1
-			Info "$prefix: $f: TEXTREL entry found: $textrel"
+		# PIE executables on ARM always has TEXTREL, do not check them.
+		if [ -z "$RPM_TARGET_ARCH" -o -n "${RPM_TARGET_ARCH##arm*}" -o ! -x "$f" -o -n "${t##*ELF*shared object*}" ]; then
+			textrel="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*TEXTREL[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
+			if [ -n "$textrel" ]; then
+				[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR
+				[ "$VERIFY_ELF_TEXTREL" = relaxed ] || rc=1
+				Info "$prefix: $f: TEXTREL entry found: $textrel"
+			fi
 		fi
 	fi
 
