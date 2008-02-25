@@ -198,7 +198,7 @@ FindByPath()
 	# APT can handle certain file-level dependencies as is.
 	case "$rep" in
 		*/bin/* | */sbin/* | */etc/* )
-			$Verbose "$f: $rep -> $rep (raw, APT-firendly)"
+			$Verbose "$f: $rep -> $rep (raw, APT-friendly)"
 			printf %s\\n "$rep"
 			return ;;
 	esac

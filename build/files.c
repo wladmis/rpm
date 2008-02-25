@@ -2544,7 +2544,7 @@ const char *saveInstScript(Spec spec, Package pkg, const char *scriptname)
 
     FILE *fp = fopen(path, "w");
     if (!fp) {
-	rpmMessage(RPMMESS_ERROR, _("cannon write %s\n"), path);
+	rpmMessage(RPMMESS_ERROR, _("cannot write %s\n"), path);
 	path = _free(path);
 	goto done;
     }
