@@ -349,22 +349,22 @@ Please remove (or at least rename) one of those files, and re-install.
     exit 1
 fi
 
-[ ! -L %_rpmlibdir/noarch-alt-%_target_os ] || %__rm -f %_rpmlibdir/noarch-alt-%_target_os ||:
+[ ! -L %_rpmlibdir/noarch-alt-%_target_os ] || rm -f %_rpmlibdir/noarch-alt-%_target_os ||:
 
 %post
 if [ -f %_localstatedir/%name/packages.rpm ]; then
-	%__chgrp %name %_localstatedir/%name/*.rpm
+	chgrp %name %_localstatedir/%name/*.rpm
 	# Migrate to db3 database.
 	%_rpmlibdir/pdeath_execute $PPID %_rpmlibdir/delayed_rebuilddb
 elif [ -f %_localstatedir/%name/Packages ]; then
-	%__chgrp %name %_localstatedir/%name/[A-Z]*
+	chgrp %name %_localstatedir/%name/[A-Z]*
 	# Undo db1 configuration.
-	%__rm -f %_sysconfdir/%name/macros.db1
+	rm -f %_sysconfdir/%name/macros.db1
 	[ -n "$DURING_INSTALL" -o -n "$BTE_INSTALL" ] ||
 		%_rpmlibdir/pdeath_execute $PPID %_rpmlibdir/delayed_rebuilddb
 else
 	# Initialize db3 database.
-	%__rm -f %_sysconfdir/%name/macros.db1
+	rm -f %_sysconfdir/%name/macros.db1
 	%_bindir/rpmdb --initdb
 fi
 :
