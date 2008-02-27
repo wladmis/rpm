@@ -183,13 +183,6 @@ FindByPath()
 	esac
 	unset dir
 
-	# Opimize out bulk dependencies.
-	case "${rep#/bin/}" in
-		sh | cat | rm | mv | cp | mkdir | ln )
-			$Verbose "$f: $rep (skip, bulk)"
-			return ;;
-	esac
-
 	# Ideally, we'd like to output all file-level dependencies here just as the are.
 	# However, due to current Sisyphus design (separate $arch and noarch repos),
 	# this can result in cross-arch "semi-unmet" dependencies.  For now, we check
