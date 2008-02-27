@@ -33,17 +33,17 @@ esac
 for f in "$@"; do
 	case "$RPM_COMPRESS_METHOD" in
 		gz*)
-			/bin/gzip -9nf "$f"
+			gzip -9nf "$f"
 			;;
 		bz*)
-			/bin/bzip2 -9f "$f"
+			bzip2 -9f "$f"
 			;;
 		*)
-			/bin/bzip2 -9kf "$f"
-			/bin/gzip -9nf "$f"
+			bzip2 -9kf "$f"
+			gzip -9nf "$f"
 			SIZE_BZIP2=`@RPMCONFIGDIR@/filesize "$f.bz2" 512`
 			SIZE_GZIP=`@RPMCONFIGDIR@/filesize "$f.gz" 512`
-			[ "$SIZE_GZIP" -gt "$SIZE_BZIP2" ] && /bin/rm -f "$f.gz" || /bin/rm -f "$f.bz2"
+			[ "$SIZE_GZIP" -gt "$SIZE_BZIP2" ] && rm -f "$f.gz" || rm -f "$f.bz2"
 			;;
 	esac
 done

@@ -167,7 +167,7 @@ for f in "$@"; do
 		done
 	fi
 
-	t="$(/usr/bin/file -b "$f")" || continue
+	t="$(file -b "$f")" || continue
 
 	[ -z "${t##Bourne* shell script text*}" ] || continue
 

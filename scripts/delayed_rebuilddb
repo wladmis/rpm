@@ -1,4 +1,4 @@
 #!/bin/sh -e
 
-/usr/bin/rpmdb -v --rebuilddb &&
-	/bin/rm -f /etc/rpm/macros.db1
+rpmdb -v --rebuilddb &&
+	rm -f /etc/rpm/macros.db1

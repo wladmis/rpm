@@ -50,7 +50,7 @@ for f in "$@"; do
 		done
 	fi
 
-	t="$(/usr/bin/file -b "$f")"
+	t="$(file -b "$f")"
 
 	if [ -z "${t/*ELF*executable,*/}" ]; then
 		if [ -n "$STRIP_EXECUTABLE" ]; then
