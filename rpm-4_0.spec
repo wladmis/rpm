@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt87
+Release: alt88
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -543,6 +543,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Feb 25 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt88
+- verify-elf: According to information from Kirill Shutemov,
+  PIE executables on ARM always contain TEXTREL, so do not check them.
+- find-package: Removed bulk dependencies optimization
+  introduced in previous release.
+- scripts: Replaced redundant paths to basic programs
+  with program names.
+
 * Sun Feb 24 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt87
 - implemented automatic dependencies for %%pre, %%preun, %%post,
   and %%postun scriptlets (#7409)
