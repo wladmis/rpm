@@ -405,18 +405,18 @@
 @alt@
 @alt@# Update Menus.
 @alt@%_update_menus_bin	%_bindir/update-menus
-@alt@%update_menus	[ -x %_update_menus_bin ] && %_update_menus_bin ||:
-@alt@%clean_menus	[ "$1" = 0 -a -x %_update_menus_bin ] && %_update_menus_bin ||:
+@alt@%update_menus	update_menus_bin='%_update_menus_bin' && [ -x "$update_menus_bin" ] && "$update_menus_bin" ||:
+@alt@%clean_menus	update_menus_bin='%_update_menus_bin' && [ "$1" = 0 -a -x "$update_menus_bin" ] && "$update_menus_bin" ||:
 @alt@
 @alt@# Update Window Managers sessions.
 @alt@%_update_wms_bin	%_sbindir/update_wms
-@alt@%update_wms	[ -x %_update_wms_bin ] && %_update_wms_bin ||:
-@alt@%clean_wms	[ "$1" = 0 -a -x %_update_wms_bin ] && %_update_wms_bin ||:
+@alt@%update_wms	update_wms_bin='%_update_wms_bin' && [ -x "$update_wms_bin" ] && "$update_wms_bin" ||:
+@alt@%clean_wms	update_wms_bin='%_update_wms_bin' && [ "$1" = 0 -a -x "$update_wms_bin" ] && "$update_wms_bin" ||:
 @alt@
 @alt@# Synchronize the scrollkeeper database.
 @alt@%_update_scrollkeeper_bin	%_bindir/scrollkeeper-update
-@alt@%update_scrollkeeper	[ -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin -q ||:
-@alt@%clean_scrollkeeper	[ "$1" = 0 -a -x %_update_scrollkeeper_bin ] && %_update_scrollkeeper_bin -q ||:
+@alt@%update_scrollkeeper	update_scrollkeeper_bin='%_update_scrollkeeper_bin' && [ -x "$update_scrollkeeper_bin" ] && "$update_scrollkeeper_bin" -q ||:
+@alt@%clean_scrollkeeper	update_scrollkeeper_bin='%_update_scrollkeeper_bin' && [ "$1" = 0 -a -x "$update_scrollkeeper_bin" ] && "$update_scrollkeeper_bin" -q ||:
 @alt@
 @alt@%_defattr	%%defattr(-,root,root,755)
 @alt@
