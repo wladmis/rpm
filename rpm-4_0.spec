@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt88
+Release: alt89
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -543,6 +543,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Mar 03 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt89
+- platform.in: Changed several macro definitions to avoid extra
+  autodependencies when used in shell scripts.
+
 * Mon Feb 25 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt88
 - verify-elf: According to information from Kirill Shutemov,
   PIE executables on ARM always contain TEXTREL, so do not check them.
