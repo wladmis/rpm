@@ -55,6 +55,14 @@ RPM_FINDPACKAGE_ROOT_PATH="$(IFS="$IFS:"; set -f; echo '' ${RPM_FINDPACKAGE_PATH
 Debug "RPM_FINDPACKAGE_USER_PATH=$RPM_FINDPACKAGE_USER_PATH"
 Debug "RPM_FINDPACKAGE_ROOT_PATH=$RPM_FINDPACKAGE_ROOT_PATH"
 
+# By default, FindPackage prefers virtual (most common) dependencies,
+# e.g. /usr/bin/perl -> /usr/bin/perl.  This is good for executables.
+# However, some binary dependencies should explicitly map to host-system
+# package names, e.g. /usr/lib/libdb.so -> libdb4.4-devel.  Localizing
+# the following variable with non-empty value will tweak FindPackage
+# to use the latter plan.
+RPM_FINDPACKAGE_HOST_PKG_NAMES=
+
 # Below we use 'local Verbose=Info' to increase per-case verbosity.
 Verbose=Verbose
 
@@ -183,6 +191,8 @@ FindByPath()
 	esac
 	unset dir
 
+if [ -z "$RPM_FINDPACKAGE_HOST_PKG_NAMES" ]; then
+
 	# Ideally, we'd like to output all file-level dependencies here just as the are.
 	# However, due to current Sisyphus design (separate $arch and noarch repos),
 	# this can result in cross-arch "semi-unmet" dependencies.  For now, we check
@@ -262,6 +272,8 @@ FindByPath()
 			return
 		fi
 	fi
+
+fi # RPM_FINDPACKAGE_HOST_PKG_NAMES
 
 	# Check package database.
 	if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" 2>/dev/null)"; then
