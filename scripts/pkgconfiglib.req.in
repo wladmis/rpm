@@ -59,6 +59,9 @@ PkgconfigLibReq()
 		Debug "gcc_libdirs=$(echo $gcc_libdirs)"
 	fi
 
+	# FindPackage should use host-system package names.
+	local RPM_FINDPACKAGE_HOST_PKG_NAMES=1
+
 	local lib libdir
 	for lib in $libs; do
 		local rep
@@ -91,23 +94,8 @@ PkgconfigLibReq()
 				continue
 			fi
 			# The library is found in the host system.
-			# Generate rpm dependency and do next lib.
-			rep=$(CanonPath "$rep")
-			local pkg n
-			pkg=$(rpmquery --whatprovides --queryformat='%{NAME}\n' "$rep" |sort -u)
-			n=$(set -- $pkg; echo $#)
-			if [ "$pkg" = glibc-devel ]; then
-				Verbose "$f: -l$lib -> $rep -> $pkg (skip)"
-			elif [ $n -eq 1 ]; then
-				Verbose "$f: -l$lib -> $rep -> $pkg"
-				printf '%s\n' "$pkg"
-			elif [ $n -gt 1 ]; then
-				Info "$f: $rep provided by:$(echo '' $pkg)"
-				Info "$f: -l$lib -> $rep (raw, ambiguous)"
-				printf '%s\n' "$rep"
-			else
-				Warning "$f: cannot map $rep to rpm dependency (skip)"
-			fi
+			Verbose "$f: -l$lib -> $rep ..."
+			FindPackage "$f" "$rep"
 			continue 2
 		done
 		Warning "$f: cannot find -l$lib library path (skip)"
