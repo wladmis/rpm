@@ -451,6 +451,7 @@ fi
 %rpmattr %_rpmlibdir/relative
 %rpmattr %_rpmlibdir/brp-*
 %rpmattr %_rpmlibdir/*_files
+%rpmattr %_rpmlibdir/cpp.*
 %rpmattr %_rpmlibdir/ldd
 %rpmattr %_rpmlibdir/rpm2cpio.sh
 %rpmattr %_rpmlibdir/find-lang

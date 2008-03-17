@@ -934,6 +934,7 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt
 	scripts/brp-verify_elf
 	scripts/brp-verify-info
 	scripts/compress_files
+	scripts/cpp.req
 	scripts/debuginfo.prov
 	scripts/debuginfo.req
 	scripts/files.req

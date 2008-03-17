@@ -1,0 +1,129 @@
+#!/bin/sh -efu
+#
+# Copyright (C) 2008  Alexey Tourbin <at@altlinux.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+. @RPMCONFIGDIR@/functions
+. @RPMCONFIGDIR@/find-package
+
+[ -n "${RPM_LIBDIR-}" ] || RPM_LIBDIR=`rpm --eval %_libdir`
+PKG_CONFIG_PATH=$RPM_LIBDIR/pkgconfig:/usr/share/pkgconfig
+[ -z "${RPM_BUILD_ROOT-}" ] ||
+PKG_CONFIG_PATH=$RPM_BUILD_ROOT$RPM_LIBDIR/pkgconfig:$RPM_BUILD_ROOT/usr/share/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH
+
+PkgconfigCflags()
+{
+	local f="$1"; shift
+	local pc_files
+	if [ -n "${RPM_BUILD_ROOT-}" ]; then
+		pc_files=$(set +f; ls "$RPM_BUILD_ROOT$RPM_LIBDIR/pkgconfig"/*.pc 2>/dev/null ||:)
+	else
+		pc_files=$(rpmquery -f "$f" --list 2>/dev/null |
+				egrep "^$RPM_LIBDIR/pkgconfig/[^/]+[.]pc\$" || [ $? = 1 ])
+	fi
+	[ -n "$pc_files" ] || return 0
+	local pc
+	for pc in $pc_files; do
+		pkg-config --enable-recursion --cflags "$pc" ||
+			Fatal "$pc: pkg-config failed"
+	done
+}
+
+Cflags()
+{
+	local f="$1"; shift
+	local cflags
+	cflags=$(PkgconfigCflags "$f")
+	set -- $cflags -I/usr/include -I${f%/*} -I${f%/*/*} -I${f%/*/*/*}
+	local cf
+	for cf; do
+		case $cf in
+			-D?*) echo $cf ;;
+		esac
+	done
+	for cf; do
+		[ -n "${RPM_BUILD_ROOT-}" ] || continue
+		case $cf in
+			-I/*) echo -I$RPM_BUILD_ROOT${cf#-I} ;;
+		esac
+	done
+	for cf; do
+		case $cf in
+			-I/*) echo $cf ;;
+		esac
+	done
+}
+
+cpp=
+IncludedFiles()
+{
+	local f="$1"; shift
+
+	if [ -z "$cpp" ]; then
+		cpp=/usr/bin/${RPM_ARCH:-noarch}-alt-linux-cpp
+		[ -x "$cpp" ] || cpp=/usr/bin/cpp
+		[ -z "${GCC_VERSION-}" ] || cpp=$cpp-$GCC_VERSION
+		Debug "cpp=$cpp"
+	fi
+
+	cflags=$(Cflags "$f")
+	Debug "$f: cflags:" $cflags
+
+	if ! out=$("$cpp" -w -x c++ $cflags "$f"); then
+		Warning "$f: cpp failed"
+		return 0
+	fi
+	echo "$out" |grep '^#' |awk -v prog="$PROG" -v hdr="$f" '
+		# info cpp "Preprocessor Output"
+		BEGIN {
+			SP = 0
+			Stack[SP] = hdr
+		}
+		function filename(f) {
+			if (!sub(/^"\//, "/", f) ||
+			    !sub(/"$/, "", f))
+				printf "%s: %s: bad path %s\n",
+					prog, hdr, f >"/dev/stderr"
+			return f
+		}
+		function Push(f) {
+			f=filename(f)
+			Stack[++SP]=f
+			if (SP==1)
+				print f
+		}
+		function Pop(f) {
+			f=filename(f)
+			if (f != Stack[--SP])
+				printf "%s: %s: expected pop %s, got pop %s\n",
+					prog, hdr, Stack[SP], f >"/dev/stderr"
+		}
+		$4==1 { Push($3) }
+		$4==2 { Pop($3) }
+		END {
+			if (SP > 0)
+				printf "%s: %s: non-empty stack, top %s\n",
+					prog, hdr, Stack[SP] >"/dev/stderr"
+		}'
+
+}
+
+CppReq()
+{
+	local f="$1"; shift
+	local files
+	files=$(IncludedFiles "$f")
+	[ -n "$files" ] || return 0
+	local RPM_FINDPACKAGE_HOST_PKG_NAMES=1
+	local inc
+	echo "$files" |while read -r inc; do
+		FindPackage "$f" "${inc#${RPM_BUILD_ROOT-}}"
+	done
+}
+
+ArgvFileAction CppReq "$@"

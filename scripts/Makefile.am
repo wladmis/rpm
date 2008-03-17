@@ -13,6 +13,7 @@ EXTRA_DIST = \
 	brp-fix-perms brp-fixup brp-strip \
 	brp-verify_elf brp-verify-info \
 	compress_files \
+	cpp.req cpp.req.files \
 	find-lang \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	files.req files.req.files 0common-files.req.list \
@@ -45,6 +46,7 @@ config_SCRIPTS = \
 	brp-fix-perms brp-fixup brp-strip \
 	brp-verify_elf brp-verify-info \
 	compress_files \
+	cpp.req cpp.req.files \
 	find-lang \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	files.req files.req.files \
