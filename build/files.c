@@ -1487,6 +1487,66 @@ static /*@null@*/ FileListRec freeFileList(/*@only@*/ FileListRec fileList,
     return NULL;
 }
 
+/* Written by Alexey Tourbin! */
+static int pathIsCanonical(const char *path)
+{
+    enum {
+	ST_NONE,
+	ST_SLASH,
+	ST_SLASHDOT,
+	ST_SLASHDOTDOT
+    } state = ST_NONE;
+    const char *p = path;
+    while (1) {
+	int c = *p;
+	switch (c) {
+	case '/':
+	    switch (state) {
+	    case ST_SLASH:
+	    case ST_SLASHDOT:
+	    case ST_SLASHDOTDOT:
+		return 0;
+	    default:
+		state = ST_SLASH;
+		break;
+	    }
+	    break;
+	case '.':
+	    switch (state) {
+	    case ST_SLASH:
+		state = ST_SLASHDOT;
+		break;
+	    case ST_SLASHDOT:
+		state = ST_SLASHDOTDOT;
+		break;
+	    default:
+		state = ST_NONE;
+		break;
+	    }
+	    break;
+	case '\0':
+	    switch (state) {
+	    case ST_SLASHDOT:
+	    case ST_SLASHDOTDOT:
+		return 0;
+	    case ST_SLASH:
+		if (p > path + 1)
+		    return 0;
+		return 1;
+	    default:
+		return 1;
+	    }
+	    break;
+	default:
+	    state = ST_NONE;
+	    break;
+	}
+	p++;
+    }
+    /* not reachable */
+    return 0;
+}
+
 /**
  * Add a file to the package manifest.
  * @param fl		package file tree walk data
@@ -1549,6 +1609,13 @@ static int addFile(FileList fl, const char * diskURL,
     if (*fileURL != '/') {
 	rpmError(RPMERR_BADSPEC,
 	    _("File must begin with \"/\": %s\n"), fileURL);
+	fl->processingFailed = 1;
+	return RPMERR_BADSPEC;
+    }
+
+    if (!pathIsCanonical(fileURL)) {
+	rpmError(RPMERR_BADSPEC,
+	    _("File path must be canonical: %s\n"), fileURL);
 	fl->processingFailed = 1;
 	return RPMERR_BADSPEC;
     }
