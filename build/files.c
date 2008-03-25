@@ -1525,8 +1525,18 @@ static int addFile(FileList fl, const char * diskURL,
      */
     {	const char *fileName;
 	(void) urlPath(fileURL, &fileName);
-	if (fl->buildRootURL && strcmp(fl->buildRootURL, "/"))
-	    fileURL += strlen(fl->buildRootURL);
+	if (fl->buildRootURL && strcmp(fl->buildRootURL, "/")) {
+	    size_t br_len = strlen(fl->buildRootURL);
+	    if (strncmp(fl->buildRootURL, fileURL, br_len) == 0
+	    && (fileURL[br_len] == '/' || fileURL[br_len] == '\0'))
+		fileURL += strlen(fl->buildRootURL);
+	    else {
+		rpmError(RPMERR_BADSPEC, _("File doesn't match buildroot (%s): %s\n"),
+			fl->buildRootURL, fileURL);
+		fl->processingFailed = 1;
+		return RPMERR_BADSPEC;
+	    }
+	}
     }
 
     /* XXX make sure '/' can be packaged also */
