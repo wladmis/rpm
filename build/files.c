@@ -1661,6 +1661,31 @@ static int addFile(FileList fl, const char * diskURL,
 	}
     }
 
+    /* intermediate path component must be directories, not symlinks */
+    {
+	struct stat st;
+	size_t du_len = strlen(diskURL);
+	char *du = alloca(du_len + 1);
+	char *p = du + du_len - strlen(fileURL);
+	strcpy(du, diskURL);
+	while ((p = strchr(p + 1, '/'))) {
+	    *p = '\0';
+	    if (Lstat(du, &st)) {
+		rpmError(RPMERR_BADSPEC, _("File not found: %s\n"), diskURL);
+		fl->processingFailed = 1;
+		return RPMERR_BADSPEC;
+	    }
+	    if (!S_ISDIR(st.st_mode)) {
+		rpmError(RPMERR_BADSPEC,
+			_("File path component must be directory (%s): %s\n"),
+			du, diskURL);
+		fl->processingFailed = 1;
+		return RPMERR_BADSPEC;
+	    }
+	    *p = '/';
+	}
+    }
+
     if ((! fl->isDir) && S_ISDIR(statp->st_mode)) {
 	/* We use our own ftw() call, because ftw() uses stat()    */
 	/* instead of lstat(), which causes it to follow symlinks! */
