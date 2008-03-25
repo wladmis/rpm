@@ -1545,6 +1545,14 @@ static int addFile(FileList fl, const char * diskURL,
 	fileURL = "/";
     /*@=branchstate@*/
 
+    /* cannot happen?! */
+    if (*fileURL != '/') {
+	rpmError(RPMERR_BADSPEC,
+	    _("File must begin with \"/\": %s\n"), fileURL);
+	fl->processingFailed = 1;
+	return RPMERR_BADSPEC;
+    }
+
     /* If we are using a prefix, validate the file */
     if (!fl->inFtw && fl->prefix) {
 	const char *prefixTest;
