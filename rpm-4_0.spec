@@ -50,7 +50,6 @@ Requires: glibc-core
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindir/subst
-BuildConflicts: rpm-devel
 
 # Automatically added by buildreq on Tue Mar 25 2008 and edited manually.
 BuildRequires: bzlib-devel-static glibc-devel-static libbeecrypt-devel-static libdb4.4-devel-static libpopt-devel-static zlib-devel-static
