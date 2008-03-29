@@ -1487,6 +1487,66 @@ static /*@null@*/ FileListRec freeFileList(/*@only@*/ FileListRec fileList,
     return NULL;
 }
 
+/* Written by Alexey Tourbin! */
+static int pathIsCanonical(const char *path)
+{
+    enum {
+	ST_NONE,
+	ST_SLASH,
+	ST_SLASHDOT,
+	ST_SLASHDOTDOT
+    } state = ST_NONE;
+    const char *p = path;
+    while (1) {
+	int c = *p;
+	switch (c) {
+	case '/':
+	    switch (state) {
+	    case ST_SLASH:
+	    case ST_SLASHDOT:
+	    case ST_SLASHDOTDOT:
+		return 0;
+	    default:
+		state = ST_SLASH;
+		break;
+	    }
+	    break;
+	case '.':
+	    switch (state) {
+	    case ST_SLASH:
+		state = ST_SLASHDOT;
+		break;
+	    case ST_SLASHDOT:
+		state = ST_SLASHDOTDOT;
+		break;
+	    default:
+		state = ST_NONE;
+		break;
+	    }
+	    break;
+	case '\0':
+	    switch (state) {
+	    case ST_SLASHDOT:
+	    case ST_SLASHDOTDOT:
+		return 0;
+	    case ST_SLASH:
+		if (p > path + 1)
+		    return 0;
+		return 1;
+	    default:
+		return 1;
+	    }
+	    break;
+	default:
+	    state = ST_NONE;
+	    break;
+	}
+	p++;
+    }
+    /* not reachable */
+    return 0;
+}
+
 /**
  * Add a file to the package manifest.
  * @param fl		package file tree walk data
@@ -1525,8 +1585,18 @@ static int addFile(FileList fl, const char * diskURL,
      */
     {	const char *fileName;
 	(void) urlPath(fileURL, &fileName);
-	if (fl->buildRootURL && strcmp(fl->buildRootURL, "/"))
-	    fileURL += strlen(fl->buildRootURL);
+	if (fl->buildRootURL && strcmp(fl->buildRootURL, "/")) {
+	    size_t br_len = strlen(fl->buildRootURL);
+	    if (strncmp(fl->buildRootURL, fileURL, br_len) == 0
+	    && (fileURL[br_len] == '/' || fileURL[br_len] == '\0'))
+		fileURL += strlen(fl->buildRootURL);
+	    else {
+		rpmError(RPMERR_BADSPEC, _("File doesn't match buildroot (%s): %s\n"),
+			fl->buildRootURL, fileURL);
+		fl->processingFailed = 1;
+		return RPMERR_BADSPEC;
+	    }
+	}
     }
 
     /* XXX make sure '/' can be packaged also */
@@ -1534,6 +1604,21 @@ static int addFile(FileList fl, const char * diskURL,
     if (*fileURL == '\0')
 	fileURL = "/";
     /*@=branchstate@*/
+
+    /* cannot happen?! */
+    if (*fileURL != '/') {
+	rpmError(RPMERR_BADSPEC,
+	    _("File must begin with \"/\": %s\n"), fileURL);
+	fl->processingFailed = 1;
+	return RPMERR_BADSPEC;
+    }
+
+    if (!pathIsCanonical(fileURL)) {
+	rpmError(RPMERR_BADSPEC,
+	    _("File path must be canonical: %s\n"), fileURL);
+	fl->processingFailed = 1;
+	return RPMERR_BADSPEC;
+    }
 
     /* If we are using a prefix, validate the file */
     if (!fl->inFtw && fl->prefix) {
@@ -1573,6 +1658,31 @@ static int addFile(FileList fl, const char * diskURL,
 	    rpmError(RPMERR_BADSPEC, _("File not found: %s\n"), diskURL);
 	    fl->processingFailed = 1;
 	    return RPMERR_BADSPEC;
+	}
+    }
+
+    /* intermediate path component must be directories, not symlinks */
+    {
+	struct stat st;
+	size_t du_len = strlen(diskURL);
+	char *du = alloca(du_len + 1);
+	char *p = du + du_len - strlen(fileURL);
+	strcpy(du, diskURL);
+	while ((p = strchr(p + 1, '/'))) {
+	    *p = '\0';
+	    if (Lstat(du, &st)) {
+		rpmError(RPMERR_BADSPEC, _("File not found: %s\n"), diskURL);
+		fl->processingFailed = 1;
+		return RPMERR_BADSPEC;
+	    }
+	    if (!S_ISDIR(st.st_mode)) {
+		rpmError(RPMERR_BADSPEC,
+			_("File path component must be directory (%s): %s\n"),
+			du, diskURL);
+		fl->processingFailed = 1;
+		return RPMERR_BADSPEC;
+	    }
+	    *p = '/';
 	}
     }
 
