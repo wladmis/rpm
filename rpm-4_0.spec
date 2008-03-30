@@ -80,7 +80,7 @@ Group: Development/C
 Provides: %name-devel = %version-%release
 Obsoletes: %name-devel
 Requires: lib%name = %version-%release, librpmbuild = %version-%release
-Requires: bzlib-devel, libbeecrypt-devel, libdb4.4-devel, libpopt-devel, zlib-devel
+Requires: libpopt-devel
 
 %package -n lib%name-devel-static
 Summary: Static libraries for developing statically linked applications which will manipulate RPM packages
