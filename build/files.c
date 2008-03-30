@@ -3181,6 +3181,95 @@ exit:
     return rc;
 }
 
+/* Written by Alexey Tourbin! */
+typedef struct MyFileList {
+    const char **bn, **dn;
+    int_32 *di;
+    int_16 *md;
+    int_32 bnt, dnt, dit, mdt;
+    int_32 bnc, dnc, dic, mdc;
+} MyFileList;
+
+static
+int fillMyFileList(MyFileList *l, Header h)
+{
+    if (!headerGetEntry(h, RPMTAG_BASENAMES, &l->bnt, (void**)&l->bn, &l->bnc))
+	return 1;
+    if (!headerGetEntry(h, RPMTAG_DIRNAMES, &l->dnt, (void**)&l->dn, &l->dnc)) {
+	headerFreeData(l->bn, l->bnt);
+	return 1;
+    }
+    if (!headerGetEntry(h, RPMTAG_DIRINDEXES, &l->dit, (void**)&l->di, &l->dic)) {
+	headerFreeData(l->bn, l->bnt);
+	headerFreeData(l->dn, l->dnt);
+	return 1;
+    }
+    if (!headerGetEntry(h, RPMTAG_FILEMODES, &l->mdt, (void**)&l->md, &l->mdc)) {
+	headerFreeData(l->bn, l->bnt);
+	headerFreeData(l->dn, l->dnt);
+	headerFreeData(l->di, l->dit);
+	return 1;
+    }
+    assert(l->bnc == l->dic);
+    assert(l->bnc == l->mdc);
+    return 0;
+}
+
+static
+void freeMyFileList(MyFileList *l)
+{
+	headerFreeData(l->bn, l->bnt);
+	headerFreeData(l->dn, l->dnt);
+	headerFreeData(l->di, l->dit);
+	headerFreeData(l->md, l->mdt);
+}
+
+static
+void checkHdrIntersect(Header h1, Header h2)
+{
+    MyFileList l1 = {0}, l2 = {0};
+    const char *N1 = NULL, *N2 = NULL;
+    int_32 i1, i2;
+    if (fillMyFileList(&l1, h1) != 0)
+	return;
+    if (fillMyFileList(&l2, h2) != 0) {
+	freeMyFileList(&l1);
+	return;
+    }
+    for (i1 = 0; i1 < l1.bnc; i1++) {
+		const mode_t m1 = l1.md[i1];
+		const char  *b1 = l1.bn[i1];
+		const char  *d1 = l1.dn[l1.di[i1]];
+		if (S_ISDIR(m1))
+		    continue;
+	for (i2 = 0; i2 < l2.bnc; i2++) {
+		const mode_t m2 = l2.md[i2];
+		const char  *b2 = l2.bn[i2];
+		const char  *d2 = l2.dn[l2.di[i2]];
+		if (S_ISDIR(m2))
+		    continue;
+	    if (strcmp(b1, b2) || strcmp(d1, d2))
+		continue;
+	    if (!N1) headerNVR(h1, &N1, NULL, NULL);
+	    if (!N2) headerNVR(h2, &N2, NULL, NULL);
+	    rpmMessage(RPMMESS_WARNING,
+		    _("file %s%s is packaged into both %s and %s\n"),
+		    d1, b1, N1, N2);
+	}
+    }
+    freeMyFileList(&l1);
+    freeMyFileList(&l2);
+}
+
+static
+void checkSpecIntersect(Spec spec)
+{
+    Package pkg1, pkg2;
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next)
+	    checkHdrIntersect(pkg1->header, pkg2->header);
+}
+
 int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 {
     Package pkg;
@@ -3224,8 +3313,11 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
      * and duplicated files.
      */
     
-    if (rc == 0 && checkFiles(spec, check_fileList, check_fileListLen) > 0)
-	rc = 1;
+    if (rc == 0) {
+	if (checkFiles(spec, check_fileList, check_fileListLen) > 0)
+	    rc = 1;
+	checkSpecIntersect(spec);
+    }
 
     check_fileListLen = 0;
     freeStringBuf(check_fileList);
