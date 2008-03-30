@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt89
+Release: alt90
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -542,6 +542,14 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Mar 30 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt90
+- reverted the rest of dependency optimization
+- stripped redundant librpm-devel dependencies
+- build/files.c: fixed a few possibilities of invalid cpio entries, including
+  `dir/.*' construct in %%files section (which globs `dir/.' and `dir/..',
+  and thus should not be used in specfiles)
+- lib/psm.c: in syslog messages, discriminate between no epoch and zero epoch
+
 * Mon Mar 03 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt89
 - platform.in: Changed several macro definitions to avoid extra
   autodependencies when used in shell scripts.
