@@ -564,6 +564,7 @@ fi
 - build/parseScript.c: optimize out RPMSENSE_INTERP dependencies on /bin/sh
 - lib.req: enabled ELF_INTERP dependencies except for standard /lib/ld-linux.so.2
 - functions (ValidateBuildRoot): require RPM_BUILD_ROOT path be canonical
+  (you may need to adjust %%_tmppath in ~/.rpmmacros)
 
 * Fri Feb 22 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt86
 - pam.req: Added substack support.
