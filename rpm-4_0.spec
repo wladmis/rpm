@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt90
+Release: alt91
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -542,6 +542,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Mar 31 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt91
+- build/files.c: check if the same files are packaged into a few subpackages
+
 * Sun Mar 30 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt90
 - reverted the rest of dependency optimization
 - stripped redundant librpm-devel dependencies
