@@ -6,7 +6,7 @@
 ShebangReq()
 {
 	local f="$1" line=; shift
-	line=$(sed -n '1s|^#![[:space:]]*/|/|p' "$f")
+	line=$(sed -n '1s|^#![[:space:]]*/|/|p;q' "$f")
 	[ -n "$line" ] || return 0
 	set -- $line
 	case "$#,$1" in
