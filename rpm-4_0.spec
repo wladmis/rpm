@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt91
+Release: alt92
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -542,6 +542,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Apr 08 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt92
+- shebang.req: Do not read the whole script (Alexey Tourbin).
+- rpmReadPackageManifest: Fixed comments handling.
+
 * Mon Mar 31 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt91
 - build/files.c: check if the same files are packaged into a few subpackages
 
