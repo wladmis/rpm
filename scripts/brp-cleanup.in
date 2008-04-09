@@ -55,6 +55,7 @@ find .$RPM_CLEANUP_TOPDIR -type f \(	\
 	-o -name .SUMS	\
 	-o -name TAGS	\
 	-o -name core	\
+	-o -name .cvsignore	\
 	-o \( -path '*/.deps/*' -a -name '*.P' \)	\
 	\) -print0 |
 		xargs -r0 rm -vf --
