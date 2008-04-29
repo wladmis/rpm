@@ -2639,7 +2639,7 @@ static int lzflush(LZFILE *lzfile)
 static int lzclose(LZFILE *lzfile)
 {
     lzma_ret ret;
-    int n;
+    int n, rc;
 
     if (!lzfile)
 	return -1;
@@ -2658,8 +2658,9 @@ static int lzclose(LZFILE *lzfile)
 	}
     }
     lzma_end(&lzfile->strm);
-    return fclose(lzfile->file);
+    rc = fclose(lzfile->file);
     free(lzfile);
+    return rc;
 }
 
 static ssize_t lzread(LZFILE *lzfile, void *buf, size_t len)
