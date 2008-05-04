@@ -280,7 +280,7 @@
 @alt@%{__spec_clean_custom_post}\
 @alt@%nil
 @alt@
-@alt@%_fixperms	%{__chmod} -Rf u+rwX,go-w
+@alt@%_fixperms	%{__chmod} -c -Rf u+rwX,go-w
 @alt@
 @alt@%_internal_gpg_path	/usr/lib/alt-gpgkeys
 @alt@
