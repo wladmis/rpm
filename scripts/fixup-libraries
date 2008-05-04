@@ -42,7 +42,7 @@ for file in "$@"; do
 
 			[ -n "${file##*/lib64/ld-*.so}" ] || continue
 
-			chmod -v u+w,a-x,ug-s "$file"
+			chmod -c u+w,a-x,ug-s "$file"
 			;;
 	esac
 done
