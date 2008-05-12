@@ -147,13 +147,6 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	    if ((ve-v) != strlen(rc->token) || strncmp(v, rc->token, (ve-v)))
 		/*@innercontinue@*/ continue;
 
-	    if (r[0] == '/') {
-		rpmError(RPMERR_BADSPEC,
-			 _("line %d: Versioned file name not permitted: %s\n"),
-			 spec->lineNum, (spec->fileStack ? spec->line : field));
-		return RPMERR_BADSPEC;
-	    }
-
 	    switch(tag) {
 	    case RPMTAG_BUILDPREREQ:
 	    case RPMTAG_PREREQ:
