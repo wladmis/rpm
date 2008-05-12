@@ -1221,8 +1221,7 @@ static int unsatisfiedDepend(rpmTransactionSet ts,
 
     /* XXX only the installer does not have the database open here. */
     if (ts->rpmdb != NULL) {
-	if (*keyName == '/') {
-	    /* keyFlags better be 0! */
+	if (*keyName == '/' && (keyFlags & RPMSENSE_SENSEMASK) == 0) {
 
 	    mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_BASENAMES, keyName, 0);
 
