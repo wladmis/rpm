@@ -875,58 +875,68 @@ static fileAction decideFileFate(const char * dirName,
     return save;
 }
 
-static int filecmp(short mode1, const char * md51, const char * link1,
-	           short mode2, const char * md52, const char * link2)
+static int filecmp(const TFI_t fi1, const int ix1, const TFI_t fi2, const int ix2)
 	/*@*/
 {
-    fileTypes what1 = whatis(mode1);
-    fileTypes what2 = whatis(mode2);
+    uint_16 m1 = fi1->fmodes[ix1], m2 = fi2->fmodes[ix2];
+    uint_32 f1 = fi1->fflags[ix1], f2 = fi2->fflags[ix2];
+    const char *u1 = fi1->fuser[ix1], *u2 = fi2->fuser[ix2];
+    const char *g1 = fi1->fgroup[ix1], *g2 = fi2->fgroup[ix2];
 
-    if (what1 != what2) return 1;
+    /* both file type and permissions must match */
+    if (m1 != m2)
+	return 1;
 
-    if (what1 == LINK)
-	return strcmp(link1, link2);
-    else if (what1 == REG)
-	return strcmp(md51, md52);
+    /* ownership must also match */
+    if (strcmp(u1, u2) || strcmp(g1, g2))
+	return 1;
 
+    if ((f1 | f2) & RPMFILE_GHOST)
+	/* one or both %ghost files, no extra check */
+	;
+    else if (S_ISLNK(m1)) {
+	/* symlinks must have the same target */
+	const char *l1 = fi1->flinks[ix1], *l2 = fi2->flinks[ix2];
+	if (strcmp(l1, l2))
+	    return 1;
+    }
+    else if (S_ISREG(m1)) {
+	/* regular files must have the same md5 sum */
+	const char *md51 = fi1->fmd5s[ix1], *md52 = fi2->fmd5s[ix2];
+	if (strcmp(md51, md52))
+	    return 1;
+    }
+
+    /* e.g. mtime difference is immaterial */
     return 0;
 }
 
-static int handleInstInstalledFiles(TFI_t fi, /*@null@*/ rpmdb db,
+static int handleInstInstalledFiles(const TFI_t fi, /*@null@*/ rpmdb db,
 			            struct sharedFileInfo * shared,
 			            int sharedCount, int reportConflicts,
 				    rpmProblemSet probs,
 				    rpmtransFlags transFlags)
 	/*@modifies fi, db, probs @*/
 {
-    HGE_t hge = fi->hge;
-    HFD_t hfd = (fi->hfd ? fi->hfd : headerFreeData);
-    rpmTagType oltype, omtype;
-    Header h;
     int i;
-    const char ** otherMd5s;
-    const char ** otherLinks;
-    const char * otherStates;
-    uint_32 * otherFlags;
-    uint_32 * otherSizes;
-    uint_16 * otherModes;
     int numReplaced = 0;
 
     rpmdbMatchIterator mi;
+    Header h;
+    TFI_t otherFi;
 
     mi = rpmdbInitIterator(db, RPMDBI_PACKAGES, &shared->otherPkg, sizeof(shared->otherPkg));
     h = rpmdbNextIterator(mi);
-    if (h == NULL) {
+    if (h) {
+	otherFi = alloca(sizeof(*otherFi));
+	memset(otherFi, 0, sizeof(*otherFi));
+	fi->type = TR_ADDED; /* load fuser and fgroup */
+	loadFi(h, otherFi);
+    }
+    else {
 	mi = rpmdbFreeIterator(mi);
 	return 1;
     }
-
-    (void) hge(h, RPMTAG_FILEMD5S, &omtype, (void **) &otherMd5s, NULL);
-    (void) hge(h, RPMTAG_FILELINKTOS, &oltype, (void **) &otherLinks, NULL);
-    (void) hge(h, RPMTAG_FILESTATES, NULL, (void **) &otherStates, NULL);
-    (void) hge(h, RPMTAG_FILEMODES, NULL, (void **) &otherModes, NULL);
-    (void) hge(h, RPMTAG_FILEFLAGS, NULL, (void **) &otherFlags, NULL);
-    (void) hge(h, RPMTAG_FILESIZES, NULL, (void **) &otherSizes, NULL);
 
     fi->replaced = xmalloc(sharedCount * sizeof(*fi->replaced));
 
@@ -936,22 +946,17 @@ static int handleInstInstalledFiles(TFI_t fi, /*@null@*/ rpmdb db,
 	fileNum = shared->pkgFileNum;
 
 	/* XXX another tedious segfault, assume file state normal. */
-	if (otherStates && otherStates[otherFileNum] != RPMFILE_STATE_NORMAL)
+	if (otherFi->fstates && otherFi->fstates[otherFileNum] != RPMFILE_STATE_NORMAL)
 	    continue;
 
 	if (XFA_SKIPPING(fi->actions[fileNum]))
 	    continue;
 
-	if (filecmp(otherModes[otherFileNum],
-			otherMd5s[otherFileNum],
-			otherLinks[otherFileNum],
-			fi->fmodes[fileNum],
-			fi->fmd5s[fileNum],
-			fi->flinks[fileNum])) {
+	if (filecmp(otherFi, otherFileNum, fi, fileNum)) {
 	    if (reportConflicts)
 		psAppend(probs, RPMPROB_FILE_CONFLICT, fi->ap,
 			fi->dnl[fi->dil[fileNum]], fi->bnl[fileNum], h, 0);
-	    if (!(otherFlags[otherFileNum] | fi->fflags[fileNum])
+	    if (!(otherFi->fflags[otherFileNum] | fi->fflags[fileNum])
 			& RPMFILE_CONFIG) {
 		/*@-assignexpose@*/
 		if (!shared->isRemoved)
@@ -960,13 +965,13 @@ static int handleInstInstalledFiles(TFI_t fi, /*@null@*/ rpmdb db,
 	    }
 	}
 
-	if ((otherFlags[otherFileNum] | fi->fflags[fileNum]) & RPMFILE_CONFIG) {
+	if ((otherFi->fflags[otherFileNum] | fi->fflags[fileNum]) & RPMFILE_CONFIG) {
 	    fi->actions[fileNum] = decideFileFate(
 			fi->dnl[fi->dil[fileNum]],
 			fi->bnl[fileNum],
-			otherModes[otherFileNum],
-			otherMd5s[otherFileNum],
-			otherLinks[otherFileNum],
+			otherFi->fmodes[otherFileNum],
+			otherFi->fmd5s[otherFileNum],
+			otherFi->flinks[otherFileNum],
 			fi->fmodes[fileNum],
 			fi->fmd5s[fileNum],
 			fi->flinks[fileNum],
@@ -974,11 +979,10 @@ static int handleInstInstalledFiles(TFI_t fi, /*@null@*/ rpmdb db,
 			transFlags);
 	}
 
-	fi->replacedSizes[fileNum] = otherSizes[otherFileNum];
+	fi->replacedSizes[fileNum] = otherFi->fsizes[otherFileNum];
     }
 
-    otherMd5s = hfd(otherMd5s, omtype);
-    otherLinks = hfd(otherLinks, oltype);
+    otherFi = freeFi(otherFi);
     mi = rpmdbFreeIterator(mi);
 
     fi->replaced = xrealloc(fi->replaced,
@@ -1140,12 +1144,7 @@ static void handleOverlappedFiles(TFI_t fi, hashTable ht,
 	    }
 
 	    /* Mark added overlapped non-identical files as a conflict. */
-	    if (probs && filecmp(recs[otherPkgNum]->fmodes[otherFileNum],
-			recs[otherPkgNum]->fmd5s[otherFileNum],
-			recs[otherPkgNum]->flinks[otherFileNum],
-			fi->fmodes[i],
-			fi->fmd5s[i],
-			fi->flinks[i])) {
+	    if (probs && filecmp(recs[otherPkgNum], otherFileNum, fi, i)) {
 		psAppend(probs, RPMPROB_NEW_FILE_CONFLICT, fi->ap,
 				filespec, NULL, recs[otherPkgNum]->ap->h, 0);
 	    }

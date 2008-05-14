@@ -185,6 +185,9 @@ void loadFi(Header h, TFI_t fi)
 	rc = hge(fi->h, RPMTAG_FILEMTIMES, NULL, (void **) &fi->fmtimes, NULL);
 	rc = hge(fi->h, RPMTAG_FILERDEVS, NULL, (void **) &fi->frdevs, NULL);
 
+	rc = hge(fi->h, RPMTAG_FILEUSERNAME, NULL, (void **) &fi->fuser, NULL);
+	rc = hge(fi->h, RPMTAG_FILEGROUPNAME, NULL, (void **) &fi->fgroup, NULL);
+
 	/* 0 makes for noops */
 	fi->replacedSizes = xcalloc(fi->fc, sizeof(*fi->replacedSizes));
 
@@ -233,7 +236,7 @@ void loadFi(Header h, TFI_t fi)
     /*@=nullstate@*/
 }
 
-void freeFi(TFI_t fi)
+TFI_t freeFi(TFI_t fi)
 {
     HFD_t hfd = (fi->hfd ? fi->hfd : headerFreeData);
 
@@ -276,9 +279,7 @@ void freeFi(TFI_t fi)
 
     fi->h = headerFree(fi->h);
 
-    /*@-nullstate@*/
-    return;
-    /*@=nullstate@*/
+    return NULL;
 }
 
 /*@observer@*/ const char * fiTypeString(TFI_t fi)

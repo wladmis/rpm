@@ -208,8 +208,9 @@ void loadFi(Header h, TFI_t fi)
 /**
  * Destroy transaction element file info.
  * @param fi		transaction element file info
+ * @return		NULL always
  */
-void freeFi(TFI_t fi)
+TFI_t freeFi(TFI_t fi)
 	/*@modifies fi @*/;
 
 /**
