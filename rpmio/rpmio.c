@@ -2134,16 +2134,26 @@ static inline /*@dependent@*/ /*@null@*/ void * gzdFileno(FD_t fd)
     return rc;
 }
 
+typedef struct rpmGZFILE_s {
+	gzFile gz;			/* gzFile is a pointer */
+} rpmGZFILE;				/* like FILE, to use with star */
+
 static /*@null@*/ FD_t gzdOpen(const char * path, const char * fmode)
 	/*@globals fileSystem @*/
 	/*@modifies fileSystem @*/
 {
     FD_t fd;
-    gzFile *gzfile;
-    if ((gzfile = gzopen(path, fmode)) == NULL)
+    rpmGZFILE *rpmgz;
+    rpmgz = calloc(1, sizeof(*rpmgz));
+    if (!rpmgz)
 	return NULL;
+    rpmgz->gz = gzopen(path, fmode);
+    if (!rpmgz->gz) {
+	free(rpmgz);
+	return NULL;
+    }
     fd = fdNew("open (gzdOpen)");
-    fdPop(fd); fdPush(fd, gzdio, gzfile, -1);
+    fdPop(fd); fdPush(fd, gzdio, rpmgz, -1);
     
 /*@-modfilesys@*/
 DBGIO(fd, (stderr, "==>\tgzdOpen(\"%s\", \"%s\") fd %p %s\n", path, fmode, (fd ? fd : NULL), fdbg(fd)));
@@ -2158,16 +2168,22 @@ static /*@null@*/ FD_t gzdFdopen(void * cookie, const char *fmode)
 {
     FD_t fd = c2f(cookie);
     int fdno;
-    gzFile *gzfile;
+    rpmGZFILE *rpmgz;
 
     if (fmode == NULL) return NULL;
     fdno = fdFileno(fd);
     fdSetFdno(fd, -1);		/* XXX skip the fdio close */
     if (fdno < 0) return NULL;
-    gzfile = gzdopen(fdno, fmode);
-    if (gzfile == NULL) return NULL;
+    rpmgz = calloc(1, sizeof(*rpmgz));
+    if (!rpmgz)
+	return NULL;
+    rpmgz->gz = gzdopen(fdno, fmode);
+    if (!rpmgz->gz) {
+	free(rpmgz);
+	return NULL;
+    }
 
-    fdPush(fd, gzdio, gzfile, fdno);		/* Push gzdio onto stack */
+    fdPush(fd, gzdio, rpmgz, fdno);		/* Push gzdio onto stack */
 
     return fdLink(fd, "gzdFdopen");
 }
@@ -2178,10 +2194,10 @@ static int gzdFlush(FD_t fd)
 	/*@globals fileSystem @*/
 	/*@modifies fileSystem @*/
 {
-    gzFile *gzfile;
-    gzfile = gzdFileno(fd);
-    if (gzfile == NULL) return -2;
-    return gzflush(gzfile, Z_SYNC_FLUSH);	/* XXX W2DO? */
+    rpmGZFILE *rpmgz;
+    rpmgz = gzdFileno(fd);
+    if (rpmgz == NULL) return -2;
+    return gzflush(rpmgz->gz, Z_SYNC_FLUSH);	/* XXX W2DO? */
 }
 /*@=globuse@*/
 
@@ -2192,24 +2208,24 @@ static ssize_t gzdRead(void * cookie, /*@out@*/ char * buf, size_t count)
 	/*@modifies *buf, fileSystem, internalState @*/
 {
     FD_t fd = c2f(cookie);
-    gzFile *gzfile;
+    rpmGZFILE *rpmgz;
     ssize_t rc;
 
     if (fd == NULL || fd->bytesRemain == 0) return 0;	/* XXX simulate EOF */
 
-    gzfile = gzdFileno(fd);
-    if (gzfile == NULL) return -2;	/* XXX can't happen */
+    rpmgz = gzdFileno(fd);
+    if (rpmgz == NULL) return -2;	/* XXX can't happen */
 
     fdstat_enter(fd, FDSTAT_READ);
     /*@-compdef@*/ /* LCL: *buf is undefined */
-    rc = gzread(gzfile, buf, count);
+    rc = gzread(rpmgz->gz, buf, count);
 /*@-modfilesys@*/
 DBGIO(fd, (stderr, "==>\tgzdRead(%p,%p,%u) rc %lx %s\n", cookie, buf, (unsigned)count, (unsigned long)rc, fdbg(fd)));
 /*@=modfilesys@*/
     /*@=compdef@*/
     if (rc < 0) {
 	int zerror = 0;
-	fd->errcookie = gzerror(gzfile, &zerror);
+	fd->errcookie = gzerror(rpmgz->gz, &zerror);
 	if (zerror == Z_ERRNO) {
 	    fd->syserrno = errno;
 	    fd->errcookie = strerror(fd->syserrno);
@@ -2229,24 +2245,24 @@ static ssize_t gzdWrite(void * cookie, const char * buf, size_t count)
 	/*@modifies fileSystem, internalState @*/
 {
     FD_t fd = c2f(cookie);
-    gzFile *gzfile;
+    rpmGZFILE *rpmgz;
     ssize_t rc;
 
     if (fd == NULL || fd->bytesRemain == 0) return 0;	/* XXX simulate EOF */
 
     if (fd->ndigests && count > 0) fdUpdateDigests(fd, buf, count);
 
-    gzfile = gzdFileno(fd);
-    if (gzfile == NULL) return -2;	/* XXX can't happen */
+    rpmgz = gzdFileno(fd);
+    if (rpmgz == NULL) return -2;	/* XXX can't happen */
 
     fdstat_enter(fd, FDSTAT_WRITE);
-    rc = gzwrite(gzfile, (void *)buf, count);
+    rc = gzwrite(rpmgz->gz, (void *)buf, count);
 /*@-modfilesys@*/
 DBGIO(fd, (stderr, "==>\tgzdWrite(%p,%p,%u) rc %lx %s\n", cookie, buf, (unsigned)count, (unsigned long)rc, fdbg(fd)));
 /*@=modfilesys@*/
     if (rc < 0) {
 	int zerror = 0;
-	fd->errcookie = gzerror(gzfile, &zerror);
+	fd->errcookie = gzerror(rpmgz->gz, &zerror);
 	if (zerror == Z_ERRNO) {
 	    fd->syserrno = errno;
 	    fd->errcookie = strerror(fd->syserrno);
@@ -2270,22 +2286,22 @@ static inline int gzdSeek(void * cookie, _libio_pos_t pos, int whence)
     int rc;
 #if HAVE_GZSEEK
     FD_t fd = c2f(cookie);
-    gzFile *gzfile;
+    rpmGZFILE *rpmgz;
 
     if (fd == NULL) return -2;
     assert(fd->bytesRemain == -1);	/* XXX FIXME */
 
-    gzfile = gzdFileno(fd);
-    if (gzfile == NULL) return -2;	/* XXX can't happen */
+    rpmgz = gzdFileno(fd);
+    if (rpmgz == NULL) return -2;	/* XXX can't happen */
 
     fdstat_enter(fd, FDSTAT_SEEK);
-    rc = gzseek(gzfile, p, whence);
+    rc = gzseek(rpmgz->gz, p, whence);
 /*@-modfilesys@*/
 DBGIO(fd, (stderr, "==>\tgzdSeek(%p,%ld,%d) rc %lx %s\n", cookie, (long)p, whence, (unsigned long)rc, fdbg(fd)));
 /*@=modfilesys@*/
     if (rc < 0) {
 	int zerror = 0;
-	fd->errcookie = gzerror(gzfile, &zerror);
+	fd->errcookie = gzerror(rpmgz->gz, &zerror);
 	if (zerror == Z_ERRNO) {
 	    fd->syserrno = errno;
 	    fd->errcookie = strerror(fd->syserrno);
@@ -2304,15 +2320,16 @@ static int gzdClose( /*@only@*/ void * cookie)
 	/*@modifies fileSystem, internalState @*/
 {
     FD_t fd = c2f(cookie);
-    gzFile *gzfile;
+    rpmGZFILE *rpmgz;
     int rc;
 
-    gzfile = gzdFileno(fd);
-    if (gzfile == NULL) return -2;	/* XXX can't happen */
+    rpmgz = gzdFileno(fd);
+    if (rpmgz == NULL) return -2;	/* XXX can't happen */
 
     fdstat_enter(fd, FDSTAT_CLOSE);
     /*@-dependenttrans@*/
-    rc = gzclose(gzfile);
+    rc = gzclose(rpmgz->gz);
+    free(rpmgz);
     /*@=dependenttrans@*/
 
     /* XXX TODO: preserve fd if errors */
