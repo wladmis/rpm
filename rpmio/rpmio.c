@@ -2286,18 +2286,20 @@ rsyncable_gzwrite(rpmGZFILE *rpmgz, const unsigned char *const buf, const size_t
 	size_t n = i + 1 - (begin - buf);
 	rc = gzwrite(rpmgz->gz, begin, n);
 	if (rc < 0)
-	    return rc;
+	    return n_written ? n_written : rc;
 	n_written += rc;
+	if (rc < n)
+	    return n_written;
 	begin += n;
 	rc = gzflush(rpmgz->gz, Z_SYNC_FLUSH);
 	if (rc < 0)
-	    return rc;
+	    return n_written ? n_written : rc;
     }
     if (begin < buf + len) {
 	size_t n = len - (begin - buf);
 	rc = gzwrite(rpmgz->gz, begin, n);
 	if (rc < 0)
-	    return rc;
+	    return n_written ? n_written : rc;
 	n_written += rc;
     }
     return n_written;
@@ -2323,16 +2325,16 @@ static ssize_t gzdWrite(void * cookie, const char * buf, size_t count)
 /*@-modfilesys@*/
 DBGIO(fd, (stderr, "==>\tgzdWrite(%p,%p,%u) rc %lx %s\n", cookie, buf, (unsigned)count, (unsigned long)rc, fdbg(fd)));
 /*@=modfilesys@*/
-    if (rc < 0) {
+    if (rc < count) {
 	int zerror = 0;
 	fd->errcookie = gzerror(rpmgz->gz, &zerror);
 	if (zerror == Z_ERRNO) {
 	    fd->syserrno = errno;
 	    fd->errcookie = strerror(fd->syserrno);
 	}
-    } else if (rc > 0) {
-	fdstat_exit(fd, FDSTAT_WRITE, rc);
     }
+    if (rc > 0)
+	fdstat_exit(fd, FDSTAT_WRITE, rc);
     return rc;
 }
 
