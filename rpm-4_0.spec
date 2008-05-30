@@ -51,8 +51,11 @@ Requires: glibc-core
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 
-# Automatically added by buildreq on Tue Mar 25 2008 and edited manually.
-BuildRequires: bzlib-devel-static glibc-devel-static libbeecrypt-devel-static libdb4.4-devel-static libpopt-devel-static zlib-devel-static
+# Must be installable with older rpm without lzma payload support.
+%define _binary_payload w9.gzdio
+
+# Automatically added by buildreq on Sat May 24 2008 and edited manually.
+BuildRequires: bzlib-devel-static libbeecrypt-devel-static libdb4.4-devel-static libelf-devel-static liblzma-devel-static libpopt-devel-static python-devel zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
