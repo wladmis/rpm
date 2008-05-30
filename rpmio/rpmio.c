@@ -2137,6 +2137,13 @@ static inline /*@dependent@*/ /*@null@*/ void * gzdFileno(FD_t fd)
 #include <stdint.h>
 #include <stdbool.h>
 
+struct cpio_state {
+	uint32_t n;			/* byte progress in cpio header */
+	uint32_t mode;			/* file attributes */
+	uint32_t nlnk;
+	uint32_t size;
+};
+
 #define RSYNC_WIN 4096
 
 struct rsync_state {
@@ -2148,6 +2155,8 @@ struct rsync_state {
 typedef struct rpmGZFILE_s {
 	gzFile gz;			/* gzFile is a pointer */
 	struct rsync_state rs;
+	struct cpio_state cs;
+	uint32_t nb;			/* bytes pending for sync */
 } rpmGZFILE;				/* like FILE, to use with star */
 
 static /*@null@*/ FD_t gzdOpen(const char * path, const char * fmode)
@@ -2252,6 +2261,75 @@ DBGIO(fd, (stderr, "==>\tgzdRead(%p,%p,%u) rc %lx %s\n", cookie, buf, (unsigned)
 }
 /*@=mustmod@*/
 
+/* from ../lib/cpio.h */
+#define CPIO_NEWC_MAGIC "070701"
+#define PHYS_HDR_SIZE 110
+
+#define OFFSET_MODE (sizeof(CPIO_NEWC_MAGIC)-1 + 1*8)
+#define OFFSET_NLNK (sizeof(CPIO_NEWC_MAGIC)-1 + 4*8)
+#define OFFSET_SIZE (sizeof(CPIO_NEWC_MAGIC)-1 + 6*8)
+
+static inline
+int hex(unsigned char c)
+{
+    if (c >= '0' && c <= '9')
+	return c - '0';
+    else if (c >= 'a' && c <= 'f')
+	return c - 'a' + 10;
+    else if (c >= 'A' && c <= 'F')
+	return c - 'A' + 10;
+    return -1;
+}
+
+static inline
+bool cpio_next(struct cpio_state *s, unsigned char c)
+{
+    if (s->n >= sizeof(CPIO_NEWC_MAGIC)-1) {
+	int d = hex(c);
+	if (d < 0) {
+	    s->n = 0;
+	    return false;
+	}
+	if (0); /* indent */
+	else if (s->n >= OFFSET_MODE && s->n < OFFSET_MODE+8) {
+	    if (s->n == OFFSET_MODE)
+		s->mode = 0;
+	    else
+		s->mode <<= 4;
+	    s->mode |= d;
+	}
+	else if (s->n >= OFFSET_NLNK && s->n < OFFSET_NLNK+8) {
+	    if (s->n == OFFSET_NLNK)
+		s->nlnk = 0;
+	    else
+		s->nlnk <<= 4;
+	    s->nlnk |= d;
+	}
+	else if (s->n >= OFFSET_SIZE && s->n < OFFSET_SIZE+8) {
+	    if (s->n == OFFSET_SIZE)
+		s->size = 0;
+	    else
+		s->size <<= 4;
+	    s->size |= d;
+	}
+	s->n++;
+	if (s->n >= PHYS_HDR_SIZE) {
+	    s->n = 0;
+	    if (!S_ISREG(s->mode) || s->nlnk != 1)
+		/* no file data */
+		s->size = 0;
+	    return true;
+	}
+    }
+    else if (CPIO_NEWC_MAGIC[s->n] == c) {
+	s->n++;
+    }
+    else {
+	s->n = 0;
+    }
+    return false;
+}
+
 static inline
 bool rsync_next(struct rsync_state *s, unsigned char c)
 {
@@ -2272,6 +2350,38 @@ bool rsync_next(struct rsync_state *s, unsigned char c)
 	return false;
 }
 
+static inline
+bool sync_hint(rpmGZFILE *rpmgz, unsigned char c)
+{
+    rpmgz->nb++;
+    bool cpio_hint = cpio_next(&rpmgz->cs, c);
+    if (cpio_hint) {
+	/* cpio header/data boundary */
+	rpmgz->rs.n = rpmgz->rs.sum = 0;
+#define CHUNK 4096
+	if (rpmgz->nb >= 2*CHUNK)
+	    /* better sync here */
+	    goto cpio_sync;
+	if (rpmgz->cs.size < CHUNK)
+	    /* file is too small */
+	    return false;
+	if (rpmgz->nb < CHUNK/2)
+	    /* not enough pending bytes */
+	    return false;
+    cpio_sync:
+	rpmgz->nb = 0;
+	return true;
+    }
+    bool rsync_hint = rsync_next(&rpmgz->rs, c);
+    if (rsync_hint) {
+	/* rolling checksum match */
+	assert(rpmgz->nb >= RSYNC_WIN);
+	rpmgz->nb = 0;
+	return true;
+    }
+    return false;
+}
+
 static ssize_t
 rsyncable_gzwrite(rpmGZFILE *rpmgz, const unsigned char *const buf, const size_t len)
 {
@@ -2281,7 +2391,7 @@ rsyncable_gzwrite(rpmGZFILE *rpmgz, const unsigned char *const buf, const size_t
     size_t i;
 
     for (i = 0; i < len; i++) {
-	if (!rsync_next(&rpmgz->rs, buf[i]))
+	if (!sync_hint(rpmgz, buf[i]))
 	    continue;
 	size_t n = i + 1 - (begin - buf);
 	rc = gzwrite(rpmgz->gz, begin, n);
