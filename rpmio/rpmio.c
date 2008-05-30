@@ -2134,8 +2134,20 @@ static inline /*@dependent@*/ /*@null@*/ void * gzdFileno(FD_t fd)
     return rc;
 }
 
+#include <stdint.h>
+#include <stdbool.h>
+
+#define RSYNC_WIN 4096
+
+struct rsync_state {
+	uint32_t n;			/* number of elements in the window */
+	uint32_t sum;			/* current sum */
+	unsigned char win[RSYNC_WIN];	/* window elements */
+};
+
 typedef struct rpmGZFILE_s {
 	gzFile gz;			/* gzFile is a pointer */
+	struct rsync_state rs;
 } rpmGZFILE;				/* like FILE, to use with star */
 
 static /*@null@*/ FD_t gzdOpen(const char * path, const char * fmode)
@@ -2240,6 +2252,57 @@ DBGIO(fd, (stderr, "==>\tgzdRead(%p,%p,%u) rc %lx %s\n", cookie, buf, (unsigned)
 }
 /*@=mustmod@*/
 
+static inline
+bool rsync_next(struct rsync_state *s, unsigned char c)
+{
+	if (s->n < RSYNC_WIN) {		/* not enough elements */
+		s->sum += c;		/* update the sum */
+		s->win[s->n++] = c;	/* remember the element */
+		return false;		/* no match */
+	}
+	int i = s->n++ % RSYNC_WIN;	/* wrap up */
+	s->sum -= s->win[i];		/* move the window on */
+	s->sum += c;
+	s->win[i] = c;
+	if (s->sum % RSYNC_WIN == 0) {	/* match */
+		s->n = 0;		/* reset */
+		s->sum = 0;
+		return true;
+	}
+	return false;
+}
+
+static ssize_t
+rsyncable_gzwrite(rpmGZFILE *rpmgz, const unsigned char *const buf, const size_t len)
+{
+    ssize_t rc;
+    ssize_t n_written = 0;
+    const unsigned char *begin = buf;
+    size_t i;
+
+    for (i = 0; i < len; i++) {
+	if (!rsync_next(&rpmgz->rs, buf[i]))
+	    continue;
+	size_t n = i + 1 - (begin - buf);
+	rc = gzwrite(rpmgz->gz, begin, n);
+	if (rc < 0)
+	    return rc;
+	n_written += rc;
+	begin += n;
+	rc = gzflush(rpmgz->gz, Z_SYNC_FLUSH);
+	if (rc < 0)
+	    return rc;
+    }
+    if (begin < buf + len) {
+	size_t n = len - (begin - buf);
+	rc = gzwrite(rpmgz->gz, begin, n);
+	if (rc < 0)
+	    return rc;
+	n_written += rc;
+    }
+    return n_written;
+}
+
 static ssize_t gzdWrite(void * cookie, const char * buf, size_t count)
 	/*@globals fileSystem, internalState @*/
 	/*@modifies fileSystem, internalState @*/
@@ -2256,7 +2319,7 @@ static ssize_t gzdWrite(void * cookie, const char * buf, size_t count)
     if (rpmgz == NULL) return -2;	/* XXX can't happen */
 
     fdstat_enter(fd, FDSTAT_WRITE);
-    rc = gzwrite(rpmgz->gz, (void *)buf, count);
+    rc = rsyncable_gzwrite(rpmgz, (void *)buf, count);
 /*@-modfilesys@*/
 DBGIO(fd, (stderr, "==>\tgzdWrite(%p,%p,%u) rc %lx %s\n", cookie, buf, (unsigned)count, (unsigned long)rc, fdbg(fd)));
 /*@=modfilesys@*/
