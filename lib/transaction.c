@@ -942,6 +942,7 @@ static int handleInstInstalledFiles(const TFI_t fi, /*@null@*/ rpmdb db,
 
     for (i = 0; i < sharedCount; i++, shared++) {
 	int otherFileNum, fileNum;
+	int isCfgFile;
 	otherFileNum = shared->otherFileNum;
 	fileNum = shared->pkgFileNum;
 
@@ -952,12 +953,13 @@ static int handleInstInstalledFiles(const TFI_t fi, /*@null@*/ rpmdb db,
 	if (XFA_SKIPPING(fi->actions[fileNum]))
 	    continue;
 
+	isCfgFile = (otherFi->fflags[otherFileNum] | fi->fflags[fileNum]) & RPMFILE_CONFIG;
+
 	if (filecmp(otherFi, otherFileNum, fi, fileNum)) {
 	    if (reportConflicts)
 		psAppend(probs, RPMPROB_FILE_CONFLICT, fi->ap,
 			fi->dnl[fi->dil[fileNum]], fi->bnl[fileNum], h, 0);
-	    if (!(otherFi->fflags[otherFileNum] | fi->fflags[fileNum])
-			& RPMFILE_CONFIG) {
+	    if (!isCfgFile) {
 		/*@-assignexpose@*/
 		if (!shared->isRemoved)
 		    fi->replaced[numReplaced++] = *shared;
@@ -965,7 +967,7 @@ static int handleInstInstalledFiles(const TFI_t fi, /*@null@*/ rpmdb db,
 	    }
 	}
 
-	if ((otherFi->fflags[otherFileNum] | fi->fflags[fileNum]) & RPMFILE_CONFIG) {
+	if (isCfgFile) {
 	    fi->actions[fileNum] = decideFileFate(
 			fi->dnl[fi->dil[fileNum]],
 			fi->bnl[fileNum],
