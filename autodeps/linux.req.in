@@ -87,12 +87,14 @@ RunMethod()
 	local filelist="$workdir/${exe##*/}".files
 	local deplist="$workdir/${exe##*/}".deps
 	Debug "running $filter"
-	"$filter" <"$workdir"/files+types >"$filelist"
+	"$filter" <"$workdir"/files+types >"$filelist" ||
+		Fatal "$filter failed"
 	Verbose "$filter: $(wc -l <"$filelist") files"
 	[ -s "$filelist" ] || return 0
 	# XXX validate $filelist
 	Debug "running $exe"
-	"$exe" <"$filelist" >"$deplist"
+	"$exe" <"$filelist" >"$deplist" ||
+		Fatal "$exe failed"
 	if [ -s "$deplist" ]; then
 		LC_COLLATE=C sort -u -o "$deplist" "$deplist"
 		Verbose "$exe: $(wc -l <"$deplist") dependencies"

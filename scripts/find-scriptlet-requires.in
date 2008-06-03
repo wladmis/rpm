@@ -19,9 +19,11 @@ RunMethod()
 	local file_and_type
 	file_and_type=$(file -L -NF$'\t' "$script")
 	local filtered
-	filtered=$(printf '%s\n' "$file_and_type" |"$filter")
+	filtered=$(printf '%s\n' "$file_and_type" |"$filter") ||
+		Fatal "$filter failed"
 	[ -n "$filtered" ] || return 0
-	printf '%s\n' "$script" |"$exe"
+	printf '%s\n' "$script" |"$exe" ||
+		Fatal "$exe failed"
 }
 
 methods=$(SetupMethods req all)
