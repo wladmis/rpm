@@ -264,6 +264,8 @@
 #
 #%_source_payload	w9.gzdio
 #%_binary_payload	w9.gzdio
+%_source_payload	w2.lzdio
+%_binary_payload	w2.lzdio
 
 #	The signature to use and the location of configuration files for
 #	signing packages with PGP.
