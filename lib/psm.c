@@ -1474,7 +1474,7 @@ assert(psm->mi == NULL);
 	    if (ts->transFlags & RPMTRANS_FLAG_JUSTDB)	break;
 	
 	    /*
-	     * Old format relocateable packages need the entire default
+	     * Old format relocatable packages need the entire default
 	     * prefix stripped to form the cpio list, while all other packages
 	     * need the leading / stripped.
 	     */

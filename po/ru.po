@@ -1846,7 +1846,7 @@ msgid "do not execute package scriptlet(s)"
 msgstr "не исполнять никаких сценариев пакета(ов)"
 
 #: lib/poptI.c:118
-msgid "relocate files in non-relocateable package"
+msgid "relocate files in non-relocatable package"
 msgstr "переместить файлы в неперемещаемом пакете"
 
 #: lib/poptI.c:121
@@ -2241,7 +2241,7 @@ msgstr "пакет %s уже установлен"
 
 #: lib/problems.c:145
 #, c-format
-msgid "path %s in package %s is not relocateable"
+msgid "path %s in package %s is not relocatable"
 msgstr "путь %s в пакете %s - не перемещаемый"
 
 #: lib/problems.c:150
@@ -2613,7 +2613,7 @@ msgstr "не могу открыть базу данных Packages в %s\n"
 
 #: lib/rpminstall.c:464
 #, c-format
-msgid "package %s is not relocateable\n"
+msgid "package %s is not relocatable\n"
 msgstr "пакет %s - не перемещаемый\n"
 
 #: lib/rpminstall.c:513

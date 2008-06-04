@@ -469,7 +469,7 @@ restart:
 		    const char * name;
 		    xx = headerNVR(eiu->h, &name, NULL, NULL);
 		    rpmMessage(RPMMESS_ERROR,
-			       _("package %s is not relocateable\n"), name);
+			       _("package %s is not relocatable\n"), name);
 		    eiu->numFailed++;
 		    goto exit;
 		    /*@notreached@*/
