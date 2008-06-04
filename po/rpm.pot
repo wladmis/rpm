@@ -552,7 +552,7 @@ msgid "relocate files from <oldpath> to <newpath>"
 msgstr ""
 
 #: lib/poptI.c:116 rpm.c:434
-msgid "relocate files in non-relocateable package"
+msgid "relocate files in non-relocatable package"
 msgstr ""
 
 #: rpm.c:435
@@ -2795,7 +2795,7 @@ msgstr ""
 
 #: lib/problems.c:145
 #, c-format
-msgid "path %s in package %s is not relocateable"
+msgid "path %s in package %s is not relocatable"
 msgstr ""
 
 #: lib/problems.c:150
@@ -3162,7 +3162,7 @@ msgstr ""
 
 #: lib/rpminstall.c:396
 #, c-format
-msgid "package %s is not relocateable\n"
+msgid "package %s is not relocatable\n"
 msgstr ""
 
 #: lib/rpminstall.c:445

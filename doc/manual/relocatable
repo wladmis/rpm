@@ -1,4 +1,4 @@
-/*! \page relocateable Relocateable packages
+/*! \page relocatable Relocateable packages
 
 Relocatable packages are a way to give the user a little control
 over the installation location of a package.  For example, a vendor
