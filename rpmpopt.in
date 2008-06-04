@@ -70,12 +70,12 @@ Summary     : %{SUMMARY}\n\
 Description :\n%{DESCRIPTION}\n' \
 	--POPTdesc=$"list descriptive information from package(s)"
 
-rpm	alias --changelog -q --qf '[* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n\n]' \
+rpm	alias --changelog -q --qf '[* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n\n]' \
 	--POPTdesc=$"list change logs for this package"
-rpm	alias --lastchange -q --qf '* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n' \
+rpm	alias --lastchange -q --qf '* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n' \
 	--POPTdesc=$"output last changelog entry for this package"
 rpm	alias --changes-since -q --qf '[%{CHANGELOGNAME:nothing}\
-%|%{CHANGELOGNAME}>!#:+?{* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n\n}:{}|]' \
+%|%{CHANGELOGNAME}>!#:+?{* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n\n}:{}|]' \
 	--POPTdesc=$"list change logs for this package that are fresher than <e:ver-rel> (as indicated by the word next to the packager's email)" \
 	--POPTargs=$"<option>"
 
