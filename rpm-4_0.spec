@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt92
+Release: alt93
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -545,6 +545,22 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Jun 04 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt93
+- rpmio.c: implemented rsyncable gzdio compression
+- rpmio.c: applied SUSE patches for LZMA payload compression
+  and decompression (LZMA compression disabled by default)
+- transaction.c: updated conflict algorithm for overlapping paths:
+  exact st_mode and uid/gid match is required; md5 check is skipped
+  for %%ghost files
+- build/files.c, build/parseReqs.c: allow versioned path dependencies
+- build/files.c: added /usr/share/gtk-doc/html to hardcoded docDirs list
+- build/files.c (isDoc): fixed docDirs match algorithm (Panu Matilainen)
+- scripts, macros: use `chmod -c' where appropriate (verbosity change)
+- rpmpopt (--setugids): use `chown -c -h' (no dereference)
+- rpmpopt (--changelog): remove extra newline after %%{CHANGELOGNAME} (jbj)
+- brp-cleanup: remove .cvsignore files (dottedmag)
+- doc/manual: spelling corrections (jbj)
+
 * Tue Apr 08 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt92
 - shebang.req: Do not read the whole script (Alexey Tourbin).
 - rpmReadPackageManifest: Fixed comments handling.
