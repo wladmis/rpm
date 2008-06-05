@@ -1009,7 +1009,7 @@ static int is_pentium3(void)
 	{
 	    case 7:	// Pentium III, Pentium III Xeon (model 7)
 	    case 8:	// Pentium III, Pentium III Xeon, Celeron (model 8)
-	    case 9:	// Pentium M
+	    case 9:	// Pentium M, Celeron M
 			/*
 			    Intel recently announced its new technology for mobile platforms,
 			    named Centrino, and presents it as a big advance in mobile PCs.
@@ -1024,6 +1024,9 @@ static int is_pentium3(void)
 			*/
 	    case 10:	// Pentium III Xeon (model A)
 	    case 11:	// Pentium III (model B)
+	    case 13:	// Pentium M, Celeron M (90 nm)
+	    case 14:	// Core Duo, Core Solo (65 nm)
+	    case 15:	// Core2 Duo (65 nm)
 		return 1;
 	}
     return 0;
