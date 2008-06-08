@@ -1676,9 +1676,12 @@ assert(psm->mi == NULL);
 	if (psm->goal == PSM_PKGINSTALL) {
 	    struct availablePackage * alp = fi->ap;
 	    int i;
+	    int isSource;
 
 	    if (fi->fc <= 0)				break;
 	    if (ts->transFlags & RPMTRANS_FLAG_JUSTDB)	break;
+
+	    isSource = !headerIsEntry(fi->h, RPMTAG_SOURCERPM);
 
 	    for (i = 0; i < fi->fc; i++) {
 		uid_t uid;
@@ -1686,7 +1689,9 @@ assert(psm->mi == NULL);
 
 		uid = fi->uid;
 		gid = fi->gid;
-		if (fi->fuser && unameToUid(fi->fuser[i], &uid)) {
+		if (isSource)
+		    fi->fmodes[i] &= ~S_ISUID;
+		else if (fi->fuser && unameToUid(fi->fuser[i], &uid)) {
 		    rpmMessage(RPMMESS_WARNING,
 			_("user %s does not exist - using root\n"),
 			fi->fuser[i]);
@@ -1695,7 +1700,9 @@ assert(psm->mi == NULL);
 		    fi->fmodes[i] &= ~S_ISUID;	/* turn off the suid bit */
 		}
 
-		if (fi->fgroup && gnameToGid(fi->fgroup[i], &gid)) {
+		if (isSource)
+		    fi->fmodes[i] &= ~S_ISGID;
+		else if (fi->fgroup && gnameToGid(fi->fgroup[i], &gid)) {
 		    rpmMessage(RPMMESS_WARNING,
 			_("group %s does not exist - using root\n"),
 			fi->fgroup[i]);
