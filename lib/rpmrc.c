@@ -990,7 +990,8 @@ static int is_athlon(void)
 	return 1;
 }
 
-static int is_pentium3(void)
+/* Retrurns 3 for pentium3 and 4 for pentium4.  Main difference is SSE2 support.  */
+static int is_pentiumN(void)
 {
     unsigned int eax, ebx, ecx, edx, family, model;
     char vendor[16];
@@ -1009,6 +1010,7 @@ static int is_pentium3(void)
 	{
 	    case 7:	// Pentium III, Pentium III Xeon (model 7)
 	    case 8:	// Pentium III, Pentium III Xeon, Celeron (model 8)
+		return 3;
 	    case 9:	// Pentium M, Celeron M
 			/*
 			    Intel recently announced its new technology for mobile platforms,
@@ -1022,30 +1024,15 @@ static int is_pentium3(void)
 			    constraints, and that is halfway between the Pentium III and the Pentium 4.
 						    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 			*/
+		return 4;
 	    case 10:	// Pentium III Xeon (model A)
 	    case 11:	// Pentium III (model B)
+		return 3;
 	    case 13:	// Pentium M, Celeron M (90 nm)
 	    case 14:	// Core Duo, Core Solo (65 nm)
 	    case 15:	// Core2 Duo (65 nm)
-		return 1;
+		return 4;
 	}
-    return 0;
-}
-
-static int is_pentium4(void)
-{
-    unsigned int eax, ebx, ecx, edx, family, model;
-    char vendor[16];
-    cpuid(0, &eax, &ebx, &ecx, &edx);
-    memset(vendor, 0, sizeof(vendor));
-    *((unsigned int *)&vendor[0]) = ebx;
-    *((unsigned int *)&vendor[4]) = edx;
-    *((unsigned int *)&vendor[8]) = ecx;
-    if (strncmp(vendor, "GenuineIntel", 12) != 0)
-	return 0;
-    cpuid(1, &eax, &ebx, &ecx, &edx);
-    family = (eax >> 8) & 0x0f;
-    model = (eax >> 4) & 0x0f;
     if (family == 15)
 	switch (model)
 	{
@@ -1059,7 +1046,7 @@ static int is_pentium4(void)
 			// Pentium D, Celeron D                      (0.09um)
 	    case 6:	// Pentium 4, Pentium 4 Extream Edition,
 			// Pentium D, Celeron D                      (0.065um)
-		return 1;
+		return 4;
 	}
     return 0;
 }
@@ -1307,9 +1294,9 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 
 	    if ((class == '6' && is_athlon()) || class == '7')
 	    	strcpy(un.machine, "athlon");
-	    else if (is_pentium4())
+	    else if (is_pentiumN() == 4)
 		strcpy(un.machine, "pentium4");
-	    else if (is_pentium3())
+	    else if (is_pentiumN() == 3)
 		strcpy(un.machine, "pentium3");
 	    else if (strchr("3456", un.machine[1]) && un.machine[1] != class)
 		un.machine[1] = class;
