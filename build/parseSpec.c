@@ -230,6 +230,9 @@ static int copyNextLine(Spec spec, OFI_t *ofi, int strip)
     return 0;
 }
 
+static
+FILE *tmpfp = NULL; /* temporary file for `rpmbuild -bE' preprocessor */
+
 int readLine(Spec spec, int strip)
 {
 #ifdef	DYING
@@ -410,13 +413,10 @@ retry:
     }
 
     if (spec->preprocess_mode) {
-	char *chomped = xstrdup( spec->line );
-	int len = strlen( chomped );
-
-	if ( '\n' == chomped[len-1] ) 
-	    chomped[len-1] = '\0';
-	puts( chomped );
-	chomped = _free( chomped );
+	size_t len = strlen(spec->line);
+	if (spec->line[len-1] == '\n')
+	    len--; /* chomp */
+	fprintf(tmpfp, "%.*s\n", (int)len, spec->line);
     }
 
     /*@-compmempass@*/ /* FIX: spec->readStack->next should be dependent */
@@ -638,6 +638,25 @@ int parseSpec(Spec *specp, const char *specFile, const char *rootURL,
     spec->fileStack = newOpenFileInfo();
     spec->fileStack->fileName = xstrdup(spec->specFile);
     spec->preprocess_mode = preprocess;
+
+    if (spec->preprocess_mode) {
+	if (!recursing){
+	    assert(tmpfp == NULL);
+	    tmpfp = tmpfile();
+	    if (!tmpfp) {
+		rpmError(RPMERR_CREATE,
+			 _("Cannot create temporary file: %s"),
+			 strerror(errno));
+		return RPMERR_CREATE;
+	    }
+	}
+	else {
+	    assert(tmpfp);
+	    fseek(tmpfp, 0, SEEK_SET);
+	    ftruncate(fileno(tmpfp), 0);
+	}
+    }
+
     if (buildRootURL) {
 	const char * buildRoot;
 	(void) urlPath(buildRootURL, &buildRoot);
@@ -848,8 +867,10 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	}
 
 	(void) headerAddEntry(pkg->header, RPMTAG_OS, RPM_STRING_TYPE, os, 1);
-	(void) headerAddEntry(pkg->header, RPMTAG_ARCH,
-		RPM_STRING_TYPE, arch, 1);
+	if (!headerIsEntry(pkg->header, RPMTAG_ARCH))
+	    headerAddEntry(pkg->header, RPMTAG_ARCH, RPM_STRING_TYPE, arch, 1);
+	else
+	    assert(pkg != spec->packages); /* noarch subpackage */
 	if (!headerIsEntry(pkg->header, RPMTAG_RHNPLATFORM))
 	    (void) headerAddEntry(pkg->header, RPMTAG_RHNPLATFORM,
 		RPM_STRING_TYPE, arch, 1);
@@ -875,6 +896,17 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 
     closeSpec(spec);
     *specp = spec;
+
+    if (spec->preprocess_mode) {
+	char buf[BUFSIZ];
+	size_t n;
+	assert(tmpfp);
+	fseek(tmpfp, 0, SEEK_SET);
+	while ((n = fread(buf, 1, sizeof(buf), tmpfp)))
+	    fwrite(buf, 1, n, stdout);
+	fclose(tmpfp);
+	tmpfp = NULL;
+    }
 
     return 0;
 }

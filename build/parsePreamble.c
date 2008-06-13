@@ -652,18 +652,37 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
 	addOrAppendListEntry(spec->buildRestrictions, tag, field);
 	break;
       case RPMTAG_BUILDARCHS:
-	if ((rc = poptParseArgvString(field,
-				      &(spec->BACount),
-				      &(spec->BANames)))) {
+      {
+	const char **BANames = NULL;
+	int BACount = 0;
+	if ((rc = poptParseArgvString(field, &BACount, &BANames))) {
 	    rpmError(RPMERR_BADSPEC,
 		     _("line %d: Bad BuildArchitecture format: %s\n"),
 		     spec->lineNum, spec->line);
 	    return RPMERR_BADSPEC;
 	}
-	if (!spec->BACount)
-	    spec->BANames = _free(spec->BANames);
+	if (pkg == spec->packages) {
+	    /* toplevel */
+	    if (BACount > 0 && BANames != NULL) {
+		spec->BACount = BACount;
+		spec->BANames = BANames;
+		BANames = NULL; /* don't free */
+	    }
+	}
+	else {
+	    /* subpackage */
+	    if (BACount != 1 || strcmp(BANames[0], "noarch")) {
+		rpmError(RPMERR_BADSPEC,
+			 _("line %d: Only \"noarch\" sub-packages are supported: %s\n"),
+			 spec->lineNum, spec->line);
+		BANames = _free(BANames);
+		return RPMERR_BADSPEC;
+	    }
+	    headerAddEntry(pkg->header, RPMTAG_ARCH, RPM_STRING_TYPE, "noarch", 1);
+	}
+	BANames = _free(BANames);
 	break;
-
+      }
       default:
 	rpmError(RPMERR_INTERNAL, _("Internal error: Bogus tag %d\n"), tag);
 	return RPMERR_INTERNAL;
