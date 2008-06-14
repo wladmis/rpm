@@ -443,6 +443,7 @@ FindByName()
 		fi
 		if [ -n "$rep" ]; then
 			$Verbose "$f: $r -> $rep -> ... (via host_env)"
+			local RPM_FINDPACKAGE_HOST_PKG_NAMES=1
 			FindByPath "$f" "$rep"
 			return
 		fi
