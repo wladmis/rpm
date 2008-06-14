@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt93
+Release: alt94
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -545,6 +545,15 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Jun 15 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt94
+- %_rpmlibdir/macros: enabled LZMA payload compression (w2.lzdio) by default
+- parsePreamble.c, parseSpec.c: allow "BuildArch: noarch" subpackages
+- psm.c: fixed chown attempts for src.rpm introduced in alt93
+- psm.c: also, when installing src.rpm, drop suid/sgid bits
+- rpmrc.c: recognize new Intel CPUs (Dmitry V. Levin)
+- rpmrc.c: classify SSE2-capable Intel CPUs as "pentium4"
+- find-package: corrected host-system lookup for commands
+
 * Wed Jun 04 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt93
 - rpmio.c: implemented rsyncable gzdio compression
 - rpmio.c: applied SUSE patches for LZMA payload compression
