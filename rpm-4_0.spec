@@ -548,6 +548,7 @@ fi
 * Sun Jun 15 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt94
 - %_rpmlibdir/macros: enabled LZMA payload compression (w2.lzdio) by default
 - parsePreamble.c, parseSpec.c: allow "BuildArch: noarch" subpackages
+- parseSpec.c: fixed duplicating 'rpmbuild -bE' output (Kirill Shutemov, #5662)
 - psm.c: fixed chown attempts for src.rpm introduced in alt93
 - psm.c: also, when installing src.rpm, drop suid/sgid bits
 - rpmrc.c: recognize new Intel CPUs (Dmitry V. Levin)
