@@ -2,15 +2,18 @@
 
 . @RPMCONFIGDIR@/functions
 
-list=$(grep ^/. @RPMCONFIGDIR@/files.req.list)
+# reverse sort provides longest match
+dirlist=$(set +f; grep -h ^/. @RPMCONFIGDIR@/*-files.req.list |sort -ur)
 
 FilesReq()
 {
 	local f="$1" d=; shift
-	for d in $list; do
+	for d in $dirlist; do
+		d=${d%/}
 		case "$f" in
 			"${RPM_BUILD_ROOT-}$d"/*)
-				echo "$d" ;;
+				echo "$d"
+				return ;;
 		esac
 	done
 }

@@ -12,7 +12,7 @@ EXTRA_DIST = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
-	files.req files.req.files files.req.list \
+	files.req files.req.files 0common-files.req.list \
 	magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
@@ -30,7 +30,7 @@ installprefix = $(DESTDIR)
 all:
 
 configdir = ${prefix}/lib/rpm
-config_DATA = .provides.sh
+config_DATA = .provides.sh 0common-files.req.list
 config_SCRIPTS = \
 	functions find-package \
 	find-scriptlet-requires \
@@ -41,7 +41,7 @@ config_SCRIPTS = \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
-	files.req files.req.files files.req.list \
+	files.req files.req.files \
 	magic.prov magic.req \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \

@@ -491,6 +491,7 @@ fi
 %rpmattr %_rpmlibdir/find-scriptlet-requires
 %rpmattr %_rpmlibdir/fixup-*
 %rpmattr %_rpmlibdir/files.*
+%rpmattr %config %_rpmlibdir/*-files.req.list
 %rpmattr %_rpmlibdir/lib.*
 %rpmattr %_rpmlibdir/pam.*
 %rpmattr %_rpmlibdir/pkgconfig.*

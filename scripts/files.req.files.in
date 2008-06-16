@@ -1,2 +1,3 @@
 #!/bin/sh -efu
-cut -f1 |grep -Ff @RPMCONFIGDIR@/files.req.list || [ $? = 1 ]
+dirlist=$(set +f; grep -h ^/. @RPMCONFIGDIR@/*-files.req.list)
+cut -f1 |fgrep "$dirlist" || [ $? = 1 ]
