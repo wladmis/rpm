@@ -7,13 +7,19 @@ dirlist=$(set +f; grep -h ^/. @RPMCONFIGDIR@/*-files.req.list |sort -ur)
 
 FilesReq()
 {
-	local f="$1" d=; shift
-	for d in $dirlist; do
+	local f="$1"; shift
+	echo "${dirlist:?}" |
+	while read -r d pkg; do
 		d=${d%/}
 		case "$f" in
 			"${RPM_BUILD_ROOT-}$d"/*)
 				echo "$d"
-				return ;;
+				break ;;
+			"${RPM_BUILD_ROOT-}$d")
+				[ -z "${pkg-}" -o -z "${RPM_SUBPACKAGE_NAME-}" ] ||
+					[ "$pkg" = "$RPM_SUBPACKAGE_NAME" ] ||
+					Warning "$f: directory belongs to $pkg"
+				break ;;
 		esac
 	done
 }
