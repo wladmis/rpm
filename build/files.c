@@ -1333,8 +1333,6 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 			       &(flp->flags), 1);
 
     }
-    (void) headerAddEntry(h, RPMTAG_SIZE, RPM_INT32_TYPE,
-		   &(fl->totalFileSize), 1);
 
     /* XXX This should be added always so that packages look alike.
      * XXX However, there is logic in files.c/depends.c that checks for
@@ -1458,7 +1456,41 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 	if (flp->flags & RPMFILE_MULTILIB_MASK)
 	    fi->fmapflags[i] |= CPIO_MULTILIB;
 
+	if (S_ISREG(flp->fl_mode) && flp->fl_nlink == 1)
+	    fl->totalFileSize += flp->fl_size;
+	else if (S_ISREG(flp->fl_mode) && flp->fl_nlink > 1) {
+	    /* Hard links need be counted only once. */
+	    int j = i + 1;
+	    FileListRec jlp = flp + 1;
+	    int found = 0;
+	    for (; j < fi->fc; j++, jlp++) {
+		while (((jlp - fl->fileList) < (fl->fileListRecsUsed - 1)) &&
+			!strcmp(jlp->fileURL, jlp[1].fileURL))
+		    jlp++;
+		if (jlp->flags & RPMFILE_EXCLUDE) {
+		    j--;
+		    continue;
+		}
+		if (jlp->flags & RPMFILE_GHOST)
+		    continue;
+		if (!S_ISREG(jlp->fl_mode))
+		    continue;
+		if (flp->fl_nlink != jlp->fl_nlink)
+		    continue;
+		if (flp->fl_ino != jlp->fl_ino)
+		    continue;
+		if (flp->fl_dev != jlp->fl_dev)
+		    continue;
+		found = 1;
+		break;
+	    }
+	    if (!found) /* last entry in hardlink set */
+		fl->totalFileSize += flp->fl_size;
+	}
     }
+    (void) headerAddEntry(h, RPMTAG_SIZE, RPM_INT32_TYPE,
+		   &(fl->totalFileSize), 1);
+
     /*@-branchstate@*/
     if (cpioList)
 	*cpioList = fi;
@@ -1793,27 +1825,6 @@ static int addFile(FileList fl, const char * diskURL,
 	    && !parseForRegexMultiLib(fileURL))
 	    flp->flags |= multiLib;
 
-
-	/* Hard links need be counted only once. */
-	if (S_ISREG(flp->fl_mode) && flp->fl_nlink > 1) {
-	    FileListRec ilp;
-	    for (i = 0;  i < fl->fileListRecsUsed; i++) {
-		ilp = fl->fileList + i;
-		if (!S_ISREG(ilp->fl_mode))
-		    continue;
-		if (flp->fl_nlink != ilp->fl_nlink)
-		    continue;
-		if (flp->fl_ino != ilp->fl_ino)
-		    continue;
-		if (flp->fl_dev != ilp->fl_dev)
-		    continue;
-		break;
-	    }
-	} else
-	    i = fl->fileListRecsUsed;
-
-	if (S_ISREG(flp->fl_mode) && i >= fl->fileListRecsUsed)
-	    fl->totalFileSize += flp->fl_size;
     }
 
     fl->fileListRecsUsed++;
@@ -2347,8 +2358,6 @@ int processSourceFiles(Spec spec)
 	flp->uname = getUname(flp->fl_uid);
 	flp->gname = getGname(flp->fl_gid);
 	flp->langs = xstrdup("");
-	
-	fl.totalFileSize += flp->fl_size;
 	
 	if (! (flp->uname && flp->gname)) {
 	    rpmError(RPMERR_BADSPEC, _("Bad owner/group: %s\n"), diskURL);
