@@ -1,23 +1,23 @@
-/etc/X11/profile.d
-/etc/X11/wmsession.d
-/etc/X11/xinit.d
-/etc/alternatives/packages.d
-/etc/chroot.d
-/etc/cron.d
-/etc/cron.daily
-/etc/cron.hourly
-/etc/cron.monthly
-/etc/cron.weekly
-/etc/emacs/site-start.d
+/etc/X11/profile.d	setup
+/etc/X11/wmsession.d	xinitrc
+/etc/X11/xinit.d	xinitrc
+/etc/alternatives/packages.d	alternatives
+/etc/chroot.d	chrooted
+/etc/cron.d	vixie-cron
+/etc/cron.daily	crontabs
+/etc/cron.hourly	crontabs
+/etc/cron.monthly	crontabs
+/etc/cron.weekly	crontabs
+/etc/emacs/site-start.d	emacs-base
 /etc/hooks
-/etc/logrotate.d
-/etc/pam.d
-/etc/ppp/ip-down.d
-/etc/ppp/ip-up.d
-/etc/rpm/macros.d
-/etc/security/console.apps
-/etc/sudo.d
-/etc/syslog.d
-/etc/tex-fonts.d
-/etc/udev/rules.d
-/etc/xinetd.d
+/etc/logrotate.d	logrotate
+/etc/pam.d	pam-config
+/etc/ppp/ip-down.d	ppp-common
+/etc/ppp/ip-up.d	ppp-common
+/etc/rpm/macros.d	rpm
+/etc/security/console.apps	pam0_console
+/etc/sudo.d	sudo
+/etc/syslog.d	syslog-common
+/etc/tex-fonts.d	tetex-core
+/etc/udev/rules.d	udev-rules
+/etc/xinetd.d	xinetd
