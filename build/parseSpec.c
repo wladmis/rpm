@@ -414,7 +414,7 @@ retry:
 
     if (spec->preprocess_mode) {
 	size_t len = strlen(spec->line);
-	if (spec->line[len-1] == '\n')
+	if (len > 0 && spec->line[len-1] == '\n')
 	    len--; /* chomp */
 	fprintf(tmpfp, "%.*s\n", (int)len, spec->line);
     }
