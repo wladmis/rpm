@@ -1806,7 +1806,6 @@ int rpmdepOrder(rpmTransactionSet ts)
     transactionElement newOrder;
     int newOrderCount = 0;
     struct orderListIndex * orderList;
-    int nrescans = 10;
     int _printed = 0;
     int treex;
     int depth;
@@ -2036,7 +2035,7 @@ rescan:
 
 	/* If a relation was eliminated, then continue sorting. */
 	/* XXX TODO: add control bit. */
-	if (nzaps && nrescans-- > 0) {
+	if (nzaps) {
 	    rpmMessage(RPMMESS_DEBUG, _("========== continuing tsort ...\n"));
 	    goto rescan;
 	}
