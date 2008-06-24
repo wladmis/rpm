@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt94
+Release: alt95
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -546,6 +546,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Jun 24 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95
+- build/files.c: re-fixed RPMTAG_SIZE calculation (cf. #2634)
+- files.req: implemented modular /usr/lib/rpm/*-files.req.list,
+  for dependencies on directories
+
 * Sun Jun 15 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt94
 - %_rpmlibdir/macros: enabled LZMA payload compression (w2.lzdio) by default
 - parsePreamble.c, parseSpec.c: allow "BuildArch: noarch" subpackages
