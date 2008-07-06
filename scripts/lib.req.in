@@ -61,7 +61,7 @@ FindLibReqs()
 		[ -z "$suffix" ] && braces= || braces='()'
 
 		rpath="$(printf %s "$dump" |
-			 awk '{if ($1=="RPATH") print $2}' |
+			 awk '($1=="RPATH"||$1=="RUNPATH"){print $2}' |
 			 tr -s : ' ' |
 			 sed -e "s|\$ORIGIN|${fname%/*}|g")"
 		if [ -n "$rpath" ]; then
@@ -86,6 +86,12 @@ function basename(f) { sub("^.*/","",f); return f; }
 NF>=3 && ($1==name || basename($1)==name) && $2=="=>" && $3~"^/" {print $3}
 NF==2 && ($1==name || basename($1)==name) && $1~"^/" && $2~"^[(]0x" {print $1}
 				')"
+			if [ -z "$pathname" ]; then
+				Warning "$fname: library $name not found"
+				continue
+			fi
+			pathname=$(CanonPath "$pathname")
+			Verbose "$fname: $name -> $pathname"
 			local under_buildroot=
 			if [ -n "${RPM_BUILD_ROOT-}" ] && [ -z "${pathname##$RPM_BUILD_ROOT*}" ]; then
 				pathname=${pathname#$RPM_BUILD_ROOT}
@@ -95,7 +101,7 @@ NF==2 && ($1==name || basename($1)==name) && $1~"^/" && $2~"^[(]0x" {print $1}
 			canon_prefix="$(printf %s "$prefix/" |
 				sed -e 's|/tls/|/|' -e 's|/sse2/|/|' -e "s|/$RPM_ARCH/|/|" -e 's|/i[3-9]86/|/|' -e 's|/\+$||')"
 			if [ -z "$canon_prefix" -o -n "${canon_prefix##/*}" ]; then
-				Info "WARNING: $fname: library $name not found"
+				Warning "$fname: library $name not found"
 				continue
 			fi
 			for dir in $RPM_FINDREQ_RPATH; do
