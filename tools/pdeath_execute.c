@@ -78,9 +78,6 @@ main (int ac, char *const *av)
 	if (kill (pid, 0) < 0)
 		error (EXIT_FAILURE, errno, "kill: %u", pid);
 
-	if (access (av[2], X_OK))
-		error (EXIT_FAILURE, errno, "access: %s", av[2]);
-
 	/* Lets parent go on. */
 	if (daemon (1, 1) < 0)
 		error (EXIT_FAILURE, errno, "daemon");
@@ -88,7 +85,7 @@ main (int ac, char *const *av)
 	/* Wait for parent completion. */
 	wait_for_pdeath (pid);
 
-	execv (av[2], av + 2);
+	execvp (av[2], av + 2);
 	error (EXIT_FAILURE, errno, "execv: %s", av[2]);
 	return EXIT_FAILURE;
 }
