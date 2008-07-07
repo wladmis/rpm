@@ -79,7 +79,7 @@ fix()
 	new_val="${new_val%% }"
 
 	if [ "$new_val" != "$old_val" ]; then
-		subst -p "s|^Cflags: .*|Cflags: $new_val|g" -- "$f" || return 1
+		subst -p "s/^Cflags: .*/Cflags: $(quote_sed_regexp "$new_val")/g" -- "$f" || return 1
 		echo "$fname: Cflags: '$old_val' --> '$new_val'"
 	fi
 
@@ -109,7 +109,7 @@ fix()
 	new_val="${new_val%% }"
 
 	if [ "$new_val" != "$old_val" ]; then
-		subst -p "s|^Libs: .*|Libs: $new_val|g" -- "$f" || return 1
+		subst -p "s/^Libs: .*/Libs: $(quote_sed_regexp "$new_val")/g" -- "$f" || return 1
 		echo "$fname: Libs: '$old_val' --> '$new_val'"
 	fi
 }

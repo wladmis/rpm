@@ -36,3 +36,16 @@ ValidateBuildRoot()
 	[ -n "$(printf %s "$RPM_BUILD_ROOT" |tr -d ' /.')" ] ||
 		Fatal "invalid \$RPM_BUILD_ROOT"
 }
+
+# Quote given arguments for sed basic regular expression.
+# Usage example: sed "s/$(quote_sed_regexp "$var_pattern")/$(quote_sed_regexp "$var_replacement")/"
+# Taken from libshell.
+quote_sed_regexp()
+{
+	local out="$*"
+	if [ -z "${out##*[\[\].*&^\$\\\\/]*}" ]; then
+		out="$(printf %s "$out" |sed -e 's/[].*&^$[\/]/\\&/g')" ||
+			return 1
+	fi
+	printf %s "$out"
+}
