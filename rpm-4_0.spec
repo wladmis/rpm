@@ -369,6 +369,11 @@ else
 	rm -f %_sysconfdir/%name/macros.db1
 	%_bindir/rpmdb --initdb
 fi
+
+# Invalidate apt cache, due to e.g. rpmlib(PayloadIsLzma).
+if set /var/cache/apt/*.bin && [ -f "$1" ]; then
+	%_rpmlibdir/pdeath_execute $PPID rm -f "$@"
+fi
 :
 
 %post -n lib%name -p /sbin/post_ldconfig
