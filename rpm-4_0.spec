@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.1
+Release: alt77.M40.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -530,6 +530,44 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Jul 08 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77.M40.2
+- spec: In %%post-script, removed /var/cache/apt/*.bin (Alexey Tourbin).
+- pdeath_execute.c: Removed X_OK check, use execvp(3) (Alexey Tourbin).
+- fixup-libtool, fixup-pkgconfig: Quote substitution text (Closes: #11437).
+- build/files.c: Re-fixed RPMTAG_SIZE calculation (Alexey Tourbin. Closes: #2634).
+- parseSpec.c: Fixed duplicating 'rpmbuild -bE' output
+  (Kirill Shutemov, Alexey Tourbin. Closes: #5662).
+- parsePreamble.c, parseSpec.c: Allow noarch subpackages (Alexey Tourbin).
+- rpmrc.c: Added more modern CPU models (Alexey Tourbin, me).
+- rpmio.c: Implemented cpio hints for rsyncable_gzwrite() (Alexey Tourbin).
+- rpmio.c: Deal with partial rsyncable_gzwrite() return (Alexey Tourbin).
+- rpmio.c: Implemented rscynable_gzwrite() (Alexey Tourbin).
+- rpmio.c: Introduced rpmGZFILE wrapper for gzdio (Alexey Tourbin).
+- scripts/rpm2cpio.sh: Deal with decompressors (Alexey Tourbin).
+- spec: Added _binary_payload w9.gzdio (Alexey Tourbin).
+- Plugged a memleak in lzclose() (Panu Matilainen).
+- Backported LZMA payload compression from SuSE (Alexey Tourbin).
+- rpmReadPackageManifest: Fix comments handling.
+- files.c (addFile): Check that each intermediate path component
+  is a directory (not symlink) (Alexey Tourbin).
+- files.c (addFile): File path must be canonical (Alexey Tourbin).
+- files.c (addFile): Reassure that file path starts with '/' (Alexey Tourbin).
+- files.c (addFile): File path must match buildroot (Alexey Tourbin).
+- spec: Removed 'BuildConflicts: rpm-devel' (Alexey Tourbin).
+- relative: Fixed potential NULL dereference (Closes: #14067).
+- platform.in (%%__autoreconf): Added deprecation warning.
+- platform.in: Added %%warning() macro.
+- platform.in: Added %%autoreconf macro (Closes: #13925).
+- relative.c: Changed to use heap for memory allocation, fix normalize(), cleanup.
+- relative.c: Fixed an off-by-one (kind of) error. (Alex Myltsev).
+- Added armv5tejl support (Kirill Shutemov).
+- rpmrc.in: Removed -fsigned-char from optflags for arm* (Kirill Shutemov).
+- Refresh ARM support (Kirill Shutemov).
+- Do not check STACK entry in ARM ELF files (Kirill Shutemov).
+- More %%_target_platform tweaks: cleanup build_os filter; initialize
+  %%_gnueabi; replace %%_gnu with %%_gnueabi in %%_target_platform.
+- %%_gnu appended to %%_target_platform (Kirill Shutemov).
+
 * Tue Aug 28 2007 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77.M40.1
 - rpmdb/header.c (guess_category_value):
   Allowed overriding locale using $RPM_LANGUAGE_I18NSTRING for header FindI18NString.
