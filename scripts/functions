@@ -188,3 +188,16 @@ PackagedFiles()
 		rpmquery --list -f -- "$@" 2>/dev/null ||:
 	fi
 }
+
+# Quote given arguments for sed basic regular expression.
+# Usage example: sed "s/$(quote_sed_regexp "$var_pattern")/$(quote_sed_regexp "$var_replacement")/"
+# Taken from libshell.
+quote_sed_regexp()
+{
+	local out="$*"
+	if [ -z "${out##*[\[\].*&^\$\\\\/]*}" ]; then
+		out="$(printf %s "$out" |sed -e 's/[].*&^$[\/]/\\&/g')" ||
+			return 1
+	fi
+	printf %s "$out"
+}

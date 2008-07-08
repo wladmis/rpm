@@ -49,7 +49,7 @@ for f in "$@"; do
 	new_val="${fname%/*}"
 
 	if [ "$new_val" != "$old_val" ]; then
-		subst -p "s,^libdir='[^']*'\$,libdir='$new_val',g" "$f"
+		subst -p "s/^libdir='[^']*'\$/libdir='$(quote_sed_regexp "$new_val")'/g" "$f"
 		echo "${fname#.}: libdir: '$old_val' --> '$new_val'"
 	fi
 	
@@ -70,7 +70,7 @@ for f in "$@"; do
 	new_val="${new_val%% }"
 
 	if [ "$new_val" != "$old_val" ]; then
-		subst -p "s,^dependency_libs='[^']*'\$,dependency_libs='$new_val',g" "$f"
+		subst -p "s/^dependency_libs='[^']*'\$/dependency_libs='$(quote_sed_regexp "$new_val")'/g" "$f"
 		echo "${fname#.}: dependency_libs: '$old_val' --> '$new_val'"
 	fi
 done
