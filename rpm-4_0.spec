@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95
+Release: alt96
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,6 +551,12 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Jul 20 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96
+- lib.req: use CanonPath() to deal with RPATH like $ORIGIN/../lib
+- fixup-{libtool,pkgconfig}: quote substitution text (Dmitry V. Levin, #11437)
+- pdeath_execute.c: remove X_OK check, use execvp(3)
+- rpm: in %post-script, remove /var/cache/apt/*.bin
+
 * Tue Jun 24 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95
 - build/files.c: re-fixed RPMTAG_SIZE calculation (cf. #2634)
 - files.req: implemented modular /usr/lib/rpm/*-files.req.list,
