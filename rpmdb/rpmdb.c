@@ -2063,17 +2063,10 @@ top:
 	    keylen = mi->mi_keylen;
 
 	    rc = dbiGet(dbi, mi->mi_dbc, &keyp, &keylen, &uh, &uhlen, gflags);
-if (dbi->dbi_api == 1 && dbi->dbi_rpmtag == RPMDBI_PACKAGES && rc == EFAULT) {
-    rpmError(RPMERR_INTERNAL,
-	_("record number %u in database is bad -- skipping.\n"), dbi->dbi_lastoffset);
-    if (keyp && dbi->dbi_lastoffset)
-	memcpy(&mi->mi_offset, keyp, sizeof(mi->mi_offset));
-    continue;
-}
 
 	    /*
 	     * If we got the next key, save the header instance number.
-	     * For db1 Packages (db1->dbi_lastoffset != 0), always copy.
+	     *
 	     * For db3 Packages, instance 0 (i.e. mi->mi_setx == 0) is the
 	     * largest header instance in the database, and should be
 	     * skipped.
