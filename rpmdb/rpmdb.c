@@ -1045,32 +1045,6 @@ static int openDatabase(/*@null@*/ const char * prefix,
 		if (minimal)
 		    goto exit;
 		/*@switchbreak@*/ break;
-	    case RPMTAG_BASENAMES:
-	    {	void * keyp = NULL;
-		DBC * dbcursor;
-
-    /* We used to store the fileindexes as complete paths, rather then
-       plain basenames. Let's see which version we are... */
-    /*
-     * XXX FIXME: db->fileindex can be NULL under pathological (e.g. mixed
-     * XXX db1/db2 linkage) conditions.
-     */
-		if (justCheck)
-		    /*@switchbreak@*/ break;
-		dbcursor = NULL;
-		xx = dbiCopen(dbi, &dbcursor, 0);
-		xx = dbiGet(dbi, dbcursor, &keyp, NULL, NULL, NULL, gflags);
-		if (xx == 0) {
-		    const char * akey = keyp;
-		    if (akey && strchr(akey, '/')) {
-			rpmError(RPMERR_OLDDB, _("old format database is present; "
-				"use --rebuilddb to generate a new format database\n"));
-			rc |= 1;
-		    }
-		}
-		xx = dbiCclose(dbi, dbcursor, 0);
-		dbcursor = NULL;
-	    }	/*@switchbreak@*/ break;
 	    default:
 		/*@switchbreak@*/ break;
 	    }
