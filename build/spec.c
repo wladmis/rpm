@@ -311,8 +311,8 @@ int addSource(Spec spec, Package pkg, const char *field, int tag)
     /* Check whether tags of the same number haven't already been defined */
     for (p = spec->sources; p != NULL; p = p->next) {
 	if ( p->num != num ) continue;
-	if (tag == RPMTAG_SOURCE && p->flags == RPMBUILD_ISSOURCE ||
-	    tag == RPMTAG_PATCH  && p->flags == RPMBUILD_ISPATCH) {
+	if ((tag == RPMTAG_SOURCE && p->flags == RPMBUILD_ISSOURCE) ||
+	    (tag == RPMTAG_PATCH  && p->flags == RPMBUILD_ISPATCH)) {
 		rpmlog(RPMLOG_ERR, _("%s %d defined multiple times\n"), name, num);
 		return RPMRC_FAIL;
 	    }
