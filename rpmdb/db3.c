@@ -843,15 +843,9 @@ static int db3close(/*@only@*/ dbiIndex dbi, /*@unused@*/ unsigned int flags)
 			(dbfile ? dbfile : tagName(dbi->dbi_rpmtag)));
 
 		/*
-		 * Depending on the DB version,
-		 * the DB handle may not be accessed again after
+		 * The DB handle may not be accessed again after
 		 * DB->verify is called, regardless of its return.
 		 */
-#if (DB_VERSION_MAJOR <= 3) || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR <= 1)
-		xx = db->close(db, 0);
-		xx = cvtdberr(dbi, "db->close", xx, _debug);
-		if (rc == 0 && xx) rc = xx;
-#endif
 		db = NULL;
 		dbf = _free(dbf);
 	}
