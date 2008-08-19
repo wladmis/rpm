@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.1
+Release: alt95.M41.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,6 +551,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Aug 19 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.2
+- find-package: updated check for file path components being alternatives
+
 * Tue Jul 29 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt95.M41.1
 - %_rpmlibdir/macros: enabled gzip payload compression (w9.gzdio) by default.
 
