@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96
+Release: alt96.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,6 +551,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Aug 20 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.1
+- find-package: updated check for file path components being alternatives
+
 * Sun Jul 20 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96
 - lib.req: use CanonPath() to deal with RPATH like $ORIGIN/../lib
 - fixup-{libtool,pkgconfig}: quote substitution text (Dmitry V. Levin, #11437)
