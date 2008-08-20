@@ -14,10 +14,6 @@
 #include "rpmlead.h"
 #include "debug.h"
 
-/*@-redecl@*/
-extern int _noDirTokens;
-/*@=redecl@*/
-
 /*@access StringBuf @*/	/* compared with NULL */
 /*@access TFI_t @*/	/* compared with NULL */
 /*@access Header @*/	/* compared with NULL */
@@ -379,7 +375,7 @@ static int rpmLeadVersion(void)
     }
 
     rpmlead_version = rpmpkg_version / 10000;
-    if (_noDirTokens || (rpmlead_version < 3 || rpmlead_version > 4))
+    if (rpmlead_version < 3 || rpmlead_version > 4)
 	rpmlead_version = 3;
     return rpmlead_version;
 }

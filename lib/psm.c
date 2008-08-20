@@ -1445,7 +1445,6 @@ assert(psm->mi == NULL);
 #endif
 
 		memset(&lead, 0, sizeof(lead));
-		/* XXX Set package version conditioned on noDirTokens. */
 		lead.major = 3;
 		lead.minor = 0;
 		lead.type = RPMLEAD_BINARY;
