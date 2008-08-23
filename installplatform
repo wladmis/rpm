@@ -37,7 +37,7 @@ case "$arch" in
     SUBSTS='s,alpha,alpha, s,alpha,alphaev5, s,alpha,alphaev56, s,alpha,alphapca56, s,alpha,alphaev6, s,alpha,alphaev67,'
     ;;
   arm*)
-    SUBSTS='s,arm.*,arm, s,arm.*,armeb, s,arm.*,armv3l, s,arm.*,armv4l, s,arm.*,armv4b, s,arm.*,armv5l, s,arm.*,armv5tejl, s,arm.*,armv5b, s,arm.*,noarch,'
+    SUBSTS='s,arm.*,arm, s,arm.*,armeb, s,arm.*,armv3l, s,arm.*,armv4l, s,arm.*,armv4b, s,arm.*,armv5l, s,arm.*,armv5tel, s,arm.*,armv5tejl, s,arm.*,armv5b, s,arm.*,noarch,'
     ;;
   sparc*)
     SUBSTS='s,sparc\(64\|v9\),sparc, s,sparc64,sparcv9,;s,sparc\([^v]\|$\),sparcv9\1, s,sparcv9,sparc64,;s,sparc\([^6]\|$\),sparc64\1,'
