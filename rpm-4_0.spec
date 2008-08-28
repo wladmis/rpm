@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96.1
+Release: alt96.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,6 +551,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri Aug 29 2008 Kirill A. Shutemov <kas@altlinux.ru> 4.0.4-alt96.2
+- add support of armv5tel and fix armv5tejl
+
 * Wed Aug 20 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.1
 - find-package: updated check for file path components being alternatives
 
