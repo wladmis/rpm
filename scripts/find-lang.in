@@ -29,7 +29,7 @@ Usage()
 	cat <<EOF
 find-lang - generate list of language specific files for inclusion in an rpm spec %files section.
 
-Usage: $PROG options PACKAGE_NAME
+Usage: $PROG options PACKAGE_NAME...
 
 Top directory gets sed'd out of the output list.  PACKAGE_NAME is usually
 the %{name} of the package.  This should also be the basename of the
