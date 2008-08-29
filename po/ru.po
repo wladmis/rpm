@@ -3546,6 +3546,9 @@ msgstr "Разработка/Документация"
 msgid "Development/Debuggers"
 msgstr "Разработка/Отладчики"
 
+msgid "Development/Erlang"
+msgstr "Разработка/Erlang"
+
 msgid "Development/Functional"
 msgstr "Разработка/Функциональные языки"
 
