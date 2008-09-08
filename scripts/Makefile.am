@@ -3,6 +3,7 @@
 AUTOMAKE_OPTIONS = 1.4 foreign
 
 EXTRA_DIST = \
+	posttrans-filetriggers \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
 	compress_files check-files convertrpmrc.sh cross-build \
@@ -22,6 +23,7 @@ all:
 
 configdir = ${prefix}/lib/rpm
 config_SCRIPTS = \
+	posttrans-filetriggers \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
 	compress_files check-files convertrpmrc.sh cross-build \

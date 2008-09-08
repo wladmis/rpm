@@ -286,6 +286,7 @@ for dbi in \
 do
     touch "%buildroot%_localstatedir/%name/$dbi"
 done
+touch %buildroot%_localstatedir/%name/files-awaiting-filetriggers
 
 # Prepare documentation.
 bzip2 -9 CHANGES ||:
@@ -429,6 +430,7 @@ fi
 %rpmdbattr %_localstatedir/%name/Sigmd5
 %rpmdbattr %_localstatedir/%name/Sha1header
 %rpmdbattr %_localstatedir/%name/Triggername
+%rpmdbattr %_localstatedir/%name/files-awaiting-filetriggers
 
 /bin/rpm
 %_bindir/rpm
@@ -449,6 +451,8 @@ fi
 %rpmdatattr %_rpmlibdir/GROUPS
 %_prefix/lib/rpmpopt
 %_prefix/lib/rpmrc
+
+%rpmattr %_rpmlibdir/posttrans-filetriggers
 
 %_man1dir/rpminit.*
 %_man8dir/rpm.*

@@ -232,6 +232,11 @@ int psmStage(PSM_t psm, pkgStage stage)
 	/*@modifies psm, rpmGlobalMacroContext,
 		fileSystem, internalState @*/;
 
+/* ALT: hack to implement file triggers */
+void psmTriggerAdded(PSM_t psm);
+void psmTriggerRemoved(PSM_t psm);
+void psmTriggerPosttrans(PSM_t psm);
+
 #ifdef __cplusplus
 }
 #endif

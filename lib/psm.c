@@ -899,7 +899,7 @@ static int runScript(PSM_t psm, Header h,
     int freePrefixes = 0;
     FD_t out;
     rpmRC rc = RPMRC_OK;
-    const char *n, *v, *r;
+    const char *n = NULL, *v = NULL, *r = NULL;
     char arg1_str [sizeof(int)*3+1] = "";
     char arg2_str [sizeof(int)*3+1] = "";
 
@@ -916,6 +916,7 @@ static int runScript(PSM_t psm, Header h,
 	argc = progArgc;
     }
 
+    if (h)
     xx = headerNVR(h, &n, &v, &r);
 
     if (arg1 >= 0)
@@ -923,9 +924,9 @@ static int runScript(PSM_t psm, Header h,
     if (arg2 >= 0)
 	sprintf(arg2_str, "%d", arg2);
 
-    if (hge(h, RPMTAG_INSTPREFIXES, &ipt, (void **) &prefixes, &numPrefixes)) {
+    if (h && hge(h, RPMTAG_INSTPREFIXES, &ipt, (void **) &prefixes, &numPrefixes)) {
 	freePrefixes = 1;
-    } else if (hge(h, RPMTAG_INSTALLPREFIX, NULL, (void **) &oldPrefix, NULL)) {
+    } else if (h && hge(h, RPMTAG_INSTALLPREFIX, NULL, (void **) &oldPrefix, NULL)) {
 	prefixes = &oldPrefix;
 	numPrefixes = 1;
     } else {
@@ -1037,6 +1038,7 @@ static int runScript(PSM_t psm, Header h,
 	    }
 	}
 
+	if (n)
 	dosetenv ("RPM_INSTALL_NAME", n, 1);
 
 	if (*arg1_str)
@@ -2115,4 +2117,59 @@ fprintf(stderr, "*** PSM_RDB_LOAD: header #%u not found\n", fi->record);
     /*@-nullstate@*/	/* FIX: psm->oh and psm->fi->h may be NULL. */
     return rc;
     /*@=nullstate@*/
+}
+
+static
+void saveTriggerFiles(PSM_t psm)
+{
+    const rpmTransactionSet ts = psm->ts;
+    if (ts->transFlags & RPMTRANS_FLAG_TEST)
+	return;
+    if (ts->transFlags & (_noTransScripts | _noTransTriggers))
+	return;
+    const TFI_t fi = psm->fi;
+    if (fi->fc < 1)
+	return;
+    psmStage(psm, PSM_CHROOT_IN);
+    const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers");
+    FILE *fp = fopen(file, "a");
+    if (fp == NULL)
+	rpmError(RPMERR_OPEN, "open of %s failed: %s\n", file, strerror(errno));
+    else {
+	int i;
+	for (i = 0; i < fi->fc; i++)
+	    fprintf(fp, "%s%s\n", fi->dnl[fi->dil[i]], fi->bnl[i]);
+	fclose(fp);
+    }
+    file = _free(file);
+    psmStage(psm, PSM_CHROOT_OUT);
+}
+
+void psmTriggerAdded(PSM_t psm)
+{
+    saveTriggerFiles(psm);
+}
+
+void psmTriggerRemoved(PSM_t psm)
+{
+    saveTriggerFiles(psm);
+}
+
+void psmTriggerPosttrans(PSM_t psm)
+{
+    const rpmTransactionSet ts = psm->ts;
+    if (ts->transFlags & RPMTRANS_FLAG_TEST)
+	return;
+    if (ts->transFlags & (_noTransScripts | _noTransTriggers))
+	return;
+    psmStage(psm, PSM_CHROOT_IN);
+    const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers");
+    const char *script = RPMCONFIGDIR "/posttrans-filetriggers";
+    const char *argv[] = { script, file, NULL };
+    rpmMessage(RPMMESS_VERBOSE, _("Running %s\n"), script);
+    int rc = runScript(psm, NULL, script, 2, argv, NULL, 0, 0);
+    if (rc == 0)
+	unlink(file);
+    file = _free(file);
+    psmStage(psm, PSM_CHROOT_OUT);
 }
