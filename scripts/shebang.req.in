@@ -1,4 +1,14 @@
 #!/bin/sh -efu
+#
+# Make dependencies for for the first line in scripts.
+# http://en.wikipedia.org/wiki/Shebang_(Unix)
+#
+# Copyright (C) 2007, 2008  Alexey Tourbin <at@altlinux.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 
 . @RPMCONFIGDIR@/functions
 . @RPMCONFIGDIR@/find-package
@@ -9,11 +19,50 @@ ShebangReq()
 	line=$(sed -n '1s|^#![[:space:]]*/|/|p;q' "$f")
 	[ -n "$line" ] || return 0
 	set -- $line
+
+	CR=$'\r'
+	line="#!$(echo "$line" |sed -e "s/$CR/<CR>/g")"
+
+	CheckInterp()
+	{
+		case "$1" in
+			*"$CR") ;;
+			*) return 0 ;;
+		esac
+		Fatal "$f: trailing <CR> in interpreter: $line"
+	}
+
+	CheckArgs()
+	{
+		case "$*" in
+			*"$CR") ;;
+			*) return 0 ;;
+		esac
+		Warning "$f: trailing <CR> in arguments: $line"
+	}
+
 	case "$#,$1" in
+		1,*)
+			CheckInterp "$1"
+			FindPackage "$f" "$1"
+			;;
 		2,/usr/bin/env)
-			FindPackage "$f" "$1" "$2" ;;
+			CheckInterp "$2"
+			FindPackage "$f" "$1" "$2"
+			;;
+		2,*)
+			CheckArgs "$2"
+			FindPackage "$f" "$1"
+			;;
+		*,/usr/bin/env)
+			CheckArgs "$*"
+			Fatal "$f: too many arguments: $line"
+			;;
 		*)
-			FindPackage "$f" "$1" ;;
+			CheckArgs "$*"
+			Warning "$f: too many arguments: $line"
+			FindPackage "$f" "$1"
+			;;
 	esac
 }
 

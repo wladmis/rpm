@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96.3
+Release: alt96.4
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,6 +551,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Sep 14 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.4
+- shebang.req: check for trailing <CR> in interpreter path or name;
+  also, validate argc, since neither execve(2) nor env(1) split arguments
+
 * Fri Aug 29 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.3
 - find-lang: Updated usage (Slava Semushin; closes: ALT#15492).
 - GROUPS: Added "Development/Erlang" (ALT#16691).
