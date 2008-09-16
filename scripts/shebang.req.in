@@ -1,6 +1,6 @@
 #!/bin/sh -efu
 #
-# Make dependencies for for the first line in scripts.
+# Make dependencies for the first line in scripts.
 # http://en.wikipedia.org/wiki/Shebang_(Unix)
 #
 # Copyright (C) 2007, 2008  Alexey Tourbin <at@altlinux.org>
