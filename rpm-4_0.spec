@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.2
+Release: alt77.M40.3
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -530,6 +530,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Sep 16 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.3
+- build/spec.c: don't allow multiple definition of PatchX or SourceX
+  (Jindrich Novy, rhbz#458261, rhbz#458260)
+
 * Tue Jul 08 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77.M40.2
 - spec: In %%post-script, removed /var/cache/apt/*.bin (Alexey Tourbin).
 - pdeath_execute.c: Removed X_OK check, use execvp(3) (Alexey Tourbin).
