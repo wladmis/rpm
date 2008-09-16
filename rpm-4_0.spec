@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.3
+Release: alt95.M41.4
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,6 +551,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Sep 16 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.4
+- build/spec.c: don't allow multiple definition of PatchX or SourceX
+  (Jindrich Novy, rhbz#458261, rhbz#458260)
+
 * Sun Sep 14 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.3
 - shebang.req: check for trailing <CR> in interpreter path or name;
   also, validate argc, since neither execve(2) nor env(1) split arguments
