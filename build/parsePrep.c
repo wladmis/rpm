@@ -249,7 +249,7 @@ static int checkOwners(const char * urlfn)
 			break;
 		case COMPRESSED_ZIP:
 			zipper = "%{_unzipbin}";
-			zipper_opts = (rpmIsVerbose() && !quietly) ? "-L" : "-Lq";
+			zipper_opts = (rpmIsVerbose() && !quietly) ? "" : "-qq";
 			tarprog = NULL;
 			break;
 		default:
