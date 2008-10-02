@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96.5
+Release: alt96.6
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,6 +551,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Oct 02 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.6
+- build/parsePrep.c (doUntar): Remove "-L" option from "unzip" invocation
+  (Igor Vlasenko; closes: ALT#17407).
+
 * Tue Sep 16 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.5
 - build/spec.c: don't allow multiple definition of PatchX or SourceX
   (Jindrich Novy, rhbz#458261, rhbz#458260)
