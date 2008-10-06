@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96.6
+Release: alt96.7
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,6 +551,12 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Oct 06 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.7
+- build/reqprov.c: when folding duplicate dependencies, Requires(pre)
+  or Requires(post) should not opimitze out bare Requires
+- build/files.c: execute find-requires before find-scriptlet-requires
+- 0common-files.req.list: added /etc/rc.d/init.d (service)
+
 * Thu Oct 02 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.6
 - build/parsePrep.c (doUntar): Remove "-L" option from "unzip" invocation
   (Igor Vlasenko; closes: ALT#17407).

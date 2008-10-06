@@ -174,11 +174,11 @@ static dep_compare_t compare_deps (rpmTag tag,
 		}
 
 		/* 7e. Aflags contains Bflags? */
-		else if ((Areq & Breq) == Breq)
+		else if (Breq && (Areq & Breq) == Breq)
 			rc = DEP_ST;
 
 		/* 7f. Bflags contains Aflags? */
-		else if ((Areq & Breq) == Areq)
+		else if (Areq && (Areq & Breq) == Areq)
 			rc = DEP_WK;
 
 		else

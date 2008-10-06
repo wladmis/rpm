@@ -2557,6 +2557,9 @@ DepMsg_t depMsgs[] = {
   { "PreReq",		{ "%{?__find_prereq}", 0 },
 	RPMTAG_REQUIRENAME, RPMTAG_REQUIREVERSION, RPMTAG_REQUIREFLAGS,
 	RPMSENSE_PREREQ, 0 },
+  { "Requires",		{ "%{?__find_requires}", 0 },
+	-1, -1, RPMTAG_REQUIREFLAGS,	/* XXX inherit name/version arrays */
+	RPMSENSE_PREREQ, RPMSENSE_PREREQ },
   { "Requires(interp)",	{ 0, "interp", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	_notpre(RPMSENSE_INTERP), 0 },
@@ -2578,9 +2581,6 @@ DepMsg_t depMsgs[] = {
   { "Requires(postun)",	{ 0, "postun", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,
 	_notpre(RPMSENSE_SCRIPT_POSTUN), 0 },
-  { "Requires",		{ "%{?__find_requires}", 0 },
-	-1, -1, RPMTAG_REQUIREFLAGS,	/* XXX inherit name/version arrays */
-	RPMSENSE_PREREQ, RPMSENSE_PREREQ },
   { "Conflicts",	{ "%{?__find_conflicts}", 0 },
 	RPMTAG_CONFLICTNAME, RPMTAG_CONFLICTVERSION, RPMTAG_CONFLICTFLAGS,
 	0, -1 },
