@@ -2137,8 +2137,15 @@ void saveTriggerFiles(PSM_t psm)
 	rpmError(RPMERR_OPEN, "open of %s failed: %s\n", file, strerror(errno));
     else {
 	int i;
-	for (i = 0; i < fi->fc; i++)
-	    fprintf(fp, "%s%s\n", fi->dnl[fi->dil[i]], fi->bnl[i]);
+	for (i = 0; i < fi->fc; i++) {
+	    const char *d = fi->dnl[fi->dil[i]];
+	    const char *b = fi->bnl[i];
+	    if (strchr(d, '\n'))
+		continue;
+	    if (strchr(b, '\n'))
+		continue;
+	    fprintf(fp, "%s%s\n", d, b);
+	}
 	fclose(fp);
     }
     file = _free(file);
