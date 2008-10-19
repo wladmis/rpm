@@ -1,6 +1,10 @@
 #!/bin/sh -efu
 #
-# File triggers are run at the end of successful transaction.
+# This script is automatically invoked after each successful transaction.
+# It runs @RPMCONFIGDIR@/*.filetrigger programs, with full list of filenames
+# affected by the transaction attached to stdin.  In *.filetrigger programs,
+# explicit file tests can be used, e.g. [ -f file ], to determine if particular
+# files were installed/updated or removed.
 #
 # Copyright (C) 2008  Alexey Tourbin <at@altlinux.org>
 #
@@ -11,6 +15,7 @@
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 
+# Passed by rpm (usually /var/lib/rpm/files-awaiting-filetriggers).
 filelist=$1
 shift
 
