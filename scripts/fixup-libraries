@@ -2,7 +2,7 @@
 #
 # fixup-shared - fix permissions of libraries.
 #
-# Copyright (C) 2003-2005  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2003-2005,2008  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,14 +31,15 @@ for file in "$@"; do
 			[ -n "$entry" ] || continue
 
 			section_header="$(readelf -S "$file")" || continue
-			text=`printf %s "$section_header" |sed -ne 's/^ *\[ *[0-9]\+\] \.text \+PROGBITS \+0*\([0-9a-f]\+\) \+.*/\1/p'`
-			[ -n "$text" ] || continue
 
-			[ "$entry" = "$text" ] || continue
-
-			if readelf -s "$file" |fgrep -wqs __preinit_array_end; then
+			# See: comm -12 <(fgrep -l .interp /usr/lib/ldscripts/*) <(fgrep -le --shared /usr/lib/ldscripts/*)
+			if printf %s "$section_header" |fgrep -qs ' .interp '; then
 				continue
 			fi
+
+			text=`printf %s "$section_header" |sed -ne 's/^ *\[ *[0-9]\+\] \.text \+PROGBITS \+0*\([0-9a-f]\+\) \+.*/\1/p'`
+			[ -n "$text" ] || continue
+			[ "$entry" = "$text" ] || continue
 
 			[ -n "${file##*/lib64/ld-*.so}" ] || continue
 
