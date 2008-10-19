@@ -1,0 +1,29 @@
+#!/bin/sh -e
+#
+# Copyright (C) 2008  Alexey Tourbin <at@altlinux.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+while read -r f; do
+	# 1) Check if basename looks like a shared library.
+	case "${f##*/}" in
+		lib*.so*) ;;
+		*) continue ;;
+	esac
+	# 2) It is also possible to check dirname and skip private
+	# directories (public ones are /lib, /lib64, /usr/lib, and
+	# /usr/lib64).  However, non-standard directories can be added
+	# via /etc/ld.so.conf (we can use our dump_ld_config helper
+	# to print non-standard directories).  And another problem
+	# is hwcap-specific directories, e.g. /usr/lib/sse2 (for wich
+	# there is no helper yet).
+	# 3) It is even possible to skip ld(1)-only symbolic links:
+	# if basename matches lib*.so, and corresponding $f.* file(s)
+	# exist, then $f appears to be a compile-time symbolic link.
+	# However, /etc/ld.so.cache seems to include both sonames and
+	# non-soname lib*.so entries.
+	exec /sbin/ldconfig
+done

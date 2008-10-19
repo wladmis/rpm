@@ -453,6 +453,7 @@ fi
 %_prefix/lib/rpmrc
 
 %rpmattr %_rpmlibdir/posttrans-filetriggers
+%rpmattr %_rpmlibdir/0ldconfig.filetrigger
 
 %_man1dir/rpminit.*
 %_man8dir/rpm.*
