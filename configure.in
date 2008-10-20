@@ -14,9 +14,8 @@ AM_INIT_AUTOMAKE([1.4 foreign])
 dnl XXX AM_MAINTAINER_MODE
 
 dnl Checks for programs.
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
-AC_AIX
-AC_MINIX
 AS=${AS-as}
 AC_SUBST(AS)
 if test "$ac_cv_prog_gcc" = yes; then
