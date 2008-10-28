@@ -41,9 +41,8 @@ Provides: %_sysconfdir/%name/macros.d
 PreReq: lib%name = %version-%release, librpmbuild = %version-%release
 PreReq: alt-gpgkeys, coreutils, /bin/sh
 
-# XXX glibc-2.1.92 has incompatible locale changes that affect statically
-# XXX linked binaries like /bin/rpm.
-Requires: glibc-core
+# Due to rpm*cmp utilities.
+Conflicts: rpm-utils <= 0:0.9.10-alt1
 
 %{?_with_python:BuildPreReq: python-devel}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
@@ -454,6 +453,7 @@ fi
 %_bindir/rpmquery
 %_bindir/rpmverify
 %_bindir/rpminit
+%_bindir/rpm*cmp
 
 %rpmdirattr %_rpmlibdir
 %rpmattr %_rpmlibdir/delayed_rebuilddb

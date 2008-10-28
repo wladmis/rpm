@@ -29,6 +29,7 @@ noinst_PROGRAMS = \
 
 pkgbindir = @RPMCONFIGDIR@
 pkgbin_PROGRAMS = javadeps filesize dump_ld_config relative pdeath_execute
+bin_PROGRAMS = rpmvercmp rpmevrcmp
 
 rpmsort_SOURCES = rpmsort.c
 rpmsort_LDFLAGS = @LDFLAGS_STATIC@
@@ -46,6 +47,10 @@ dump_ld_config_LDADD =
 
 pdeath_execute_SOURCES = pdeath_execute.c
 pdeath_execute_LDADD =
+
+rpmvercmp_SOURCES = rpmvercmp.c
+
+rpmevrcmp_SOURCES = rpmevrcmp.c
 
 $(PROGRAMS): $(LDADD)
 
