@@ -3594,6 +3594,9 @@ msgstr "Разработка/Scheme"
 msgid "Development/Tcl"
 msgstr "Разработка/Tcl"
 
+msgid "Development/Tools"
+msgstr "Разработка/Инструменты"
+
 msgid "Documentation"
 msgstr "Документация"
 
