@@ -7,11 +7,29 @@
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 
+# library flag
+lib=
+
+# system library flag
+sys=
+
 while read -r f; do
+	# 0) Short circuit condition: if a library is already found,
+	# skip the remaining list of non-system libraries.  Note that
+	# the input file list is sorted, and "/lic" collates after
+	# "/lib" and "/lib64".
+	if [ -n "$lib" ] && LC_ALL=C [ "$f" '>' "/lic" ]; then
+		#echo >&2 break="$f"
+		break
+	fi
 	# 1) Check if basename looks like a shared library.
 	case "${f##*/}" in
-		lib*.so*) ;;
-		*) continue ;;
+		lib*.so*)
+			#echo >&2 lib="$f"
+			lib=1
+			;;
+		*) continue
+			;;
 	esac
 	# 2) It is also possible to check dirname and skip private
 	# directories (public ones are /lib, /lib64, /usr/lib, and
@@ -25,5 +43,21 @@ while read -r f; do
 	# exist, then $f appears to be a compile-time symbolic link.
 	# However, /etc/ld.so.cache seems to include both sonames and
 	# non-soname lib*.so entries.
-	exec /sbin/ldconfig
+	# 4) Check whether it is a system library.
+	case "${f%/*}" in
+		/lib | /lib/* | /lib64 | /lib64/* )
+			#echo >&2 sys="$f"
+			sys=1
+			break
+			;;
+	esac
 done
+
+if [ -n "$lib" ]; then
+	/sbin/ldconfig
+fi
+
+update_chrooted=/sbin/update_chrooted
+if [ -n "$sys" ] && [ -x "$update_chrooted" ]; then
+	"$update_chrooted" lib
+fi
