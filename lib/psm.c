@@ -2174,7 +2174,7 @@ void psmTriggerPosttrans(PSM_t psm)
     const char *script = RPMCONFIGDIR "/posttrans-filetriggers";
     const char *argv[] = { script, file, NULL };
     rpmMessage(RPMMESS_VERBOSE, _("Running %s\n"), script);
-    int rc = runScript(psm, NULL, script, 2, argv, NULL, 0, 0);
+    int rc = runScript(psm, NULL, script, 2, argv, NULL, -1, -1);
     if (rc == 0)
 	unlink(file);
     file = _free(file);
