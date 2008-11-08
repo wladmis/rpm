@@ -1,4 +1,4 @@
-#!/bin/sh -efu
+#!/bin/sh -e
 #
 # This script is automatically invoked after each successful transaction.
 # It runs @RPMCONFIGDIR@/*.filetrigger programs, with full list of filenames
@@ -8,7 +8,7 @@
 #
 # Copyright (C) 2008  Alexey Tourbin <at@altlinux.org>
 #
-# Vaguely based on filetriggers.patch from Mandriva Linux.
+# Loosely based on filetriggers.patch from Mandriva Linux.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,21 +16,21 @@
 # (at your option) any later version.
 
 # Passed by rpm (usually /var/lib/rpm/files-awaiting-filetriggers).
-filelist=$1
+filelist="${1:?}"
 shift
 
 RC=0
 
 if [ -s "$filelist" ]; then
 	LC_ALL=C sort -u -o "$filelist" "$filelist"
-	set +f
 	for filetrigger in @RPMCONFIGDIR@/*.filetrigger; do
-		[ -x "$filetrigger" ] || continue
-		"$filetrigger" <"$filelist" ||
-		{
+		if ! [ -x "$filetrigger" ]; then
+			continue
+		fi
+		if ! "$filetrigger" <"$filelist"; then
 			echo >&2 "$filetrigger failed"
 			RC=1
-		}
+		fi
 	done
 fi
 
