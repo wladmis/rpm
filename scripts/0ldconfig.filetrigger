@@ -44,8 +44,8 @@ while read -r f; do
 	# However, /etc/ld.so.cache seems to include both sonames and
 	# non-soname lib*.so entries.
 	# 4) Check whether it is a system library.
-	case "${f%/*}" in
-		/lib | /lib/* | /lib64 | /lib64/* )
+	case "$f" in
+		/lib/* | /lib64/* )
 			#echo >&2 sys="$f"
 			sys=1
 			break
