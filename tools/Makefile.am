@@ -12,7 +12,7 @@ INCLUDES = -I. \
 
 EXTRA_DIST =	rpmchecksig.c
 
-EXTRA_PROGRAMS = rpminject rpmsort
+EXTRA_PROGRAMS = rpminject
 
 #myLDFLAGS= -L$(top_builddir)/build -L$(top_builddir)/lib \
 #	-L$(top_builddir)/rpmio

@@ -1856,11 +1856,7 @@ static void addQ(struct availablePackage * p,
 int rpmdepOrder(rpmTransactionSet ts)
 {
     int npkgs = ts->addedPackages.size;
-#ifdef	DYING
-    int chainsaw = ts->transFlags & RPMTRANS_FLAG_CHAINSAW;
-#else
-    int chainsaw = 0;
-#endif
+    int anaconda = 0;
     struct availablePackage * p;
     struct availablePackage * q;
     struct availablePackage * r;
@@ -1954,8 +1950,8 @@ rescan:
     if ((p = ts->addedPackages.list) != NULL)
     for (i = 0; i < npkgs; i++, p++) {
 
-	/* Prefer packages in chainsaw or presentation order. */
-	if (!chainsaw)
+	/* Prefer packages in chainsaw or anaconda presentation order. */
+	if (anaconda)
 	    p->tsi.tsi_qcnt = (npkgs - i);
 
 	if (p->tsi.tsi_count != 0)

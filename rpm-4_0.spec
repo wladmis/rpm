@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96.9
+Release: alt96.10
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,6 +551,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Nov 10 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.10
+- improved install/upgrade package reordering (in tsort algorithm,
+  changed "presentation order" to "chainsaw order")
+
 * Tue Oct 28 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.9
 - rpmevrcmp, rpmvercmp: Imported from rpm-utils (closes: #13627).
 - GROUPS: Added "Development/Tools" (ALT#17550).
