@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.4
+Release: alt77.M40.5
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -530,6 +530,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Nov 10 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.5
+- improved install/upgrade package reordering (in tsort algorithm,
+  changed "presentation order" to "chainsaw order")
+
 * Mon Sep 22 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.4
 - build/reqprov.c: when folding duplicate dependencies, Requires(pre)
   or Requires(post) should not opimitze out bare Requires
