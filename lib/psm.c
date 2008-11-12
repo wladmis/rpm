@@ -17,6 +17,7 @@
 #include "signature.h"		/* signature constants */
 #include "ugid.h"
 #include "misc.h"
+#include "rpmcli.h"		/* HACK for rpmShowProgress */
 #include "db.h"			/* HACK for relock */
 #include "rpmdb.h"		/* XXX for db_chrootDone */
 #include "debug.h"
@@ -2190,7 +2191,14 @@ void psmTriggerPosttrans(PSM_t psm)
     const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers", NULL);
     const char *script = RPMCONFIGDIR "/posttrans-filetriggers";
     const char *argv[] = { script, file, NULL };
-    rpmMessage(RPMMESS_VERBOSE, _("Running %s\n"), script);
+    int verbose = RPMMESS_VERBOSE;
+    /* HACK maybe increase verbosity */
+    if (psm->ts->notify == rpmShowProgress) {
+	int flags = (int) ((long)psm->ts->notifyData);
+	if (flags & INSTALL_LABEL)
+	    verbose = RPMMESS_NORMAL;
+    }
+    rpmMessage(verbose, _("Running %s\n"), script);
     int rc = runScript(psm, NULL, script, 2, argv, NULL, -1, -1);
     if (rc == 0)
 	unlink(file);
