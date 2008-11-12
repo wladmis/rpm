@@ -376,12 +376,6 @@ if set /var/cache/apt/*.bin && [ -f "$1" ]; then
 fi
 :
 
-%post -n lib%name -p /sbin/post_ldconfig
-%postun -n lib%name -p /sbin/postun_ldconfig
-
-%post -n librpmbuild -p /sbin/post_ldconfig
-%postun -n librpmbuild -p /sbin/postun_ldconfig
-
 %files -n librpmbuild
 %_libdir/librpmbuild-*.so
 
