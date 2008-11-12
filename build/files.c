@@ -17,7 +17,6 @@
 #include "buildio.h"
 
 #include "myftw.h"
-#include "md5.h"
 #include "debug.h"
 
 /*@access Header @*/

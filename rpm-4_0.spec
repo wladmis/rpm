@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.6
+Release: alt95.M41.6+
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -291,6 +291,7 @@ for dbi in \
 do
     touch "%buildroot%_localstatedir/%name/$dbi"
 done
+touch %buildroot%_localstatedir/%name/files-awaiting-filetriggers
 
 # Prepare documentation.
 bzip2 -9 CHANGES ||:
@@ -444,6 +445,7 @@ fi
 %rpmdbattr %_localstatedir/%name/Sigmd5
 %rpmdbattr %_localstatedir/%name/Sha1header
 %rpmdbattr %_localstatedir/%name/Triggername
+%rpmdbattr %_localstatedir/%name/files-awaiting-filetriggers
 
 /bin/rpm
 %_bindir/rpm
@@ -464,6 +466,9 @@ fi
 %rpmdatattr %_rpmlibdir/GROUPS
 %_prefix/lib/rpmpopt
 %_prefix/lib/rpmrc
+
+%rpmattr %_rpmlibdir/posttrans-filetriggers
+%rpmattr %_rpmlibdir/0ldconfig.filetrigger
 
 %rpmattr %_rpmlibdir/functions
 %rpmattr %_rpmlibdir/find-package
@@ -551,6 +556,12 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Nov 12 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.6+
+- implemented post-transaction filetriggers, loosely based on filetriggers.patch
+  from Mandriva Linux (see %_rpmlibdir/posttrans-filetriggers for details)
+- implemented %_rpmlibdir/0ldconfig.filetrigger, so that packages with
+  shared libraries need not to invoke ldconfig(1) in they %%post-scriptlets
+
 * Mon Nov 10 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.6
 - improved install/upgrade package reordering (in tsort algorithm,
   changed "presentation order" to "chainsaw order")

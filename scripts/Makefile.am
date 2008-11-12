@@ -3,6 +3,7 @@
 AUTOMAKE_OPTIONS = 1.4 foreign
 
 EXTRA_DIST = \
+	posttrans-filetriggers 0ldconfig.filetrigger \
 	functions find-package .provides.sh \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
@@ -32,6 +33,7 @@ all:
 configdir = ${prefix}/lib/rpm
 config_DATA = .provides.sh 0common-files.req.list
 config_SCRIPTS = \
+	posttrans-filetriggers 0ldconfig.filetrigger \
 	functions find-package \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \

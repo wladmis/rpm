@@ -2068,6 +2068,9 @@ assert(alp == fi->ap);
 		    ourrc++;
 		    lastFailed = i;
 		}
+		else {
+		    psmTriggerAdded(psm);
+		}
 		fi->h = headerFree(fi->h);
 		if (hsave) {
 		    fi->h = headerLink(hsave);
@@ -2094,11 +2097,18 @@ assert(alp == fi->ap);
 
 	    if (psmStage(psm, PSM_PKGERASE))
 		ourrc++;
+	    else {
+		psmTriggerRemoved(psm);
+	    }
 
 	    break;
 	}
 	(void) rpmdbSync(ts->rpmdb);
     }
+
+    if (ourrc == 0)
+	psmTriggerPosttrans(psm);
+
     tsi = tsFreeIterator(tsi);
 
     ts->flList = freeFl(ts, ts->flList);
