@@ -17,6 +17,7 @@
 #include "signature.h"		/* signature constants */
 #include "ugid.h"
 #include "misc.h"
+#include "db.h"			/* HACK for relock */
 #include "rpmdb.h"		/* XXX for db_chrootDone */
 #include "debug.h"
 
@@ -2162,6 +2163,20 @@ void psmTriggerRemoved(PSM_t psm)
     saveTriggerFiles(psm);
 }
 
+static /* HACK */
+int relock(rpmdb db_, short type)
+{
+    DB *db = db_->_dbi[0]->dbi_db;
+    if (db == NULL)
+	return 1;
+    int fd = -1;
+    if (db->fd(db, &fd) || fd < 0)
+	return 1;
+    struct flock l = { 0 };
+    l.l_type = type;
+    return fcntl(fd, F_SETLK, &l);
+}
+
 void psmTriggerPosttrans(PSM_t psm)
 {
     const rpmTransactionSet ts = psm->ts;
@@ -2170,6 +2185,8 @@ void psmTriggerPosttrans(PSM_t psm)
     if (ts->transFlags & (_noTransScripts | _noTransTriggers))
 	return;
     psmStage(psm, PSM_CHROOT_IN);
+    if (relock(psm->ts->rpmdb, F_RDLCK))
+	rpmMessage(RPMMESS_WARNING, "failed to downgrade database lock\n");
     const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers", NULL);
     const char *script = RPMCONFIGDIR "/posttrans-filetriggers";
     const char *argv[] = { script, file, NULL };
@@ -2178,5 +2195,7 @@ void psmTriggerPosttrans(PSM_t psm)
     if (rc == 0)
 	unlink(file);
     file = _free(file);
+    if (relock(psm->ts->rpmdb, F_WRLCK))
+	rpmMessage(RPMMESS_WARNING, "failed to restore database lock\n");
     psmStage(psm, PSM_CHROOT_OUT);
 }
