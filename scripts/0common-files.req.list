@@ -18,6 +18,7 @@
 /etc/rpm/macros.d	rpm
 /etc/security/console.apps	pam0_console
 /etc/sudo.d	sudo
+/etc/sysconfig/limits.d	service
 /etc/syslog.d	syslog-common
 /etc/tex-fonts.d	tetex-core
 /etc/udev/rules.d	udev-rules
