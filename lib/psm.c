@@ -2170,7 +2170,7 @@ void psmTriggerPosttrans(PSM_t psm)
     if (ts->transFlags & (_noTransScripts | _noTransTriggers))
 	return;
     psmStage(psm, PSM_CHROOT_IN);
-    const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers");
+    const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers", NULL);
     const char *script = RPMCONFIGDIR "/posttrans-filetriggers";
     const char *argv[] = { script, file, NULL };
     rpmMessage(RPMMESS_VERBOSE, _("Running %s\n"), script);
