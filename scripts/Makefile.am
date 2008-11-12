@@ -18,6 +18,7 @@ EXTRA_DIST = \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
+	rpmlib.req rpmlib.req.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
@@ -48,6 +49,7 @@ config_SCRIPTS = \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
+	rpmlib.req rpmlib.req.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \

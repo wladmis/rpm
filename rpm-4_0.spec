@@ -506,6 +506,7 @@ fi
 %rpmattr %_rpmlibdir/pam.*
 %rpmattr %_rpmlibdir/pkgconfig.*
 %rpmattr %_rpmlibdir/pkgconfiglib.*
+%rpmattr %_rpmlibdir/rpmlib.*
 %rpmattr %_rpmlibdir/shell.*
 %rpmattr %_rpmlibdir/shebang.*
 %rpmattr %_rpmlibdir/static.*
