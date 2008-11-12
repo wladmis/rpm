@@ -40,6 +40,9 @@ static struct rpmlibProvides_s {
     { "rpmlib(PartialHardlinkSets)",    "4.0.4-1",
 	(                RPMSENSE_EQUAL),
     N_("a hardlink file set may be installed without being complete.") },
+    { "rpmlib(PosttransFiletriggers)",  "4.0.4",
+	(                RPMSENSE_EQUAL),
+    N_("package installs post-transaction filetrigger.") },
     { NULL,				NULL, 0,	NULL }
 };
 

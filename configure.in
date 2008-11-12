@@ -1014,6 +1014,8 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	scripts/pam.req
 	scripts/pkgconfig.req
 	scripts/pkgconfiglib.req
+	scripts/rpmlib.req
+	scripts/rpmlib.req.files
 	scripts/shebang.req
 	scripts/shell.prov
 	scripts/shell.req
@@ -1021,6 +1023,7 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt rpm.spec
 	scripts/strip_files
 	scripts/symlinks.req
 	scripts/verify-elf
+	scripts/posttrans-filetriggers
 	tests/Makefile tests/rpmrc tests/macros tests/hello-test/Makefile
 	po/Makefile.in
 	doc/Makefile doc/manual/Makefile

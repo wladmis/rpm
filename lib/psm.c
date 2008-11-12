@@ -17,6 +17,8 @@
 #include "signature.h"		/* signature constants */
 #include "ugid.h"
 #include "misc.h"
+#include "rpmcli.h"		/* HACK for rpmShowProgress */
+#include "db.h"			/* HACK for relock */
 #include "rpmdb.h"		/* XXX for db_chrootDone */
 #include "debug.h"
 
@@ -900,7 +902,7 @@ static int runScript(PSM_t psm, Header h,
     int freePrefixes = 0;
     FD_t out;
     rpmRC rc = RPMRC_OK;
-    const char *n, *v, *r;
+    const char *n = NULL, *v = NULL, *r = NULL;
     char arg1_str [sizeof(int)*3+1] = "";
     char arg2_str [sizeof(int)*3+1] = "";
 
@@ -917,6 +919,7 @@ static int runScript(PSM_t psm, Header h,
 	argc = progArgc;
     }
 
+    if (h)
     xx = headerNVR(h, &n, &v, &r);
 
     if (arg1 >= 0)
@@ -924,9 +927,9 @@ static int runScript(PSM_t psm, Header h,
     if (arg2 >= 0)
 	sprintf(arg2_str, "%d", arg2);
 
-    if (hge(h, RPMTAG_INSTPREFIXES, &ipt, (void **) &prefixes, &numPrefixes)) {
+    if (h && hge(h, RPMTAG_INSTPREFIXES, &ipt, (void **) &prefixes, &numPrefixes)) {
 	freePrefixes = 1;
-    } else if (hge(h, RPMTAG_INSTALLPREFIX, NULL, (void **) &oldPrefix, NULL)) {
+    } else if (h && hge(h, RPMTAG_INSTALLPREFIX, NULL, (void **) &oldPrefix, NULL)) {
 	prefixes = &oldPrefix;
 	numPrefixes = 1;
     } else {
@@ -1038,6 +1041,7 @@ static int runScript(PSM_t psm, Header h,
 	    }
 	}
 
+	if (n)
 	dosetenv ("RPM_INSTALL_NAME", n, 1);
 
 	if (*arg1_str)
@@ -2129,4 +2133,91 @@ fprintf(stderr, "*** PSM_RDB_LOAD: header #%u not found\n", fi->record);
     /*@-nullstate@*/	/* FIX: psm->oh and psm->fi->h may be NULL. */
     return rc;
     /*@=nullstate@*/
+}
+
+static
+void saveTriggerFiles(PSM_t psm)
+{
+    const rpmTransactionSet ts = psm->ts;
+    if (ts->transFlags & RPMTRANS_FLAG_TEST)
+	return;
+    if (ts->transFlags & (_noTransScripts | _noTransTriggers))
+	return;
+    const TFI_t fi = psm->fi;
+    if (fi->fc < 1)
+	return;
+    psmStage(psm, PSM_CHROOT_IN);
+    const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers");
+    FILE *fp = fopen(file, "a");
+    if (fp == NULL)
+	rpmError(RPMERR_OPEN, "open of %s failed: %s\n", file, strerror(errno));
+    else {
+	int i;
+	for (i = 0; i < fi->fc; i++) {
+	    const char *d = fi->dnl[fi->dil[i]];
+	    const char *b = fi->bnl[i];
+	    if (strchr(d, '\n'))
+		continue;
+	    if (strchr(b, '\n'))
+		continue;
+	    fprintf(fp, "%s%s\n", d, b);
+	}
+	fclose(fp);
+    }
+    file = _free(file);
+    psmStage(psm, PSM_CHROOT_OUT);
+}
+
+void psmTriggerAdded(PSM_t psm)
+{
+    saveTriggerFiles(psm);
+}
+
+void psmTriggerRemoved(PSM_t psm)
+{
+    saveTriggerFiles(psm);
+}
+
+static /* HACK */
+int relock(rpmdb db_, short type)
+{
+    DB *db = db_->_dbi[0]->dbi_db;
+    if (db == NULL)
+	return 1;
+    int fd = -1;
+    if (db->fd(db, &fd) || fd < 0)
+	return 1;
+    struct flock l = { 0 };
+    l.l_type = type;
+    return fcntl(fd, F_SETLK, &l);
+}
+
+void psmTriggerPosttrans(PSM_t psm)
+{
+    const rpmTransactionSet ts = psm->ts;
+    if (ts->transFlags & RPMTRANS_FLAG_TEST)
+	return;
+    if (ts->transFlags & (_noTransScripts | _noTransTriggers))
+	return;
+    psmStage(psm, PSM_CHROOT_IN);
+    if (relock(psm->ts->rpmdb, F_RDLCK))
+	rpmMessage(RPMMESS_WARNING, "failed to downgrade database lock\n");
+    const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers", NULL);
+    const char *script = RPMCONFIGDIR "/posttrans-filetriggers";
+    const char *argv[] = { script, file, NULL };
+    int verbose = RPMMESS_VERBOSE;
+    /* HACK maybe increase verbosity */
+    if (psm->ts->notify == rpmShowProgress) {
+	int flags = (int) ((long)psm->ts->notifyData);
+	if (flags & INSTALL_LABEL)
+	    verbose = RPMMESS_NORMAL;
+    }
+    rpmMessage(verbose, _("Running %s\n"), script);
+    int rc = runScript(psm, NULL, script, 2, argv, NULL, -1, -1);
+    if (rc == 0)
+	unlink(file);
+    file = _free(file);
+    if (relock(psm->ts->rpmdb, F_WRLCK))
+	rpmMessage(RPMMESS_WARNING, "failed to restore database lock\n");
+    psmStage(psm, PSM_CHROOT_OUT);
 }

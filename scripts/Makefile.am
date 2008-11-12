@@ -3,6 +3,7 @@
 AUTOMAKE_OPTIONS = 1.4 foreign
 
 EXTRA_DIST = \
+	posttrans-filetriggers 0ldconfig.filetrigger \
 	functions find-package .provides.sh \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
@@ -17,6 +18,7 @@ EXTRA_DIST = \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
+	rpmlib.req rpmlib.req.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
@@ -32,6 +34,7 @@ all:
 configdir = ${prefix}/lib/rpm
 config_DATA = .provides.sh 0common-files.req.list
 config_SCRIPTS = \
+	posttrans-filetriggers 0ldconfig.filetrigger \
 	functions find-package \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
@@ -46,6 +49,7 @@ config_SCRIPTS = \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files perl.prov perl.req \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
+	rpmlib.req rpmlib.req.files \
 	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
