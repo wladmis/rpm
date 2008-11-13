@@ -2147,7 +2147,7 @@ void saveTriggerFiles(PSM_t psm)
     if (fi->fc < 1)
 	return;
     psmStage(psm, PSM_CHROOT_IN);
-    const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers");
+    const char *file = rpmGetPath(ts->rpmdb->db_home, "/files-awaiting-filetriggers", NULL);
     FILE *fp = fopen(file, "a");
     if (fp == NULL)
 	rpmError(RPMERR_OPEN, "open of %s failed: %s\n", file, strerror(errno));
