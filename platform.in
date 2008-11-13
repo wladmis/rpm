@@ -403,10 +403,10 @@
 @alt@%_target_libdir_noarch	/usr/lib
 @alt@%_target_libdir	%{expand:%%{?_target_libdir_%_target_cpu:%%_target_libdir_%_target_cpu}%%{!?_target_libdir_%_target_cpu:%%_libdir}}
 @alt@
-@alt@# Update Menus.
+@alt@# OBSOLETE update menu macros.
 @alt@%_update_menus_bin	%_bindir/update-menus
-@alt@%update_menus	update_menus_bin='%_update_menus_bin' && [ -x "$update_menus_bin" ] && "$update_menus_bin" ||:
-@alt@%clean_menus	update_menus_bin='%_update_menus_bin' && [ "$1" = 0 -a -x "$update_menus_bin" ] && "$update_menus_bin" ||:
+@alt@%update_menus	%{warning %%update_menus is obsolete and will be removed soon}update_menus_bin='%_update_menus_bin' && [ -x "$update_menus_bin" ] && "$update_menus_bin" ||:
+@alt@%clean_menus	%{warning %%clean_menus is obsolete and will be removed soon}update_menus_bin='%_update_menus_bin' && [ "$1" = 0 -a -x "$update_menus_bin" ] && "$update_menus_bin" ||:
 @alt@
 @alt@# Update Window Managers sessions.
 @alt@%_update_wms_bin	%_sbindir/update_wms
