@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96.11
+Release: alt96.12
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -551,16 +551,22 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Nov 13 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.12
+- verify-elf: Removed no longer needed workaround for PIE executables on ARM.
+- 0common-files.req.list: Added /etc/sysconfig/limits.d (service).
+- librpm, librpmbuild: Removed %%post/%%postun scripts.
+- librpm: Fixed crash bug in saveTriggerFiles().
+
 * Wed Nov 12 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.11
-- implemented post-transaction filetriggers, loosely based on filetriggers.patch
+- Implemented post-transaction filetriggers, loosely based on filetriggers.patch
   from Mandriva Linux (see %_rpmlibdir/posttrans-filetriggers for details)
-- implemented %_rpmlibdir/0ldconfig.filetrigger, so that packages with
+- Implemented %_rpmlibdir/0ldconfig.filetrigger, so that packages with
   shared libraries need not to invoke ldconfig(1) in they %%post-scriptlets
-- rpmlib.req: automatically generate rpmlib(PosttransFiletriggers) dependency
+- rpmlib.req: Automatically generate rpmlib(PosttransFiletriggers) dependency
   for packages which provide %_rpmlibdir/*.filetrigger programs
 
 * Mon Nov 10 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.10
-- improved install/upgrade package reordering (in tsort algorithm,
+- Improved install/upgrade package reordering (in tsort algorithm,
   changed "presentation order" to "chainsaw order")
 
 * Tue Oct 28 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.9
