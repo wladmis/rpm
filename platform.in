@@ -314,11 +314,11 @@
 @alt@# Autotools.
 @alt@%autoreconf		autoreconf -fisv
 @alt@
-@alt@# Library cache update (ldconfig) macros.
-@alt@%post_ldconfig_lib /sbin/ldconfig
-@alt@%post_ldconfig_sys /sbin/post_ldconfig
-@alt@%post_ldconfig %post_ldconfig_lib
-@alt@%postun_ldconfig /sbin/postun_ldconfig
+@alt@# OBSOLETE library cache update (ldconfig) macros.
+@alt@%post_ldconfig_lib %{warning %%post_ldconfig_lib is obsolete and will be removed soon}/sbin/ldconfig
+@alt@%post_ldconfig_sys %{warning %%post_ldconfig_sys is obsolete and will be removed soon}/sbin/post_ldconfig
+@alt@%post_ldconfig %{warning %%post_ldconfig is obsolete and will be removed soon}/sbin/ldconfig
+@alt@%postun_ldconfig %{warning %%postun_ldconfig is obsolete and will be removed soon}/sbin/postun_ldconfig
 @alt@
 @alt@# Macros used for install/uninstall info files.
 @alt@
