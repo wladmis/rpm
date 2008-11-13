@@ -172,6 +172,7 @@ int	isCompressed	(const char * file,
  * @return		macro expansion (malloc'ed)
  */
 char * rpmExpand	(/*@null@*/ const char * arg, ...)
+	__attribute__ ((sentinel))
 	/*@globals rpmGlobalMacroContext @*/
 	/*@modifies rpmGlobalMacroContext @*/;
 
@@ -190,6 +191,7 @@ char * rpmExpand	(/*@null@*/ const char * arg, ...)
  */
 /*@-redecl@*/ /* LCL: shrug */
 const char * rpmGetPath	(/*@null@*/ const char * path, ...)
+	__attribute__ ((sentinel))
 	/*@globals rpmGlobalMacroContext @*/
 	/*@modifies rpmGlobalMacroContext @*/;
 /*@=redecl@*/

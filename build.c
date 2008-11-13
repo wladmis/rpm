@@ -274,7 +274,7 @@ static int buildForTarget(const char * arg, BTA_t ba,
     }
 #undef	_anyarch
 
-    char *br_build = rpmExpand("%{?_buildrequires_build}", 0);
+    char *br_build = rpmExpand("%{?_buildrequires_build}", NULL);
     if (spec->packages && br_build && *br_build) {
 	if (parseRCPOT (spec, spec->packages, br_build, RPMTAG_BUILDREQUIRES, 0, RPMSENSE_SCRIPT_BUILD)) {
 	    rc = 1;

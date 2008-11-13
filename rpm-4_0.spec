@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.7
+Release: alt95.M41.8
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -557,6 +557,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Nov 13 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.8
+- fixed crash in previous release (Dmitry V. Levin)
+
 * Wed Nov 12 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.7
 - implemented post-transaction filetriggers, loosely based on filetriggers.patch
   from Mandriva Linux (see %_rpmlibdir/posttrans-filetriggers for details)
