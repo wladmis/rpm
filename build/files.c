@@ -2880,7 +2880,7 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 
 	Fclose(xfd);
 
-	runCmd = rpmExpand( "%{?___build_cmd}", " ", runScript, 0 );
+	runCmd = rpmExpand("%{?___build_cmd}", " ", runScript, NULL);
 
 	poptParseArgvString(runCmd, &argc, &argv);
 
@@ -3148,7 +3148,7 @@ static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
 
     Fclose(xfd);
 
-    runCmd = rpmExpand( "%{?___build_cmd}", " ", runScript, 0 );
+    runCmd = rpmExpand("%{?___build_cmd}", " ", runScript, NULL);
 
     if (!((rc = poptParseArgvString(runCmd, &ac, (const char ***)&av)) == 0
           && ac > 0 && av != NULL))
