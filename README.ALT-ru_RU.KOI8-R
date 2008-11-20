@@ -188,14 +188,6 @@ BuildRoot.
    %uninstall_info:
           отмена регистрации удалённых info-страниц.
 
-Регистрация каталогов scrollkeeper.
-
-   %update_scrollkeeper:
-          регистрация новых/обновлённых каталогов;
-
-   %clean_scrollkeeper:
-          отмена регистрации удалённых каталогов.
-
 Вспомогательные макросы %configure.
 
    %__libtoolize:

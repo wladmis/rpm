@@ -413,10 +413,10 @@
 @alt@%update_wms	%{warning %%update_wms is obsolete and will be removed soon}update_wms_bin='%_update_wms_bin' && [ -x "$update_wms_bin" ] && "$update_wms_bin" ||:
 @alt@%clean_wms	%{warning %%clean_wms is obsolete and will be removed soon}update_wms_bin='%_update_wms_bin' && [ "$1" = 0 -a -x "$update_wms_bin" ] && "$update_wms_bin" ||:
 @alt@
-@alt@# Synchronize the scrollkeeper database.
+@alt@# OBSOLETE scrollkeeper database synchronization macros.
 @alt@%_update_scrollkeeper_bin	%_bindir/scrollkeeper-update
-@alt@%update_scrollkeeper	update_scrollkeeper_bin='%_update_scrollkeeper_bin' && [ -x "$update_scrollkeeper_bin" ] && "$update_scrollkeeper_bin" -q ||:
-@alt@%clean_scrollkeeper	update_scrollkeeper_bin='%_update_scrollkeeper_bin' && [ "$1" = 0 -a -x "$update_scrollkeeper_bin" ] && "$update_scrollkeeper_bin" -q ||:
+@alt@%update_scrollkeeper	%{warning %%update_scrollkeeper is obsolete and will be removed soon}update_scrollkeeper_bin='%_update_scrollkeeper_bin' && [ -x "$update_scrollkeeper_bin" ] && "$update_scrollkeeper_bin" -q ||:
+@alt@%clean_scrollkeeper	%{warning %%clean_scrollkeeper is obsolete and will be removed soon}update_scrollkeeper_bin='%_update_scrollkeeper_bin' && [ "$1" = 0 -a -x "$update_scrollkeeper_bin" ] && "$update_scrollkeeper_bin" -q ||:
 @alt@
 @alt@%_defattr	%%defattr(-,root,root,755)
 @alt@
