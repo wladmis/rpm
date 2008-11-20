@@ -31,12 +31,10 @@ Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
 Packager: Dmitry V. Levin <ldv@altlinux.org>
 
-# 1. ftp://ftp.rpm.org/pub/rpm/dist/
-# 2. cvs -d :pserver:anonymous@cvs.rpm.org:/cvs/devel export -r rpm-4_0 rpm
-# 3. ALT Linux CVS
+# http://git.altlinux.org/people/ldv/packages/?p=rpm.git
 Source: %srcname.tar
 
-Provides: %_sysconfdir/%name/macros.d
+Provides: %_rpmlibdir/macros.d, %_sysconfdir/%name/macros.d
 
 PreReq: lib%name = %version-%release, librpmbuild = %version-%release
 PreReq: alt-gpgkeys, coreutils, /bin/sh
@@ -271,7 +269,7 @@ chmod a-w %buildroot%_usrsrc/RPM{,/RPMS/*}
 #mkdir -p %buildroot%_sysconfdir/logrotate.d
 #install -p -m640 scripts/%name.log %buildroot%_sysconfdir/logrotate.d/%name
 
-mkdir -p %buildroot%_sysconfdir/%name/macros.d
+mkdir -p %buildroot{%_rpmlibdir/macros.d,%_sysconfdir/%name/macros.d}
 touch %buildroot%_sysconfdir/%name/macros
 cat << E_O_F > %buildroot%_sysconfdir/%name/macros.db1
 %%_dbapi		1
@@ -415,6 +413,7 @@ fi
 #%config(noreplace,missingok) %_sysconfdir/cron.daily/%name
 #%config(noreplace,missingok) %_sysconfdir/logrotate.d/%name
 
+%rpmdirattr %_rpmlibdir/macros.d
 %dir %_sysconfdir/%name
 %dir %_sysconfdir/%name/macros.d
 %config(noreplace,missingok) %_sysconfdir/%name/macros
@@ -451,7 +450,6 @@ fi
 %_bindir/rpminit
 %_bindir/rpm*cmp
 
-%rpmdirattr %_rpmlibdir
 %rpmattr %_rpmlibdir/delayed_rebuilddb
 %rpmattr %_rpmlibdir/pdeath_execute
 %rpmattr %_rpmlibdir/rpm[dikq]
@@ -477,7 +475,6 @@ fi
 %rpmattr %_bindir/gendiff
 %_bindir/rpmbuild
 %_bindir/relative
-%rpmdirattr %_rpmlibdir
 %_rpmlibdir/rpmt
 %rpmattr %_rpmlibdir/rpmb
 %rpmattr %_rpmlibdir/dump_ld_config
@@ -532,7 +529,6 @@ fi
 
 %if_with contrib
 %files contrib
-%rpmattr %dir %_rpmlibdir
 %rpmattr %_rpmlibdir/cpanflute*
 %rpmattr %_rpmlibdir/cross-build
 %rpmattr %_rpmlibdir/find-prov.pl

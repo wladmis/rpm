@@ -23,3 +23,5 @@
 /etc/tex-fonts.d	tetex-core
 /etc/udev/rules.d	udev-rules
 /etc/xinetd.d	xinetd
+/usr/lib/rpm	librpm
+/usr/lib/rpm/macros.d	rpm
