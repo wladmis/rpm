@@ -396,8 +396,9 @@
 @alt@# Directory for emacs lisp modules.
 @alt@%_emacslispdir	%{_datadir}/emacs/site-lisp
 @alt@
-@alt@# RPM directory.
+@alt@# RPM directories.
 @alt@%_rpmlibdir	%_prefix/lib/rpm
+@alt@%_rpmmacrosdir	%_rpmlibdir/macros.d
 @alt@
 @alt@# target libdir.
 @alt@%_target_libdir_noarch	/usr/lib
