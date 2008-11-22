@@ -3663,6 +3663,9 @@ msgstr "Графические оболочки/Rox"
 msgid "Graphical desktop/Sawfish"
 msgstr "Графические оболочки/Sawfish"
 
+msgid "Graphical desktop/Sugar"
+msgstr "Графические оболочки/Sugar"
+
 msgid "Graphical desktop/Window Maker"
 msgstr "Графические оболочки/Window Maker"
 
