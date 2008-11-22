@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96.12
+Release: alt96.13
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -547,6 +547,15 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Nov 23 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.13
+- Introduced /usr/lib/rpm/macros.d/ (closes: #17948).
+- GROUPS: Added "Graphical desktop/Sugar" (closes: #17950).
+- platform.in:
+  + Marked update menu, window managers registration, scrollkeeper
+    database synchronization and ldconfig macros as obsolete.
+  + Removed obsolete %%php_version and %%php_release macros (Alexey Gladkov).
+  + Added %_rpmmacrosdir macro.
+
 * Thu Nov 13 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.12
 - verify-elf: Removed no longer needed workaround for PIE executables on ARM.
 - 0common-files.req.list: Added /etc/sysconfig/limits.d (service).
