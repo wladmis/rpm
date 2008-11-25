@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.8
+Release: alt95.M41.10
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -556,6 +556,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Nov 25 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt95.M41.10
+- Disabled automatic rpmlib(PosttransFiletriggers) requirements for M41.
+
 * Thu Nov 13 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.8
 - fixed crash in previous release (Dmitry V. Levin)
 
