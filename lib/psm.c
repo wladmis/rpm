@@ -2185,6 +2185,8 @@ void psmTriggerPosttrans(PSM_t psm)
 	return;
     if (ts->transFlags & (_noTransScripts | _noTransTriggers))
 	return;
+    if (!psm->fi)
+	return;
     psmStage(psm, PSM_CHROOT_IN);
     if (relock(psm->ts->rpmdb, F_RDLCK))
 	rpmMessage(RPMMESS_WARNING, "failed to downgrade database lock\n");
