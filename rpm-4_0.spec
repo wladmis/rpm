@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.10
+Release: alt95.M41.11
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -556,6 +556,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Dec 09 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt95.M41.11
+- psm.c (psmTriggerPosttrans):
+  Handle null "transaction file info" pointer properly (closes: #18079).
+- GROUPS: Added "Graphical desktop/Sugar" (closes: #18094).
+
 * Tue Nov 25 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt95.M41.10
 - Disabled automatic rpmlib(PosttransFiletriggers) requirements for M41.
 
