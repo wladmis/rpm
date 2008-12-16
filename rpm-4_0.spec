@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96.14
+Release: alt96.15
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -547,6 +547,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Dec 16 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.15
+- Added buildreq ignore rule for /usr/lib/rpm/macros.d/*
+
 * Fri Dec 12 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.14
 - psm.c (psmTriggerPosttrans):
   Handle null "transaction file info" pointer properly (closes: #18079).
