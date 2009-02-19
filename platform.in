@@ -305,6 +305,7 @@
 @alt@%make_build	[ -n "$NPROCS" ] || NPROCS=%__nprocs; %_make_bin -j$NPROCS
 @alt@
 @alt@%make_install	%_make_bin INSTALL="%__install -p"
+@alt@%makeinstall_std	%make_install %{?_makeinstall_target:%{_makeinstall_target}} DESTDIR=%buildroot
 @alt@
 @alt@# Compatibility.
 @alt@%make_compile	%make_build
