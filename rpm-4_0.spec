@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt96.15
+Release: alt96.16
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -547,6 +547,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Feb 25 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt96.16
+- platform.in: Imported %%makeinstall_std macro from rpm-build-perl.
+- 0common-files.req.list: Removed /etc/tex-fonts.d directory.
+
 * Tue Dec 16 2008 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt96.15
 - Added buildreq ignore rule for /usr/lib/rpm/macros.d/*
 
