@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.8
+Release: alt77.M40.9
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -535,6 +535,15 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Mar 08 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.9
+- backported changes from branch 4.1:
+- psm.c: in syslog messages, discriminate between no epoch and zero epoch
+- transaction.c: updated conflict algorithm for overlapping paths:
+  exact st_mode and uid/gid match is required; md5 check is skipped
+  for %ghost files
+- psm.c: fixed chown attempts for src.rpm introduced [with previous change]
+- rpmpopt (--changelog): remove extra newline after %{CHANGELOGNAME} (jbj)
+
 * Tue Dec 09 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt77.M40.8
 - psm.c (psmTriggerPosttrans):
   Handle null "transaction file info" pointer properly (closes: #18079).
