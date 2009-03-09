@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.11
+Release: alt77.M40.12
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -535,6 +535,16 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Mar 09 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.12
+- Updated %%config algorithm to avoid unnecessary *.rpmnew, *.rpmsave,
+  and *.rpmorig files (credits: Panu Matilainen, Tomas Mraz).
+  + If new package keeps the same config file, updating the file on disk
+    is skipped (rhbz#194246).  This provides limited support for replacing
+    config files with custom symbolic links.
+  + If pre-existing file is the same as the one being installed for
+    the first time, backup action is suppress (rhbz#128622).
+  + Backup action is also disabled but for regular files and symlinks.
+
 * Mon Mar 09 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.11
 - Fixed /usr/lib/rpm/ ownership for new sisyphus_check.
 
