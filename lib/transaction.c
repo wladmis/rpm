@@ -858,6 +858,45 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
     return FA_SAVE;
 }
 
+static int configConflict(TFI_t fi, const int ix)
+{
+    if ((fi->fflags[ix] & RPMFILE_CONFIG) == 0)
+	return 0;
+
+    const char *bn = fi->bnl[ix];
+    const char *dn = fi->dnl[fi->dil[ix]];
+    char *fn = alloca(strlen(dn) + strlen(bn) + 1);
+    (void) stpcpy( stpcpy(fn, dn), bn);
+
+    struct stat sb;
+    if (lstat(fn, &sb) != 0)
+	return 0;
+
+    fileTypes diskWhat = whatis(sb.st_mode);
+    fileTypes newWhat = whatis(fi->fmodes[ix]);
+
+    if (diskWhat == REG && newWhat == REG) {
+	char mdsum[50];
+	if (mdfile(fn, mdsum) != 0)
+	    return 0;	/* assume file has been removed */
+	if (strcmp(fi->fmd5s[ix], mdsum) == 0)
+	    return 0;	/* unmodified config file */
+    }
+    if (diskWhat == LINK && newWhat == LINK) {
+	char linkto[PATH_MAX+1] = "";
+	if (readlink(fn, linkto, sizeof(linkto) - 1) < 0)
+	    return 0;
+	if (strcmp(fi->flinks[ix], linkto) == 0)
+	    return 0;
+    }
+
+    if (fi->fflags[ix] & RPMFILE_NOREPLACE)
+	return 1;
+    if (diskWhat != REG && diskWhat != LINK)
+	return 0;
+    return 1;
+}
+
 static int filecmp(const TFI_t fi1, const int ix1, const TFI_t fi2, const int ix2)
 	/*@*/
 {
@@ -1101,13 +1140,11 @@ static void handleOverlappedFiles(TFI_t fi, hashTable ht,
 
 	switch (fi->type) {
 	case TR_ADDED:
-	  { struct stat sb;
 	    if (otherPkgNum < 0) {
 		/* XXX is this test still necessary? */
 		if (fi->actions[i] != FA_UNKNOWN)
 		    break;
-		if ((fi->fflags[i] & RPMFILE_CONFIG) && 
-			!lstat(filespec, &sb)) {
+		if (configConflict(fi, i)) {
 		    /* Here is a non-overlapped pre-existing config file. */
 		    fi->actions[i] = (fi->fflags[i] & RPMFILE_NOREPLACE)
 			? FA_ALTNAME : FA_BACKUP;
@@ -1126,14 +1163,14 @@ static void handleOverlappedFiles(TFI_t fi, hashTable ht,
 	    /* Try to get the disk accounting correct even if a conflict. */
 	    fixupSize = recs[otherPkgNum]->fsizes[otherFileNum];
 
-	    if ((fi->fflags[i] & RPMFILE_CONFIG) && !lstat(filespec, &sb)) {
+	    if (configConflict(fi, i)) {
 		/* Here is an overlapped  pre-existing config file. */
 		fi->actions[i] = (fi->fflags[i] & RPMFILE_NOREPLACE)
 			? FA_ALTNAME : FA_SKIP;
 	    } else {
 		fi->actions[i] = FA_CREATE;
 	    }
-	  } break;
+	    break;
 	case TR_REMOVED:
 	    if (otherPkgNum >= 0) {
 		/* Here is an overlapped added file we don't want to nuke. */
