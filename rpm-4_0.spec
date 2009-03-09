@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.11
+Release: alt95.M41.12
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -457,7 +457,6 @@ fi
 %_bindir/rpmverify
 %_bindir/rpminit
 
-%rpmdirattr %_rpmlibdir
 %rpmattr %_rpmlibdir/delayed_rebuilddb
 %rpmattr %_rpmlibdir/pdeath_execute
 %rpmattr %_rpmlibdir/rpm[dikq]
@@ -483,7 +482,6 @@ fi
 %rpmattr %_bindir/gendiff
 %_bindir/rpmbuild
 %_bindir/relative
-%rpmdirattr %_rpmlibdir
 %_rpmlibdir/rpmt
 %rpmattr %_rpmlibdir/rpmb
 %rpmattr %_rpmlibdir/dump_ld_config
@@ -556,6 +554,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Mar 09 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.12
+- Fixed /usr/lib/rpm/ ownership for new sisyphus_check.
+
 * Tue Dec 09 2008 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt95.M41.11
 - psm.c (psmTriggerPosttrans):
   Handle null "transaction file info" pointer properly (closes: #18079).
