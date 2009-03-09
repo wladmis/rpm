@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.10
+Release: alt77.M40.11
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -535,6 +535,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon Mar 09 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.11
+- Fixed /usr/lib/rpm/ ownership for new sisyphus_check.
+
 * Mon Mar 09 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.10
 - Renamed rpm-python subpackage to python-module-rpm (ldv).
 
