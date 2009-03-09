@@ -161,11 +161,11 @@ int domd5(const char * fn, /*@out@*/ unsigned char * digest, int asAscii)
  * @return		0 on success, 1 on error
  */
 /*@unused@*/ static inline
-int mdfile(const char * fn, /*@out@*/ unsigned char * digest)
+int mdfile(const char * fn, /*@out@*/ char * digest)
 	/*@globals fileSystem@*/
 	/*@modifies digest, fileSystem @*/
 {
-    return domd5(fn, digest, 1);
+    return domd5(fn, (unsigned char *) digest, 1);
 }
 
 /**
