@@ -782,30 +782,23 @@ static int sharedCmp(const void * one, const void * two)
     return 0;
 }
 
-static fileAction decideFileFate(const char * dirName,
-			const char * baseName, short dbMode,
-			const char * dbMd5, const char * dbLink, short newMode,
-			const char * newMd5, const char * newLink, int newFlags,
-			rpmtransFlags transFlags)
+static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
+		TFI_t newfi, const int newix, rpmtransFlags transFlags)
 	/*@*/
 {
-    char buffer[1024];
-    const char * dbAttr, * newAttr;
-    fileTypes dbWhat, newWhat, diskWhat;
-    struct stat sb;
-    int i, rc;
-    int save = (newFlags & RPMFILE_NOREPLACE) ? FA_ALTNAME : FA_SAVE;
+    const char *dirName = newfi->dnl[newfi->dil[newix]];
+    const char *baseName = newfi->bnl[newix];
     char * filespec = alloca(strlen(dirName) + strlen(baseName) + 1);
-
     (void) stpcpy( stpcpy(filespec, dirName), baseName);
 
+    struct stat sb;
     if (lstat(filespec, &sb)) {
 	/*
 	 * The file doesn't exist on the disk. Create it unless the new
 	 * package has marked it as missingok, or allfiles is requested.
 	 */
 	if (!(transFlags & RPMTRANS_FLAG_ALLFILES) &&
-	   (newFlags & RPMFILE_MISSINGOK)) {
+	   (newfi->fflags[newix] & RPMFILE_MISSINGOK)) {
 	    rpmMessage(RPMMESS_DEBUG, _("%s skipped due to missingok flag\n"),
 			filespec);
 	    return FA_SKIP;
@@ -814,43 +807,44 @@ static fileAction decideFileFate(const char * dirName,
 	}
     }
 
-    diskWhat = whatis(sb.st_mode);
-    dbWhat = whatis(dbMode);
-    newWhat = whatis(newMode);
+    fileTypes diskWhat = whatis(sb.st_mode);
+    fileTypes dbWhat = whatis(dbfi->fmodes[dbix]);
+    fileTypes newWhat = whatis(newfi->fmodes[newix]);
 
     /* RPM >= 2.3.10 shouldn't create config directories -- we'll ignore
        them in older packages as well */
-    if (newWhat == XDIR) {
+    if (newWhat == XDIR)
 	return FA_CREATE;
-    }
 
-    if (diskWhat != newWhat) {
+    fileAction save = (newfi->fflags[newix] & RPMFILE_NOREPLACE) ? FA_ALTNAME : FA_SAVE;
+    if (diskWhat != newWhat)
 	return save;
-    } else if (newWhat != dbWhat && diskWhat != dbWhat) {
+    else if (newWhat != dbWhat && diskWhat != dbWhat)
 	return save;
-    } else if (dbWhat != newWhat) {
+    else if (dbWhat != newWhat)
 	return FA_CREATE;
-    } else if (dbWhat != LINK && dbWhat != REG) {
+    else if (dbWhat != LINK && dbWhat != REG)
 	return FA_CREATE;
-    }
 
+    const char *dbAttr, *newAttr;
+    char buffer[1024];
     if (dbWhat == REG) {
-	rc = domd5(filespec, buffer, 1);
+	int rc = mdfile(filespec, buffer);
 	if (rc) {
 	    /* assume the file has been removed, don't freak */
 	    return FA_CREATE;
 	}
-	dbAttr = dbMd5;
-	newAttr = newMd5;
+	dbAttr = dbfi->fmd5s[dbix];
+	newAttr = newfi->fmd5s[newix];
     } else /* dbWhat == LINK */ {
 	memset(buffer, 0, sizeof(buffer));
-	i = readlink(filespec, buffer, sizeof(buffer) - 1);
-	if (i == -1) {
+	ssize_t len = readlink(filespec, buffer, sizeof(buffer) - 1);
+	if (len < 0) {
 	    /* assume the file has been removed, don't freak */
 	    return FA_CREATE;
 	}
-	dbAttr = dbLink;
-	newAttr = newLink;
+	dbAttr = dbfi->flinks[dbix];
+	newAttr = newfi->flinks[newix];
      }
 
     /* this order matters - we'd prefer to CREATE the file if at all
@@ -967,19 +961,8 @@ static int handleInstInstalledFiles(const TFI_t fi, /*@null@*/ rpmdb db,
 	    }
 	}
 
-	if (isCfgFile) {
-	    fi->actions[fileNum] = decideFileFate(
-			fi->dnl[fi->dil[fileNum]],
-			fi->bnl[fileNum],
-			otherFi->fmodes[otherFileNum],
-			otherFi->fmd5s[otherFileNum],
-			otherFi->flinks[otherFileNum],
-			fi->fmodes[fileNum],
-			fi->fmd5s[fileNum],
-			fi->flinks[fileNum],
-			fi->fflags[fileNum],
-			transFlags);
-	}
+	if (isCfgFile)
+	    fi->actions[fileNum] = decideConfigFate(otherFi, otherFileNum, fi, fileNum, transFlags);
 
 	fi->replacedSizes[fileNum] = otherFi->fsizes[otherFileNum];
     }
