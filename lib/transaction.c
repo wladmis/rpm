@@ -817,7 +817,7 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
 	return FA_CREATE;
 
     fileAction save = (newfi->fflags[newix] & RPMFILE_NOREPLACE) ? FA_ALTNAME : FA_SAVE;
-    if (diskWhat != newWhat)
+    if (diskWhat != newWhat && dbWhat != REG && dbWhat != LINK)
 	return save;
     else if (newWhat != dbWhat && diskWhat != dbWhat)
 	return save;
@@ -827,21 +827,25 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
 	return FA_CREATE;
 
     if (dbWhat == REG) {
-	char mdsum[50];
-	if (mdfile(filespec, mdsum) != 0)
-	    return FA_CREATE;		/* assume file has been removed */
 	/* this order matters - we'd prefer to CREATE the file if at all
 	   possible in case something else (like the timestamp) has changed */
-	if (strcmp(dbfi->fmd5s[dbix], mdsum) == 0)
-	    return FA_CREATE;		/* unmodified config file, replace. */
+	if (diskWhat == REG) {
+	    char mdsum[50];
+	    if (mdfile(filespec, mdsum) != 0)
+		return FA_CREATE;	/* assume file has been removed */
+	    if (strcmp(dbfi->fmd5s[dbix], mdsum) == 0)
+		return FA_CREATE;	/* unmodified config file, replace. */
+	}
 	if (strcmp(dbfi->fmd5s[dbix], newfi->fmd5s[newix]) == 0)
 	    return FA_SKIP;		/* identical file, don't bother. */
     } else /* dbWhat == LINK */ {
-	char linkto[PATH_MAX+1] = "";
-	if (readlink(filespec, linkto, sizeof(linkto) - 1) < 0)
-	    return FA_CREATE;
-	if (strcmp(dbfi->flinks[dbix], linkto) == 0)
-	    return FA_CREATE;
+	if (diskWhat == LINK) {
+	    char linkto[PATH_MAX+1] = "";
+	    if (readlink(filespec, linkto, sizeof(linkto) - 1) < 0)
+		return FA_CREATE;
+	    if (strcmp(dbfi->flinks[dbix], linkto) == 0)
+		return FA_CREATE;
+	}
 	if (strcmp(dbfi->flinks[dbix], newfi->flinks[newix]) == 0)
 	    return FA_SKIP;
     }
