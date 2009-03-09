@@ -444,7 +444,6 @@ fi
 %_bindir/rpmverify
 %_bindir/rpminit
 
-%rpmdirattr %_rpmlibdir
 %rpmattr %_rpmlibdir/delayed_rebuilddb
 %rpmattr %_rpmlibdir/pdeath_execute
 %rpmattr %_rpmlibdir/rpm[dikq]
@@ -466,7 +465,6 @@ fi
 %rpmattr %_bindir/gendiff
 %_bindir/rpmbuild
 %_bindir/relative
-%rpmdirattr %_rpmlibdir
 %_rpmlibdir/rpmt
 %rpmattr %_rpmlibdir/rpmb
 %rpmattr %_rpmlibdir/dump_ld_config
