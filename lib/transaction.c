@@ -786,21 +786,20 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
 		TFI_t newfi, const int newix, rpmtransFlags transFlags)
 	/*@*/
 {
-    const char *dirName = newfi->dnl[newfi->dil[newix]];
-    const char *baseName = newfi->bnl[newix];
-    char * filespec = alloca(strlen(dirName) + strlen(baseName) + 1);
-    (void) stpcpy( stpcpy(filespec, dirName), baseName);
+    const char *dn = newfi->dnl[newfi->dil[newix]];
+    const char *bn = newfi->bnl[newix];
+    char *fn = alloca(strlen(dn) + strlen(bn) + 1);
+    (void) stpcpy( stpcpy(fn, dn), bn);
 
     struct stat sb;
-    if (lstat(filespec, &sb)) {
+    if (lstat(fn, &sb)) {
 	/*
 	 * The file doesn't exist on the disk. Create it unless the new
 	 * package has marked it as missingok, or allfiles is requested.
 	 */
 	if (!(transFlags & RPMTRANS_FLAG_ALLFILES) &&
 	   (newfi->fflags[newix] & RPMFILE_MISSINGOK)) {
-	    rpmMessage(RPMMESS_DEBUG, _("%s skipped due to missingok flag\n"),
-			filespec);
+	    rpmMessage(RPMMESS_DEBUG, _("%s skipped due to missingok flag\n"), fn);
 	    return FA_SKIP;
 	} else {
 	    return FA_CREATE;
@@ -821,7 +820,7 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
 	   possible in case something else (like the timestamp) has changed */
 	if (diskWhat == REG) {
 	    char mdsum[50];
-	    if (mdfile(filespec, mdsum) != 0)
+	    if (mdfile(fn, mdsum) != 0)
 		return FA_CREATE;	/* assume file has been removed */
 	    if (strcmp(dbfi->fmd5s[dbix], mdsum) == 0)
 		return FA_CREATE;	/* unmodified config file, replace. */
@@ -834,7 +833,7 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
     if (dbWhat == LINK) {
 	if (diskWhat == LINK) {
 	    char linkto[PATH_MAX+1] = "";
-	    if (readlink(filespec, linkto, sizeof(linkto) - 1) < 0)
+	    if (readlink(fn, linkto, sizeof(linkto) - 1) < 0)
 		return FA_CREATE;
 	    if (strcmp(dbfi->flinks[dbix], linkto) == 0)
 		return FA_CREATE;
