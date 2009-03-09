@@ -143,8 +143,8 @@ static PyObject * hdrVerifyFile(hdrObject * s, PyObject * args) {
 		     &count);
 	}
 
-	char buf[2048];
-	if (mdfile(s->fileList[fileNumber], (unsigned char *) buf)) {
+	char buf[50];
+	if (mdfile(s->fileList[fileNumber], buf)) {
 	    strcpy(buf, "(unknown)");
 	}
 
