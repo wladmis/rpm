@@ -826,38 +826,24 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
     else if (dbWhat != LINK && dbWhat != REG)
 	return FA_CREATE;
 
-    const char *dbAttr, *newAttr;
-    char buffer[1024];
     if (dbWhat == REG) {
-	int rc = mdfile(filespec, buffer);
-	if (rc) {
-	    /* assume the file has been removed, don't freak */
-	    return FA_CREATE;
-	}
-	dbAttr = dbfi->fmd5s[dbix];
-	newAttr = newfi->fmd5s[newix];
+	char mdsum[50];
+	if (mdfile(filespec, mdsum) != 0)
+	    return FA_CREATE;		/* assume file has been removed */
+	/* this order matters - we'd prefer to CREATE the file if at all
+	   possible in case something else (like the timestamp) has changed */
+	if (strcmp(dbfi->fmd5s[dbix], mdsum) == 0)
+	    return FA_CREATE;		/* unmodified config file, replace. */
+	if (strcmp(dbfi->fmd5s[dbix], newfi->fmd5s[newix]) == 0)
+	    return FA_SKIP;		/* identical file, don't bother. */
     } else /* dbWhat == LINK */ {
-	memset(buffer, 0, sizeof(buffer));
-	ssize_t len = readlink(filespec, buffer, sizeof(buffer) - 1);
-	if (len < 0) {
-	    /* assume the file has been removed, don't freak */
+	char linkto[PATH_MAX+1] = "";
+	if (readlink(filespec, linkto, sizeof(linkto) - 1) < 0)
 	    return FA_CREATE;
-	}
-	dbAttr = dbfi->flinks[dbix];
-	newAttr = newfi->flinks[newix];
-     }
-
-    /* this order matters - we'd prefer to CREATE the file if at all
-       possible in case something else (like the timestamp) has changed */
-
-    if (!strcmp(dbAttr, buffer)) {
-	/* this config file has never been modified, so just replace it */
-	return FA_CREATE;
-    }
-
-    if (!strcmp(dbAttr, newAttr)) {
-	/* this file is the same in all versions of this package */
-	return FA_SKIP;
+	if (strcmp(dbfi->flinks[dbix], linkto) == 0)
+	    return FA_CREATE;
+	if (strcmp(dbfi->flinks[dbix], newfi->flinks[newix]) == 0)
+	    return FA_SKIP;
     }
 
     /*
