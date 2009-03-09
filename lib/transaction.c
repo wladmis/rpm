@@ -836,9 +836,12 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
 	    if (strcmp(dbfi->fmd5s[dbix], mdsum) == 0)
 		return FA_CREATE;	/* unmodified config file, replace. */
 	}
-	if (strcmp(dbfi->fmd5s[dbix], newfi->fmd5s[newix]) == 0)
-	    return FA_SKIP;		/* identical file, don't bother. */
-    } else /* dbWhat == LINK */ {
+	if (newWhat == REG) {
+	    if (strcmp(dbfi->fmd5s[dbix], newfi->fmd5s[newix]) == 0)
+		return FA_SKIP;		/* identical file, don't bother. */
+	}
+    }
+    if (dbWhat == LINK) {
 	if (diskWhat == LINK) {
 	    char linkto[PATH_MAX+1] = "";
 	    if (readlink(filespec, linkto, sizeof(linkto) - 1) < 0)
@@ -846,8 +849,10 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
 	    if (strcmp(dbfi->flinks[dbix], linkto) == 0)
 		return FA_CREATE;
 	}
-	if (strcmp(dbfi->flinks[dbix], newfi->flinks[newix]) == 0)
-	    return FA_SKIP;
+	if (newWhat == LINK) {
+	    if (strcmp(dbfi->flinks[dbix], newfi->flinks[newix]) == 0)
+		return FA_SKIP;
+	}
     }
 
     /*
