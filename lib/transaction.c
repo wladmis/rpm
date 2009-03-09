@@ -816,16 +816,6 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
     if (newWhat == XDIR)
 	return FA_CREATE;
 
-    fileAction save = (newfi->fflags[newix] & RPMFILE_NOREPLACE) ? FA_ALTNAME : FA_SAVE;
-    if (diskWhat != newWhat && dbWhat != REG && dbWhat != LINK)
-	return save;
-    else if (newWhat != dbWhat && diskWhat != dbWhat)
-	return save;
-    else if (dbWhat != newWhat)
-	return FA_CREATE;
-    else if (dbWhat != LINK && dbWhat != REG)
-	return FA_CREATE;
-
     if (dbWhat == REG) {
 	/* this order matters - we'd prefer to CREATE the file if at all
 	   possible in case something else (like the timestamp) has changed */
@@ -861,7 +851,11 @@ static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
      * be nice if RPM was smart enough to at least try and
      * merge the difference ala CVS, but...
      */
-    return save;
+    if (newfi->fflags[newix] & RPMFILE_NOREPLACE)
+	return FA_ALTNAME;
+    if (diskWhat != REG && diskWhat != LINK)
+	return FA_CREATE;
+    return FA_SAVE;
 }
 
 static int filecmp(const TFI_t fi1, const int ix1, const TFI_t fi2, const int ix2)
