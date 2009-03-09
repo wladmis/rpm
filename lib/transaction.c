@@ -782,88 +782,66 @@ static int sharedCmp(const void * one, const void * two)
     return 0;
 }
 
-static fileAction decideFileFate(const char * dirName,
-			const char * baseName, short dbMode,
-			const char * dbMd5, const char * dbLink, short newMode,
-			const char * newMd5, const char * newLink, int newFlags,
-			rpmtransFlags transFlags)
+static fileAction decideConfigFate(TFI_t dbfi, const int dbix,
+		TFI_t newfi, const int newix, rpmtransFlags transFlags)
 	/*@*/
 {
-    char buffer[1024];
-    const char * dbAttr, * newAttr;
-    fileTypes dbWhat, newWhat, diskWhat;
+    const char *dn = newfi->dnl[newfi->dil[newix]];
+    const char *bn = newfi->bnl[newix];
+    char *fn = alloca(strlen(dn) + strlen(bn) + 1);
+    (void) stpcpy( stpcpy(fn, dn), bn);
+
     struct stat sb;
-    int i, rc;
-    int save = (newFlags & RPMFILE_NOREPLACE) ? FA_ALTNAME : FA_SAVE;
-    char * filespec = alloca(strlen(dirName) + strlen(baseName) + 1);
-
-    (void) stpcpy( stpcpy(filespec, dirName), baseName);
-
-    if (lstat(filespec, &sb)) {
+    if (lstat(fn, &sb)) {
 	/*
 	 * The file doesn't exist on the disk. Create it unless the new
 	 * package has marked it as missingok, or allfiles is requested.
 	 */
 	if (!(transFlags & RPMTRANS_FLAG_ALLFILES) &&
-	   (newFlags & RPMFILE_MISSINGOK)) {
-	    rpmMessage(RPMMESS_DEBUG, _("%s skipped due to missingok flag\n"),
-			filespec);
+	   (newfi->fflags[newix] & RPMFILE_MISSINGOK)) {
+	    rpmMessage(RPMMESS_DEBUG, _("%s skipped due to missingok flag\n"), fn);
 	    return FA_SKIP;
 	} else {
 	    return FA_CREATE;
 	}
     }
 
-    diskWhat = whatis(sb.st_mode);
-    dbWhat = whatis(dbMode);
-    newWhat = whatis(newMode);
+    fileTypes diskWhat = whatis(sb.st_mode);
+    fileTypes dbWhat = whatis(dbfi->fmodes[dbix]);
+    fileTypes newWhat = whatis(newfi->fmodes[newix]);
 
     /* RPM >= 2.3.10 shouldn't create config directories -- we'll ignore
        them in older packages as well */
-    if (newWhat == XDIR) {
+    if (newWhat == XDIR)
 	return FA_CREATE;
-    }
-
-    if (diskWhat != newWhat) {
-	return save;
-    } else if (newWhat != dbWhat && diskWhat != dbWhat) {
-	return save;
-    } else if (dbWhat != newWhat) {
-	return FA_CREATE;
-    } else if (dbWhat != LINK && dbWhat != REG) {
-	return FA_CREATE;
-    }
 
     if (dbWhat == REG) {
-	rc = domd5(filespec, buffer, 1);
-	if (rc) {
-	    /* assume the file has been removed, don't freak */
-	    return FA_CREATE;
+	/* this order matters - we'd prefer to CREATE the file if at all
+	   possible in case something else (like the timestamp) has changed */
+	if (diskWhat == REG) {
+	    char mdsum[50];
+	    if (mdfile(fn, mdsum) != 0)
+		return FA_CREATE;	/* assume file has been removed */
+	    if (strcmp(dbfi->fmd5s[dbix], mdsum) == 0)
+		return FA_CREATE;	/* unmodified config file, replace. */
 	}
-	dbAttr = dbMd5;
-	newAttr = newMd5;
-    } else /* dbWhat == LINK */ {
-	memset(buffer, 0, sizeof(buffer));
-	i = readlink(filespec, buffer, sizeof(buffer) - 1);
-	if (i == -1) {
-	    /* assume the file has been removed, don't freak */
-	    return FA_CREATE;
+	if (newWhat == REG) {
+	    if (strcmp(dbfi->fmd5s[dbix], newfi->fmd5s[newix]) == 0)
+		return FA_SKIP;		/* identical file, don't bother. */
 	}
-	dbAttr = dbLink;
-	newAttr = newLink;
-     }
-
-    /* this order matters - we'd prefer to CREATE the file if at all
-       possible in case something else (like the timestamp) has changed */
-
-    if (!strcmp(dbAttr, buffer)) {
-	/* this config file has never been modified, so just replace it */
-	return FA_CREATE;
     }
-
-    if (!strcmp(dbAttr, newAttr)) {
-	/* this file is the same in all versions of this package */
-	return FA_SKIP;
+    if (dbWhat == LINK) {
+	if (diskWhat == LINK) {
+	    char linkto[PATH_MAX+1] = "";
+	    if (readlink(fn, linkto, sizeof(linkto) - 1) < 0)
+		return FA_CREATE;
+	    if (strcmp(dbfi->flinks[dbix], linkto) == 0)
+		return FA_CREATE;
+	}
+	if (newWhat == LINK) {
+	    if (strcmp(dbfi->flinks[dbix], newfi->flinks[newix]) == 0)
+		return FA_SKIP;
+	}
     }
 
     /*
@@ -872,7 +850,50 @@ static fileAction decideFileFate(const char * dirName,
      * be nice if RPM was smart enough to at least try and
      * merge the difference ala CVS, but...
      */
-    return save;
+    if (newfi->fflags[newix] & RPMFILE_NOREPLACE)
+	return FA_ALTNAME;
+    if (diskWhat != REG && diskWhat != LINK)
+	return FA_CREATE;
+    return FA_SAVE;
+}
+
+static int configConflict(TFI_t fi, const int ix)
+{
+    if ((fi->fflags[ix] & RPMFILE_CONFIG) == 0)
+	return 0;
+
+    const char *bn = fi->bnl[ix];
+    const char *dn = fi->dnl[fi->dil[ix]];
+    char *fn = alloca(strlen(dn) + strlen(bn) + 1);
+    (void) stpcpy( stpcpy(fn, dn), bn);
+
+    struct stat sb;
+    if (lstat(fn, &sb) != 0)
+	return 0;
+
+    fileTypes diskWhat = whatis(sb.st_mode);
+    fileTypes newWhat = whatis(fi->fmodes[ix]);
+
+    if (diskWhat == REG && newWhat == REG) {
+	char mdsum[50];
+	if (mdfile(fn, mdsum) != 0)
+	    return 0;	/* assume file has been removed */
+	if (strcmp(fi->fmd5s[ix], mdsum) == 0)
+	    return 0;	/* unmodified config file */
+    }
+    if (diskWhat == LINK && newWhat == LINK) {
+	char linkto[PATH_MAX+1] = "";
+	if (readlink(fn, linkto, sizeof(linkto) - 1) < 0)
+	    return 0;
+	if (strcmp(fi->flinks[ix], linkto) == 0)
+	    return 0;
+    }
+
+    if (fi->fflags[ix] & RPMFILE_NOREPLACE)
+	return 1;
+    if (diskWhat != REG && diskWhat != LINK)
+	return 0;
+    return 1;
 }
 
 static int filecmp(const TFI_t fi1, const int ix1, const TFI_t fi2, const int ix2)
@@ -967,19 +988,8 @@ static int handleInstInstalledFiles(const TFI_t fi, /*@null@*/ rpmdb db,
 	    }
 	}
 
-	if (isCfgFile) {
-	    fi->actions[fileNum] = decideFileFate(
-			fi->dnl[fi->dil[fileNum]],
-			fi->bnl[fileNum],
-			otherFi->fmodes[otherFileNum],
-			otherFi->fmd5s[otherFileNum],
-			otherFi->flinks[otherFileNum],
-			fi->fmodes[fileNum],
-			fi->fmd5s[fileNum],
-			fi->flinks[fileNum],
-			fi->fflags[fileNum],
-			transFlags);
-	}
+	if (isCfgFile)
+	    fi->actions[fileNum] = decideConfigFate(otherFi, otherFileNum, fi, fileNum, transFlags);
 
 	fi->replacedSizes[fileNum] = otherFi->fsizes[otherFileNum];
     }
@@ -1129,13 +1139,11 @@ static void handleOverlappedFiles(TFI_t fi, hashTable ht,
 
 	switch (fi->type) {
 	case TR_ADDED:
-	  { struct stat sb;
 	    if (otherPkgNum < 0) {
 		/* XXX is this test still necessary? */
 		if (fi->actions[i] != FA_UNKNOWN)
 		    break;
-		if ((fi->fflags[i] & RPMFILE_CONFIG) && 
-			!lstat(filespec, &sb)) {
+		if (configConflict(fi, i)) {
 		    /* Here is a non-overlapped pre-existing config file. */
 		    fi->actions[i] = (fi->fflags[i] & RPMFILE_NOREPLACE)
 			? FA_ALTNAME : FA_BACKUP;
@@ -1154,14 +1162,14 @@ static void handleOverlappedFiles(TFI_t fi, hashTable ht,
 	    /* Try to get the disk accounting correct even if a conflict. */
 	    fixupSize = recs[otherPkgNum]->fsizes[otherFileNum];
 
-	    if ((fi->fflags[i] & RPMFILE_CONFIG) && !lstat(filespec, &sb)) {
+	    if (configConflict(fi, i)) {
 		/* Here is an overlapped  pre-existing config file. */
 		fi->actions[i] = (fi->fflags[i] & RPMFILE_NOREPLACE)
 			? FA_ALTNAME : FA_SKIP;
 	    } else {
 		fi->actions[i] = FA_CREATE;
 	    }
-	  } break;
+	    break;
 	case TR_REMOVED:
 	    if (otherPkgNum >= 0) {
 		/* Here is an overlapped added file we don't want to nuke. */
