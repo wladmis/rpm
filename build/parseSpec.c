@@ -503,7 +503,6 @@ static tags_struct tags_files_list[] = {
     {0, "ghost"},
     {0, "lang"},
     {0, "license"},
-    {0, "multilib"},
     {0, "readme"},
     {0, "verify"},
 };

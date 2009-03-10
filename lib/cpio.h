@@ -67,7 +67,6 @@ typedef enum cpioMapFlags_e {
     CPIO_MAP_ADDDOT	= (1 << 6),
     CPIO_ALL_HARDLINKS	= (1 << 7), /*!< fail if hardlinks are missing. */
     CPIO_MAP_TYPE	= (1 << 8), /*!< only for building. */
-    CPIO_MULTILIB	= (1 << 31) /*!< internal, only for building. */
 } cpioMapFlags;
 
 #define CPIO_NEWC_MAGIC	"070701"
