@@ -56,7 +56,6 @@ struct availablePackage {
     int tree;				/*!< Tree index. */
     struct tsortInfo_s tsi;		/*!< Dependency tsort data. */
 
-    uint_32 multiLib;	/* MULTILIB */
 /*@kept@*//*@null@*/ const void * key;	/*!< Private data associated with a package (e.g. file name of package). */
 /*@null@*/ rpmRelocation * relocs;
 /*@null@*/ FD_t fd;
@@ -90,7 +89,6 @@ struct availableIndex {
  */
 struct fileIndexEntry {
     int pkgNum;				/*!< Containing package number. */
-    int fileFlags;	/* MULTILIB */
 /*@dependent@*/ /*@null@*/ const char * baseName;	/*!< File basename. */
 } ;
 

@@ -2913,11 +2913,6 @@ msgstr "%5d исключен %s\n"
 msgid "%5d relocate %s -> %s\n"
 msgstr "%5d перемещение %s -> %s\n"
 
-#: lib/transaction.c:527
-#, c-format
-msgid "excluding multilib path %s%s\n"
-msgstr "исключается многобиблиотечный путь %s%s\n"
-
 #: lib/transaction.c:590
 #, c-format
 msgid "excluding %s %s\n"

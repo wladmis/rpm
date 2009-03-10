@@ -3451,11 +3451,6 @@ msgstr ""
 msgid "%5d relocate %s -> %s\n"
 msgstr ""
 
-#: lib/transaction.c:524
-#, c-format
-msgid "excluding multilib path %s%s\n"
-msgstr ""
-
 #: lib/transaction.c:587
 #, c-format
 msgid "excluding %s %s\n"

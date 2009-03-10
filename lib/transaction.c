@@ -299,7 +299,6 @@ static fileTypes whatis(uint_16 mode)
 
 /**
  * Relocate files in header.
- * @todo multilib file dispositions need to be checked.
  * @param ts		transaction set
  * @param fi		transaction element file info
  * @param alp		available package
@@ -366,7 +365,6 @@ static Header relocateFileList(const rpmTransactionSet ts, TFI_t fi,
 			validType, validRelocations, numValid);
 	    validRelocations = hfd(validRelocations, validType);
 	}
-	/* XXX FIXME multilib file actions need to be checked. */
 	return headerLink(origH);
     }
 
@@ -513,19 +511,6 @@ static Header relocateFileList(const rpmTransactionSet ts, TFI_t fi,
     for (i = fileCount - 1; i >= 0; i--) {
 	fileTypes ft;
 	int fnlen;
-
-	/*
-	 * If only adding libraries of different arch into an already
-	 * installed package, skip all other files.
-	 */
-	if (alp->multiLib && !isFileMULTILIB((fFlags[i]))) {
-	    if (actions) {
-		actions[i] = FA_SKIPMULTILIB;
-		rpmMessage(RPMMESS_DEBUG, _("excluding multilib path %s%s\n"), 
-			dirNames[dirIndexes[i]], baseNames[i]);
-	    }
-	    continue;
-	}
 
 	len = reldel +
 		strlen(dirNames[dirIndexes[i]]) + strlen(baseNames[i]) + 1;
@@ -1562,8 +1547,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     if (ts->transFlags & RPMTRANS_FLAG_NOTRIGGERS)
 	ts->transFlags |= _noTransTriggers;
 
-    /* XXX MULTILIB is broken, as packages can and do execute /sbin/ldconfig. */
-    if (ts->transFlags & (RPMTRANS_FLAG_JUSTDB | RPMTRANS_FLAG_MULTILIB))
+    if (ts->transFlags & RPMTRANS_FLAG_JUSTDB)
 	ts->transFlags |= (_noTransScripts | _noTransTriggers);
 
     ts->notify = notify;
@@ -1667,8 +1651,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 	    mi = rpmdbFreeIterator(mi);
 	}
 
-	/* XXX multilib should not display "already installed" problems */
-	if (!(ts->ignoreSet & RPMPROB_FILTER_REPLACEPKG) && !alp->multiLib) {
+	if (!(ts->ignoreSet & RPMPROB_FILTER_REPLACEPKG)) {
 	    rpmdbMatchIterator mi;
 	    char b[80];
 
@@ -2068,8 +2051,6 @@ assert(alp == fi->ap);
 		    fi->h = headerFree(fi->h);
 		}
 		fi->h = headerLink(h);
-		if (alp->multiLib)
-		    ts->transFlags |= RPMTRANS_FLAG_MULTILIB;
 
 assert(alp == fi->ap);
 		if (psmStage(psm, PSM_PKGINSTALL)) {

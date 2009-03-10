@@ -396,7 +396,7 @@ typedef enum rpmTag_e {
     RPMTAG_PAYLOADFORMAT	= 1124,
     RPMTAG_PAYLOADCOMPRESSOR	= 1125,
     RPMTAG_PAYLOADFLAGS		= 1126,
-    RPMTAG_MULTILIBS		= 1127,
+//  ___TAG_MULTILIBS		= 1127,
     RPMTAG_INSTALLTID		= 1128,
     RPMTAG_REMOVETID		= 1129,
     RPMTAG_SHA1RHN		= 1130, /*!< internal - obsolete */
@@ -453,14 +453,8 @@ typedef	enum rpmfileAttrs_e {
     RPMFILE_README	= (1 << 8),	/*!< from %%readme */
     RPMFILE_EXCLUDE	= (1 << 9)	/*!< from %%exclude */
 } rpmfileAttrs;
-#define	RPMFILE_MULTILIB_SHIFT		9
-#define	RPMFILE_MULTILIB(N)		((N) << RPMFILE_MULTILIB_SHIFT)
-#define	RPMFILE_MULTILIB_MASK		RPMFILE_MULTILIB(7)
 
 #define	RPMFILE_ALL	~(RPMFILE_NONE)
-
-/* XXX Check file flags for multilib marker. */
-#define	isFileMULTILIB(_fflags)		((_fflags) & RPMFILE_MULTILIB_MASK)
 
 /**
  * Dependency Attributes.
@@ -489,7 +483,7 @@ typedef	enum rpmsenseFlags_e {
     RPMSENSE_TRIGGERIN	= (1 << 16),	/*!< %triggerin dependency. */
     RPMSENSE_TRIGGERUN	= (1 << 17),	/*!< %triggerun dependency. */
     RPMSENSE_TRIGGERPOSTUN = (1 << 18),	/*!< %triggerpostun dependency. */
-    RPMSENSE_MULTILIB	= (1 << 19),
+//  ___SENSE_MULTILIB	= (1 << 19),
     RPMSENSE_SCRIPT_PREP = (1 << 20),	/*!< %prep build dependency. */
     RPMSENSE_SCRIPT_BUILD = (1 << 21),	/*!< %build build dependency. */
     RPMSENSE_SCRIPT_INSTALL = (1 << 22),/*!< %install build dependency. */
@@ -509,8 +503,6 @@ typedef	enum rpmsenseFlags_e {
 
 #define	RPMSENSE_TRIGGER	\
 	(RPMSENSE_TRIGGERIN | RPMSENSE_TRIGGERUN | RPMSENSE_TRIGGERPOSTUN)
-
-#define	isDependsMULTILIB(_dflags)	((_dflags) & RPMSENSE_MULTILIB)
 
 #define	_ALL_REQUIRES_MASK	(\
     RPMSENSE_INTERP | \
@@ -1227,11 +1219,10 @@ typedef enum fileAction_e {
     FA_ERASE,		/*!< ... to be removed. */
     FA_SKIPNSTATE,	/*!< ... untouched, state "not installed". */
     FA_SKIPNETSHARED,	/*!< ... untouched, state "netshared". */
-    FA_SKIPMULTILIB	/*!< ... untouched. @todo state "multilib" ???. */
 } fileAction;
 
 #define XFA_SKIPPING(_a)	\
-    ((_a) == FA_SKIP || (_a) == FA_SKIPNSTATE || (_a) == FA_SKIPNETSHARED || (_a) == FA_SKIPMULTILIB)
+    ((_a) == FA_SKIP || (_a) == FA_SKIPNSTATE || (_a) == FA_SKIPNETSHARED)
 
 /**
  * File types.
@@ -1424,7 +1415,7 @@ typedef enum rpmtransFlags_e {
 /*@-enummemuse@*/
     RPMTRANS_FLAG_KEEPOBSOLETE	= (1 <<  7),	/*!< @todo Document. */
 /*@=enummemuse@*/
-    RPMTRANS_FLAG_MULTILIB	= (1 <<  8),	/*!< @todo Document. */
+//  ___TRANS_FLAG_MULTILIB	= (1 <<  8),	/*!< @todo Document. */
     RPMTRANS_FLAG_DIRSTASH	= (1 <<  9),	/*!< from --dirstash */
     RPMTRANS_FLAG_REPACKAGE	= (1 << 10),	/*!< from --repackage */
 
