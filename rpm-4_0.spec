@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.1
+Release: alt98.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -547,6 +547,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Mar 10 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.2
+- Removed prehistoric multilib support.
+
 * Mon Mar 09 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.1
 - alt97.M50 release series is for branch 5.0, alt98 is for Sisyphus.
 - Updated %%config algorithm to avoid unnecessary *.rpmnew, *.rpmsave,

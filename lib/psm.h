@@ -164,7 +164,7 @@ struct psm_s {
     TFI_t fi;			/*!< transaction element file info */
     FD_t cfd;			/*!< Payload file handle. */
     FD_t fd;			/*!< Repackage file handle. */
-    Header oh;			/*!< Repackage/multilib header. */
+    Header oh;			/*!< Repackage header. */
 /*@null@*/
     rpmdbMatchIterator mi;
 /*@observer@*/
