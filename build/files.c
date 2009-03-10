@@ -89,11 +89,6 @@ static StringBuf check_fileList = NULL;
 static int check_fileListLen = 0;
 
 /**
- */
-/*@unchecked@*/
-static int multiLib = 0;	/* MULTILIB */
-
-/**
  * Package file tree walk data.
  */
 typedef struct FileList_s {
@@ -841,38 +836,6 @@ static int parseForRegexLang(const char * fileName, /*@out@*/ char ** lang)
 
 /**
  */
-static int parseForRegexMultiLib(const char *fileName)
-	/*@globals rpmGlobalMacroContext @*/
-	/*@modifies rpmGlobalMacroContext @*/
-{
-    static int initialized = 0;
-    static int hasRegex = 0;
-    static regex_t compiledPatt;
-
-    if (! initialized) {
-	const char *patt;
-	int rc = 0;
-
-	initialized = 1;
-	patt = rpmExpand("%{?_multilibpatt}", NULL);
-	if (!(patt && *patt))
-	    rc = 1;
-	else if (regcomp(&compiledPatt, patt, REG_EXTENDED | REG_NOSUB))
-	    rc = -1;
-	patt = _free(patt);
-	if (rc)
-	    return rc;
-	hasRegex = 1;
-    }
-
-    if (! hasRegex || regexec(&compiledPatt, fileName, 0, NULL, 0))
-	return 1;
-
-    return 0;
-}
-
-/**
- */
 /*@-exportlocal -exportheadervar@*/
 /*@unchecked@*/
 VFA_t virtualFileAttributes[] = {
@@ -882,7 +845,6 @@ VFA_t virtualFileAttributes[] = {
 	{ "%exclude",	RPMFILE_EXCLUDE },
 	{ "%readme",	RPMFILE_README },
 	{ "%license",	RPMFILE_LICENSE },
-	{ "%multilib",	0 },
 
 #if WHY_NOT
 	{ "%spec",	RPMFILE_SPEC },
@@ -949,8 +911,6 @@ static int parseForSimple(/*@unused@*/Spec spec, Package pkg, char * buf,
 	    if (!vfa->flag) {
 		if (!strcmp(s, "%dir"))
 		    fl->isDir = 1;	/* XXX why not RPMFILE_DIR? */
-		else if (!strcmp(s, "%multilib"))
-		    fl->currentFlags |= multiLib;
 	    } else
 		fl->currentFlags |= vfa->flag;
 	    /*@innerbreak@*/ break;
@@ -1128,7 +1088,6 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 		rpmGlobalMacroContext, fileSystem @*/
 {
     int _addDotSlash = !(isSrc || rpmExpandNumeric("%{?_noPayloadPrefix}"));
-    uint_32 multiLibMask = 0;
     int apathlen = 0;
     int dpathlen = 0;
     int skipLen = 0;
@@ -1209,11 +1168,6 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 
 	/* Leave room for both dirname and basename NUL's */
 	dpathlen += (strlen(flp->diskURL) + 2);
-
-	if (flp->flags & RPMFILE_MULTILIB_MASK)
-	    multiLibMask |=
-		(1u << ((flp->flags & RPMFILE_MULTILIB_MASK))
-		      >> RPMFILE_MULTILIB_SHIFT);
 
 	/*
 	 * Make the header, the OLDFILENAMES will get converted to a 
@@ -1333,14 +1287,6 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 
     }
 
-    /* XXX This should be added always so that packages look alike.
-     * XXX However, there is logic in files.c/depends.c that checks for
-     * XXX existence (rather than value) that will need to change as well.
-     */
-    if (multiLibMask)
-	(void) headerAddEntry(h, RPMTAG_MULTILIBS, RPM_INT32_TYPE,
-		       &multiLibMask, 1);
-
     if (_addDotSlash)
 	(void) rpmlibNeedsFeature(h, "PayloadFilesHavePrefix", "4.0-1");
 
@@ -1452,8 +1398,6 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 		CPIO_MAP_TYPE | CPIO_MAP_MODE | CPIO_MAP_UID | CPIO_MAP_GID;
 	if (isSrc)
 	    fi->fmapflags[i] |= CPIO_FOLLOW_SYMLINKS;
-	if (flp->flags & RPMFILE_MULTILIB_MASK)
-	    fi->fmapflags[i] |= CPIO_MULTILIB;
 
 	if (S_ISREG(flp->fl_mode) && flp->fl_nlink == 1)
 	    fl->totalFileSize += flp->fl_size;
@@ -1819,11 +1763,6 @@ static int addFile(FileList fl, const char * diskURL,
 	flp->specdFlags = fl->currentSpecdFlags;
 	flp->verifyFlags = fl->currentVerifyFlags;
 
-	if (multiLib
-	    && !(flp->flags & RPMFILE_MULTILIB_MASK)
-	    && !parseForRegexMultiLib(fileURL))
-	    flp->flags |= multiLib;
-
     }
 
     fl->fileListRecsUsed++;
@@ -1931,12 +1870,6 @@ static int processPackageFiles(Spec spec, Package pkg,
     AttrRec specialDocAttrRec = &arbuf;
     char *specialDoc = NULL;
 
-#ifdef MULTILIB
-    multiLib = rpmExpandNumeric("%{?_multilibno}");
-    if (multiLib)
-	multiLib = RPMFILE_MULTILIB(multiLib);
-#endif /* MULTILIB */
-    
     nullAttrRec(specialDocAttrRec);
     pkg->cpioList = NULL;
 
@@ -2587,7 +2520,7 @@ DepMsg_t depMsgs[] = {
 
 /**
  */
-static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
+static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem, internalState @*/
 	/*@modifies cpioList, rpmGlobalMacroContext,
@@ -2655,13 +2588,6 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 
     writeBuf = newStringBuf();
     for (i = 0, writeBytes = 0; i < fi->fc; i++) {
-
-	if (fi->fmapflags && multiLib == 2) {
-	    if (!(fi->fmapflags[i] & CPIO_MULTILIB))
-		continue;
-	    fi->fmapflags[i] &= ~CPIO_MULTILIB;
-	}
-
 	appendStringBuf(writeBuf, fi->dnl[fi->dil[i]]);
 	writeBytes += strlen(fi->dnl[fi->dil[i]]);
 	appendLineStringBuf(writeBuf, fi->bnl[i]);
@@ -2791,11 +2717,6 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList, int multiLib)
 	}
 
 	/* Parse dependencies into header */
-	tagflags &= ~RPMSENSE_MULTILIB;
-	if (multiLib > 1)
-	    tagflags |=  RPMSENSE_MULTILIB;
-	else
-	    tagflags &= ~RPMSENSE_MULTILIB;
 	rc = parseRCPOT(spec, pkg, getStringBuf(readBuf), tag, 0, tagflags);
 	readBuf = freeStringBuf(readBuf);
 
@@ -2856,9 +2777,6 @@ static void printDepMsg(DepMsg_t * dm, int count, const char ** names,
 	else
 	    bingo = 2;
 	rpmMessage(RPMMESS_NORMAL, " %s", *names);
-
-	if (hasFlags && isDependsMULTILIB(*flags))
-	    rpmMessage(RPMMESS_NORMAL, " (multilib)");
 
 	if (hasVersions && !(*versions != NULL && **versions != '\0'))
 	    continue;
@@ -3082,19 +3000,9 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
 	if (rc) break;
 
-    /* XXX This should be added always so that packages look alike.
-     * XXX However, there is logic in files.c/depends.c that checks for
-     * XXX existence (rather than value) that will need to change as well.
-     */
-	if (headerIsEntry(pkg->header, RPMTAG_MULTILIBS)) {
-	    rc = generateDepends(spec, pkg, pkg->cpioList, 1);
-	    if (rc) break;
-	    rc = generateDepends(spec, pkg, pkg->cpioList, 2);
-	    if (rc) break;
-	} else {
-	    rc = generateDepends(spec, pkg, pkg->cpioList, 0);
-	    if (rc) break;
-	}
+	rc = generateDepends(spec, pkg, pkg->cpioList);
+	if (rc) break;
+
 	/*@-noeffect@*/
 	printDeps(pkg->header);
 	/*@=noeffect@*/

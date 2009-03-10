@@ -545,8 +545,6 @@ int fsmMapPath(FSM_t fsm)
 	switch (fsm->action) {
 	case FA_SKIP:
 	    break;
-	case FA_SKIPMULTILIB:	/* XXX RPMFILE_STATE_MULTILIB? */
-	    break;
 	case FA_UNKNOWN:
 	    break;
 
@@ -2142,7 +2140,6 @@ if (!(fsm->mapFlags & CPIO_ALL_HARDLINKS)) break;
     case FA_ERASE:	return "erase";
     case FA_SKIPNSTATE: return "skipnstate";
     case FA_SKIPNETSHARED: return "skipnetshared";
-    case FA_SKIPMULTILIB: return "skipmultilib";
     default:		return "???";
     }
     /*@notreached@*/

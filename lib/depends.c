@@ -231,9 +231,6 @@ alAddPackage(availableList al,
     int first, last, fileNum;
     int origNumDirs;
     int pkgNum;
-    uint_32 multiLibMask = 0;
-    uint_32 * fileFlags = NULL;
-    uint_32 * pp = NULL;
 
     if (al->size == al->alloced) {
 	al->alloced += al->delta;
@@ -245,27 +242,8 @@ alAddPackage(availableList al,
     p->h = headerLink(h);	/* XXX reference held by transaction set */
     p->depth = p->npreds = 0;
     memset(&p->tsi, 0, sizeof(p->tsi));
-    p->multiLib = 0;	/* MULTILIB */
 
     (void) headerNVR(p->h, &p->name, &p->version, &p->release);
-
-    /* XXX This should be added always so that packages look alike.
-     * XXX However, there is logic in files.c/depends.c that checks for
-     * XXX existence (rather than value) that will need to change as well.
-     */
-    if (hge(p->h, RPMTAG_MULTILIBS, NULL, (void **) &pp, NULL))
-	multiLibMask = *pp;
-
-    if (multiLibMask) {
-	for (i = 0; i < pkgNum - 1; i++) {
-	    if (!strcmp (p->name, al->list[i].name)
-		&& hge(al->list[i].h, RPMTAG_MULTILIBS, NULL,
-				  (void **) &pp, NULL)
-		&& !rpmVersionCompare(p->h, al->list[i].h)
-		&& *pp && !(*pp & multiLibMask))
-		    p->multiLib = multiLibMask;
-	}
-    }
 
     if (!hge(h, RPMTAG_EPOCH, NULL, (void **) &p->epoch, NULL))
 	p->epoch = NULL;
@@ -310,7 +288,6 @@ alAddPackage(availableList al,
     } else {
 	(void) hge(h, RPMTAG_DIRNAMES, &dnt, (void **) &dirNames, &numDirs);
 	(void) hge(h, RPMTAG_DIRINDEXES, NULL, (void **) &dirIndexes, NULL);
-	(void) hge(h, RPMTAG_FILEFLAGS, NULL, (void **) &fileFlags, NULL);
 
 	/* XXX FIXME: We ought to relocate the directory list here */
 
@@ -359,8 +336,6 @@ alAddPackage(availableList al,
 		dirMatch->files[dirMatch->numFiles].baseName =
 		    p->baseNames[fileNum];
 		dirMatch->files[dirMatch->numFiles].pkgNum = pkgNum;
-		dirMatch->files[dirMatch->numFiles].fileFlags =
-				fileFlags[fileNum];
 		dirMatch->numFiles++;
 	    }
 
@@ -434,14 +409,6 @@ static void alMakeIndex(availableList al)
 	k = 0;
 	for (i = 0; i < al->size; i++) {
 	    for (j = 0; j < al->list[i].providesCount; j++) {
-
-		/* If multilib install, skip non-multilib provides. */
-		if (al->list[i].multiLib &&
-		    !isDependsMULTILIB(al->list[i].provideFlags[j])) {
-			ai->size--;
-			continue;
-		}
-
 		ai->index[k].package = al->list + i;
 		ai->index[k].entry = al->list[i].provides[j];
 		ai->index[k].entryLen = strlen(al->list[i].provides[j]);
@@ -781,18 +748,6 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
 	while((h2 = rpmdbNextIterator(mi)) != NULL) {
 	    if (rpmDigestCompare(h, h2) || rpmVersionCompare(h, h2))
 		(void) removePackage(ts, rpmdbGetIteratorOffset(mi), alNum);
-	    else {
-		uint_32 *p, multiLibMask = 0, oldmultiLibMask = 0;
-
-		if (hge(h2, RPMTAG_MULTILIBS, NULL, (void **) &p, NULL))
-		    oldmultiLibMask = *p;
-		if (hge(h, RPMTAG_MULTILIBS, NULL, (void **) &p, NULL))
-		    multiLibMask = *p;
-		if (oldmultiLibMask && multiLibMask
-		    && !(oldmultiLibMask & multiLibMask)) {
-		    ts->addedPackages.list[alNum].multiLib = multiLibMask;
-		}
-	    }
 	}
 	mi = rpmdbFreeIterator(mi);
     }
@@ -951,14 +906,6 @@ alAllFileSatisfiesDepend(const availableList al,
 	    if (dirMatch->files[i].baseName == NULL ||
 			strcmp(dirMatch->files[i].baseName, baseName))
 		continue;
-
-	    /*
-	     * If a file dependency would be satisfied by a file
-	     * we are not going to install, skip it.
-	     */
-	    if (al->list[dirMatch->files[i].pkgNum].multiLib &&
-			!isFileMULTILIB(dirMatch->files[i].fileFlags))
-	        continue;
 
 	    if (keyType)
 		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added files)\n"),
@@ -1308,11 +1255,10 @@ exit:
  * @param psp		dependency problems
  * @param h		header to check
  * @param keyName	dependency name
- * @param multiLib	skip multilib colored dependencies?
  * @return		0 no problems found
  */
 static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
-		Header h, const char * keyName, uint_32 multiLib)
+		Header h, const char * keyName)
 	/*@modifies ts, h, psp */
 {
     HGE_t hge = (HGE_t)headerGetEntryMinMemory;
@@ -1349,11 +1295,6 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 
 	/* Filter out requires that came along for the ride. */
 	if (keyName && strcmp(keyName, requires[i]))
-	    continue;
-
-	/* If this requirement comes from the core package only, not libraries,
-	   then if we're installing the libraries only, don't count it in. */
-	if (multiLib && !isDependsMULTILIB(requireFlags[i]))
 	    continue;
 
 	keyDepend = printDepend("R",
@@ -1432,11 +1373,6 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	if (keyName && strcmp(keyName, conflicts[i]))
 	    continue;
 
-	/* If this requirement comes from the core package only, not libraries,
-	   then if we're installing the libraries only, don't count it in. */
-	if (multiLib && !isDependsMULTILIB(conflictFlags[i]))
-	    continue;
-
 	keyDepend = printDepend("C", conflicts[i], conflictsEVR[i], conflictFlags[i]);
 
 	rc = unsatisfiedDepend(ts, "Conflicts", keyDepend,
@@ -1506,7 +1442,7 @@ static int checkPackageSet(rpmTransactionSet ts, problemsSet psp,
     (void) rpmdbPruneIterator(mi,
 		ts->removedPackages, ts->numRemovedPackages, 1);
     while ((h = rpmdbNextIterator(mi)) != NULL) {
-	if (checkPackageDeps(ts, psp, h, key, 0)) {
+	if (checkPackageDeps(ts, psp, h, key)) {
 	    rc = 1;
 	    break;
 	}
@@ -2227,7 +2163,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 
         rpmMessage(RPMMESS_DEBUG,  "========== +++ %s-%s-%s\n" ,
 		p->name, p->version, p->release);
-	rc = checkPackageDeps(ts, ps, p->h, NULL, p->multiLib);
+	rc = checkPackageDeps(ts, ps, p->h, NULL);
 	if (rc)
 	    goto exit;
 
