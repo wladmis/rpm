@@ -1773,7 +1773,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 #endif
     }
 
-    ht = htCreate(totalFileCount * 2, 0, 0, fpHashFunction, fpEqual);
+    ht = htCreate(totalFileCount * 2, 0, fpHashFunction, fpEqual);
     fpc = fpCacheCreate(totalFileCount);
 
     /* ===============================================

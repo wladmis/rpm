@@ -43,16 +43,13 @@ int hashEqualityString(const void * key1, const void * key2)
 
 /**
  * Create hash table.
- * If keySize > 0, the key is duplicated within the table (which costs
- * memory, but may be useful anyway.
  * @param numBuckets    number of hash buckets
- * @param keySize       size of key (0 if unknown)
  * @param freeData      Should data be freed when table is destroyed?
  * @param fn            function to generate hash value for key
  * @param eq            function to compare hash keys for equality
  * @return		pointer to initialized hash table
  */
-hashTable htCreate(int numBuckets, int keySize, int freeData,
+hashTable htCreate(int numBuckets, int freeData,
 		hashFunctionType fn, hashEqualityType eq)
 	/*@*/; 
 
