@@ -243,23 +243,3 @@ void fpLookupList(fingerPrintCache cache, const char ** dirNames,
 	}
     }
 }
-
-void fpLookupHeader(fingerPrintCache cache, Header h, fingerPrint * fpList)
-{
-    HGE_t hge = (HGE_t)headerGetEntryMinMemory;
-    HFD_t hfd = headerFreeData;
-    const char ** baseNames, ** dirNames;
-    rpmTagType bnt, dnt;
-    int_32 * dirIndexes;
-    int fileCount;
-    int xx;
-
-    if (!hge(h, RPMTAG_BASENAMES, &bnt, (void **) &baseNames, &fileCount))
-	return;
-
-    xx = hge(h, RPMTAG_DIRNAMES, &dnt, (void **) &dirNames, NULL);
-    xx = hge(h, RPMTAG_DIRINDEXES, NULL, (void **) &dirIndexes, NULL);
-    fpLookupList(cache, dirNames, baseNames, dirIndexes, fileCount, fpList);
-    dirNames = hfd(dirNames, dnt);
-    baseNames = hfd(baseNames, bnt);
-}

@@ -146,17 +146,6 @@ void fpLookupList(fingerPrintCache cache, const char ** dirNames,
 		  int fileCount, fingerPrint * fpList)
 	/*@modifies cache, *fpList @*/;
 
-/**
- * Return finger prints of all file names in header.
- * @warning: scareMemory is assumed!
- * @param cache		pointer to fingerprint cache
- * @param h		package header
- * @retval fpList	pointer to array of finger prints
- */
-/*@unused@*/
-void fpLookupHeader(fingerPrintCache cache, Header h, fingerPrint * fpList)
-	/*@modifies h, cache, *fpList @*/;
-
 #ifdef __cplusplus
 }
 #endif
