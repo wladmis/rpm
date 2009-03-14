@@ -8,17 +8,15 @@
 #include "rpmhash.h"
 #include "debug.h"
 
-typedef /*@owned@*/ const void * voidptr;
-
 typedef	struct hashBucket_s * hashBucket;
 
 /**
  */
 struct hashBucket_s {
-    voidptr key;			/*!< hash key */
-/*@owned@*/ voidptr * data;		/*!< pointer to hashed data */
-    int dataCount;			/*!< length of data (0 if unknown) */
-/*@dependent@*/hashBucket next;		/*!< pointer to next item in bucket */
+    hashBucket next;		/*!< pointer to next item in bucket */
+    void *key;			/*!< hash key */
+    int dataCount;		/*!< data entries */
+    void *data[1];		/*!< data - grows by resizing whole bucket */
 };
 
 /**
@@ -98,34 +96,35 @@ hashTable htCreate(int numBuckets, int freeData,
 
 void htAddEntry(hashTable ht, const void * key, const void * data)
 {
-    unsigned int hash;
-    hashBucket b;
+    unsigned int hash = ht->fn(key) % ht->numBuckets;
+    hashBucket b = ht->buckets[hash];
+    hashBucket *b_addr = ht->buckets + hash;
 
-    hash = ht->fn(key) % ht->numBuckets;
-    b = ht->buckets[hash];
-
-    while (b && b->key && ht->eq(b->key, key))
+    while (b && b->key && ht->eq(b->key, key)) {
+	b_addr = &(b->next);
 	b = b->next;
+    }
 
-    /*@-branchstate@*/
     if (b == NULL) {
 	b = xmalloc(sizeof(*b));
 	b->key = key;
-	b->dataCount = 0;
+	b->dataCount = 1;
+	b->data[0] = data;
 	b->next = ht->buckets[hash];
-	b->data = NULL;
 	ht->buckets[hash] = b;
     }
-    /*@=branchstate@*/
-
-    b->data = xrealloc(b->data, sizeof(*b->data) * (b->dataCount + 1));
-    b->data[b->dataCount++] = data;
+    else {
+	// Bucket_s already contains space for one dataset
+	b = *b_addr = xrealloc(b, sizeof(*b) + sizeof(b->data[0]) * b->dataCount);
+	// though increasing dataCount after the resize
+	b->data[b->dataCount++] = data;
+    }
 }
 
 void htFree(hashTable ht)
 {
     hashBucket b, n;
-    int i;
+    int i, j;
 
     for (i = 0; i < ht->numBuckets; i++) {
 	b = ht->buckets[i];
@@ -135,11 +134,9 @@ void htFree(hashTable ht)
 	do {
 	    n = b->next;
 	    /*@-branchstate@*/
-	    if (b->data) {
-		if (ht->freeData)
-		    *b->data = _free(*b->data);
-		b->data = _free(b->data);
-	    }
+	    if (ht->freeData)
+		for (j = 0; j < b->dataCount; j++)
+		    b->data[j] = _free(b->data[j]);
 	    /*@=branchstate@*/
 	    b = _free(b);
 	} while ((b = n) != NULL);
