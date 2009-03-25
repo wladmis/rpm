@@ -10,12 +10,12 @@
 #include "fprint.h"
 #include "debug.h"
 
-fingerPrintCache fpCacheCreate(int sizeHint)
+fingerPrintCache fpCacheCreate(unsigned int size)
 {
     fingerPrintCache fpc;
 
     fpc = xmalloc(sizeof(*fpc));
-    fpc->ht = htCreate(sizeHint * 2, hashFunctionString, hashEqualityString);
+    fpc->ht = htCreate(size, hashFunctionString, hashEqualityString);
     return fpc;
 }
 

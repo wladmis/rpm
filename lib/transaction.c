@@ -1525,7 +1525,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     int i, j;
     int ourrc = 0;
     struct availablePackage * alp;
-    int totalFileCount = 0;
+    unsigned int totalFileCount = 0;
     hashTable ht;
     TFI_t fi;
     struct diskspaceInfo * dip;
@@ -1773,7 +1773,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 #endif
     }
 
-    ht = htCreate(totalFileCount * 2, fpHashFunction, fpEqual);
+    ht = htCreate(totalFileCount, fpHashFunction, fpEqual);
     fpc = fpCacheCreate(totalFileCount);
 
     /* ===============================================

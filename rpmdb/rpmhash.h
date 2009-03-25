@@ -46,12 +46,12 @@ typedef void *(*hashFreeDataType) (const void *data);
 
 /**
  * Create hash table.
- * @param numBuckets    number of hash buckets
+ * @param size		number of elements expected
  * @param fn            function to generate hash value for key
  * @param eq            function to compare hash keys for equality
  * @return		pointer to initialized hash table
  */
-hashTable htCreate(int numBuckets, hashFunctionType fn, hashEqualityType eq)
+hashTable htCreate(unsigned int size, hashFunctionType fn, hashEqualityType eq)
 	/*@*/; 
 
 /**

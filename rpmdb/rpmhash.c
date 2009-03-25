@@ -8,6 +8,8 @@
 #include "rpmhash.h"
 #include "debug.h"
 
+#include "jhash.h"
+
 typedef	struct hashBucket_s * hashBucket;
 
 /**
@@ -22,7 +24,7 @@ struct hashBucket_s {
 /**
  */
 struct hashTable_s {
-    int numBuckets;			/*!< number of hash buckets */
+    unsigned int numBuckets;		/*!< number of hash buckets */
     hashBucket * buckets;		/*!< hash bucket array */
     hashFunctionType fn;		/*!< generate hash value for key */
     hashEqualityType eq;		/*!< compare hash keys for equality */
@@ -42,7 +44,7 @@ hashBucket findEntry(hashTable ht, const void * key)
     hashBucket b;
 
     /*@-modunconnomods@*/
-    hash = ht->fn(key) % ht->numBuckets;
+    hash = ht->fn(key) & (ht->numBuckets - 1);
     b = ht->buckets[hash];
 
     while (b && b->key && ht->eq(b->key, key))
@@ -59,30 +61,18 @@ int hashEqualityString(const void * key1, const void * key2)
     return strcmp(k1, k2);
 }
 
-unsigned int hashFunctionString(const void * string)
+unsigned int hashFunctionString(const void *str)
 {
-    char xorValue = 0;
-    char sum = 0;
-    short len;
-    int i;
-    const char * chp = string;
-
-    len = strlen(string);
-    for (i = 0; i < len; i++, chp++) {
-	xorValue ^= *chp;
-	sum += *chp;
-    }
-
-    return ((((unsigned)len) << 16) + (((unsigned)sum) << 8) + xorValue);
+    return jhashString(str);
 }
 
-hashTable htCreate(int numBuckets, hashFunctionType fn, hashEqualityType eq)
+hashTable htCreate(unsigned int size, hashFunctionType fn, hashEqualityType eq)
 {
     hashTable ht;
 
     ht = xmalloc(sizeof(*ht));
-    ht->numBuckets = numBuckets;
-    ht->buckets = xcalloc(numBuckets, sizeof(*ht->buckets));
+    ht->numBuckets = jhashSize(size);
+    ht->buckets = xcalloc(ht->numBuckets, sizeof(*ht->buckets));
     /*@-assignexpose@*/
     ht->fn = fn;
     ht->eq = eq;
@@ -93,7 +83,7 @@ hashTable htCreate(int numBuckets, hashFunctionType fn, hashEqualityType eq)
 
 void htAddEntry(hashTable ht, const void * key, const void * data)
 {
-    unsigned int hash = ht->fn(key) % ht->numBuckets;
+    unsigned int hash = ht->fn(key) & (ht->numBuckets - 1);
     hashBucket b = ht->buckets[hash];
     hashBucket *b_addr = ht->buckets + hash;
 
