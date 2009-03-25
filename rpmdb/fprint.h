@@ -88,7 +88,7 @@ int rpmdbFindFpList(/*@null@*/ rpmdb db, fingerPrint  * fpList,
 
 /**
  * Create finger print cache.
- * @param size		number of elements expected
+ * @param size		number of directories expected
  * @return pointer to initialized fingerprint cache
  */
 /*@only@*/ fingerPrintCache fpCacheCreate(unsigned int size)

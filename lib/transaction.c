@@ -1774,7 +1774,8 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     }
 
     ht = htCreate(totalFileCount, fpHashFunction, fpEqual);
-    fpc = fpCacheCreate(totalFileCount);
+    /* XXX fpCache size = directories + space for rpmdbFindFpList */
+    fpc = fpCacheCreate(totalFileCount / 2 + 4096);
 
     /* ===============================================
      * Add fingerprint for each file not skipped.

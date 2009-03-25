@@ -1176,8 +1176,6 @@ static int rpmdbFindByFile(rpmdb db, /*@null@*/ const char * filespec,
     const char * dirName;
     const char * baseName;
     rpmTagType bnt, dnt;
-    fingerPrintCache fpc;
-    fingerPrint fp1;
     dbiIndex dbi = NULL;
     DBC * dbcursor;
     dbiIndexSet allMatches = NULL;
@@ -1206,9 +1204,6 @@ static int rpmdbFindByFile(rpmdb db, /*@null@*/ const char * filespec,
     if (baseName == NULL)
 	return -2;
 
-    fpc = fpCacheCreate(20);
-    fp1 = fpLookup(fpc, dirName, baseName, 1);
-
     dbi = dbiOpen(db, RPMTAG_BASENAMES, 0);
     if (dbi != NULL) {
 	dbcursor = NULL;
@@ -1221,14 +1216,16 @@ static int rpmdbFindByFile(rpmdb db, /*@null@*/ const char * filespec,
 
     if (rc) {
 	allMatches = dbiFreeIndexSet(allMatches);
-	fpCacheFree(fpc);
 	return rc;
     }
+
+    assert(allMatches && allMatches->count > 0);
+    fingerPrintCache fpc = fpCacheCreate(allMatches->count);
+    fingerPrint fp1 = fpLookup(fpc, dirName, baseName, 1);
 
     *matches = xcalloc(1, sizeof(**matches));
     rec = dbiIndexNewItem(0, 0);
     i = 0;
-    if (allMatches != NULL)
     while (i < allMatches->count) {
 	const char ** baseNames, ** dirNames;
 	int_32 * dirIndexes;
