@@ -23,7 +23,6 @@ struct hashBucket_s {
  */
 struct hashTable_s {
     int numBuckets;			/*!< number of hash buckets */
-    int freeData;	/*!< should data be freed when table is destroyed? */
     hashBucket * buckets;		/*!< hash bucket array */
     hashFunctionType fn;		/*!< generate hash value for key */
     hashEqualityType eq;		/*!< compare hash keys for equality */
@@ -77,15 +76,13 @@ unsigned int hashFunctionString(const void * string)
     return ((((unsigned)len) << 16) + (((unsigned)sum) << 8) + xorValue);
 }
 
-hashTable htCreate(int numBuckets, int freeData,
-		hashFunctionType fn, hashEqualityType eq)
+hashTable htCreate(int numBuckets, hashFunctionType fn, hashEqualityType eq)
 {
     hashTable ht;
 
     ht = xmalloc(sizeof(*ht));
     ht->numBuckets = numBuckets;
     ht->buckets = xcalloc(numBuckets, sizeof(*ht->buckets));
-    ht->freeData = freeData;
     /*@-assignexpose@*/
     ht->fn = fn;
     ht->eq = eq;
@@ -121,7 +118,7 @@ void htAddEntry(hashTable ht, const void * key, const void * data)
     }
 }
 
-void htFree(hashTable ht)
+hashTable htFree(hashTable ht, hashFreeKeyType freeKey, hashFreeDataType freeData)
 {
     hashBucket b, n;
     int i, j;
@@ -133,17 +130,18 @@ void htFree(hashTable ht)
 	ht->buckets[i] = NULL;
 	do {
 	    n = b->next;
-	    /*@-branchstate@*/
-	    if (ht->freeData)
+	    if (freeKey)
+		b->key = freeKey(b->key);
+	    if (freeData)
 		for (j = 0; j < b->dataCount; j++)
-		    b->data[j] = _free(b->data[j]);
-	    /*@=branchstate@*/
+		    b->data[j] = freeData(b->data[j]);
 	    b = _free(b);
 	} while ((b = n) != NULL);
     }
 
     ht->buckets = _free(ht->buckets);
     ht = _free(ht);
+    return NULL;
 }
 
 int htHasEntry(hashTable ht, const void * key)

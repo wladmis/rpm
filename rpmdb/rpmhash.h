@@ -41,23 +41,26 @@ unsigned int hashFunctionString(const void * string)
 int hashEqualityString(const void * key1, const void * key2)
 	/*@*/;
 
+typedef void *(*hashFreeKeyType) (const void *key);
+typedef void *(*hashFreeDataType) (const void *data);
+
 /**
  * Create hash table.
  * @param numBuckets    number of hash buckets
- * @param freeData      Should data be freed when table is destroyed?
  * @param fn            function to generate hash value for key
  * @param eq            function to compare hash keys for equality
  * @return		pointer to initialized hash table
  */
-hashTable htCreate(int numBuckets, int freeData,
-		hashFunctionType fn, hashEqualityType eq)
+hashTable htCreate(int numBuckets, hashFunctionType fn, hashEqualityType eq)
 	/*@*/; 
 
 /**
  * Destroy hash table.
  * @param ht            pointer to hash table
+ * @return		NULL always
  */
-void htFree( /*@only@*/ hashTable ht)
+/*@null@*/
+hashTable htFree(hashTable ht, hashFreeKeyType freeKey, hashFreeDataType freeData)
 	/*@modifies ht @*/;
 
 /**

@@ -15,14 +15,13 @@ fingerPrintCache fpCacheCreate(int sizeHint)
     fingerPrintCache fpc;
 
     fpc = xmalloc(sizeof(*fpc));
-    fpc->ht = htCreate(sizeHint * 2, 1, hashFunctionString,
-		       hashEqualityString);
+    fpc->ht = htCreate(sizeHint * 2, hashFunctionString, hashEqualityString);
     return fpc;
 }
 
 void fpCacheFree(fingerPrintCache cache)
 {
-    htFree(cache->ht);
+    cache->ht = htFree(cache->ht, NULL, _free);
     free(cache);
 }
 

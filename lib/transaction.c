@@ -1773,7 +1773,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 #endif
     }
 
-    ht = htCreate(totalFileCount * 2, 0, fpHashFunction, fpEqual);
+    ht = htCreate(totalFileCount * 2, fpHashFunction, fpEqual);
     fpc = fpCacheCreate(totalFileCount);
 
     /* ===============================================
@@ -1961,7 +1961,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     tsi = tsFreeIterator(tsi);
 
     fpCacheFree(fpc);
-    htFree(ht);
+    ht = htFree(ht, NULL, NULL);
 
     /* ===============================================
      * If unfiltered problems exist, free memory and return.
