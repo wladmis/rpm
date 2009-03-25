@@ -10,6 +10,8 @@
 #include "fprint.h"
 #include "debug.h"
 
+#include "jhash.h"
+
 fingerPrintCache fpCacheCreate(unsigned int size)
 {
     fingerPrintCache fpc;
@@ -190,19 +192,14 @@ fingerPrint fpLookup(fingerPrintCache cache, const char * dirName,
 
 unsigned int fpHashFunction(const void * key)
 {
-    const fingerPrint * fp = key;
-    unsigned int hash = 0;
-    char ch;
-    const char * chptr;
-
-    ch = 0;
-    chptr = fp->baseName;
-    while (*chptr != '\0') ch ^= *chptr++;
-
-    hash |= ((unsigned)ch) << 24;
-    hash |= (((((unsigned)fp->entry->dev) >> 8) ^ fp->entry->dev) & 0xFF) << 16;
-    hash |= fp->entry->ino & 0xFFFF;
-    
+    const fingerPrint *fp = key;
+    unsigned int hash = jhashString(fp->baseName);
+    if (fp->subDir)
+	hash = jhashStringAppend(fp->subDir, hash);
+    if (fp->entry) {
+	hash = jhashDataAppend(&fp->entry->dev, sizeof(fp->entry->dev), hash);
+	hash = jhashDataAppend(&fp->entry->ino, sizeof(fp->entry->ino), hash);
+    }
     return hash;
 }
 
