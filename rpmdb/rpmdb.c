@@ -3013,12 +3013,11 @@ exit:
 
 /* XXX transaction.c */
 int rpmdbFindFpList(rpmdb db, fingerPrint * fpList, dbiIndexSet * matchList, 
-		    int numItems)
+		    int numItems, fingerPrintCache fpc)
 {
     HGE_t hge = (HGE_t)headerGetEntryMinMemory;
     HFD_t hfd = headerFreeData;
     rpmdbMatchIterator mi;
-    fingerPrintCache fpc;
     Header h;
     int i, xx;
 
@@ -3036,7 +3035,6 @@ int rpmdbFindFpList(rpmdb db, fingerPrint * fpList, dbiIndexSet * matchList,
 	mi = rpmdbFreeIterator(mi);
 	return 0;
     }
-    fpc = fpCacheCreate(i);
 
     rpmdbSortIterator(mi);
     /* iterator is now sorted by (recnum, filenum) */
@@ -3102,8 +3100,6 @@ int rpmdbFindFpList(rpmdb db, fingerPrint * fpList, dbiIndexSet * matchList,
     }
 
     mi = rpmdbFreeIterator(mi);
-
-    fpCacheFree(fpc);
 
     return 0;
 

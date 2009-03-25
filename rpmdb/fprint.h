@@ -79,7 +79,8 @@ extern "C" {
  * @return		0 always
  */
 int rpmdbFindFpList(/*@null@*/ rpmdb db, fingerPrint  * fpList,
-		/*@out@*/ dbiIndexSet * matchList, int numItems)
+		/*@out@*/ dbiIndexSet * matchList, int numItems,
+		fingerPrintCache fpc);
 	/*@globals fileSystem@*/
 	/*@modifies db, *matchList, fileSystem @*/;
 

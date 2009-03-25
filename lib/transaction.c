@@ -1814,7 +1814,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 
 	/* Extract file info for all files in this package from the database. */
 	matches = xcalloc(sizeof(*matches), fi->fc);
-	if (rpmdbFindFpList(ts->rpmdb, fi->fps, matches, fi->fc))
+	if (rpmdbFindFpList(ts->rpmdb, fi->fps, matches, fi->fc, fpc))
 	    return 1;	/* XXX WTFO? */
 
 	numShared = 0;
