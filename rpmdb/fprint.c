@@ -21,6 +21,7 @@ fingerPrintCache fpCacheCreate(int sizeHint)
 
 void fpCacheFree(fingerPrintCache cache)
 {
+    /* don't free keys: key=dirname is part of value=entry, see below */
     cache->ht = htFree(cache->ht, NULL, _free);
     free(cache);
 }
@@ -127,12 +128,12 @@ static fingerPrint doLookup(fingerPrintCache cache,
 	if (cacheHit != NULL) {
 	    fp.entry = cacheHit;
 	} else if (!stat((*buf != '\0' ? buf : "/"), &sb)) {
+	    /* single malloc for both key=dirname and value=entry */
 	    size_t nb = sizeof(*fp.entry) + (*buf != '\0' ? (end-buf) : 1) + 1;
-	    char * dn = xmalloc(nb);
-	    struct fprintCacheEntry_s * newEntry = (void *)dn;
+	    struct fprintCacheEntry_s *newEntry = xmalloc(nb);
 
 	    /*@-usereleased@*/	/* LCL: contiguous malloc confusion */
-	    dn += sizeof(*newEntry);
+	    char *dn = (char *)(newEntry + 1);
 	    strcpy(dn, (*buf != '\0' ? buf : "/"));
 	    newEntry->ino = sb.st_ino;
 	    newEntry->dev = sb.st_dev;
