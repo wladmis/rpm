@@ -140,7 +140,6 @@ static fingerPrint doLookup(fingerPrintCache cache,
 	    strcpy(dn, (*buf != '\0' ? buf : "/"));
 	    newEntry->ino = sb.st_ino;
 	    newEntry->dev = sb.st_dev;
-	    newEntry->isFake = 0;
 	    newEntry->dirName = dn;
 	    fp.entry = newEntry;
 
@@ -161,7 +160,7 @@ static fingerPrint doLookup(fingerPrintCache cache,
 	    fp.baseName = baseName;
 	    if (!scareMemory && fp.subDir != NULL)
 		fp.subDir = xstrdup(fp.subDir);
-	/*@-compdef@*/ /* FIX: fp.entry.{dirName,dev,ino,isFake} undef @*/
+	/*@-compdef@*/ /* FIX: fp.entry.{dirName,dev,ino} undef @*/
 	    return fp;
 	/*@=compdef@*/
 	}
@@ -180,7 +179,7 @@ static fingerPrint doLookup(fingerPrintCache cache,
 
     /*@notreached@*/
 
-    /*@-compdef@*/ /* FIX: fp.entry.{dirName,dev,ino,isFake} undef @*/
+    /*@-compdef@*/ /* FIX: fp.entry.{dirName,dev,ino} undef @*/
     /*@-nullret@*/ return fp; /*@=nullret@*/	/* LCL: can't happen. */
     /*@=compdef@*/
 }

@@ -28,7 +28,6 @@ struct fprintCacheEntry_s {
     const char * dirName;		/*!< path to existing directory */
     dev_t dev;				/*!< stat(2) device number */
     ino_t ino;				/*!< stat(2) inode number */
-    int isFake;				/*!< (currently unused) */
 };
 
 /**
