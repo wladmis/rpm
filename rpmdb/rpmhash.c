@@ -36,20 +36,15 @@ struct hashTable_s {
  * @param key           pointer to key value
  * @return pointer to hash bucket of key (or NULL)
  */
-static /*@shared@*/ /*@null@*/
-hashBucket findEntry(hashTable ht, const void * key)
+static inline /*@shared@*/ /*@null@*/
+hashBucket findBucket(hashTable ht, const void * key)
 	/*@*/
 {
-    unsigned int hash;
-    hashBucket b;
-
-    /*@-modunconnomods@*/
-    hash = ht->fn(key) & (ht->numBuckets - 1);
-    b = ht->buckets[hash];
+    unsigned int hash = ht->fn(key) & (ht->numBuckets - 1);
+    hashBucket b = ht->buckets[hash];
 
     while (b && b->key && ht->eq(b->key, key))
 	b = b->next;
-    /*@=modunconnomods@*/
 
     return b;
 }
@@ -134,25 +129,23 @@ hashTable htFree(hashTable ht, hashFreeKeyType freeKey, hashFreeDataType freeDat
 
 int htHasEntry(hashTable ht, const void * key)
 {
-    hashBucket b;
-
-    if (!(b = findEntry(ht, key))) return 0; else return 1;
+    hashBucket b = findBucket(ht, key);
+    if (b == NULL)
+	return 0;
+    return 1;
 }
 
 int htGetEntry(hashTable ht, const void * key, const void *** data,
 	       int * dataCount, const void ** tableKey)
 {
-    hashBucket b;
-
-    if ((b = findEntry(ht, key)) == NULL)
+    hashBucket b = findBucket(ht, key);
+    if (b == NULL)
 	return 1;
-
     if (data)
 	*data = (const void **) b->data;
     if (dataCount)
 	*dataCount = b->dataCount;
     if (tableKey)
 	*tableKey = b->key;
-
     return 0;
 }
