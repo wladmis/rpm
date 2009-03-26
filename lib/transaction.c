@@ -1525,7 +1525,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     int i, j;
     int ourrc = 0;
     struct availablePackage * alp;
-    int totalFileCount = 0;
+    unsigned int totalFileCount = 0;
     hashTable ht;
     TFI_t fi;
     struct diskspaceInfo * dip;
@@ -1773,8 +1773,9 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 #endif
     }
 
-    ht = htCreate(totalFileCount * 2, 0, 0, fpHashFunction, fpEqual);
-    fpc = fpCacheCreate(totalFileCount);
+    ht = htCreate(totalFileCount, fpHashFunction, fpEqual);
+    /* XXX fpCache size = directories + space for rpmdbFindFpList */
+    fpc = fpCacheCreate(totalFileCount / 2 + 4096);
 
     /* ===============================================
      * Add fingerprint for each file not skipped.
@@ -1814,7 +1815,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 
 	/* Extract file info for all files in this package from the database. */
 	matches = xcalloc(sizeof(*matches), fi->fc);
-	if (rpmdbFindFpList(ts->rpmdb, fi->fps, matches, fi->fc))
+	if (rpmdbFindFpList(ts->rpmdb, fi->fps, matches, fi->fc, fpc))
 	    return 1;	/* XXX WTFO? */
 
 	numShared = 0;
@@ -1960,8 +1961,8 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     }
     tsi = tsFreeIterator(tsi);
 
-    fpCacheFree(fpc);
-    htFree(ht);
+    fpc = fpCacheFree(fpc);
+    ht = htFree(ht, NULL, NULL);
 
     /* ===============================================
      * If unfiltered problems exist, free memory and return.

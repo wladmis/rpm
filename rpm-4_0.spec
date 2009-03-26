@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.14
+Release: alt95.M41.15
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -554,6 +554,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Mar 26 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.15
+- Improved fingerprint cache performance (credits: Florian Festi).
+
 * Tue Mar 10 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.14
 - Removed prehistoric multilib support.
 
