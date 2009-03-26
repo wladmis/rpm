@@ -1176,8 +1176,6 @@ static int rpmdbFindByFile(rpmdb db, /*@null@*/ const char * filespec,
     const char * dirName;
     const char * baseName;
     rpmTagType bnt, dnt;
-    fingerPrintCache fpc;
-    fingerPrint fp1;
     dbiIndex dbi = NULL;
     DBC * dbcursor;
     dbiIndexSet allMatches = NULL;
@@ -1206,9 +1204,6 @@ static int rpmdbFindByFile(rpmdb db, /*@null@*/ const char * filespec,
     if (baseName == NULL)
 	return -2;
 
-    fpc = fpCacheCreate(20);
-    fp1 = fpLookup(fpc, dirName, baseName, 1);
-
     dbi = dbiOpen(db, RPMTAG_BASENAMES, 0);
     if (dbi != NULL) {
 	dbcursor = NULL;
@@ -1221,14 +1216,16 @@ static int rpmdbFindByFile(rpmdb db, /*@null@*/ const char * filespec,
 
     if (rc) {
 	allMatches = dbiFreeIndexSet(allMatches);
-	fpCacheFree(fpc);
 	return rc;
     }
+
+    assert(allMatches && allMatches->count > 0);
+    fingerPrintCache fpc = fpCacheCreate(allMatches->count);
+    fingerPrint fp1 = fpLookup(fpc, dirName, baseName, 1);
 
     *matches = xcalloc(1, sizeof(**matches));
     rec = dbiIndexNewItem(0, 0);
     i = 0;
-    if (allMatches != NULL)
     while (i < allMatches->count) {
 	const char ** baseNames, ** dirNames;
 	int_32 * dirIndexes;
@@ -1280,7 +1277,7 @@ static int rpmdbFindByFile(rpmdb db, /*@null@*/ const char * filespec,
     rec = _free(rec);
     allMatches = dbiFreeIndexSet(allMatches);
 
-    fpCacheFree(fpc);
+    fpc = fpCacheFree(fpc);
 
     if ((*matches)->count == 0) {
 	*matches = dbiFreeIndexSet(*matches);
@@ -3013,12 +3010,11 @@ exit:
 
 /* XXX transaction.c */
 int rpmdbFindFpList(rpmdb db, fingerPrint * fpList, dbiIndexSet * matchList, 
-		    int numItems)
+		    int numItems, fingerPrintCache fpc)
 {
     HGE_t hge = (HGE_t)headerGetEntryMinMemory;
     HFD_t hfd = headerFreeData;
     rpmdbMatchIterator mi;
-    fingerPrintCache fpc;
     Header h;
     int i, xx;
 
@@ -3036,7 +3032,6 @@ int rpmdbFindFpList(rpmdb db, fingerPrint * fpList, dbiIndexSet * matchList,
 	mi = rpmdbFreeIterator(mi);
 	return 0;
     }
-    fpc = fpCacheCreate(i);
 
     rpmdbSortIterator(mi);
     /* iterator is now sorted by (recnum, filenum) */
@@ -3102,8 +3097,6 @@ int rpmdbFindFpList(rpmdb db, fingerPrint * fpList, dbiIndexSet * matchList,
     }
 
     mi = rpmdbFreeIterator(mi);
-
-    fpCacheFree(fpc);
 
     return 0;
 

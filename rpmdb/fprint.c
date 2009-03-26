@@ -10,20 +10,23 @@
 #include "fprint.h"
 #include "debug.h"
 
-fingerPrintCache fpCacheCreate(int sizeHint)
+#include "jhash.h"
+
+fingerPrintCache fpCacheCreate(unsigned int size)
 {
     fingerPrintCache fpc;
 
     fpc = xmalloc(sizeof(*fpc));
-    fpc->ht = htCreate(sizeHint * 2, 0, 1, hashFunctionString,
-		       hashEqualityString);
+    fpc->ht = htCreate(size, hashFunctionString, hashEqualityString);
     return fpc;
 }
 
-void fpCacheFree(fingerPrintCache cache)
+fingerPrintCache fpCacheFree(fingerPrintCache cache)
 {
-    htFree(cache->ht);
-    free(cache);
+    /* don't free keys: key=dirname is part of value=entry, see below */
+    cache->ht = htFree(cache->ht, NULL, _free);
+    cache = _free(cache);
+    return NULL;
 }
 
 /**
@@ -128,16 +131,15 @@ static fingerPrint doLookup(fingerPrintCache cache,
 	if (cacheHit != NULL) {
 	    fp.entry = cacheHit;
 	} else if (!stat((*buf != '\0' ? buf : "/"), &sb)) {
+	    /* single malloc for both key=dirname and value=entry */
 	    size_t nb = sizeof(*fp.entry) + (*buf != '\0' ? (end-buf) : 1) + 1;
-	    char * dn = xmalloc(nb);
-	    struct fprintCacheEntry_s * newEntry = (void *)dn;
+	    struct fprintCacheEntry_s *newEntry = xmalloc(nb);
 
 	    /*@-usereleased@*/	/* LCL: contiguous malloc confusion */
-	    dn += sizeof(*newEntry);
+	    char *dn = (char *)(newEntry + 1);
 	    strcpy(dn, (*buf != '\0' ? buf : "/"));
 	    newEntry->ino = sb.st_ino;
 	    newEntry->dev = sb.st_dev;
-	    newEntry->isFake = 0;
 	    newEntry->dirName = dn;
 	    fp.entry = newEntry;
 
@@ -158,7 +160,7 @@ static fingerPrint doLookup(fingerPrintCache cache,
 	    fp.baseName = baseName;
 	    if (!scareMemory && fp.subDir != NULL)
 		fp.subDir = xstrdup(fp.subDir);
-	/*@-compdef@*/ /* FIX: fp.entry.{dirName,dev,ino,isFake} undef @*/
+	/*@-compdef@*/ /* FIX: fp.entry.{dirName,dev,ino} undef @*/
 	    return fp;
 	/*@=compdef@*/
 	}
@@ -177,7 +179,7 @@ static fingerPrint doLookup(fingerPrintCache cache,
 
     /*@notreached@*/
 
-    /*@-compdef@*/ /* FIX: fp.entry.{dirName,dev,ino,isFake} undef @*/
+    /*@-compdef@*/ /* FIX: fp.entry.{dirName,dev,ino} undef @*/
     /*@-nullret@*/ return fp; /*@=nullret@*/	/* LCL: can't happen. */
     /*@=compdef@*/
 }
@@ -190,19 +192,14 @@ fingerPrint fpLookup(fingerPrintCache cache, const char * dirName,
 
 unsigned int fpHashFunction(const void * key)
 {
-    const fingerPrint * fp = key;
-    unsigned int hash = 0;
-    char ch;
-    const char * chptr;
-
-    ch = 0;
-    chptr = fp->baseName;
-    while (*chptr != '\0') ch ^= *chptr++;
-
-    hash |= ((unsigned)ch) << 24;
-    hash |= (((((unsigned)fp->entry->dev) >> 8) ^ fp->entry->dev) & 0xFF) << 16;
-    hash |= fp->entry->ino & 0xFFFF;
-    
+    const fingerPrint *fp = key;
+    unsigned int hash = jhashString(fp->baseName);
+    if (fp->subDir)
+	hash = jhashStringAppend(fp->subDir, hash);
+    if (fp->entry) {
+	hash = jhashDataAppend(&fp->entry->dev, sizeof(fp->entry->dev), hash);
+	hash = jhashDataAppend(&fp->entry->ino, sizeof(fp->entry->ino), hash);
+    }
     return hash;
 }
 
@@ -242,24 +239,4 @@ void fpLookupList(fingerPrintCache cache, const char ** dirNames,
 				 1);
 	}
     }
-}
-
-void fpLookupHeader(fingerPrintCache cache, Header h, fingerPrint * fpList)
-{
-    HGE_t hge = (HGE_t)headerGetEntryMinMemory;
-    HFD_t hfd = headerFreeData;
-    const char ** baseNames, ** dirNames;
-    rpmTagType bnt, dnt;
-    int_32 * dirIndexes;
-    int fileCount;
-    int xx;
-
-    if (!hge(h, RPMTAG_BASENAMES, &bnt, (void **) &baseNames, &fileCount))
-	return;
-
-    xx = hge(h, RPMTAG_DIRNAMES, &dnt, (void **) &dirNames, NULL);
-    xx = hge(h, RPMTAG_DIRINDEXES, NULL, (void **) &dirIndexes, NULL);
-    fpLookupList(cache, dirNames, baseNames, dirIndexes, fileCount, fpList);
-    dirNames = hfd(dirNames, dnt);
-    baseNames = hfd(baseNames, bnt);
 }
