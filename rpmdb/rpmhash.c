@@ -15,10 +15,10 @@ typedef	struct hashBucket_s * hashBucket;
 /**
  */
 struct hashBucket_s {
-    hashBucket next;		/*!< pointer to next item in bucket */
-    void *key;			/*!< hash key */
-    int dataCount;		/*!< data entries */
-    void *data[1];		/*!< data - grows by resizing whole bucket */
+    hashBucket next;			/*!< pointer to next item in bucket */
+    const void *key;			/*!< hash key */
+    unsigned int dataCount;		/*!< data entries */
+    const void *data[1];		/*!< data - grows by resizing whole bucket */
 };
 
 /**
@@ -105,7 +105,7 @@ void htAddEntry(hashTable ht, const void * key, const void * data)
 hashTable htFree(hashTable ht, hashFreeKeyType freeKey, hashFreeDataType freeData)
 {
     hashBucket b, n;
-    int i, j;
+    unsigned int i, j;
 
     for (i = 0; i < ht->numBuckets; i++) {
 	b = ht->buckets[i];
@@ -142,7 +142,7 @@ int htGetEntry(hashTable ht, const void * key, const void *** data,
     if (b == NULL)
 	return 1;
     if (data)
-	*data = (const void **) b->data;
+	*data = b->data;
     if (dataCount)
 	*dataCount = b->dataCount;
     if (tableKey)
