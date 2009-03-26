@@ -16,7 +16,7 @@ LIBPOPT = @LIBPOPT@
 
 pkgincdir = $(pkgincludedir)
 pkginc_HEADERS = hdrinline.h rpmdb.h
-noinst_HEADERS = falloc.h fprint.h rpmhash.h
+noinst_HEADERS = falloc.h fprint.h rpmhash.h jhash.h
 
 mylibpaths = -L$(top_builddir)/lib/.libs
 mylibs = -lrpm
