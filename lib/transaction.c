@@ -1961,7 +1961,7 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     }
     tsi = tsFreeIterator(tsi);
 
-    fpCacheFree(fpc);
+    fpc = fpCacheFree(fpc);
     ht = htFree(ht, NULL, NULL);
 
     /* ===============================================

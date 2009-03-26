@@ -21,11 +21,12 @@ fingerPrintCache fpCacheCreate(unsigned int size)
     return fpc;
 }
 
-void fpCacheFree(fingerPrintCache cache)
+fingerPrintCache fpCacheFree(fingerPrintCache cache)
 {
     /* don't free keys: key=dirname is part of value=entry, see below */
     cache->ht = htFree(cache->ht, NULL, _free);
-    free(cache);
+    cache = _free(cache);
+    return NULL;
 }
 
 /**

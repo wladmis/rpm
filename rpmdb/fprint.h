@@ -97,8 +97,10 @@ int rpmdbFindFpList(/*@null@*/ rpmdb db, fingerPrint  * fpList,
 /**
  * Destroy finger print cache.
  * @param cache		pointer to fingerprint cache
+ * @return		NULL always
  */
-void fpCacheFree(/*@only@*/ fingerPrintCache cache)
+/*@null@*/
+fingerPrintCache fpCacheFree(/*@only@*/ fingerPrintCache cache)
 	/*@modifies cache @*/;
 
 /**

@@ -1277,7 +1277,7 @@ static int rpmdbFindByFile(rpmdb db, /*@null@*/ const char * filespec,
     rec = _free(rec);
     allMatches = dbiFreeIndexSet(allMatches);
 
-    fpCacheFree(fpc);
+    fpc = fpCacheFree(fpc);
 
     if ((*matches)->count == 0) {
 	*matches = dbiFreeIndexSet(*matches);
