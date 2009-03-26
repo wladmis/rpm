@@ -24,10 +24,10 @@ struct hashBucket_s {
 /**
  */
 struct hashTable_s {
-    unsigned int numBuckets;		/*!< number of hash buckets */
-    hashBucket * buckets;		/*!< hash bucket array */
     hashFunctionType fn;		/*!< generate hash value for key */
     hashEqualityType eq;		/*!< compare hash keys for equality */
+    unsigned int numBuckets;		/*!< number of hash buckets */
+    hashBucket buckets[1];		/*!< hash bucket array */
 };
 
 /**
@@ -69,15 +69,14 @@ unsigned int hashFunctionString(const void *str)
 hashTable htCreate(unsigned int size, hashFunctionType fn, hashEqualityType eq)
 {
     hashTable ht;
-
-    ht = xmalloc(sizeof(*ht));
-    ht->numBuckets = jhashSize(size);
-    ht->buckets = xcalloc(ht->numBuckets, sizeof(*ht->buckets));
+    unsigned int numBuckets = jhashSize(size);
+    size_t numBytes = sizeof(*ht) + sizeof(ht->buckets[1]) * (numBuckets - 1);
+    ht = xcalloc(numBytes, 1);
+    ht->numBuckets = numBuckets;
     /*@-assignexpose@*/
     ht->fn = fn;
     ht->eq = eq;
     /*@=assignexpose@*/
-
     return ht;
 }
 
@@ -129,7 +128,6 @@ hashTable htFree(hashTable ht, hashFreeKeyType freeKey, hashFreeDataType freeDat
 	} while ((b = n) != NULL);
     }
 
-    ht->buckets = _free(ht->buckets);
     ht = _free(ht);
     return NULL;
 }
