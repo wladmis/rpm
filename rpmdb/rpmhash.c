@@ -51,9 +51,7 @@ hashBucket findBucket(hashTable ht, const void * key)
 
 int hashEqualityString(const void * key1, const void * key2)
 {
-    const char *k1 = (const char *)key1;
-    const char *k2 = (const char *)key2;
-    return strcmp(k1, k2);
+    return strcmp(key1, key2);
 }
 
 unsigned int hashFunctionString(const void *str)
