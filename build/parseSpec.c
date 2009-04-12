@@ -870,9 +870,6 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	    headerAddEntry(pkg->header, RPMTAG_ARCH, RPM_STRING_TYPE, arch, 1);
 	else
 	    assert(pkg != spec->packages); /* noarch subpackage */
-	if (!headerIsEntry(pkg->header, RPMTAG_RHNPLATFORM))
-	    (void) headerAddEntry(pkg->header, RPMTAG_RHNPLATFORM,
-		RPM_STRING_TYPE, arch, 1);
 	(void) headerAddEntry(pkg->header, RPMTAG_PLATFORM,
 		RPM_STRING_TYPE, platform, 1);
     }
