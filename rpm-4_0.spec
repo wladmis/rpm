@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt97.M50.3
+Release: alt97.M50.4
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -547,6 +547,13 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Apr 14 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt97.M50.4
+- Dropped deprecated RPMTAG_RHNPLATFORM support.
+- Dropped unused RPMTAG_PLATFORM support.
+- rpmVersionCompare(): Added handling of omitted tags.
+- rpmevrcmp: Changed to use rpmVersionCompare() instead of rpmEVRcmp().
+- 0common-files.req.list: Added /etc/X11/wms-methods.d (Igor Vlasenko).
+
 * Thu Mar 26 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt97.M50.3
 - Improved fingerprint cache performance (credits: Florian Festi).
 
