@@ -47,50 +47,36 @@ static int upgrade_honor_buildtime(void)
     return honor_buildtime;
 }
 
-static int rpmBuildTimeCompare(Header first, Header second)
+static int rpm_cmp_tag_int(Header first, Header second, rpmTag tag)
 {
     int_32 * one, * two;
 
-    if (!headerGetEntry(first, RPMTAG_BUILDTIME, NULL, (void **) &one, NULL))
+    if (!headerGetEntry(first, tag, NULL, (void **) &one, NULL))
 	one = NULL;
-    if (!headerGetEntry(second, RPMTAG_BUILDTIME, NULL, (void **) &two, NULL))
+    if (!headerGetEntry(second, tag, NULL, (void **) &two, NULL))
 	two = NULL;
 
     if (!one && !two)
 	return 0;
-    if (one && !two)
-	return 1;
-    if (!one && two)
+    else if (!one && two)
 	return -1;
-    if (*one < *two)
-	return -1;
-    if (*one > *two)
+    else if (one && !two)
 	return 1;
-    return 0;
+    else if (*one < *two)
+	return -1;
+    else if (*one > *two)
+	return 1;
+    else
+	return 0;
 }
 
 int rpmVersionCompare(Header first, Header second)
 {
     const char * one, * two;
-    int_32 * epochOne, * epochTwo;
     int rc;
 
-    if (!headerGetEntry(first, RPMTAG_EPOCH, NULL, (void **) &epochOne, NULL))
-	epochOne = NULL;
-    if (!headerGetEntry(second, RPMTAG_EPOCH, NULL, (void **) &epochTwo,
-			NULL))
-	epochTwo = NULL;
-
-    if (epochOne && !epochTwo)
-	return 1;
-    else if (!epochOne && epochTwo)
-	return -1;
-    else if (epochOne && epochTwo) {
-	if (*epochOne < *epochTwo)
-	    return -1;
-	else if (*epochOne > *epochTwo)
-	    return 1;
-    }
+    if ((rc = rpm_cmp_tag_int(first, second, RPMTAG_EPOCH)))
+	return rc;
 
     rc = headerGetEntry(first, RPMTAG_VERSION, NULL, (void **) &one, NULL);
     rc = headerGetEntry(second, RPMTAG_VERSION, NULL, (void **) &two, NULL);
@@ -107,7 +93,7 @@ int rpmVersionCompare(Header first, Header second)
 	return rc;
 
     if (upgrade_honor_buildtime())
-	return rpmBuildTimeCompare(first, second);
+	return rpm_cmp_tag_int(first, second, RPMTAG_BUILDTIME);
 
     return 0;
 }
