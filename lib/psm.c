@@ -70,26 +70,36 @@ static int rpm_cmp_tag_int(Header first, Header second, rpmTag tag)
 	return 0;
 }
 
-int rpmVersionCompare(Header first, Header second)
+static int rpm_cmp_tag_version(Header first, Header second, rpmTag tag)
 {
     const char * one, * two;
+
+    if (!headerGetEntry(first, tag, NULL, (void **) &one, NULL))
+	one = NULL;
+    if (!headerGetEntry(second, tag, NULL, (void **) &two, NULL))
+	two = NULL;
+
+    if (!one && !two)
+	return 0;
+    else if (!one && two)
+	return -1;
+    else if (one && !two)
+	return 1;
+    else
+	return rpmvercmp(one, two);
+}
+
+int rpmVersionCompare(Header first, Header second)
+{
     int rc;
 
     if ((rc = rpm_cmp_tag_int(first, second, RPMTAG_EPOCH)))
 	return rc;
 
-    rc = headerGetEntry(first, RPMTAG_VERSION, NULL, (void **) &one, NULL);
-    rc = headerGetEntry(second, RPMTAG_VERSION, NULL, (void **) &two, NULL);
-
-    rc = rpmvercmp(one, two);
-    if (rc)
+    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_VERSION)))
 	return rc;
 
-    (void) headerGetEntry(first, RPMTAG_RELEASE, NULL, (void **) &one, NULL);
-    (void) headerGetEntry(second, RPMTAG_RELEASE, NULL, (void **) &two, NULL);
-
-    rc = rpmvercmp(one, two);
-    if (rc)
+    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_RELEASE)))
 	return rc;
 
     if (upgrade_honor_buildtime())
