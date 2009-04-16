@@ -563,6 +563,7 @@
 @alt@%_install_info		%install_info
 @alt@%_remove_install_info	%uninstall_info
 @alt@
+@alt@%_initddir		%_initdir
 @alt@%_initrddir	%_initdir
 @alt@%make_session	%update_wms
 @alt@
