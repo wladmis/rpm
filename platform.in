@@ -385,6 +385,9 @@
 @alt@# Initscripts.
 @alt@%_initdir	%{_sysconfdir}/rc.d/init.d
 @alt@
+@alt@# logrotate configs.
+@alt@%_logrotatedir	%{_sysconfdir}/logrotate.d
+@alt@
 @alt@# Licenses.
 @alt@%_licensedir	%{_datadir}/license
 @alt@
