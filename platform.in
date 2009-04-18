@@ -400,6 +400,9 @@
 @alt@# Application cache data directory.
 @alt@%_cachedir	%{_var}/cache
 @alt@
+@alt@# Application runtime directory.
+@alt@%_runtimedir	%{_var}/run
+@alt@
 @alt@# Application spool data directory.
 @alt@%_spooldir	%{_var}/spool
 @alt@
