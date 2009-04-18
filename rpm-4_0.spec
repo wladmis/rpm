@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt97.M50.4
+Release: alt97.M50.5
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -547,6 +547,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Apr 18 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt97.M50.5
+- rpm.8: Fixed typo (closes: #19356).
+- platform.in: Added macros: %%_logrotatedir, %%_runtimedir (closes: #13639).
+
 * Tue Apr 14 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt97.M50.4
 - Dropped deprecated RPMTAG_RHNPLATFORM support.
 - Dropped unused RPMTAG_PLATFORM support.
