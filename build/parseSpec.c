@@ -850,7 +850,6 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	os = myos;
     }
 #else
-    const char *platform = rpmExpand("%{_target_platform}", NULL);
     const char *arch = rpmExpand("%{_target_cpu}", NULL);
     const char *os = rpmExpand("%{_target_os}", NULL);
 #endif
@@ -870,17 +869,11 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
 	    headerAddEntry(pkg->header, RPMTAG_ARCH, RPM_STRING_TYPE, arch, 1);
 	else
 	    assert(pkg != spec->packages); /* noarch subpackage */
-	if (!headerIsEntry(pkg->header, RPMTAG_RHNPLATFORM))
-	    (void) headerAddEntry(pkg->header, RPMTAG_RHNPLATFORM,
-		RPM_STRING_TYPE, arch, 1);
-	(void) headerAddEntry(pkg->header, RPMTAG_PLATFORM,
-		RPM_STRING_TYPE, platform, 1);
     }
 
 #ifdef	DYING
     myos = _free(myos);
 #else
-    platform = _free(platform);
     arch = _free(arch);
     os = _free(os);
 #endif

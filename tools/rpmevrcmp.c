@@ -20,38 +20,69 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <error.h>
 #include <string.h>
 #include <stdlib.h>
 #include <rpmlib.h>
 
+static  Header
+newHeaderEVR(const char *e, const char *v, const char *r)
+{
+	Header  h;
+
+	if (!(h = headerNew()))
+		return h;
+
+	if (e)
+	{
+		int     i = atoi(e);
+
+		headerAddEntry(h, RPMTAG_EPOCH, RPM_INT32_TYPE, &i, 1);
+	}
+	if (v)
+		headerAddEntry(h, RPMTAG_VERSION, RPM_STRING_TYPE, v, 1);
+	if (r)
+		headerAddEntry(h, RPMTAG_RELEASE, RPM_STRING_TYPE, r, 1);
+	return h;
+}
+
 int
-main (int ac, const char *av[])
+main(int ac, const char *av[])
 {
 	const char *e1 = 0, *v1 = 0, *r1 = 0;
 	const char *e2 = 0, *v2 = 0, *r2 = 0;
-	char *arg1, *arg2;
+	char   *arg1, *arg2;
+	Header  h1, h2;
 
 	if (ac != 3)
 	{
-		fprintf (stderr,
-			 "%s - compare EVRs.\n"
-			 "Usage: %s <EVR1> <EVR2>\n"
-			 "\nReport bugs to http://bugs.altlinux.ru/\n\n",
-			 program_invocation_short_name,
-			 program_invocation_short_name);
+		fprintf(stderr,
+			"%s - compare EVRs.\n"
+			"Usage: %s <EVR1> <EVR2>\n"
+			"\nReport bugs to http://bugs.altlinux.ru/\n\n",
+			program_invocation_short_name,
+			program_invocation_short_name);
 		return EXIT_FAILURE;
 	}
 
-	arg1 = strdup (av[1]);
-	parseEVR (arg1, &e1, &v1, &r1);
+	arg1 = strdup(av[1]);
+	arg2 = strdup(av[2]);
+	if (!arg1 || !arg2)
+		error(EXIT_FAILURE, errno, "strdup");
 
-	arg2 = strdup (av[2]);
-	parseEVR (arg2, &e2, &v2, &r2);
+	parseEVR(arg1, &e1, &v1, &r1);
+	parseEVR(arg2, &e2, &v2, &r2);
+	h1 = newHeaderEVR(e1, v1, r1);
+	h2 = newHeaderEVR(e2, v2, r2);
+	if (!h1 || !h2)
+		error(EXIT_FAILURE, errno, "headerNew");
 
-	printf ("%d\n", rpmEVRcmp (e1, v1, r1, 0, e2, v2, r2, 0));
+	printf("%d\n", rpmVersionCompare(h1, h2));
 
-	free (arg2);
-	free (arg1);
+	h2 = headerFree(h2);
+	h1 = headerFree(h1);
+	free(arg2);
+	free(arg1);
 
 	return EXIT_SUCCESS;
 }

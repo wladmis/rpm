@@ -23,20 +23,20 @@
 #include <rpmlib.h>
 
 int
-main (int ac, const char *av[])
+main(int ac, const char *av[])
 {
 	if (ac != 3)
 	{
-		fprintf (stderr,
-			 "%s - compare versions.\n"
-			 "Usage: %s <version1> <version2>\n"
-			 "\nReport bugs to http://bugs.altlinux.ru/\n\n",
-			 program_invocation_short_name,
-			 program_invocation_short_name);
+		fprintf(stderr,
+			"%s - compare versions.\n"
+			"Usage: %s <version1> <version2>\n"
+			"\nReport bugs to http://bugs.altlinux.ru/\n\n",
+			program_invocation_short_name,
+			program_invocation_short_name);
 		return 1;
 	}
 
-	printf ("%d\n", rpmvercmp (av[1], av[2]));
+	printf("%d\n", rpmvercmp(av[1], av[2]));
 
 	return 0;
 }
