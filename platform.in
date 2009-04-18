@@ -368,6 +368,9 @@
 @alt@# Initscripts.
 @alt@%_initdir	%{_sysconfdir}/rc.d/init.d
 @alt@
+@alt@# logrotate configs.
+@alt@%_logrotatedir	%{_sysconfdir}/logrotate.d
+@alt@
 @alt@# Licenses.
 @alt@%_licensedir	%{_datadir}/license
 @alt@
@@ -379,6 +382,9 @@
 @alt@
 @alt@# Application cache data directory.
 @alt@%_cachedir	%{_var}/cache
+@alt@
+@alt@# Application runtime directory.
+@alt@%_runtimedir	%{_var}/run
 @alt@
 @alt@# Application spool data directory.
 @alt@%_spooldir	%{_var}/spool
@@ -520,6 +526,7 @@
 @alt@%_install_info		%install_info
 @alt@%_remove_install_info	%uninstall_info
 @alt@
+@alt@%_initddir		%_initdir
 @alt@%_initrddir	%_initdir
 @alt@%make_session	%update_wms
 @alt@
