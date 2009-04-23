@@ -271,9 +271,6 @@ chmod a-w %buildroot%_usrsrc/RPM{,/RPMS/*}
 
 mkdir -p %buildroot%_sysconfdir/%name/macros.d
 touch %buildroot%_sysconfdir/%name/macros
-cat << E_O_F > %buildroot%_sysconfdir/%name/macros.db1
-%%_dbapi		1
-E_O_F
 cat << E_O_F > %buildroot%_sysconfdir/%name/macros.cdb
 %{?enable_cdb:#%%__dbi_cdb	%enable_cdb}
 E_O_F
@@ -329,34 +326,12 @@ popd
 	sed -e "s|^%buildroot|%%attr(-,root,%name) |g" >>%name.lang
 
 %pre
-if [ -f %_localstatedir/%name/Packages -a -f %_localstatedir/%name/packages.rpm ]; then
-    echo "
-You have both
-	%_localstatedir/%name/packages.rpm	db1 format installed package headers
-	%_localstatedir/%name/Packages		db3 format installed package headers
-Please remove (or at least rename) one of those files, and re-install.
-" >&2
-    exit 1
-fi
-
 [ ! -L %_rpmlibdir/noarch-alt-%_target_os ] || rm -f %_rpmlibdir/noarch-alt-%_target_os ||:
 
 %post
-if [ -f %_localstatedir/%name/packages.rpm ]; then
-	chgrp %name %_localstatedir/%name/*.rpm
-	# Migrate to db3 database.
-	%_rpmlibdir/pdeath_execute $PPID %_rpmlibdir/delayed_rebuilddb
-elif [ -f %_localstatedir/%name/Packages ]; then
-	chgrp %name %_localstatedir/%name/[A-Z]*
-	# Undo db1 configuration.
-	rm -f %_sysconfdir/%name/macros.db1
-	[ -n "$DURING_INSTALL" -o -n "$BTE_INSTALL" ] ||
-		%_rpmlibdir/pdeath_execute $PPID %_rpmlibdir/delayed_rebuilddb
-else
-	# Initialize db3 database.
-	rm -f %_sysconfdir/%name/macros.db1
-	%_bindir/rpmdb --initdb
-fi
+chgrp %name %_localstatedir/%name/[A-Z]*
+[ -n "$DURING_INSTALL" -o -n "$BTE_INSTALL" ] ||
+	%_rpmlibdir/pdeath_execute $PPID rpmdb -v --rebuilddb
 
 # Invalidate apt cache, due to e.g. rpmlib(PayloadIsLzma).
 if set /var/cache/apt/*.bin && [ -f "$1" ]; then
@@ -444,7 +419,6 @@ fi
 %_bindir/rpmverify
 %_bindir/rpminit
 
-%rpmattr %_rpmlibdir/delayed_rebuilddb
 %rpmattr %_rpmlibdir/pdeath_execute
 %rpmattr %_rpmlibdir/rpm[dikq]
 %_rpmlibdir/rpm[euv]

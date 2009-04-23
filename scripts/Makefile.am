@@ -7,7 +7,7 @@ EXTRA_DIST = \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
 	compress_files check-files convertrpmrc.sh cross-build \
-	delayed_rebuilddb find-lang find-package find-prov.pl find-req.pl \
+	find-lang find-package find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
@@ -27,7 +27,7 @@ config_SCRIPTS = \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
 	compress_files check-files convertrpmrc.sh cross-build \
-	delayed_rebuilddb find-lang find-package find-prov.pl find-req.pl \
+	find-lang find-package find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	get_magic.pl getpo.sh http.req \
