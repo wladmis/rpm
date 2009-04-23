@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt97.M50.6
+Release: alt97.M50.7
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -521,6 +521,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Apr 23 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt97.M50.7
+- rpmdb: Rebuilt with libdb4.7.
+
 * Thu Apr 23 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt97.M50.6
 - rpmdb: Removed db1 support.
 - db3.c (db3close): Backported fix for double close (RH#138589).
