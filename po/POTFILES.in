@@ -49,10 +49,8 @@ lib/signature.c
 lib/stringbuf.c
 lib/transaction.c
 lib/verify.c
-rpmdb/db1.c
 rpmdb/db3.c
 rpmdb/dbconfig.c
-rpmdb/falloc.c
 rpmdb/fprint.c
 rpmdb/poptDB.c
 rpmdb/rpmhash.c
