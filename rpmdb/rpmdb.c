@@ -173,29 +173,12 @@ static void dbiTagsInit(void)
 }
 
 /*@-redecl@*/
-#if USE_DB1
-/*@unchecked@*/
-extern struct _dbiVec db1vec;
-#define	DB1vec		&db1vec
-#else
 #define	DB1vec		NULL
-#endif
-
-#if USE_DB2
-/*@unchecked@*/
-extern struct _dbiVec db2vec;
-#define	DB2vec		&db2vec
-#else
 #define	DB2vec		NULL
-#endif
 
-#if USE_DB3
 /*@unchecked@*/
 extern struct _dbiVec db3vec;
 #define	DB3vec		&db3vec
-#else
-#define	DB3vec		NULL
-#endif
 /*@=redecl@*/
 
 /*@-nullassign@*/
@@ -1058,32 +1041,6 @@ static int openDatabase(/*@null@*/ const char * prefix,
 		if (minimal)
 		    goto exit;
 		/*@switchbreak@*/ break;
-	    case RPMTAG_BASENAMES:
-	    {	void * keyp = NULL;
-		DBC * dbcursor;
-
-    /* We used to store the fileindexes as complete paths, rather then
-       plain basenames. Let's see which version we are... */
-    /*
-     * XXX FIXME: db->fileindex can be NULL under pathological (e.g. mixed
-     * XXX db1/db2 linkage) conditions.
-     */
-		if (justCheck)
-		    /*@switchbreak@*/ break;
-		dbcursor = NULL;
-		xx = dbiCopen(dbi, &dbcursor, 0);
-		xx = dbiGet(dbi, dbcursor, &keyp, NULL, NULL, NULL, gflags);
-		if (xx == 0) {
-		    const char * akey = keyp;
-		    if (akey && strchr(akey, '/')) {
-			rpmError(RPMERR_OLDDB, _("old format database is present; "
-				"use --rebuilddb to generate a new format database\n"));
-			rc |= 1;
-		    }
-		}
-		xx = dbiCclose(dbi, dbcursor, 0);
-		dbcursor = NULL;
-	    }	/*@switchbreak@*/ break;
 	    default:
 		/*@switchbreak@*/ break;
 	    }
@@ -2102,17 +2059,10 @@ top:
 	    keylen = mi->mi_keylen;
 
 	    rc = dbiGet(dbi, mi->mi_dbc, &keyp, &keylen, &uh, &uhlen, gflags);
-if (dbi->dbi_api == 1 && dbi->dbi_rpmtag == RPMDBI_PACKAGES && rc == EFAULT) {
-    rpmError(RPMERR_INTERNAL,
-	_("record number %u in database is bad -- skipping.\n"), dbi->dbi_lastoffset);
-    if (keyp && dbi->dbi_lastoffset)
-	memcpy(&mi->mi_offset, keyp, sizeof(mi->mi_offset));
-    continue;
-}
 
 	    /*
 	     * If we got the next key, save the header instance number.
-	     * For db1 Packages (db1->dbi_lastoffset != 0), always copy.
+	     *
 	     * For db3 Packages, instance 0 (i.e. mi->mi_setx == 0) is the
 	     * largest header instance in the database, and should be
 	     * skipped.
@@ -3102,29 +3052,6 @@ int rpmdbFindFpList(rpmdb db, fingerPrint * fpList, dbiIndexSet * matchList,
 
 }
 
-char * db1basename (int rpmtag)
-{
-    char * base = NULL;
-    /*@-branchstate@*/
-    switch (rpmtag) {
-    case RPMDBI_PACKAGES:	base = "packages.rpm";		break;
-    case RPMTAG_NAME:		base = "nameindex.rpm";		break;
-    case RPMTAG_BASENAMES:	base = "fileindex.rpm";		break;
-    case RPMTAG_GROUP:		base = "groupindex.rpm";	break;
-    case RPMTAG_REQUIRENAME:	base = "requiredby.rpm";	break;
-    case RPMTAG_PROVIDENAME:	base = "providesindex.rpm";	break;
-    case RPMTAG_CONFLICTNAME:	base = "conflictsindex.rpm";	break;
-    case RPMTAG_TRIGGERNAME:	base = "triggerindex.rpm";	break;
-    default:
-      {	const char * tn = tagName(rpmtag);
-	base = alloca( strlen(tn) + sizeof(".idx") + 1 );
-	(void) stpcpy( stpcpy(base, tn), ".idx");
-      }	break;
-    }
-    /*@=branchstate@*/
-    return xstrdup(base);
-}
-
 /**
  * Check if file esists using stat(2).
  * @param urlfn		file name (may be URL)
@@ -3207,16 +3134,6 @@ static int rpmdbRemoveDatabase(const char * prefix,
     case 2:
     case 1:
     case 0:
-	if (dbiTags != NULL)
-	for (i = 0; i < dbiTagsMax; i++) {
-	    const char * base = db1basename(dbiTags[i]);
-	    sprintf(filename, "%s/%s/%s", prefix, dbpath, base);
-	    (void)rpmCleanPath(filename);
-	    if (!rpmioFileExists(filename))
-		continue;
-	    xx = unlink(filename);
-	    base = _free(base);
-	}
 	break;
     }
 
@@ -3311,34 +3228,6 @@ static int rpmdbMoveDatabase(const char * prefix,
     case 2:
     case 1:
     case 0:
-	if (dbiTags != NULL)
-	for (i = 0; i < dbiTagsMax; i++) {
-	    const char * base;
-	    int rpmtag;
-
-	    /* Filter out temporary databases */
-	    switch ((rpmtag = dbiTags[i])) {
-	    case RPMDBI_AVAILABLE:
-	    case RPMDBI_ADDED:
-	    case RPMDBI_REMOVED:
-	    case RPMDBI_DEPENDS:
-		continue;
-		/*@notreached@*/ /*@switchbreak@*/ break;
-	    default:
-		/*@switchbreak@*/ break;
-	    }
-
-	    base = db1basename(rpmtag);
-	    sprintf(ofilename, "%s/%s/%s", prefix, olddbpath, base);
-	    (void)rpmCleanPath(ofilename);
-	    if (!rpmioFileExists(ofilename))
-		continue;
-	    sprintf(nfilename, "%s/%s/%s", prefix, newdbpath, base);
-	    (void)rpmCleanPath(nfilename);
-	    if ((xx = Rename(ofilename, nfilename)) != 0)
-		rc = 1;
-	    base = _free(base);
-	}
 	break;
     }
     if (rc || _olddbapi == _newdbapi)
@@ -3346,15 +3235,6 @@ static int rpmdbMoveDatabase(const char * prefix,
 
     rc = rpmdbRemoveDatabase(prefix, newdbpath, _newdbapi);
 
-
-    /* Remove /etc/rpm/macros.db1 configuration file if db3 rebuilt. */
-    if (rc == 0 && _newdbapi == 1 && _olddbapi == 3) {
-	const char * mdb1 = "/etc/rpm/macros.db1";
-	struct stat st;
-	if (!stat(mdb1, &st) && S_ISREG(st.st_mode) && !unlink(mdb1))
-	    rpmMessage(RPMMESS_DEBUG,
-		_("removing %s after successful db3 rebuild.\n"), mdb1);
-    }
     return rc;
 }
 

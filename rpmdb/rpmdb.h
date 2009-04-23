@@ -510,14 +510,6 @@ int dbiSync (dbiIndex dbi, unsigned int flags)
  */
 int dbiByteSwapped(dbiIndex dbi)
 	/*@*/;
-
-/** \ingroup db1
- * Return base file name for db1 database (legacy).
- * @param rpmtag	rpm tag
- * @return		base file name of db1 database
- */
-char * db1basename(int rpmtag)
-	/*@*/;
 /*@=exportlocal@*/
 
 /** \ingroup rpmdb
