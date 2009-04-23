@@ -19,27 +19,13 @@ mylibs= \
 LDADD =
 
 pythondir = $(libdir)/python${PYVER}/site-packages
-python_PROGRAMS = rpmmodule.so
+python_LTLIBRARIES = rpmmodule.la
 
-noinst_PROGRAMS = poptmodule.so
+rpmmodule_la_LDFLAGS = -module -avoid-version
+rpmmodule_la_LIBADD = $(mylibs) $(LIBS) -lpython${PYVER}
 
-rpmmodule_so_SOURCES =
-rpmmodule_so_CFLAGS = -fPIC -DPIC
-rpmmodule_so_LDFLAGS = $(mylibs) $(LIBS) -lpython${PYVER} -shared -Wl,-soname,rpmmodule.so
-
-poptmodule_so_SOURCES = poptmodule.c
-poptmodule_so_CFLAGS = -fPIC -DPIC
-poptmodule_so_LDFLAGS = $(mylibs) $(LIBS) -shared -Wl,-soname,poptmodule.so
-
-noinst_LTLIBRARIES = librpmmodule.la
-librpmmodule_la_SOURCES = rpmmodule.c hash.c upgrade.c header-py.c db-py.c
-
-rpmmodule.so: $(librpmmodule_la_OBJECTS)
-	$(LINK) -o $@ $(librpmmodule_la_OBJECTS) $(rpmmodule_so_LDFLAGS)
-
-poptmodule.so: $(poptmodule_so_OBJECTS)
-	$(LINK) -o $@ $(poptmodule_so_OBJECTS) $(poptmodule_so_LDFLAGS)
+rpmmodule_la_SOURCES = rpmmodule.c hash.c upgrade.c header-py.c db-py.c
 
 .PHONY:	lclint
 lclint:
-	lclint $(DEFS) $(INCLUDES) $(librpmmodule_la_SOURCES)
+	lclint $(DEFS) $(INCLUDES) $(rpmmodule_la_SOURCES)
