@@ -190,9 +190,6 @@ BuildRoot.
 
 Вспомогательные макросы %configure.
 
-   %__libtoolize:
-          путь к скрипту libtoolize;
-
    %_configure_script:
           путь к скрипту configure;
 
