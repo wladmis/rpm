@@ -51,8 +51,8 @@ BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindi
 # Must be installable with older rpm without lzma payload support.
 %define _binary_payload w9.gzdio
 
-# Automatically added by buildreq on Sat May 24 2008 and edited manually.
-BuildRequires: bzlib-devel-static libbeecrypt-devel-static libdb4.4-devel-static libelf-devel-static liblzma-devel-static libpopt-devel-static python-devel zlib-devel-static
+# Automatically added by buildreq on Thu Apr 23 2009 and edited manually.
+BuildRequires: bzlib-devel-static libbeecrypt-devel-static libdb4.7-devel-static libelf-devel-static liblzma-devel-static libpopt-devel-static python-devel zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -63,7 +63,7 @@ PreReq: zlib >= 1.1.4
 PreReq: bzlib >= 1:1.0.2-alt2
 PreReq: libpopt >= 1:1.7-alt3
 PreReq: libbeecrypt >= 2.2.0-alt1
-PreReq: libdb4.4
+PreReq: libdb4.7
 
 %package -n librpmbuild
 Summary: Shared library required for applications which will build RPM packages
@@ -88,7 +88,7 @@ Summary(ru_RU.KOI8-R): Статические библиотеки, необходимые для разработки статич
 License: GPL/LGPL
 Group: Development/C
 Requires: lib%name-devel = %version-%release
-Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.4-devel-static, libpopt-devel-static, zlib-devel-static
+Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.7-devel-static, libpopt-devel-static, zlib-devel-static
 
 %package build
 Summary: Scripts and executable programs used to build packages
