@@ -176,13 +176,9 @@ static void dbiTagsInit(void)
 #define	DB1vec		NULL
 #define	DB2vec		NULL
 
-#if USE_DB3
 /*@unchecked@*/
 extern struct _dbiVec db3vec;
 #define	DB3vec		&db3vec
-#else
-#define	DB3vec		NULL
-#endif
 /*@=redecl@*/
 
 /*@-nullassign@*/

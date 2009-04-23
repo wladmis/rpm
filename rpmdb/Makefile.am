@@ -8,7 +8,7 @@ INCLUDES = -I. \
 	-I$(top_srcdir)/rpmio \
 	@INCPATH@
 
-LIBDB = @libdb3@
+LIBDB = -ldb
 LIBELF = @WITH_LIBELF_LIB@
 LIBPOPT = @LIBPOPT@
 
@@ -25,7 +25,7 @@ lib_LTLIBRARIES = librpmdb.la
 librpmdb_la_SOURCES = db3.c \
 	dbconfig.c hdrNVR.c header.c fprint.c legacy.c merge.c poptDB.c \
 	rpmhash.c rpmdb.c rpmvercmp.c tagname.c tagtbl.c
-librpmdb_la_LDFLAGS = -release @VERSION@ @libdb3@
+librpmdb_la_LDFLAGS = -release @VERSION@
 librpmdb_la_LIBADD = $(LIBDB) $(LIBELF) $(LIBPOPT) $(top_builddir)/rpmio/librpmio.la
 librpmdb_la_DEPENDENCIES = $(top_builddir)/rpmio/librpmio.la
 
