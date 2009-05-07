@@ -672,6 +672,7 @@ rpmRC rpmReadPackageFile(rpmts ts, FD_t fd, const char * fn, Header * hdrp)
     char *msg = NULL;
 
     int cache_hit = 0;
+    int readahead_off = 0;
     rpmPlugins plugins;
     struct stat st;
 
@@ -682,8 +683,18 @@ rpmRC rpmReadPackageFile(rpmts ts, FD_t fd, const char * fn, Header * hdrp)
 		cache_hit = 1;
 	}
 
-	if (rc != RPMRC_OK)
+	if (rc != RPMRC_OK) {
+	    /* Typical header size is 4-16K, and default readahead is 128K.
+	     * When scanning a large number of packages (with e.g. rpmquery),
+	     * readahead might cause negative effects on the buffer cache. */
+	    if (st.st_size > /* page size */ 4096)
+		if (posix_fadvise(Fileno(fd), 0, 0, POSIX_FADV_RANDOM) == 0)
+		    readahead_off = 1;
 	    rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
+	    /* re-enable readahead for cpio */
+	    if (readahead_off)
+		posix_fadvise(Fileno(fd), 0, 0, POSIX_FADV_NORMAL);
+	}
     } else
 	rc = RPMRC_FAIL;
 
