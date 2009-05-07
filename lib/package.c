@@ -244,12 +244,22 @@ static rpmRC readPackageHeaders(FD_t fd,
 	/*@modifies fd, *leadPtr, *sigs, *hdrPtr @*/
 {
     struct stat sb;
+    int readahead_off = 0;
     /* if fd points to a socket, pipe, etc, sb.st_size is *always* zero */
     if (fstat(Fileno(fd), &sb) == 0 && S_ISREG(sb.st_mode)) {
 	if (sb.st_size < sizeof(struct rpmlead))
 	    return 1;
+	/* Typical header size is 4-16K, and default readahead is 128K.
+	 * When scanning a large number of packages (with e.g. rpmquery),
+	 * readahead might cause negative effects on the buffer cache. */
+	if (sb.st_size > /* page size */ 4096)
+	    if (posix_fadvise(Fileno(fd), 0, 0, POSIX_FADV_RANDOM) == 0)
+		readahead_off = 1;
     }
     rpmRC rc = do_readPackageHeaders(fd, leadPtr, sigs, hdrPtr);
+    /* re-enable readahead for cpio */
+    if (readahead_off)
+	posix_fadvise(Fileno(fd), 0, 0, POSIX_FADV_NORMAL);
     return rc;
 }
 
