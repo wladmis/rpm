@@ -137,7 +137,7 @@ Header headerRegenSigHeader(const Header h)
  * @param hdrPtr	address of header (or NULL)
  * @return		rpmRC return code
  */
-static rpmRC readPackageHeaders(FD_t fd,
+static rpmRC do_readPackageHeaders(FD_t fd,
 		/*@null@*/ /*@out@*/ struct rpmlead * leadPtr, 
 		/*@null@*/ /*@out@*/ Header * sigs,
 		/*@null@*/ /*@out@*/ Header * hdrPtr)
@@ -148,16 +148,10 @@ static rpmRC readPackageHeaders(FD_t fd,
     Header * hdr = NULL;
     struct rpmlead * lead;
     char * defaultPrefix;
-    struct stat sb;
     rpmRC rc;
 
     hdr = hdrPtr ? hdrPtr : &hdrBlock;
     lead = leadPtr ? leadPtr : &leadBlock;
-
-    memset(&sb, 0, sizeof(sb));
-    (void) fstat(Fileno(fd), &sb);
-    /* if fd points to a socket, pipe, etc, sb.st_size is *always* zero */
-    if (S_ISREG(sb.st_mode) && sb.st_size < sizeof(*lead)) return 1;
 
     if (readLead(fd, lead))
 	return RPMRC_FAIL;
@@ -241,6 +235,32 @@ static rpmRC readPackageHeaders(FD_t fd,
 	*hdr = headerFree(*hdr);
     
     return RPMRC_OK;
+}
+
+static rpmRC readPackageHeaders(FD_t fd,
+		/*@null@*/ /*@out@*/ struct rpmlead * leadPtr,
+		/*@null@*/ /*@out@*/ Header * sigs,
+		/*@null@*/ /*@out@*/ Header * hdrPtr)
+	/*@modifies fd, *leadPtr, *sigs, *hdrPtr @*/
+{
+    struct stat sb;
+    int readahead_off = 0;
+    /* if fd points to a socket, pipe, etc, sb.st_size is *always* zero */
+    if (fstat(Fileno(fd), &sb) == 0 && S_ISREG(sb.st_mode)) {
+	if (sb.st_size < sizeof(struct rpmlead))
+	    return 1;
+	/* Typical header size is 4-16K, and default readahead is 128K.
+	 * When scanning a large number of packages (with e.g. rpmquery),
+	 * readahead might cause negative effects on the buffer cache. */
+	if (sb.st_size > /* page size */ 4096)
+	    if (posix_fadvise(Fileno(fd), 0, 0, POSIX_FADV_RANDOM) == 0)
+		readahead_off = 1;
+    }
+    rpmRC rc = do_readPackageHeaders(fd, leadPtr, sigs, hdrPtr);
+    /* re-enable readahead for cpio */
+    if (readahead_off)
+	posix_fadvise(Fileno(fd), 0, 0, POSIX_FADV_NORMAL);
+    return rc;
 }
 
 rpmRC rpmReadPackageInfo(FD_t fd, Header * sigp, Header * hdrp)
