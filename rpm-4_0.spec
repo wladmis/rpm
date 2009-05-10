@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.8
+Release: alt98.9
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -47,9 +47,6 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindir/subst
-
-# Must be installable with older rpm without lzma payload support.
-%define _binary_payload w9.gzdio
 
 # Automatically added by buildreq on Thu Apr 23 2009 and edited manually.
 BuildRequires: bzlib-devel-static libbeecrypt-devel-static libdb4.7-devel-static libelf-devel-static liblzma-devel-static libpopt-devel-static python-devel zlib-devel-static
@@ -521,6 +518,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Mon May 11 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.9
+- Re-enabled LZMA compression for rpm itself.
+
 * Mon May 11 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.8
 - package.c (readPackageHeaders): Use posix_fadvise(2) to disable readahead.
   When scanning a large number of packages (with e.g. rpmquery), readahead
