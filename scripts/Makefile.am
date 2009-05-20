@@ -7,7 +7,8 @@ EXTRA_DIST = \
 	functions find-package .provides.sh \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
-	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
+	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip \
+	brp-verify_elf brp-verify-info \
 	compress_files check-files convertrpmrc.sh cross-build \
 	find-lang find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
@@ -38,7 +39,8 @@ config_SCRIPTS = \
 	functions find-package \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
-	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
+	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip \
+	brp-verify_elf brp-verify-info \
 	compress_files check-files convertrpmrc.sh cross-build \
 	find-lang find-prov.pl find-req.pl \
 	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \

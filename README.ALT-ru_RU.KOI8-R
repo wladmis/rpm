@@ -238,6 +238,9 @@ BuildRoot.
    %_verify_elf_method:
           метод, используемый при проверке ELF-файлов в секции %install;
 
+   %_verify_info_method:
+          метод, используемый при проверке info-файлов в секции %install;
+
    %_strip_method:
           метод, используемый при обработке ELF-файлов в секции %install;
 
@@ -260,7 +263,7 @@ BuildRoot.
           параметр,   определяющий   влияние   неупакованных   файлов  на
           результат сборки;
 
-   %set_{cleanup,compress,fixup,strip,verify_elf,perl_req}_method:
+   %set_{cleanup,compress,fixup,strip,verify_{elf,info},perl_req}_method:
           изменить значение соответствующего макроса;
 
    %set_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_{topdi

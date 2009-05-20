@@ -37,6 +37,9 @@ cd "$RPM_BUILD_ROOT"
 # Compress info and man pages.
 @RPMCONFIGDIR@/brp-compress
 
+# Verify texinfo files.
+@RPMCONFIGDIR@/brp-verify-info
+
 # Adjust library links.
 @RPMCONFIGDIR@/brp-adjust_libraries
  
