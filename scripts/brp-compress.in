@@ -49,7 +49,9 @@ StripSuffix()
 	printf %s "$1"
 }
 
-for d in `find "$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR" -type d -name info`; do
+for d in "$RPM_BUILD_ROOT/usr/share/info"; do
+	[ -z "${d##$RPM_BUILD_ROOT$RPM_COMPRESS_TOPDIR/*}" -a -d "$d" ] ||
+		continue
 	set -f
 	if [ -n "$RPM_COMPRESS_SKIPLIST" ]; then
 		for skip in $RPM_COMPRESS_SKIPLIST; do
