@@ -10,7 +10,12 @@
 #include "fprint.h"
 #include "debug.h"
 
+#include "rpmhash.h"
 #include "jhash.h"
+
+struct fprintCache_s {
+    hashTable ht;			/*!< hashed by dirName */
+};
 
 fingerPrintCache fpCacheCreate(unsigned int size)
 {

@@ -6,10 +6,8 @@
  * Identify a file name path by a unique "finger print".
  */
 
-#include "rpmhash.h"
-#include "header.h"
-
 /**
+ * Finger print cache.
  */
 typedef /*@abstract@*/ struct fprintCache_s * fingerPrintCache;
 
@@ -28,13 +26,6 @@ struct fprintCacheEntry_s {
     const char * dirName;		/*!< path to existing directory */
     dev_t dev;				/*!< stat(2) device number */
     ino_t ino;				/*!< stat(2) inode number */
-};
-
-/**
- * Finger print cache.
- */
-struct fprintCache_s {
-    hashTable ht;			/*!< hashed by dirName */
 };
 
 /**
