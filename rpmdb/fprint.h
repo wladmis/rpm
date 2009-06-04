@@ -23,9 +23,9 @@ typedef struct fingerPrint_s fingerPrint;
  * installs of a system w/o actually mounting filesystems.
  */
 struct fprintCacheEntry_s {
-    const char * dirName;		/*!< path to existing directory */
     dev_t dev;				/*!< stat(2) device number */
     ino_t ino;				/*!< stat(2) inode number */
+    char dirName[1];			/*!< path to existing directory */
 };
 
 /**
