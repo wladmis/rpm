@@ -215,8 +215,12 @@ FindByPath()
 		fi
 	fi
 
-	# Not found; output raw dependence.
-	Info "$f: $rep -> $rep (raw, not found)"
+	if [ -e "$rep" ] || rpmquery --whatprovides -- "$rep" >/dev/null 2>&1; then
+		$Verbose "$f: $rep -> $rep (raw)"
+	else
+		Info "$f: $rep -> $rep (raw, not installed)"
+	fi
+
 	printf %s\\n "$rep"
 }
 
