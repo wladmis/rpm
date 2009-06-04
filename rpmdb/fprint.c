@@ -14,22 +14,20 @@
 #include "jhash.h"
 
 struct fprintCache_s {
-    hashTable ht;			/*!< hashed by dirName */
+    hashTable dn2de;		/*!< maps dirName to fprintCacheEntry */
 };
 
 fingerPrintCache fpCacheCreate(unsigned int size)
 {
-    fingerPrintCache fpc;
-
-    fpc = xmalloc(sizeof(*fpc));
-    fpc->ht = htCreate(size, hashFunctionString, hashEqualityString);
+    fingerPrintCache fpc = xmalloc(sizeof(*fpc));
+    fpc->dn2de = htCreate(size, hashFunctionString, hashEqualityString);
     return fpc;
 }
 
 fingerPrintCache fpCacheFree(fingerPrintCache cache)
 {
     /* don't free keys: key=dirname is part of value=entry, see below */
-    cache->ht = htFree(cache->ht, NULL, _free);
+    cache->dn2de = htFree(cache->dn2de, NULL, _free);
     cache = _free(cache);
     return NULL;
 }
@@ -47,7 +45,7 @@ static /*@null@*/ const struct fprintCacheEntry_s * cacheContainsDirectory(
 {
     const void ** data;
 
-    if (htGetEntry(cache->ht, dirName, &data, NULL, NULL))
+    if (htGetEntry(cache->dn2de, dirName, &data, NULL, NULL))
 	return NULL;
     return data[0];
 }
@@ -149,7 +147,7 @@ static fingerPrint doLookup(fingerPrintCache cache,
 	    fp.entry = newEntry;
 
 	    /*@-kepttrans -dependenttrans @*/
-	    htAddEntry(cache->ht, dn, fp.entry);
+	    htAddEntry(cache->dn2de, dn, fp.entry);
 	    /*@=kepttrans =dependenttrans @*/
 	    /*@=usereleased@*/
 	}
