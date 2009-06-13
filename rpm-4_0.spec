@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.10
+Release: alt98.11
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -518,6 +518,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Jun 13 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.11
+- rpmdb: Minor fingerprint cache improvement.
+
 * Wed May 20 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.10
 - brp-compress: Avoid non-standard info directories (closes: #19993).
 - rpm-build: Implemented info files verification.

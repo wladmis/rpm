@@ -10,21 +10,24 @@
 #include "fprint.h"
 #include "debug.h"
 
+#include "rpmhash.h"
 #include "jhash.h"
+
+struct fprintCache_s {
+    hashTable dn2de;		/*!< maps dirName to fprintCacheEntry */
+};
 
 fingerPrintCache fpCacheCreate(unsigned int size)
 {
-    fingerPrintCache fpc;
-
-    fpc = xmalloc(sizeof(*fpc));
-    fpc->ht = htCreate(size, hashFunctionString, hashEqualityString);
+    fingerPrintCache fpc = xmalloc(sizeof(*fpc));
+    fpc->dn2de = htCreate(size, hashFunctionString, hashEqualityString);
     return fpc;
 }
 
 fingerPrintCache fpCacheFree(fingerPrintCache cache)
 {
-    /* don't free keys: key=dirname is part of value=entry, see below */
-    cache->ht = htFree(cache->ht, NULL, _free);
+    /* don't free keys: key=dirname is flexible member of value=entry */
+    cache->dn2de = htFree(cache->dn2de, NULL, _free);
     cache = _free(cache);
     return NULL;
 }
@@ -42,7 +45,7 @@ static /*@null@*/ const struct fprintCacheEntry_s * cacheContainsDirectory(
 {
     const void ** data;
 
-    if (htGetEntry(cache->ht, dirName, &data, NULL, NULL))
+    if (htGetEntry(cache->dn2de, dirName, &data, NULL, NULL))
 	return NULL;
     return data[0];
 }
@@ -131,22 +134,16 @@ static fingerPrint doLookup(fingerPrintCache cache,
 	if (cacheHit != NULL) {
 	    fp.entry = cacheHit;
 	} else if (!stat((*buf != '\0' ? buf : "/"), &sb)) {
-	    /* single malloc for both key=dirname and value=entry */
-	    size_t nb = sizeof(*fp.entry) + (*buf != '\0' ? (end-buf) : 1) + 1;
-	    struct fprintCacheEntry_s *newEntry = xmalloc(nb);
+	    /* dirName has a byte for terminating '\0' */
+	    size_t nb = sizeof(*fp.entry) + (*buf != '\0' ? (end-buf) : 1);
+	    struct fprintCacheEntry_s *de = xmalloc(nb);
 
-	    /*@-usereleased@*/	/* LCL: contiguous malloc confusion */
-	    char *dn = (char *)(newEntry + 1);
-	    strcpy(dn, (*buf != '\0' ? buf : "/"));
-	    newEntry->ino = sb.st_ino;
-	    newEntry->dev = sb.st_dev;
-	    newEntry->dirName = dn;
-	    fp.entry = newEntry;
+	    de->ino = sb.st_ino;
+	    de->dev = sb.st_dev;
+	    strcpy(de->dirName, (*buf != '\0' ? buf : "/"));
 
-	    /*@-kepttrans -dependenttrans @*/
-	    htAddEntry(cache->ht, dn, fp.entry);
-	    /*@=kepttrans =dependenttrans @*/
-	    /*@=usereleased@*/
+	    htAddEntry(cache->dn2de, de->dirName, de);
+	    fp.entry = de;
 	}
 
         if (fp.entry) {
