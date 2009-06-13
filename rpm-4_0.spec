@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.17
+Release: alt77.M40.18
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -509,6 +509,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Jun 13 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.18
+- rpmdb: Minor fingerprint cache improvement.
+
 * Sun May 10 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.17
 - package.c (readPackageHeaders): Use posix_fadvise(2) to disable readahead.
   When scanning a large number of packages (with e.g. rpmquery), readahead
