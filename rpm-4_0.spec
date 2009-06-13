@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt97.M50.9
+Release: alt97.M50.10
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -518,6 +518,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Jun 13 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt97.M50.10
+- rpmdb: Minor fingerprint cache improvement.
+
 * Mon May 11 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt97.M50.9
 - Re-enabled LZMA compression for rpm itself.
 
