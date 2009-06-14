@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.19
+Release: alt95.M41.20
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -528,6 +528,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Jun 14 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.20
+- Remove artificial limit in dependency loop elimination attempts (Panu Matilainen).
+
 * Sat Jun 13 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.19
 - rpmdb: Minor fingerprint cache improvement.
 
