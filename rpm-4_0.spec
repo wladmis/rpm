@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.18
+Release: alt77.M40.19
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -509,6 +509,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Sun Jun 14 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.19
+- Remove artificial limit in dependency loop elimination attempts (Panu Matilainen).
+
 * Sat Jun 13 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.18
 - rpmdb: Minor fingerprint cache improvement.
 
