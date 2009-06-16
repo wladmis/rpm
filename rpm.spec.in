@@ -9,9 +9,6 @@
 # XXX enable at your own risk, CDB access to rpmdb isn't cooked yet.
 %define	enable_cdb		create cdb
 
-# XXX legacy requires './' payload prefix to be omitted from rpm packages.
-%define	_noPayloadPrefix	1
-
 %define	__prefix	/usr
 %{expand: %%define __share %(if [ -d %{__prefix}/share/man ]; then echo /share ; else echo %%{nil} ; fi)}
 

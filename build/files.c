@@ -1083,7 +1083,7 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 	/*@modifies h, *cpioList, fl->processingFailed, fl->fileList,
 		rpmGlobalMacroContext, fileSystem @*/
 {
-    int _addDotSlash = !(isSrc || rpmExpandNumeric("%{?_noPayloadPrefix}"));
+    int _addDotSlash = !isSrc;
     int apathlen = 0;
     int dpathlen = 0;
     int skipLen = 0;
@@ -1283,11 +1283,7 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 
     }
 
-    if (_addDotSlash)
-	(void) rpmlibNeedsFeature(h, "PayloadFilesHavePrefix", "4.0-1");
-
     compressFilelist(h);
-    (void) rpmlibNeedsFeature(h, "CompressedFileNames", "3.0.4-1");
 
   { TFI_t fi = xcalloc(1, sizeof(*fi));
     char * a, * d;
