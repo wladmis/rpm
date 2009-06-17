@@ -29,10 +29,6 @@
 
 #define MAXDOCDIR 1024
 
-/*@-redecl@*/
-extern int _noDirTokens;
-/*@=redecl@*/
-
 /**
  */
 typedef enum specdFlags_e {
@@ -1091,7 +1087,7 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 	/*@modifies h, *cpioList, fl->processingFailed, fl->fileList,
 		rpmGlobalMacroContext, fileSystem @*/
 {
-    int _addDotSlash = !(isSrc || rpmExpandNumeric("%{?_noPayloadPrefix}"));
+    int _addDotSlash = !isSrc;
     int apathlen = 0;
     int dpathlen = 0;
     int skipLen = 0;
@@ -1291,17 +1287,7 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 
     }
 
-    if (_addDotSlash)
-	(void) rpmlibNeedsFeature(h, "PayloadFilesHavePrefix", "4.0-1");
-
-    /* Choose how filenames are represented. */
-    if (_noDirTokens)
-	expandFilelist(h);
-    else {
-	compressFilelist(h);
-	/* Binary packages with dirNames cannot be installed by legacy rpm. */
-	(void) rpmlibNeedsFeature(h, "CompressedFileNames", "3.0.4-1");
-    }
+    compressFilelist(h);
 
   { TFI_t fi = xcalloc(1, sizeof(*fi));
     char * a, * d;

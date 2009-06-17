@@ -147,18 +147,6 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	    if ((ve-v) != strlen(rc->token) || strncmp(v, rc->token, (ve-v)))
 		/*@innercontinue@*/ continue;
 
-	    switch(tag) {
-	    case RPMTAG_BUILDPREREQ:
-	    case RPMTAG_PREREQ:
-	    case RPMTAG_PROVIDEFLAGS:
-	    case RPMTAG_OBSOLETEFLAGS:
-		/* Add prereq on rpmlib that has versioned dependencies. */
-		if (!rpmExpandNumeric("%{?_noVersionedDependencies}"))
-		    (void) rpmlibNeedsFeature(h, "VersionedDependencies", "3.0.3-1");
-		/*@switchbreak@*/ break;
-	    default:
-		/*@switchbreak@*/ break;
-	    }
 	    flags |= rc->sense;
 
 	    /* now parse version */
