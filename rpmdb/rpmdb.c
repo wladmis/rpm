@@ -45,9 +45,6 @@ extern void regfree (/*@only@*/ regex_t *preg)
 static int _debug = 0;
 #define	INLINE
 
-/*@-redecl@*/
-extern int _noDirTokens;
-/*@=redecl@*/
 /*@unchecked@*/
 static int _rebuildinprogress = 0;
 /*@unchecked@*/
@@ -1493,9 +1490,6 @@ static int dbiUpdateRecord(dbiIndex dbi, DBC * dbcursor, int offset, Header h)
     unsigned int pflags = 0;	/* dbiPut() flags */
     int xx;
 
-    if (_noDirTokens)
-	expandFilelist(h);
-
     uhlen = headerSizeof(h, HEADER_MAGIC_NO);
     uh = headerUnload(h);
     if (uh) {
@@ -2670,9 +2664,6 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
      */
 
     xx = hge(h, RPMTAG_BASENAMES, &bnt, (void **) &baseNames, &count);
-
-    if (_noDirTokens)
-	expandFilelist(h);
 
     (void) blockSignals(db, &signalMask);
 

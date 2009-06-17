@@ -14,10 +14,6 @@
 #include "rpmlead.h"
 #include "debug.h"
 
-/*@-redecl@*/
-extern int _noDirTokens;
-/*@=redecl@*/
-
 /*@access StringBuf @*/	/* compared with NULL */
 /*@access TFI_t @*/	/* compared with NULL */
 /*@access Header @*/	/* compared with NULL */
@@ -379,7 +375,7 @@ static int rpmLeadVersion(void)
     }
 
     rpmlead_version = rpmpkg_version / 10000;
-    if (_noDirTokens || (rpmlead_version < 3 || rpmlead_version > 4))
+    if (rpmlead_version < 3 || rpmlead_version > 4)
 	rpmlead_version = 3;
     return rpmlead_version;
 }
@@ -438,13 +434,12 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
 	if (s[1] == 'b' && s[2] == 'z') {
 	    (void) headerAddEntry(h, RPMTAG_PAYLOADCOMPRESSOR, RPM_STRING_TYPE,
 		"bzip2", 1);
-	    /* Add prereq on rpm version that understands bzip2 payloads */
-	    (void) rpmlibNeedsFeature(h, "PayloadIsBzip2", "3.0.5-1");
+	    (void) rpmlibNeedsFeature(h, "PayloadIsBzip2", NULL);
 	}
 	if (s[1] == 'l' && s[2] == 'z') {
 	    (void) headerAddEntry(h, RPMTAG_PAYLOADCOMPRESSOR, RPM_STRING_TYPE,
 		"lzma", 1);
-	    (void) rpmlibNeedsFeature(h, "PayloadIsLzma", "4.4.2-1");
+	    (void) rpmlibNeedsFeature(h, "PayloadIsLzma", NULL);
 	}
 	strcpy(buf, rpmio_flags);
 	buf[s - rpmio_flags] = '\0';

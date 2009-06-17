@@ -234,11 +234,6 @@ exit:
     return rc;
 }
 
-/*@-exportheadervar@*/
-/*@unchecked@*/
-int _noDirTokens = 0;
-/*@=exportheadervar@*/
-
 /*@-boundsread@*/
 static int dncmp(const void * a, const void * b)
 	/*@*/
