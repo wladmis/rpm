@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.12
+Release: alt98.13
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -518,6 +518,13 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Jun 17 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.13
+- Removed _noDirTokens support (producing legacy filelist format).
+- Disabled rpmlib(PayloadFilesHavePrefix), rpmlib(CompressedFileNames),
+  and rpmlib(VersionedDependencies) dependencies.
+- Disabled versioning for rpmlib(PayloadIsBzip2) and rpmlib(PayloadIsLzma)
+  dependencies.
+
 * Sun Jun 14 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.12
 - Remove artificial limit in dependency loop elimination attempts (Panu Matilainen).
 

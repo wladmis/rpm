@@ -50,9 +50,6 @@ char *_rpm_nosource;
 char *_rpm_nopatch;
 
 /*@-redecl@*/
-/*@unchecked@*/
-extern int _noDirTokens;
-/*@unchecked@*/
 extern int _fsm_debug;
 /*@=redecl@*/
 
@@ -211,8 +208,6 @@ struct poptOption rpmBuildPoptTable[] = {
 	N_("override build root"), "DIRECTORY" },
  { "clean", '\0', 0, 0, POPT_RMBUILD,
 	N_("remove build tree when done"), NULL},
- { "dirtokens", '\0', POPT_ARG_VAL|POPT_ARGFLAG_DOC_HIDDEN, &_noDirTokens, 0,
-	N_("generate headers compatible with rpm4 packaging"), NULL},
  { "force", '\0', POPT_ARGFLAG_DOC_HIDDEN, &force, POPT_FORCE,
         N_("ignore ExcludeArch: directives from spec file"), NULL},
  { "fsmdebug", '\0', (POPT_ARG_VAL|POPT_ARGFLAG_DOC_HIDDEN), &_fsm_debug, -1,
@@ -221,9 +216,6 @@ struct poptOption rpmBuildPoptTable[] = {
 	N_("do not execute any stages of the build"), NULL },
  { "nodeps", '\0', 0, &noDeps, POPT_NODEPS,
 	N_("do not verify build dependencies"), NULL },
- { "nodirtokens", '\0', POPT_ARG_VAL, &_noDirTokens, 1,
-	N_("generate package header(s) compatible with (legacy) rpm[23] packaging"),
-	NULL},
  { "nolang", '\0', POPT_ARGFLAG_DOC_HIDDEN, &noLang, POPT_NOLANG,
 	N_("do not accept i18N msgstr's from specfile"), NULL},
  { "nopatch", '\0', POPT_ARG_STRING, &_rpm_nopatch, 0,
