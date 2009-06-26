@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.14
+Release: alt98.15
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -518,6 +518,15 @@ fi
 %endif #with contrib
 
 %changelog
+* Fri Jun 26 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.15
+- pam.req.in:
+  + Handle lines with optional modules.
+  + Handle lines with leading whitespaces.
+  + Handle lines with conditional controls.
+- brp-cleanup.in wrt PAM config files:
+  + Changed pam_stack replacement from "include" to "substack".
+  + Changed spacing.
+
 * Sun Jun 21 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.14
 - shell.req.files: Adjusted /bin/ash script detection.
 
