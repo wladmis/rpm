@@ -42,6 +42,9 @@ sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|requir
 # pam_module.so*
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(requisite\|required\|sufficient\|optional\)[[:space:]]\+\(/lib[0-9]*/security/\)\?\([^.[:space:]]\+\.so[^[:space:]]\+\).*#PAM(\4)#pg' <"$file" |sort -u
 
+# libpam(optional_module)
+sed -n 's/^[[:space:]]*-.*/libpam(optional_module)/p' <"$file" |sort -u
+
 # libpam(include), libpam(substack)
 sed -ne 's#^\(account\|auth\|password\|session\)[[:space:]]\+\(include\|substack\)[[:space:]].*#libpam(\2)#pg' <"$file" |sort -u
 
