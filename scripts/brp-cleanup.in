@@ -80,7 +80,7 @@ s,^\(#\?\)account[[:space:]]\+,\1account  ,g
 s,^\(#\?\)password[[:space:]]\+,\1password ,g
 s,^\(#\?\)session[[:space:]]\+,\1session  ,g
 s,\([[:space:]]\)/lib\(64\)\?/security/\(pam_\),\1\3,g
-s,\([[:space:]]\)required[[:space:]]\+pam_stack.so[[:space:]]\+service=,\1include	,g
+s,\([[:space:]]\)required[[:space:]]\+pam_stack.so[[:space:]]\+service=,\1substack	,g
 ' --
 fi
 
