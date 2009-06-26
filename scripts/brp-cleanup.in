@@ -74,11 +74,11 @@ fi
 
 if [ -d ./etc/pam.d ]; then
 	find ./etc/pam.d -mindepth 1 -maxdepth 1 -type f -print0 |
-		xargs -r0 subst -p '
-s,^\(#\?\)auth[[:space:]]\+,\1auth     ,g
-s,^\(#\?\)account[[:space:]]\+,\1account  ,g
-s,^\(#\?\)password[[:space:]]\+,\1password ,g
-s,^\(#\?\)session[[:space:]]\+,\1session  ,g
+		xargs -r0 sed -i '
+s,^[[:space:]]*\(#\?\)[[:space:]]*\(-\?auth\|account\|session\)[[:space:]]\+,\1\2		,
+s,^[[:space:]]*\(#\?\)[[:space:]]*\(-account\|-session\|-\?password\)[[:space:]]\+,\1\2	,
+s,^[[:space:]]*\(#\?[[:space:]]*-\?\(auth\|account\|password\|session\)[[:space:]]\+\)\(include\)[[:space:]]\+,\1\3		,
+s,^[[:space:]]*\(#\?[[:space:]]*-\?\(auth\|account\|password\|session\)[[:space:]]\+\)\(required\|requisite\|sufficient\|optional\|substack\|\[[^]]\+\]\)[[:space:]]\+,\1\3	,
 s,\([[:space:]]\)/lib\(64\)\?/security/\(pam_\),\1\3,g
 s,\([[:space:]]\)required[[:space:]]\+pam_stack.so[[:space:]]\+service=,\1substack	,g
 ' --
