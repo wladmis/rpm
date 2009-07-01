@@ -199,93 +199,9 @@ FindByPath()
 	esac
 	unset dir
 
-if [ -z "$RPM_FINDPACKAGE_HOST_PKG_NAMES" ]; then
-
-	# Ideally, we'd like to output all file-level dependencies here just as the are.
-	# However, due to current Sisyphus design (separate $arch and noarch repos),
-	# this can result in cross-arch "semi-unmet" dependencies.  For now, we check
-	# if the dependency is "safe enough" to put it as is.
-
-	# APT can handle certain file-level dependencies as is.
-	case "$rep" in
-		*/bin/* | */sbin/* | */etc/* )
-			$Verbose "$f: $rep -> $rep (raw, APT-friendly)"
-			printf %s\\n "$rep"
-			return ;;
-	esac
-
-	# Check if this path is explicitly provided.
-	local prov n1 n2
-	if prov=$(rpmquery --queryformat='%{NAME}\n' --whatprovides "$rep" 2>/dev/null) &&
-	   n1=$(echo "$prov" |wc -l) &&
-	   n2=$(rpmquery --queryformat='%{NAME}\n' -f "$rep" 2>/dev/null |wc -l) &&
-	   [ "$n1" -gt "$n2" ]; then
-		prov=$(echo "$prov" |LC_COLLATE=C sort -u)
-		$Verbose "$f: $rep -> $rep (raw, provided by$(echo '' $prov))"
-		printf %s\\n "$rep"
-		return
-	fi
-
-	# The path is also "safe enough" if it is already required by someone.
-	local req
-	if req=$(rpmquery --queryformat='%{NAME}\n' --whatrequires "$rep" 2>/dev/null); then
-		req=$(echo "$req" |LC_COLLATE=C sort -u)
-		$Verbose "$f: $rep -> $rep (raw, required by$(echo '' $req))"
-		printf %s\\n "$rep"
-		return
-	fi
-
-	# Always try package binary index.
-	local idx_bin="${RPM_PKG_CONTENTS_INDEX_BIN-}" try_idx_bin=1
-	[ -n "$idx_bin" ] && [ -s "$idx_bin" ] && [ -r "$idx_bin" ] || try_idx_bin=
-	if [ -n "$try_idx_bin" ]; then
-		package="$(awk -v "f=$rep" '($1 == f) {print $2}' "$idx_bin" |sort -u)"
-		local n="$(IFS=$'\n'; set -- $package; echo $#)"
-		if [ "$n" = 1 ]; then
-			$Verbose "$f: $rep -> $package (via contents_index_bin)"
-			printf %s\\n "$package"
-			return
-		elif [ "$n" -gt 1 ]; then
-			Info "$f: $rep indexed by:$(echo '' $package)"
-			Info "$f: $rep -> $rep (raw, ambiguous, via contents_index_bin)"
-			printf %s\\n "$rep"
-			return
-		fi
-	fi
-
-	# Maybe try pkg complete index.
-	local idx_all="${RPM_PKG_CONTENTS_INDEX_ALL-}" try_idx_all=1
-	[ -n "$idx_all" ] && [ -s "$idx_all" ] && [ -r "$idx_all" ] || try_idx_all=
-	case "$try_idx_bin$rep" in
-		1/bin/* | 1/sbin/* | 1/usr/bin/* | 1/usr/sbin/* )
-			# Binary index already checked for standard *bin/* entries.
-			# No need to check complete index.
-			try_idx_all=
-	esac
-	if [ -n "$try_idx_all" ]; then
-		# Checking complete index is expensive.
-		local Verbose=Info
-		Info "$f: checking contents_index_all for $rep"
-		# Complete package index is possibly gzipped.
-		package="$(gzip -cdfq "$idx_all" |awk -v "f=$rep" '($1 == f) {print $2}' |sort -u)"
-		local n="$(IFS=$'\n'; set -- $package; echo $#)"
-		if [ "$n" = 1 ]; then
-			Info "$f: $rep -> $package (via contents_index_all)"
-			printf %s\\n "$package"
-			return
-		elif [ "$n" -gt 1 ]; then
-			Info "$f: $rep indexed by:$(echo '' $package)"
-			Info "$f: $rep -> $rep (raw, ambiguous, via contents_index_all)"
-			printf %s\\n "$rep"
-			return
-		fi
-	fi
-
-fi # RPM_FINDPACKAGE_HOST_PKG_NAMES
-
-	# Check package database.
-	if package="$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" 2>/dev/null)"; then
-		package="$(printf %s "$package" |LC_COLLATE=C sort -u)"
+	if [ -n "$RPM_FINDPACKAGE_HOST_PKG_NAMES" ] &&
+	   package=$(rpmquery --whatprovides --queryformat='%{NAME}\n' -- "$rep" 2>/dev/null); then
+		package=$(printf %s "$package" |LC_COLLATE=C sort -u)
 		local n="$(IFS=$'\n'; set -- $package; echo $#)"
 		if [ "$n" = 1 ]; then
 			$Verbose "$f: $rep -> $package (via rpmdb)"
@@ -299,8 +215,12 @@ fi # RPM_FINDPACKAGE_HOST_PKG_NAMES
 		fi
 	fi
 
-	# Not found; output raw dependence.
-	Info "$f: $rep -> $rep (raw, not found)"
+	if [ -e "$rep" ] || rpmquery --whatprovides -- "$rep" >/dev/null 2>&1; then
+		$Verbose "$f: $rep -> $rep (raw)"
+	else
+		Info "$f: $rep -> $rep (raw, not installed)"
+	fi
+
 	printf %s\\n "$rep"
 }
 
