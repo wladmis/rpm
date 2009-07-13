@@ -589,12 +589,13 @@ doShellEscape(MacroBuf mb, const char * cmd, size_t clen)
 
     if ((shf = popen(pcmd, "r")) == NULL)
 	return 1;
+    const char *start = mb->t;
     while(mb->nb > 0 && (c = fgetc(shf)) != EOF)
 	SAVECHAR(mb, c);
     (void) pclose(shf);
 
     /* XXX delete trailing \r \n */
-    while (iseol(mb->t[-1])) {
+    while (mb->t > start && iseol(mb->t[-1])) {
 	*(mb->t--) = '\0';
 	mb->nb++;
     }
