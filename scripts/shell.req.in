@@ -48,7 +48,7 @@ ShellReq()
 			if [ $# -gt 1 ] && [ "$1" = exec ]; then
 				Info "$f is $2 script!"
 				# We do no more than shebang.req does.  If the script
-				# is not executable, shebang.req.files must have been
+				# is not executable, shebang.req.files must have
 				# already issued "executable not executable" warning.
 				if [ -x "$f" ]; then
 					FindPackage "$f" "$2"
