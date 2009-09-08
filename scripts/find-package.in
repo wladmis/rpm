@@ -66,7 +66,7 @@ RPM_FINDPACKAGE_HOST_PKG_NAMES=
 # Below we use 'local Verbose=Info' to increase per-case verbosity.
 Verbose=Verbose
 
-FindByPathUnderBuildroot()
+FindByFileUnderBuildroot()
 {
 	local f="$1" rep="$2" xbrep; shift 2 || return
 	[ -n "${RPM_BUILD_ROOT-}" ] || return 0
@@ -107,7 +107,7 @@ FindByPathUnderBuildroot()
 	:
 }
 
-FindByPath()
+FindByFile()
 {
 	# Dependence name starts with `/'.
 	local f="$1" rep="$2" package; shift 2 || return
@@ -124,7 +124,7 @@ FindByPath()
 
 	# Does it belong to buildroot?
 	local xbrep
-	xbrep=$(FindByPathUnderBuildroot "$f" "$rep")
+	xbrep=$(FindByFileUnderBuildroot "$f" "$rep")
 	if [ -n "$xbrep" ]; then
 		# The file is under buildroot.  We emit file-level dependency.
 		# If the file is in the same package, rpm-build will optimize
@@ -372,7 +372,7 @@ FindByName()
 		if [ -n "$rep" ]; then
 			$Verbose "$f: $r -> $rep -> ... (via host_env)"
 			local RPM_FINDPACKAGE_HOST_PKG_NAMES=1
-			FindByPath "$f" "$rep"
+			FindByFile "$f" "$rep"
 			return
 		fi
 	fi
@@ -410,7 +410,7 @@ FindPackage()
 			/*[!$valid]*)
 				Info "$f: invalid pathname: $r" ;;
 			/*[!/.]*)
-				FindByPath "$f" "$r" ;;
+				FindByFile "$f" "$r" ;;
 			*/*)
 				Info "$f: invalid pathname: $r" ;;
 			-*)
