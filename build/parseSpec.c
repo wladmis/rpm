@@ -466,6 +466,7 @@ comp_tags(const void *m1, const void *m2)
 static tags_struct tags_common_list[] = {
     {0, "build"},
     {0, "changelog"},
+    {0, "check"},
     {0, "clean"},
     {0, "description"},
     {0, "else"},
