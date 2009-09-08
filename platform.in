@@ -267,6 +267,16 @@
 @alt@%{__spec_install_custom_pre}\
 @alt@%nil
 @alt@
+@alt@%__spec_check_pre\
+@alt@%{?!_enable_check:%{?_disable_check:echo 'Check is turned off by --disable check' >&2; exit 0}}\
+@alt@%{?!_with_check:%{?_without_check:echo 'Check is turned off by --without check' >&2; exit 0}}\
+@alt@%{?!_enable_test:%{?_disable_test:echo 'Check is turned off by --disable test' >&2; exit 0}}\
+@alt@%{?!_with_test:%{?_without_test:echo 'Check is turned off by --without test' >&2; exit 0}}\
+@alt@%{?__buildreqs:echo 'Check is turned off in buildreq mode' >&2; exit 0}\
+@alt@%{___build_pre}\
+@alt@%{__spec_check_custom_pre}\
+@alt@%nil
+@alt@
 @alt@%__spec_clean_post\
 @alt@%clean_buildroot\
 @alt@%{___build_post}\
