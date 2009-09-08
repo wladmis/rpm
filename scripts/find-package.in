@@ -263,6 +263,11 @@ FindByName()
 		fi
 	fi
 
+	# Record each command name we search.
+	if [ -n "${RPM_FINDPACKAGE_COMMANDS_LOG-}" ]; then
+		printf '%s\n' "$r" >>"$RPM_FINDPACKAGE_COMMANDS_LOG"
+	fi
+
 	# Check for pkg contents binary index.
 	local save_rep= save_package=
 	if [ -n "${RPM_PKG_CONTENTS_INDEX_BIN-}" ] && [ -s "$RPM_PKG_CONTENTS_INDEX_BIN" ] && [ -r "$RPM_PKG_CONTENTS_INDEX_BIN" ]; then
