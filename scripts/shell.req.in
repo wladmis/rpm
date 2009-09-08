@@ -36,8 +36,6 @@ ShellReq()
 		*)
 			sh=/bin/sh ;;
 	esac
-	$sh --rpm-requires </dev/null >/dev/null ||
-		Fatal "$sh interpreter does not support --rpm-requires feature"
 
 	local out line1
 	if ! out=$($sh --rpm-requires "$f"); then
