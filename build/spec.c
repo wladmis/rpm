@@ -453,6 +453,7 @@ Spec newSpec(void)
     spec->prep = NULL;
     spec->build = NULL;
     spec->install = NULL;
+    spec->check = NULL;
     spec->clean = NULL;
 
     spec->sources = NULL;
@@ -498,6 +499,7 @@ Spec freeSpec(Spec spec)
     spec->prep = freeStringBuf(spec->prep);
     spec->build = freeStringBuf(spec->build);
     spec->install = freeStringBuf(spec->install);
+    spec->check = freeStringBuf(spec->check);
     spec->clean = freeStringBuf(spec->clean);
 
     spec->buildRootURL = _free(spec->buildRootURL);

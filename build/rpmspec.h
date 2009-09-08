@@ -139,6 +139,7 @@ struct SpecStruct {
 /*@only@*/ StringBuf prep;		/*!< %prep scriptlet. */
 /*@only@*/ StringBuf build;		/*!< %build scriptlet. */
 /*@only@*/ StringBuf install;		/*!< %install scriptlet. */
+/*@only@*/ StringBuf check;		/*!< %check scriptlet. */
 /*@only@*/ StringBuf clean;		/*!< %clean scriptlet. */
 
 /*@owned@*/ struct PackageStruct * packages;	/*!< Package list. */
