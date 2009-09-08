@@ -104,6 +104,14 @@ RunMethod()
 	fi
 }
 
+export RPM_FINDPACKAGE_COMMANDS_LOG="$RPM_BUILD_ROOT"/.findpackage-commands
+>"$RPM_FINDPACKAGE_COMMANDS_LOG"
+
 Info "running scripts ($methods)"
 RunMethods req "$methods" RunMethod
 [ -z "$found" ] || (set +f; LC_COLLATE=C sort -u -m "$workdir"/*.deps) || exit 1
+
+if [ -s "$RPM_FINDPACKAGE_COMMANDS_LOG" ]; then
+	LC_ALL=C sort -u -o "$RPM_FINDPACKAGE_COMMANDS_LOG"{,}
+	Info "FINDPACKAGE-COMMANDS:" $(cat <"$RPM_FINDPACKAGE_COMMANDS_LOG")
+fi

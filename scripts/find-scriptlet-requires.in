@@ -26,5 +26,13 @@ RunMethod()
 		Fatal "$exe failed"
 }
 
+export RPM_FINDPACKAGE_COMMANDS_LOG="$RPM_BUILD_ROOT"/.findpackage-commands
+>"$RPM_FINDPACKAGE_COMMANDS_LOG"
+
 methods=$(SetupMethods req all)
 RunMethods req "$methods" RunMethod
+
+if [ -s "$RPM_FINDPACKAGE_COMMANDS_LOG" ]; then
+	LC_ALL=C sort -u -o "$RPM_FINDPACKAGE_COMMANDS_LOG"{,}
+	Info "FINDPACKAGE-COMMANDS:" $(cat <"$RPM_FINDPACKAGE_COMMANDS_LOG")
+fi
