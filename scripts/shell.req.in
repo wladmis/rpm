@@ -21,17 +21,6 @@
 . @RPMCONFIGDIR@/functions
 . @RPMCONFIGDIR@/find-package
 
-Buildrooted()
-{
-	local rep="$1"; shift || return
-	if [ -n "${RPM_BUILD_ROOT-}" ] &&
-	   [ -n "$rep" -a -z "${rep##/*}" ] &&
-	   [ -e "$RPM_BUILD_ROOT$rep" -o -L "$RPM_BUILD_ROOT$rep" ]; then
-		return 0
-	fi
-	return 1
-}
-
 shREQ= shPROV=
 ShellReq()
 {
@@ -130,16 +119,7 @@ ShellReq()
 		while read -r t r; do
 			[ "$t" = executable ] || continue
 			if [ -n "$prov" ] && printf '%s\n' "$prov" |fgrep -qs -x -e "$r"; then
-				# Still check if executable candidates are available.
-				local exe="$(FindPackage "$f" "$r" 2>/dev/null)"
-				local Verbose=Verbose
-				if [ -n "$exe" ] && ! Buildrooted "$exe"; then
-					Verbose=Info
-				fi
-				$Verbose "$f: $r() is possibly used before its definition"
-				if [ -n "$exe" ]; then
-					$Verbose "$f: $r() has execuatable candidate: $r -> $exe (skip)"
-				fi
+				Verbose "$f: $r() is used before its definition"
 				continue
 			fi
 			printf '%s\n' "$r"
@@ -184,19 +164,7 @@ ShellReqEND()
 		local self_req
 		self_req=$(CheckSelfReq)
 		if [ -n "$self_req" ]; then
-			# Still check if executable candidates are available.
-			local exe="$(FindPackage "$f" "$r" 2>/dev/null)"
-			local Verbose=Verbose
-			if [ -n "$exe" ] && ! Buildrooted "$exe"; then
-				Verbose=Info
-			fi
-			printf '%s\n' "$self_req" |
-			while read -r f2; do
-				$Verbose "$f: $r() is possibly defined in $f2"
-			done
-			if [ -n "$exe" ]; then
-				$Verbose "$f: $r() has execuatable candidate: $r -> $exe (skip)"
-			fi
+			Verbose "$f: $r() is defined in" $self_req
 			continue
 		fi
 
