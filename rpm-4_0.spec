@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.17
+Release: alt98.18
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -518,6 +518,13 @@ fi
 %endif #with contrib
 
 %changelog
+* Wed Sep 09 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.18
+- Backported %%check from rpm-4.2.
+- Implemented automated %%check control using
+  --enable/--disable/--with/--without check/test controls.
+- Bumped librpmbuild soname to reflect ABI change intoduced
+  along with %%check support.
+
 * Tue Jul 14 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.17
 - rpmio/macro.c (doShellEscape): Fixed potential buffer underflow (closes: #11921).
 
