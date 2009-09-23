@@ -441,6 +441,11 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
 		"lzma", 1);
 	    (void) rpmlibNeedsFeature(h, "PayloadIsLzma", NULL);
 	}
+	if (s[1] == 'x' && s[2] == 'z') {
+	    (void) headerAddEntry(h, RPMTAG_PAYLOADCOMPRESSOR, RPM_STRING_TYPE,
+		"xz", 1);
+	    (void) rpmlibNeedsFeature(h, "PayloadIsXz", NULL);
+	}
 	strcpy(buf, rpmio_flags);
 	buf[s - rpmio_flags] = '\0';
 	(void) headerAddEntry(h, RPMTAG_PAYLOADFLAGS, RPM_STRING_TYPE, buf+1, 1);
