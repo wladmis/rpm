@@ -487,6 +487,7 @@ fi
 
 %files static
 %_bindir/rpm.static
+%_bindir/rpm2cpio.static
 
 %if_with contrib
 %files contrib

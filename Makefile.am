@@ -26,7 +26,7 @@ myLDADD = $(mylibLDADD) $(top_builddir)/build/librpmbuild.la
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
 rpmbin_PROGRAMS =
 
-bin_PROGRAMS =		rpm rpm.static rpm2cpio
+bin_PROGRAMS =		rpm rpm.static rpm2cpio rpm2cpio.static
 bin_SCRIPTS =		gendiff
 
 pkglibdir =		@RPMCONFIGDIR@
@@ -85,6 +85,10 @@ rpmq.o:	rpmqv.c
 rpm2cpio_SOURCES =	rpm2cpio.c
 rpm2cpio_LDFLAGS =	$(myLDFLAGS)
 rpm2cpio_LDADD =	$(mylibLDADD)
+
+rpm2cpio_static_SOURCES =	rpm2cpio.c
+rpm2cpio_static_LDFLAGS =	@LDFLAGS_STATIC@ $(myLDFLAGS)
+rpm2cpio_static_LDADD =		$(mylibLDADD)
 
 $(PROGRAMS): 		$(myLDADD) @WITH_APIDOCS_TARGET@
 
