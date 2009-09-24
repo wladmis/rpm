@@ -86,7 +86,7 @@ static int inet_aton(const char *cp, struct in_addr *inp)
 #define	FDONLY(fd)	assert(fdGetIo(fd) == fdio)
 #define	GZDONLY(fd)	assert(fdGetIo(fd) == gzdio)
 #define	BZDONLY(fd)	assert(fdGetIo(fd) == bzdio)
-#define	LZDONLY(fd)	assert(fdGetIo(fd) == lzdio)
+#define	LZDONLY(fd)	assert(fdGetIo(fd) == xzdio || fdGetIo(fd) == lzdio)
 
 #define	UFDONLY(fd)	/* assert(fdGetIo(fd) == ufdio) */
 
@@ -186,6 +186,8 @@ static /*@observer@*/ const char * fdbg(/*@null@*/ FD_t fd)
 #endif
 	} else if (fps->io == lzdio) {
 	    sprintf(be, "LZD %p fdno %d", fps->fp, fps->fdno);
+	} else if (fps->io == xzdio) {
+	    sprintf(be, "XZD %p fdno %d", fps->fp, fps->fdno);
 	} else if (fps->io == fpio) {
 	    /*@+voidabstract@*/
 	    sprintf(be, "%s %p(%d) fdno %d",
@@ -2764,9 +2766,9 @@ typedef struct lzfile {
 
 } LZFILE;
 
-static LZFILE *lzopen_internal(const char *path, const char *mode, int fd)
+static LZFILE *lzopen_internal(const char *path, const char *mode, int fd, int xz)
 {
-    int level = 5;
+    int level = LZMA_PRESET_DEFAULT;
     int encoding = 0;
     FILE *fp;
     LZFILE *lzfile;
@@ -2794,14 +2796,21 @@ static LZFILE *lzopen_internal(const char *path, const char *mode, int fd)
     lzfile->file = fp;
     lzfile->encoding = encoding;
     lzfile->eof = 0;
-    lzfile->strm = LZMA_STREAM_INIT_VAR;
+    lzfile->strm = (lzma_stream)LZMA_STREAM_INIT;
     if (encoding) {
-	lzma_options_alone alone;
-	alone.uncompressed_size = LZMA_VLI_VALUE_UNKNOWN;
-	memcpy(&alone.lzma, &lzma_preset_lzma[level - 1], sizeof(alone.lzma));
-	ret = lzma_alone_encoder(&lzfile->strm, &alone);
+	if (xz) {
+	    /* xz(1) uses CRC64 by default */
+	    ret = lzma_easy_encoder(&lzfile->strm, level, LZMA_CHECK_CRC64);
+	} else {
+	    lzma_options_lzma options;
+	    lzma_lzma_preset(&options, level);
+	    ret = lzma_alone_encoder(&lzfile->strm, &options);
+	}
     } else {
-	ret = lzma_auto_decoder(&lzfile->strm, 0, 0);
+	/* We set the memlimit for decompression to 100MiB which should be
+	 * more than enough to be sufficient for level 9 which requires 65 MiB.
+	 */
+	ret = lzma_auto_decoder(&lzfile->strm, 100<<20, 0);
     }
     if (ret != LZMA_OK) {
 	fclose(fp);
@@ -2811,16 +2820,28 @@ static LZFILE *lzopen_internal(const char *path, const char *mode, int fd)
     return lzfile;
 }
 
+static LZFILE *xzopen(const char *path, const char *mode)
+{
+    return lzopen_internal(path, mode, -1, 1);
+}
+
 static LZFILE *lzopen(const char *path, const char *mode)
 {
-    return lzopen_internal(path, mode, -1);
+    return lzopen_internal(path, mode, -1, 0);
+}
+
+static LZFILE *xzdopen(int fd, const char *mode)
+{
+    if (fd < 0)
+	return 0;
+    return lzopen_internal(0, mode, fd, 1);
 }
 
 static LZFILE *lzdopen(int fd, const char *mode)
 {
     if (fd < 0)
 	return 0;
-    return lzopen_internal(0, mode, fd);
+    return lzopen_internal(0, mode, fd, 0);
 }
 
 static int lzflush(LZFILE *lzfile)
@@ -2831,7 +2852,8 @@ static int lzflush(LZFILE *lzfile)
 static int lzclose(LZFILE *lzfile)
 {
     lzma_ret ret;
-    int n, rc;
+    size_t n;
+    int rc;
 
     if (!lzfile)
 	return -1;
@@ -2890,7 +2912,7 @@ static ssize_t lzread(LZFILE *lzfile, void *buf, size_t len)
 static ssize_t lzwrite(LZFILE *lzfile, void *buf, size_t len)
 {
     lzma_ret ret;
-    int n;
+    size_t n;
     if (!lzfile || !lzfile->encoding)
 	return -1;
     if (!len)
@@ -2924,7 +2946,7 @@ static inline /*@dependent@*/ void * lzdFileno(FD_t fd)
 /*@-boundsread@*/
 	    FDSTACK_t * fps = &fd->fps[i];
 /*@=boundsread@*/
-	    if (fps->io != lzdio)
+	    if (fps->io != xzdio && fps->io != lzdio)
 		continue;
 	    rc = fps->fp;
 	break;
@@ -2932,6 +2954,21 @@ static inline /*@dependent@*/ void * lzdFileno(FD_t fd)
     
     return rc;
 }
+
+/*@-globuse@*/
+static /*@null@*/ FD_t xzdOpen(const char * path, const char * mode)
+	/*@globals fileSystem @*/
+	/*@modifies fileSystem @*/
+{
+    FD_t fd;
+    LZFILE *lzfile;
+    if ((lzfile = xzopen(path, mode)) == NULL)
+	return NULL;
+    fd = fdNew("open (xzdOpen)");
+    fdPop(fd); fdPush(fd, xzdio, lzfile, -1);
+    return fdLink(fd, "xzdOpen");
+}
+/*@=globuse@*/
 
 /*@-globuse@*/
 static /*@null@*/ FD_t lzdOpen(const char * path, const char * mode)
@@ -2948,6 +2985,25 @@ static /*@null@*/ FD_t lzdOpen(const char * path, const char * mode)
 }
 /*@=globuse@*/
 
+/*@-globuse@*/
+static /*@null@*/ FD_t xzdFdopen(void * cookie, const char * fmode)
+	/*@globals fileSystem, internalState @*/
+	/*@modifies fileSystem, internalState @*/
+{
+    FD_t fd = c2f(cookie);
+    int fdno;
+    LZFILE *lzfile;
+
+    if (fmode == NULL) return NULL;
+    fdno = fdFileno(fd);
+    fdSetFdno(fd, -1);          /* XXX skip the fdio close */
+    if (fdno < 0) return NULL;
+    lzfile = xzdopen(fdno, fmode);
+    if (lzfile == NULL) return NULL;
+    fdPush(fd, xzdio, lzfile, fdno);
+    return fdLink(fd, "xzdFdopen");
+}
+/*@=globuse@*/
 
 /*@-globuse@*/
 static /*@null@*/ FD_t lzdFdopen(void * cookie, const char * fmode)
@@ -3088,6 +3144,14 @@ static struct FDIO_s lzdio_s = {
 /*@=type@*/
 FDIO_t lzdio = /*@-compmempass@*/ &lzdio_s /*@=compmempass@*/ ;
 
+/*@-type@*/ /* LCL: function typedefs */
+static struct FDIO_s xzdio_s = {
+  lzdRead, lzdWrite, lzdSeek, lzdClose, XfdLink, XfdFree, XfdNew, fdFileno,
+  NULL, xzdOpen, lzdFileno, lzdFlush,	NULL, NULL, NULL, NULL, NULL
+};
+/*@=type@*/
+FDIO_t xzdio = /*@-compmempass@*/ &xzdio_s /*@=compmempass@*/ ;
+
 /* =============================================================== */
 /*@observer@*/
 static const char * getFdErrstr (FD_t fd)
@@ -3106,9 +3170,9 @@ static const char * getFdErrstr (FD_t fd)
 	errstr = fd->errcookie;
     } else
 #endif	/* HAVE_BZLIB_H */
-    if (fdGetIo(fd) == lzdio) {
-    errstr = fd->errcookie;
-    } else 
+    if (fdGetIo(fd) == xzdio || fdGetIo(fd) == lzdio) {
+	errstr = fd->errcookie;
+    } else
     {
 	errstr = (fd->syserrno ? strerror(fd->syserrno) : "");
     }
@@ -3406,9 +3470,12 @@ fprintf(stderr, "*** Fdopen(%p,%s) %s\n", fd, fmode, fdbg(fd));
 	    fd = bzdFdopen(fd, zstdio);
 	    /*@=internalglobs@*/
 #endif
-    } else if (!strcmp(end, "lzdio")) {
-        iof = lzdio;
-        fd = lzdFdopen(fd, zstdio);
+	} else if (!strcmp(end, "lzdio")) {
+	    iof = lzdio;
+	    fd = lzdFdopen(fd, zstdio);
+	} else if (!strcmp(end, "xzdio")) {
+	    iof = xzdio;
+	    fd = xzdFdopen(fd, zstdio);
 	} else if (!strcmp(end, "ufdio")) {
 	    iof = ufdio;
 	} else if (!strcmp(end, "fadio")) {
@@ -3574,7 +3641,9 @@ int Fflush(FD_t fd)
     if (vh && fdGetIo(fd) == bzdio)
 	return bzdFlush(vh);
 #endif
-
+    if (vh && (fdGetIo(fd) == xzdio || fdGetIo(fd) == lzdio))
+	return lzdFlush(vh);
+/* FIXME: If we get here, something went wrong above */
     return 0;
 }
 
@@ -3599,9 +3668,9 @@ int Ferror(FD_t fd)
 	    ec = (fd->syserrno  || fd->errcookie != NULL) ? -1 : 0;
 	    i--;	/* XXX fdio under bzdio always has fdno == -1 */
 #endif
-    } else if (fps->io == lzdio) {
+	} else if (fps->io == xzdio || fps->io == lzdio) {
 	    ec = (fd->syserrno  || fd->errcookie != NULL) ? -1 : 0;
-	    i--;	/* XXX fdio under lzdio always has fdno == -1 */
+	    i--;	/* XXX fdio under xzdio/lzdio always has fdno == -1 */
 	} else {
 	/* XXX need to check ufdio/gzdio/bzdio/fdio errors correctly. */
 	    ec = (fdFileno(fd) < 0 ? -1 : 0);
