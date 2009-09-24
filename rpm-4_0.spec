@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt97.M50.14
+Release: alt97.M50.15
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -518,6 +518,11 @@ fi
 %endif #with contrib
 
 %changelog
+* Thu Sep 24 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt97.M50.15
+- Backported changes by Dmitry V. Levin:
+- rpmio/macro.c (doShellEscape): Fixed potential buffer underflow (closes: #11921).
+- python: Fixed build with libtool.
+
 * Wed Jul 01 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt97.M50.14
 - find-package: Removed contents_index_all search, enabled file-level dependencies.
 
