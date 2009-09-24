@@ -239,9 +239,9 @@ doxygen @WITH_APIDOCS_TARGET@: Doxyfile
 	- [ X"@__DOXYGEN@" != Xno ] && @__DOXYGEN@
 
 ctags:
-	find . -type f -name "*.[ch]*" | xargs @CTAGS@
+	find . -type f -name "*.[ch]*" | xargs ctags
 
 cscope:
-	@CSCOPE@ -b -R
+	cscope -b -R
 
 cref: ctags cscope

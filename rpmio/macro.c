@@ -1092,17 +1092,23 @@ doFoo(MacroBuf mb, int negate, const char * f, size_t fn,
 #endif
 	switch(compressed) {
 	default:
-	case 0:	/* COMPRESSED_NOT */
-	    sprintf(be, "%%_cat %s", b);
+	case COMPRESSED_NOT:
+	    sprintf(be, "%%__cat '%s'", b);
 	    break;
-	case 1:	/* COMPRESSED_OTHER */
-	    sprintf(be, "%%_gzip -dc %s", b);
+	case COMPRESSED_OTHER:
+	    sprintf(be, "%%__gzip -dc '%s'", b);
 	    break;
-	case 2:	/* COMPRESSED_BZIP2 */
-	    sprintf(be, "%%_bzip2 %s", b);
+	case COMPRESSED_BZIP2:
+	    sprintf(be, "%%__bzip2 -dc '%s'", b);
 	    break;
-	case 3:	/* COMPRESSED_ZIP */
-	    sprintf(be, "%%_unzip %s", b);
+	case COMPRESSED_ZIP:
+	    sprintf(be, "%%__unzip -qq -p '%s'", b);
+	    break;
+	case COMPRESSED_LZMA:
+	    sprintf(be, "%%__lzma -dc '%s'", b);
+	    break;
+	case COMPRESSED_XZ:
+	    sprintf(be, "%%__xz -dc '%s'", b);
 	    break;
 	}
 	b = be;
@@ -1766,26 +1772,24 @@ rpmFreeMacros(MacroContext mc)
 /* =============================================================== */
 int isCompressed(const char * file, rpmCompressedMagic * compressed)
 {
-    FD_t fd;
-    ssize_t nb;
-    int rc = -1;
-    unsigned char magic[4];
-
     *compressed = COMPRESSED_NOT;
 
-    fd = Fopen(file, "r.ufdio");
+    FD_t fd = Fopen(file, "r.ufdio");
     if (fd == NULL || Ferror(fd)) {
 	/* XXX Fstrerror */
 	rpmError(RPMERR_BADSPEC, _("File %s: %s\n"), file, Fstrerror(fd));
 	if (fd) (void) Fclose(fd);
 	return 1;
     }
-    nb = Fread(magic, sizeof(magic[0]), sizeof(magic), fd);
+
+    int rc = -1;
+    unsigned char magic[8];
+    ssize_t nb = Fread(magic, sizeof(magic[0]), sizeof(magic), fd);
     if (nb < 0) {
 	rpmError(RPMERR_BADSPEC, _("File %s: %s\n"), file, Fstrerror(fd));
 	rc = 1;
     } else if (nb < sizeof(magic)) {
-	rpmError(RPMERR_BADSPEC, _("File %s is smaller than %u bytes\n"),
+	rpmMessage(RPMMESS_WARNING, _("File %s is smaller than %u bytes\n"),
 		file, (unsigned)sizeof(magic));
 	rc = 0;
     }
@@ -1793,18 +1797,25 @@ int isCompressed(const char * file, rpmCompressedMagic * compressed)
     if (rc >= 0)
 	return rc;
 
-    if ((magic[0] == 'B') && (magic[1] == 'Z')) {
-	*compressed = COMPRESSED_BZIP2;
-    } else if ((magic[0] == 0120) && (magic[1] == 0113) &&
-	 (magic[2] == 0003) && (magic[3] == 0004)) {	/* pkzip */
-	*compressed = COMPRESSED_ZIP;
-    } else if (((magic[0] == 0037) && (magic[1] == 0213)) || /* gzip */
-	((magic[0] == 0037) && (magic[1] == 0236)) ||	/* old gzip */
-	((magic[0] == 0037) && (magic[1] == 0036)) ||	/* pack */
-	((magic[0] == 0037) && (magic[1] == 0240)) ||	/* SCO lzh */
-	((magic[0] == 0037) && (magic[1] == 0235))	/* compress */
-	) {
-	*compressed = COMPRESSED_OTHER;
+#define BT(s,t) \
+	if (memcmp(s,magic,sizeof(s)-1)==0) \
+	{ *compressed = COMPRESSED_##t; return 0; }
+    BT("BZh", BZIP2);
+    BT("PK\003\004", ZIP);
+    BT("\037\213", OTHER); // gizp
+    BT("\037\236", OTHER); // old gzip
+    BT("\037\036", OTHER); // pack
+    BT("\037\240", OTHER); // SCO lzh
+    BT("\037\235", OTHER); // compress
+    BT("\3757zXZ\0", XZ);
+#undef BT
+
+    /* LZMA has no magic */
+    if (magic[0] < 0xE1 && magic[1] == 0) {
+	const char *ext = strrchr(file, '.');
+	if (ext)
+	    if (strcmp(ext, ".lzma") == 0 || strcmp(ext, ".tlz") == 0)
+		*compressed = COMPRESSED_LZMA;
     }
 
     return 0;

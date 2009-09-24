@@ -223,13 +223,13 @@ touch config.rpath
 gettextize --force --quiet
 install -pv -m644 /usr/share/gettext/intl/Makevars* po/Makevars
 autoreconf -fisv -I m4
-export \
-	ac_cv_path_CTAGS=/usr/bin/ctags \
-	ac_cv_path_UNZIPBIN=/usr/bin/unzip \
-	ac_cv_path___CPIO=/bin/cpio \
-	ac_cv_path___GPG=/usr/bin/gpg \
-	ac_cv_path___SSH=/usr/bin/ssh \
-	#
+# avoid extra build dependencies
+export ac_cv_path___CPIO=/bin/cpio
+export ac_cv_path___UNZIP=/usr/bin/unzip
+export ac_cv_path___LZMA=/usr/bin/lzma
+export ac_cv_path___XZ=/usr/bin/xz
+export ac_cv_path___GPG=/usr/bin/gpg
+export ac_cv_path___SSH=/usr/bin/ssh
 %configure \
 	%{?_with_python} %{?_without_python} \
 	%{?_with_apidocs} %{?_without_apidocs} \

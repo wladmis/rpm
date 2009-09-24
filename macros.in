@@ -33,17 +33,14 @@
 # ---- Generally useful path macros.
 #
 %__awk			@AWK@
-%__bzip2		@BZIP2BIN@
 %__cat			@__CAT@
 %__chgrp		@__CHGRP@
 %__chmod		@__CHMOD@
 %__chown		@__CHOWN@
 %__cp			@__CP@
-%__cpio			@__CPIO@
 %__file			@__FILE@
 %__gpg			@__GPG@
 %__grep			@__GREP@
-%__gzip			@GZIPBIN@
 %__id			@__ID@
 %__install		@__INSTALL@
 %__install_info		@__INSTALL_INFO@
@@ -61,8 +58,18 @@
 %__sed			@__SED@
 %__ssh			@__SSH@
 %__subst		@__SUBST@
+
+#==============================================================================
+# ---- Archiving and compression programs.
+#
+#
 %__tar			@__TAR@
-%__unzip		@UNZIPBIN@
+%__cpio			@__CPIO@
+%__gzip			@__GZIP@
+%__bzip2		@__BZIP2@
+%__unzip		@__UNZIP@
+%__lzma			@__LZMA@
+%__xz			@__XZ@
 
 #==============================================================================
 # ---- Build system path macros.
@@ -99,9 +106,6 @@
 #	The interpreter used for build scriptlets.
 %_buildshell		/bin/sh
 
-#	The path to the bzip2 executable (legacy, use %{__bzip2} instead).
-%_bzip2bin		%{__bzip2}
-
 #	The location of the rpm database file(s).
 %_dbpath		%{_var}/lib/rpm
 
@@ -128,9 +132,6 @@
 #%_fixgroup		[ `%{__id_u}` = '0' ] && %{__chgrp_Rhf} @ROOT_GROUP@
 #%_fixperms		%{__chmod} -Rf @FIXPERMS@
 #
-
-#	The path to the gzip executable (legacy, use %{__gzip} instead).
-%_gzipbin		%{__gzip}
 
 #	The number of changelog entries kept when installing (legacy, unused in
 #	rpm-4.0.1 and later).
@@ -168,9 +169,6 @@
 
 #	Path to top of spec/source/patch area.
 %_topsrcdir		%{_topdir}
-
-#	The path to the unzip executable (legacy, use %{__unzip} instead).
-%_unzipbin		%{__unzip}
 
 #==============================================================================
 # ---- Optional rpmrc macros.
