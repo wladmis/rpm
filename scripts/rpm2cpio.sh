@@ -23,16 +23,4 @@ dl=`expr 256 \* \( 256 \* \( 256 \* $6 + $7 \) + $8 \) + $9`
 hdrsize=`expr 8 + 16 \* $il + $dl`
 o=`expr $o + $hdrsize`
 
-magic=`dd if="$pkg" ibs=$o skip=1 count=1 2>/dev/null | dd bs=3 count=1 2>/dev/null`
-gzip_magic=`printf '\037\213'`
-
-case "$magic" in
-	BZh) filter=bunzip2 ;;
-	"$gzip_magic"?) filter=gunzip ;;
-	# plain cpio
-	070) filter=cat ;;
-	# no magic in old lzma format
-	*) filter=unlzma ;;
-esac
-
-dd if=$pkg ibs=$o skip=1 2>/dev/null | $filter
+exec dd if=$pkg ibs=$o skip=1 2>/dev/null

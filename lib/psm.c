@@ -1869,6 +1869,8 @@ assert(psm->mi == NULL);
 	    t = stpcpy(t, ".bzdio");
 	if (!strcmp(payload_compressor, "lzma"))
 	    t = stpcpy(t, ".lzdio");
+	if (!strcmp(payload_compressor, "xz"))
+	    t = stpcpy(t, ".xzdio");
 	rc = RPMRC_OK;
     }	break;
 

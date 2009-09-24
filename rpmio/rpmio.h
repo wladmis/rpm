@@ -624,6 +624,10 @@ int ufdGetFile( /*@killref@*/ FD_t sfd, FD_t tfd)
 
 /**
  */
+/*@observer@*/ /*@unchecked@*/ extern FDIO_t xzdio;
+
+/**
+ */
 /*@observer@*/ /*@unchecked@*/ extern FDIO_t fadio;
 /*@=exportlocal@*/
 /*@}*/
