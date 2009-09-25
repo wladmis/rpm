@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.23
+Release: alt77.M40.24
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -510,6 +510,9 @@ fi
 %endif #with contrib
 
 %changelog
+* Sat Sep 26 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.24
+- rpmio: Tweak lzma preset options for better compression.
+
 * Thu Sep 24 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.23
 - rpmio: Updated lzma compression routines for xz-5.0 API.
 - Packaged /usr/bin/rpm2cpio.static.
