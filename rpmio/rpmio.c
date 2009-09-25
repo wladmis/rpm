@@ -2758,6 +2758,8 @@ typedef struct lzfile {
     uint8_t buf[kBufferSize];
 
     lzma_stream strm;
+    lzma_options_lzma options;
+    lzma_filter filters[2];
 
     FILE *file;
 
@@ -2798,13 +2800,25 @@ static LZFILE *lzopen_internal(const char *path, const char *mode, int fd, int x
     lzfile->eof = 0;
     lzfile->strm = (lzma_stream)LZMA_STREAM_INIT;
     if (encoding) {
+	lzma_lzma_preset(&lzfile->options, level);
+#if 1	/* tweak options for better compression */
+	if (level >= 2) {
+	    unsigned int dict_size = 1<<20;
+	    if (lzfile->options.dict_size < dict_size)
+		lzfile->options.dict_size = dict_size;
+	    unsigned int nice_len = (level < LZMA_PRESET_DEFAULT) ? 64 : 128;
+	    if (lzfile->options.nice_len < nice_len)
+		lzfile->options.nice_len = nice_len;
+	}
+#endif
 	if (xz) {
+	    lzfile->filters[0].id = LZMA_FILTER_LZMA2;
+	    lzfile->filters[0].options = &lzfile->options;
+	    lzfile->filters[1].id = LZMA_VLI_UNKNOWN;
 	    /* xz(1) uses CRC64 by default */
-	    ret = lzma_easy_encoder(&lzfile->strm, level, LZMA_CHECK_CRC64);
+	    ret = lzma_stream_encoder(&lzfile->strm, lzfile->filters, LZMA_CHECK_CRC64);
 	} else {
-	    lzma_options_lzma options;
-	    lzma_lzma_preset(&options, level);
-	    ret = lzma_alone_encoder(&lzfile->strm, &options);
+	    ret = lzma_alone_encoder(&lzfile->strm, &lzfile->options);
 	}
     } else {
 	/* We set the memlimit for decompression to 100MiB which should be
