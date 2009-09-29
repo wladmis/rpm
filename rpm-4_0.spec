@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.20
+Release: alt98.21
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -18,7 +18,6 @@ Release: alt98.20
 %def_with libelf
 %def_without apidocs
 %def_without db
-%def_without contrib
 %def_without build_topdir
 
 # XXX enable at your own risk, CDB access to rpmdb isn't cooked yet.
@@ -127,13 +126,6 @@ License: GPL
 Group: System/Configuration/Packaging
 PreReq: %name = %version-%release
 
-%package contrib
-Summary: Contributed scripts and executable programs which aren't currently used
-Summary(ru_RU.KOI8-R): Файлы, не используемые в настоящее время
-License: GPL
-Group: Development/Other
-PreReq: %name-build = %version-%release
-
 %description
 The RPM Package Manager (RPM) is a powerful command line driven
 package management system capable of installing, uninstalling,
@@ -185,10 +177,6 @@ This package contains RPM package installation and build directory tree.
 %description static
 This package contains statically linked version of the RPM program.
 
-%description contrib
-This package contains extra scripts and executable programs which arent
-currently used.
-
 %if_with python
 %package -n python-module-rpm
 Version: %{rpm_version}_%__python_version
@@ -218,15 +206,16 @@ find -type f \( -name .cvsignore -o -name \*~ -o -name \*.orig \) -print0 |
 %build
 touch config.rpath
 gettextize --force --quiet
+install -pv -m644 /usr/share/automake/mkinstalldirs .
 install -pv -m644 /usr/share/gettext/intl/Makevars* po/Makevars
 autoreconf -fisv -I m4
-export \
-	ac_cv_path_CTAGS=/usr/bin/ctags \
-	ac_cv_path_UNZIPBIN=/usr/bin/unzip \
-	ac_cv_path___CPIO=/bin/cpio \
-	ac_cv_path___GPG=/usr/bin/gpg \
-	ac_cv_path___SSH=/usr/bin/ssh \
-	#
+# avoid extra build dependencies
+export ac_cv_path___CPIO=/bin/cpio
+export ac_cv_path___UNZIP=/usr/bin/unzip
+export ac_cv_path___LZMA=/usr/bin/lzma
+export ac_cv_path___XZ=/usr/bin/xz
+export ac_cv_path___GPG=/usr/bin/gpg
+export ac_cv_path___SSH=/usr/bin/ssh
 %configure \
 	%{?_with_python} %{?_without_python} \
 	%{?_with_apidocs} %{?_without_apidocs} \
@@ -287,7 +276,7 @@ touch %buildroot%_localstatedir/%name/files-awaiting-filetriggers
 # Prepare documentation.
 bzip2 -9 CHANGES ||:
 mkdir -p %buildroot%_docdir/%name-%rpm_version
-install -p -m644 CHANGES* CREDITS README README.ALT* RPM-GPG-KEY RPM-PGP-KEY \
+install -p -m644 CHANGES* CREDITS README README.ALT* \
 	%buildroot%_docdir/%name-%rpm_version/
 cp -a doc/manual %buildroot%_docdir/%name-%rpm_version/
 rm -f %buildroot%_docdir/%name-%rpm_version/manual/{Makefile*,buildroot}
@@ -454,7 +443,6 @@ fi
 %rpmattr %_rpmlibdir/brp-*
 %rpmattr %_rpmlibdir/*_files
 %rpmattr %_rpmlibdir/check-files
-%rpmattr %_rpmlibdir/convertrpmrc.sh
 %rpmattr %_rpmlibdir/ldd
 %rpmattr %_rpmlibdir/rpm2cpio.sh
 %rpmattr %_rpmlibdir/find-lang
@@ -499,26 +487,11 @@ fi
 %_bindir/rpm.static
 %_bindir/rpm2cpio.static
 
-%if_with contrib
-%files contrib
-%rpmattr %_rpmlibdir/cpanflute*
-%rpmattr %_rpmlibdir/cross-build
-%rpmattr %_rpmlibdir/find-prov.pl
-%rpmattr %_rpmlibdir/find-provides.perl
-%rpmattr %_rpmlibdir/find-req.pl
-%rpmattr %_rpmlibdir/find-requires.perl
-%rpmattr %_rpmlibdir/get_magic.pl
-%rpmattr %_rpmlibdir/getpo.sh
-%rpmattr %_rpmlibdir/javadeps
-%rpmattr %_rpmlibdir/magic.*
-%rpmattr %_rpmlibdir/rpmdiff*
-%rpmattr %_rpmlibdir/trpm
-%rpmattr %_rpmlibdir/u_pkg.sh
-%rpmattr %_rpmlibdir/vpkg-provides.sh
-%rpmattr %_rpmlibdir/vpkg-provides2.sh
-%endif #with contrib
-
 %changelog
+* Tue Sep 29 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.21
+- rpmio, rpmbuild: Added support for .xz/.lzma compressed sources and patches.
+- Removed old scripts in /usr/lib/rpm.
+
 * Sat Sep 26 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.20
 - rpmio: Tweak lzma preset options for better compression.
 
