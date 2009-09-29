@@ -18,7 +18,6 @@ Release: alt77.M40.25
 %def_with libelf
 %def_without apidocs
 %def_without db
-%def_without contrib
 %def_without build_topdir
 
 # XXX enable at your own risk, CDB access to rpmdb isn't cooked yet.
@@ -130,13 +129,6 @@ License: GPL
 Group: System/Configuration/Packaging
 PreReq: %name = %version-%release
 
-%package contrib
-Summary: Contributed scripts and executable programs which aren't currently used
-Summary(ru_RU.KOI8-R): Файлы, не используемые в настоящее время
-License: GPL
-Group: Development/Other
-PreReq: %name-build = %version-%release
-
 %description
 The RPM Package Manager (RPM) is a powerful command line driven
 package management system capable of installing, uninstalling,
@@ -187,10 +179,6 @@ This package contains RPM package installation and build directory tree.
 
 %description static
 This package contains statically linked version of the RPM program.
-
-%description contrib
-This package contains extra scripts and executable programs which arent
-currently used.
 
 %if_with python
 %package -n python-module-rpm
@@ -290,7 +278,7 @@ touch %buildroot%_localstatedir/%name/files-awaiting-filetriggers
 # Prepare documentation.
 bzip2 -9 CHANGES ||:
 mkdir -p %buildroot%_docdir/%name-%rpm_version
-install -p -m644 CHANGES* CREDITS README README.ALT* RPM-GPG-KEY RPM-PGP-KEY \
+install -p -m644 CHANGES* CREDITS README README.ALT* \
 	%buildroot%_docdir/%name-%rpm_version/
 cp -a doc/manual %buildroot%_docdir/%name-%rpm_version/
 rm -f %buildroot%_docdir/%name-%rpm_version/manual/{Makefile*,buildroot}
@@ -448,7 +436,6 @@ fi
 %rpmattr %_rpmlibdir/brp-*
 %rpmattr %_rpmlibdir/*_files
 %rpmattr %_rpmlibdir/check-files
-%rpmattr %_rpmlibdir/convertrpmrc.sh
 %rpmattr %_rpmlibdir/ldd
 %rpmattr %_rpmlibdir/rpm2cpio.sh
 %rpmattr %_rpmlibdir/find-lang
@@ -456,14 +443,11 @@ fi
 %rpmattr %_rpmlibdir/find-provides
 %rpmattr %_rpmlibdir/find-requires
 %rpmattr %_rpmlibdir/fixup-*
-%rpmattr %_rpmlibdir/http.req
 %rpmattr %_rpmlibdir/files.*
 %rpmattr %_rpmlibdir/pam.*
 %rpmattr %_rpmlibdir/pkgconfig.*
 %rpmattr %_rpmlibdir/shell.*
-%rpmattr %_rpmlibdir/sql.*
 %rpmattr %_rpmlibdir/verify-elf
-%rpmattr %_rpmlibdir/Specfile.pm
 %rpmattr %_rpmlibdir/*.awk
 
 %_mandir/man?/gendiff.*
@@ -488,26 +472,6 @@ fi
 %files static
 %_bindir/rpm.static
 %_bindir/rpm2cpio.static
-
-%if_with contrib
-%files contrib
-%rpmattr %dir %_rpmlibdir
-%rpmattr %_rpmlibdir/cpanflute*
-%rpmattr %_rpmlibdir/cross-build
-%rpmattr %_rpmlibdir/find-prov.pl
-%rpmattr %_rpmlibdir/find-provides.perl
-%rpmattr %_rpmlibdir/find-req.pl
-%rpmattr %_rpmlibdir/find-requires.perl
-%rpmattr %_rpmlibdir/get_magic.pl
-%rpmattr %_rpmlibdir/getpo.sh
-%rpmattr %_rpmlibdir/javadeps
-%rpmattr %_rpmlibdir/magic.*
-%rpmattr %_rpmlibdir/rpmdiff*
-%rpmattr %_rpmlibdir/trpm
-%rpmattr %_rpmlibdir/u_pkg.sh
-%rpmattr %_rpmlibdir/vpkg-provides.sh
-%rpmattr %_rpmlibdir/vpkg-provides2.sh
-%endif #with contrib
 
 %changelog
 * Tue Sep 29 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.25

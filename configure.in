@@ -128,32 +128,9 @@ dnl see if we have a mkdir that supports `-p'.
 dnl
 AC_PATH_PROGS(MKDIR, mkdir, mkdir)
 AC_MSG_CHECKING(if $MKDIR supports -p)
-rm -rf conftest
-$MKDIR -p conftest/a 2>/dev/null
-if test $? = 0 ; then
-	rmdir conftest/a 2>/dev/null
-	if test $? = 0  ; then
-		:
-	else
-		MKDIR_P=0
-	fi
+MKDIR_P="$MKDIR -p"
+AC_MSG_RESULT(yes)
 
-	rmdir conftest 2>/dev/null
-	if test $? = 0 ; then
-		MKDIR_P="$MKDIR -p"
-	else
-		MKDIR_P=0
-	fi
-else
-	MKDIR_P=0
-fi
-
-if test X"$MKDIR_P" = X0 ; then
-	AC_MSG_RESULT(no)
-	MKDIR_P="`echo ${prefix}/lib/rpm/mkinstalldirs`"
-else
-	AC_MSG_RESULT(yes)
-fi
 dnl
 dnl substitute this into config.h, so the C source picks it up.
 dnl
@@ -947,8 +924,6 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt
 	scripts/strip_files
 	scripts/verify-elf
 	scripts/posttrans-filetriggers
-	tests/Makefile tests/rpmrc tests/macros tests/hello-test/Makefile
-	po/Makefile.in
 	doc/Makefile doc/manual/Makefile
 	doc/ja/Makefile doc/pl/Makefile doc/ru/Makefile doc/sk/Makefile
 	python/Makefile ],
@@ -956,38 +931,5 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt
   ]
 )
 
-rm -f ./find-provides
-if test -f ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.prov ; then
-	echo "using ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.prov for automatic provides generation"
-    ln -s ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.prov ./find-provides
-elif test -f ${srcdir}/autodeps/${build_os_exact}.prov ; then
-	echo "using ${srcdir}/autodeps/${build_os_exact}.prov for automatic provides generation"
-    ln -s ${srcdir}/autodeps/${build_os_exact}.prov ./find-provides
-elif test -f ${srcdir}/autodeps/${build_os_major}.prov ; then
-	echo "using ${srcdir}/autodeps/${build_os_major}.prov for automatic provides generation"
-    ln -s ${srcdir}/autodeps/${build_os_major}.prov ./find-provides
-elif test -f ${srcdir}/autodeps/${build_os_noversion}.prov ; then
-	echo "using ${srcdir}/autodeps/${build_os_noversion}.prov for automatic provides generation"
-    ln -s ${srcdir}/autodeps/${build_os_noversion}.prov ./find-provides
-else
-    echo "*** no default provides information is available for ${build_os_noversion}"
-    ln -s ${srcdir}/autodeps/none ./find-provides
-fi
-
-rm -f ./find-requires
-if test -f ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.req ; then
-	echo "using ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.req for automatic requires generation"
-    ln -s ${srcdir}/autodeps/${build_cpu}-${build_os_exact}.req ./find-requires
-elif test -f ${srcdir}/autodeps/${build_os_exact}.req ; then
-	echo "using ${srcdir}/autodeps/${build_os_exact}.req for automatic requires generation"
-    ln -s ${srcdir}/autodeps/${build_os_exact}.req ./find-requires
-elif test -f ${srcdir}/autodeps/${build_os_major}.req ; then
-	echo "using ${srcdir}/autodeps/${build_os_major}.req for automatic requires generation"
-    ln -s ${srcdir}/autodeps/${build_os_major}.req ./find-requires
-elif test -f ${srcdir}/autodeps/${build_os_noversion}.req ; then
-	echo "using ${srcdir}/autodeps/${build_os_noversion}.req for automatic requires generation"
-    ln -s ${srcdir}/autodeps/${build_os_noversion}.req ./find-requires
-else
-    echo "*** no default requires information is available for ${build_os_noversion}"
-    ln -s ${srcdir}/autodeps/none ./find-requires
-fi
+ln -s ${srcdir}/autodeps/linux.prov ./find-provides
+ln -s ${srcdir}/autodeps/linux.req ./find-requires

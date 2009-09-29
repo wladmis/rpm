@@ -30,9 +30,6 @@ noinst_PROGRAMS = \
 pkgbindir = @RPMCONFIGDIR@
 pkgbin_PROGRAMS = javadeps filesize dump_ld_config relative pdeath_execute
 
-rpmsort_SOURCES = rpmsort.c
-rpmsort_LDFLAGS = @LDFLAGS_STATIC@
-
 javadeps_SOURCES = javadeps.c
 
 filesize_SOURCES = filesize.c

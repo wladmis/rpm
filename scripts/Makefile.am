@@ -6,16 +6,14 @@ EXTRA_DIST = \
 	posttrans-filetriggers 0ldconfig.filetrigger \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
-	compress_files check-files convertrpmrc.sh cross-build \
-	find-lang find-package find-prov.pl find-req.pl \
-	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
+	compress_files check-files \
+	find-lang find-package \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
-	get_magic.pl getpo.sh http.req \
-	functions files.req.list ldd magic.prov magic.req \
-	pam.prov pam.req pkgconfig.prov pkgconfig.req perl.prov perl.req \
-	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
-	shell.req shell.prov shlib.req.awk sql.prov sql.req strip_files \
-	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
+	functions files.req.list ldd \
+	pam.prov pam.req pkgconfig.prov pkgconfig.req \
+	rpm2cpio.sh \
+	shell.req shell.prov shlib.req.awk strip_files \
+	verify-elf
 
 installprefix = $(DESTDIR)
 
@@ -26,13 +24,11 @@ config_SCRIPTS = \
 	posttrans-filetriggers 0ldconfig.filetrigger \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip brp-verify_elf \
-	compress_files check-files convertrpmrc.sh cross-build \
-	find-lang find-package find-prov.pl find-req.pl \
-	cpanflute cpanflute2 Specfile.pm find-provides.perl find-requires.perl \
+	compress_files check-files \
+	find-lang find-package \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
-	get_magic.pl getpo.sh http.req \
-	functions files.req.list ldd magic.prov magic.req \
-	pam.prov pam.req pkgconfig.prov pkgconfig.req perl.prov perl.req \
-	rpmdiff rpmdiff.cgi rpm.daily rpm.log rpm.xinetd rpm2cpio.sh \
-	shell.req shell.prov shlib.req.awk sql.prov sql.req strip_files \
-	tcl.req trpm u_pkg.sh verify-elf vpkg-provides.sh vpkg-provides2.sh
+	functions files.req.list ldd \
+	pam.prov pam.req pkgconfig.prov pkgconfig.req \
+	rpm2cpio.sh \
+	shell.req shell.prov shlib.req.awk strip_files \
+	verify-elf

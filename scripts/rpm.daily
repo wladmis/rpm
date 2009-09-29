@@ -1,5 +1,0 @@
-#!/bin/sh
-
-umask 077
-rpm -qa --qf '%{NAME}-%|SERIAL?{%{SERIAL}:}|%{VERSION}-%{RELEASE}.%{ARCH}.rpm\n' 2>&1 |
-	LC_COLLATE=C sort >/var/log/rpmpkgs

@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = 1.4 foreign
 
 EXTRA_DIST = tdigest.c tficl.c tkey.c trpmio.c
 
-EXTRA_PROGRAMS = tdigest tkey tring trpmio dumpasn1
+EXTRA_PROGRAMS = tdigest tkey tring trpmio
 
 INCLUDES = -I. @INCPATH@
 
@@ -36,8 +36,6 @@ tkey_LDADD = librpmio.la @LIBPOPT@
 tring_SOURCES = tring.c
 tring_LDFLAGS = -all-static
 tring_LDADD = librpmio.la @LIBPOPT@
-
-dumpasn1_SOURCES = dumpasn1.c
 
 .PHONY:	sources
 sources:
