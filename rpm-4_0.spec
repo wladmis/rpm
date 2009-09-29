@@ -209,6 +209,7 @@ find -type f \( -name .cvsignore -o -name \*~ -o -name \*.orig \) -print0 |
 %build
 touch config.rpath
 gettextize --force --quiet
+install -pv -m644 /usr/share/automake/mkinstalldirs .
 install -pv -m644 /usr/share/gettext/intl/Makevars* po/Makevars
 autoreconf -fisv -I m4
 # avoid extra build dependencies
