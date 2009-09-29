@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.26
+Release: alt95.M41.27
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -529,6 +529,10 @@ fi
 %endif #with contrib
 
 %changelog
+* Tue Sep 29 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.27
+- build/parsePrep.c (doUntar): Remove "-L" option from "unzip" invocation
+  (Igor Vlasenko; closes: ALT#17407).
+
 * Sat Sep 26 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.26
 - rpmio: Tweak lzma preset options for better compression.
 
