@@ -71,13 +71,7 @@ static int checkOwners(const char * urlfn)
 		fileSystem@*/
 	/*@modifies rpmGlobalMacroContext, fileSystem @*/
 {
-    const char *fn, *urlfn, *patcher;
-    static char buf[BUFSIZ];
-    char args[BUFSIZ];
     struct Source *sp;
-    rpmCompressedMagic compressed = COMPRESSED_NOT;
-    int urltype;
-
     for (sp = spec->sources; sp != NULL; sp = sp->next) {
 	if ((sp->flags & RPMBUILD_ISPATCH) && (sp->num == c)) {
 	    break;
@@ -88,33 +82,30 @@ static int checkOwners(const char * urlfn)
 	return NULL;
     }
 
-    urlfn = rpmGetPath("%{_sourcedir}/", sp->source, NULL);
+    const char *urlfn = rpmGetPath("%{_sourcedir}/", sp->source, NULL);
 
-    args[0] = '\0';
+    char args[BUFSIZ];
+    sprintf(args, "-p%d", strip);
     if (silent)
 	strcat(args, " -s");
     if (db) {
-#if HAVE_OLDPATCH_21 == 0
-	strcat(args, "-b ");
-#endif
-	strcat(args, "--suffix ");
+	strcat(args, " -b --suffix ");
 	strcat(args, db);
     }
-    if (reverse) {
+    if (reverse)
 	strcat(args, " -R");
-    }
-    if (removeEmpties) {
+    if (removeEmpties)
 	strcat(args, " -E");
-    }
 
+    rpmCompressedMagic compressed = COMPRESSED_NOT;
     /* XXX On non-build parse's, file cannot be stat'd or read */
     if (!spec->force && (isCompressed(urlfn, &compressed) || checkOwners(urlfn))) {
 	urlfn = _free(urlfn);
 	return NULL;
     }
 
-    fn = NULL;
-    urltype = urlPath(urlfn, &fn);
+    const char *fn = NULL;
+    int urltype = urlPath(urlfn, &fn);
     switch (urltype) {
     case URL_IS_HTTP:	/* XXX WRONG WRONG WRONG */
     case URL_IS_FTP:	/* XXX WRONG WRONG WRONG */
@@ -127,40 +118,40 @@ static int checkOwners(const char * urlfn)
 	/*@notreached@*/ break;
     }
 
-    patcher = rpmGetPath("%{__patch}", NULL);
+    const char *t;
+    const char *patcher = rpmGetPath("%{__patch}", NULL);
+    char cmd[BUFSIZ];
     if (compressed != COMPRESSED_NOT) {
-	const char *zipper, *zipper_opts;
-	switch ( compressed )
-	{
-		case COMPRESSED_BZIP2:
-			zipper = "%{_bzip2bin}";
-			zipper_opts = "-dc";
-			break;
-		case COMPRESSED_ZIP:
-			zipper = "%{_unzipbin}";
-			zipper_opts = "-p";
-			break;
-		default:
-			zipper = "%{_gzipbin}";
-			zipper_opts = "-dc";
-			break;
+	switch (compressed) {
+	default:	/* XXX can't happen */
+	case COMPRESSED_OTHER:
+	    t = "%{__gzip} -dc";
+	    break;
+	case COMPRESSED_BZIP2:
+	    t = "%{__bzip2} -dc";
+	    break;
+	case COMPRESSED_ZIP:
+	    t = "%{__unzip} -qq -p";
+	    break;
+	case COMPRESSED_LZMA:
+	    t = "%{__lzma} -dc";
+	    break;
+	case COMPRESSED_XZ:
+	    t = "%{__xz} -dc";
+	    break;
 	}
-	zipper = rpmGetPath( zipper, NULL );
-
-	snprintf(buf, sizeof(buf),
-		"echo \"Patch #%d (%s):\"\n"
-		"%s %s %s |%s -p%d %s\n",
-		c, /*@-unrecog@*/ (const char *) basename(fn), /*@=unrecog@*/
-		zipper, zipper_opts, fn, patcher, strip, args);
+	const char *zipper = rpmGetPath(t, NULL);
+	sprintf(cmd, "%s '%s' | %s %s\n", zipper, fn, patcher, args);
 	zipper = _free(zipper);
     } else {
-	snprintf(buf, sizeof(buf),
-		"echo \"Patch #%d (%s):\"\n"
-		"%s -p%d %s < %s", c, (const char *) basename(fn),
-		patcher, strip, args, fn);
+	sprintf(cmd, "%s %s < '%s'\n", patcher, args, fn);
     }
-
     patcher = _free(patcher);
+
+    static char buf[BUFSIZ];
+    sprintf(buf, "echo 'Patch #%d (%s):'\n", c, basename(fn));
+    strcat(buf, cmd);
+
     urlfn = _free(urlfn);
     return buf;
 }
@@ -177,12 +168,7 @@ static int checkOwners(const char * urlfn)
 		fileSystem@*/
 	/*@modifies rpmGlobalMacroContext, fileSystem @*/
 {
-    const char *fn, *urlfn;
-    static char buf[BUFSIZ];
     struct Source *sp;
-    rpmCompressedMagic compressed = COMPRESSED_NOT;
-    int urltype;
-
     for (sp = spec->sources; sp != NULL; sp = sp->next) {
 	if ((sp->flags & RPMBUILD_ISSOURCE) && (sp->num == c)) {
 	    break;
@@ -193,7 +179,7 @@ static int checkOwners(const char * urlfn)
 	return NULL;
     }
 
-    urlfn = rpmGetPath("%{_sourcedir}/", sp->source, NULL);
+    const char *urlfn = rpmGetPath("%{_sourcedir}/", sp->source, NULL);
 
 #ifdef AUTOFETCH_NOT	/* XXX don't expect this code to be enabled */
     /* XXX
@@ -215,14 +201,15 @@ static int checkOwners(const char * urlfn)
     }
 #endif
 
+    rpmCompressedMagic compressed = COMPRESSED_NOT;
     /* XXX On non-build parse's, file cannot be stat'd or read */
     if (!spec->force && (isCompressed(urlfn, &compressed) || checkOwners(urlfn))) {
 	urlfn = _free(urlfn);
 	return NULL;
     }
 
-    fn = NULL;
-    urltype = urlPath(urlfn, &fn);
+    const char *fn = NULL;
+    int urltype = urlPath(urlfn, &fn);
     switch (urltype) {
     case URL_IS_HTTP:	/* XXX WRONG WRONG WRONG */
     case URL_IS_FTP:	/* XXX WRONG WRONG WRONG */
@@ -235,49 +222,49 @@ static int checkOwners(const char * urlfn)
 	/*@notreached@*/ break;
     }
 
+    const char *t;
+    if (rpmIsVerbose() && !quietly)
+	t = "%{__tar} -xvvf";
+    else
+	t = "%{__tar} -xf";
+    const char *tar = rpmGetPath(t, NULL);
+    char cmd[BUFSIZ];
     if (compressed != COMPRESSED_NOT) {
-	/*@-internalglobs@*/ /* FIX: shrug */
-	const char *taropts = (rpmIsVerbose() && !quietly) ? "-xvvf -" : "-xf -";
-	/*@=internalglobs@*/
-	const char *zipper, *zipper_opts, *tarprog = "%{__tar}";
-
-	switch ( compressed )
-	{
-		case COMPRESSED_BZIP2:
-			zipper = "%{_bzip2bin}";
-			zipper_opts = "-dc";
-			break;
-		case COMPRESSED_ZIP:
-			zipper = "%{_unzipbin}";
-			zipper_opts = (rpmIsVerbose() && !quietly) ? "" : "-qq";
-			tarprog = NULL;
-			break;
-		default:
-			zipper = "%{_gzipbin}";
-			zipper_opts = "-dc";
-			break;
+	switch (compressed) {
+	default:	/* XXX can't happen */
+	case COMPRESSED_OTHER:
+	    t = "%{__gzip} -dc";
+	    break;
+	case COMPRESSED_BZIP2:
+	    t = "%{__bzip2} -dc";
+	    break;
+	case COMPRESSED_ZIP:
+	    if (rpmIsVerbose() && !quietly)
+		t = "%{__unzip}";
+	    else
+		t = "%{__unzip} -qq";
+	    break;
+	case COMPRESSED_LZMA:
+	    t = "%{__lzma} -dc";
+	    break;
+	case COMPRESSED_XZ:
+	    t = "%{__xz} -dc";
+	    break;
 	}
-	if ( tarprog )
-	    tarprog = rpmGetPath( tarprog, NULL );
-	zipper = rpmGetPath( zipper, NULL );
-	snprintf(buf, sizeof(buf),
-		"echo \"Source #%d (%s):\"\n"
-		"%s %s %s %s%s %s\n",
-		c, /*@-unrecog@*/ (const char *) basename(fn), /*@=unrecog@*/
-		zipper, zipper_opts, fn,
-		(tarprog?"|":""), (tarprog?tarprog:""), (tarprog?taropts:""));
- 	zipper = _free( zipper );
- 	tarprog = _free( tarprog );
-     } else {
-	const char *taropts = (rpmIsVerbose() && !quietly) ? "-xvvf" : "-xf";
-	const char *tarprog = rpmGetPath( "%{__tar}", NULL );
-	snprintf( buf, sizeof(buf),
-		"echo \"Source #%d (%s):\"\n"
-		"%s %s %s",
-		c, /*@-unrecog@*/ (const char *) basename(fn), /*@=unrecog@*/
-		tarprog, taropts, fn );
-	tarprog = _free( tarprog );
+	const char *zipper = rpmGetPath(t, NULL);
+	if (compressed == COMPRESSED_ZIP)
+	    sprintf(cmd, "%s '%s'\n", zipper, fn);
+	else
+	    sprintf(cmd, "%s '%s' | %s -\n", zipper, fn, tar);
+	zipper = _free(zipper);
+    } else {
+	sprintf(cmd, "%s '%s'\n", tar, fn);
     }
+    tar = _free(tar);
+
+    static char buf[BUFSIZ];
+    sprintf(buf, "echo 'Source #%d (%s):'\n", c, basename(fn));
+    strcat(buf, cmd);
 
     urlfn = _free(urlfn);
     return buf;

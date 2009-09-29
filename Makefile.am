@@ -2,14 +2,13 @@
 
 AUTOMAKE_OPTIONS = 1.4 foreign
 
-EXTRA_DIST = CHANGES CREDITS Doxyheader GROUPS README.amiga INSTALL \
-	RPM-GPG-KEY RPM-PGP-KEY \
-	autodeps/none autodeps/*.prov autodeps/*.req autogen.sh \
-	config.site gendiff installplatform platform* \
+EXTRA_DIST = CHANGES CREDITS Doxyheader GROUPS INSTALL \
+	autodeps/*.prov autodeps/*.req \
+	gendiff installplatform platform* \
 	po/*.in po/*.po po/rpm.pot \
-	rpm.magic rpmpopt-$(VERSION) rpmqv.c rpm.c
+	rpmpopt-$(VERSION) rpmqv.c
 
-SUBDIRS = po rpmio rpmdb lib build @WITH_PYTHON_SUBDIR@ tools scripts tests doc .
+SUBDIRS = po rpmio rpmdb lib build @WITH_PYTHON_SUBDIR@ tools scripts doc .
 
 INCLUDES = \
 	-I$(top_srcdir)/build \
@@ -32,8 +31,7 @@ bin_SCRIPTS =		gendiff
 pkglibdir =		@RPMCONFIGDIR@
 pkglib_PROGRAMS =	rpmb rpmd rpmi rpmk rpmq
 pkglib_DATA =		rpmrc rpmpopt-$(VERSION) macros
-pkglib_SCRIPTS =	find-provides find-requires mkinstalldirs \
-			config.guess config.sub config.site
+pkglib_SCRIPTS =	find-provides find-requires
 
 rpmpopt-$(VERSION): rpmpopt
 	cp rpmpopt $@
@@ -239,9 +237,9 @@ doxygen @WITH_APIDOCS_TARGET@: Doxyfile
 	- [ X"@__DOXYGEN@" != Xno ] && @__DOXYGEN@
 
 ctags:
-	find . -type f -name "*.[ch]*" | xargs @CTAGS@
+	find . -type f -name "*.[ch]*" | xargs ctags
 
 cscope:
-	@CSCOPE@ -b -R
+	cscope -b -R
 
 cref: ctags cscope
