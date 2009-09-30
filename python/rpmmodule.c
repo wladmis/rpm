@@ -217,21 +217,17 @@ static PyObject * rpmtransAdd(rpmtransObject * s, PyObject * args) {
 	return NULL;
     }
 
-    if (how && strcmp(how, "a") && strcmp(how, "u") && strcmp(how, "i")) {
-	PyErr_SetString(PyExc_TypeError, "how argument must be \"u\", \"a\", or \"i\"");
+    if (how && strcmp(how, "u") && strcmp(how, "i")) {
+	PyErr_SetString(PyExc_TypeError, "how argument must be \"u\" or \"i\"");
 	return NULL;
     } else if (how && !strcmp(how, "u"))
     	isUpgrade = 1;
 
-    if (how && !strcmp(how, "a"))
-	rpmtransAvailablePackage(s->ts, hdrGetHeader(h), key);
-    else
-	rpmtransAddPackage(s->ts, hdrGetHeader(h), NULL, key, isUpgrade, NULL);
+    rpmtransAddPackage(s->ts, hdrGetHeader(h), NULL, key, isUpgrade, NULL);
 
     /* This should increment the usage count for me */
-    if (key) {
+    if (key)
 	PyList_Append(s->keyList, key);
-    }
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -273,7 +269,7 @@ static PyObject * rpmtransRemove(rpmtransObject * s, PyObject * args) {
 static PyObject * rpmtransDepCheck(rpmtransObject * s, PyObject * args) {
     rpmDependencyConflict conflicts;
     int numConflicts;
-    PyObject * list, * cf, * suggestions;
+    PyObject * list, * cf;
     int i, j;
     int allSuggestions = 0;
 
@@ -283,20 +279,7 @@ static PyObject * rpmtransDepCheck(rpmtransObject * s, PyObject * args) {
     if (numConflicts) {
 	list = PyList_New(0);
 
-	/* XXX TODO: rpmlib-4.0.3 can return multiple suggested packages. */
 	for (i = 0; i < numConflicts; i++) {
-	    if (!conflicts[i].suggestedPackages)
-		suggestions = Py_None;
-	    else if (!allSuggestions)
-		suggestions = conflicts[i].suggestedPackages[0];
-	    else {
-		suggestions = PyList_New(0);
-
-		for (j = 0; conflicts[i].suggestedPackages[j]; j++)
-		    PyList_Append(suggestions, 
-				  conflicts[i].suggestedPackages[j]);
-	    }
-
 	    cf = Py_BuildValue("((sss)(ss)iOi)", conflicts[i].byName,
 			       conflicts[i].byVersion, conflicts[i].byRelease,
 
@@ -304,7 +287,7 @@ static PyObject * rpmtransDepCheck(rpmtransObject * s, PyObject * args) {
 			       conflicts[i].needsVersion,
 
 			       conflicts[i].needsFlags,
-			       suggestions,
+			       /* suggestions */ Py_None,
 			       conflicts[i].sense);
 	    PyList_Append(list, (PyObject *) cf);
 	    Py_DECREF(cf);
