@@ -1035,7 +1035,6 @@ typedef /*@abstract@*/ struct rpmDependencyConflict_s {
     const char * needsName;	/*!< dependency name */
     const char * needsVersion;	/*!< dependency epoch:version-release */
     int needsFlags;		/*!< dependency flags */
-/*@owned@*/ /*@null@*/ const void ** suggestedPackages; /* terminated by NULL */
     enum {
 	RPMDEP_SENSE_REQUIRES,		/*!< requirement not satisfied. */
 	RPMDEP_SENSE_CONFLICTS		/*!< conflict was found. */
@@ -1299,17 +1298,6 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, /*@null@*/ FD_t fd,
 		/*@null@*/ /*@owned@*/ const void * key, int upgrade,
 		/*@null@*/ rpmRelocation * relocs)
 	/*@modifies fd, h, ts @*/;
-
-/** \ingroup rpmtrans
- * Add package to universe of possible packages to install in transaction set.
- * @param ts		transaction set
- * @param h		header
- * @param key		package private data
- */
-/*@unused@*/
-void rpmtransAvailablePackage(rpmTransactionSet ts, Header h,
-		/*@null@*/ /*@owned@*/ const void * key)
-	/*@modifies h, ts @*/;
 
 /** \ingroup rpmtrans
  * Add package to be removed to unordered transaction set.

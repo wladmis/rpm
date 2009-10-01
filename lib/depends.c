@@ -619,8 +619,6 @@ rpmTransactionSet rpmtransCreateSet(rpmdb rpmdb, const char * rootDir)
 
     ts->addedPackages.delta = ts->delta;
     alCreate(&ts->addedPackages);
-    ts->availablePackages.delta = ts->delta;
-    alCreate(&ts->availablePackages);
 
     ts->orderAlloced = ts->delta;
     ts->orderCount = 0;
@@ -799,12 +797,6 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
     return 0;
 }
 
-void rpmtransAvailablePackage(rpmTransactionSet ts, Header h, const void * key)
-{
-    struct availablePackage * al;
-    al = alAddPackage(&ts->availablePackages, h, key, NULL, NULL);
-}
-
 int rpmtransRemovePackage(rpmTransactionSet ts, int dboffset)
 {
     return removePackage(ts, dboffset, -1);
@@ -814,7 +806,6 @@ rpmTransactionSet rpmtransFree(rpmTransactionSet ts)
 {
     if (ts) {
 	alFree(&ts->addedPackages);
-	alFree(&ts->availablePackages);
 	ts->di = _free(ts->di);
 	ts->removedPackages = _free(ts->removedPackages);
 	ts->order = _free(ts->order);
@@ -842,7 +833,6 @@ rpmDependencyConflict rpmdepFreeConflicts(rpmDependencyConflict conflicts,
 	conflicts[i].byRelease = _free(conflicts[i].byRelease);
 	conflicts[i].needsName = _free(conflicts[i].needsName);
 	conflicts[i].needsVersion = _free(conflicts[i].needsVersion);
-	conflicts[i].suggestedPackages = _free(conflicts[i].suggestedPackages);
     }
 
     return (conflicts = _free(conflicts));
@@ -1072,20 +1062,16 @@ alSatisfiesDepend(const availableList al,
  * @param keyName	dependency name string
  * @param keyEVR	dependency [epoch:]version[-release] string
  * @param keyFlags	dependency logical range qualifiers
- * @retval suggestion	possible package(s) to resolve dependency
  * @return		0 if satisfied, 1 if not satisfied, 2 if error
  */
 static int unsatisfiedDepend(rpmTransactionSet ts,
 		const char * keyType, const char * keyDepend,
-		const char * keyName, const char * keyEVR, int keyFlags,
-		/*@null@*/ /*@out@*/ struct availablePackage *** suggestion)
-	/*@modifies ts, *suggestion @*/
+		const char * keyName, const char * keyEVR, int keyFlags)
+	/*@modifies ts @*/
 {
     rpmdbMatchIterator mi;
     Header h;
     int rc = 0;	/* assume dependency is satisfied */
-
-    if (suggestion) *suggestion = NULL;
 
     /*
      * Check if dbiOpen/dbiPut failed (e.g. permissions), we can't cache.
@@ -1110,10 +1096,6 @@ static int unsatisfiedDepend(rpmTransactionSet ts,
 		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s %-s (cached)\n"),
 			keyType, keyDepend, (rc ? _("NO ") : _("YES")));
 		xx = dbiCclose(dbi, NULL, 0);
-
-		if (suggestion && rc == 1)
-		    *suggestion = alAllSatisfiesDepend(&ts->availablePackages,
-				NULL, NULL, keyName, keyEVR, keyFlags);
 
 		return rc;
 	    }
@@ -1214,10 +1196,6 @@ static int unsatisfiedDepend(rpmTransactionSet ts,
 
     }
 
-    if (suggestion)
-	*suggestion = alAllSatisfiesDepend(&ts->availablePackages, NULL, NULL,
-				keyName, keyEVR, keyFlags);
-
 unsatisfied:
     rpmMessage(RPMMESS_DEBUG, _("%s: %-45s NO\n"), keyType, keyDepend+2);
     rc = 1;	/* dependency is unsatisfied */
@@ -1276,7 +1254,6 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
     rpmTagType type;
     int i, rc;
     int ourrc = 0;
-    struct availablePackage ** suggestion;
 
     (void) headerNVR(h, &name, &version, &release);
 
@@ -1300,7 +1277,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 		requires[i], requiresEVR[i], requireFlags[i]);
 
 	rc = unsatisfiedDepend(ts, " Requires", keyDepend,
-		requires[i], requiresEVR[i], requireFlags[i], &suggestion);
+		requires[i], requiresEVR[i], requireFlags[i]);
 
 	switch (rc) {
 	case 0:		/* requirements are satisfied. */
@@ -1324,19 +1301,6 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 		pp->needsVersion = xstrdup(requiresEVR[i]);
 		pp->needsFlags = requireFlags[i];
 		pp->sense = RPMDEP_SENSE_REQUIRES;
-
-		if (suggestion) {
-		    int j;
-		    for (j = 0; suggestion[j]; j++)
-			{};
-		    pp->suggestedPackages =
-			xmalloc( (j + 1) * sizeof(*pp->suggestedPackages) );
-		    for (j = 0; suggestion[j]; j++)
-			pp->suggestedPackages[j] = suggestion[j]->key;
-		    pp->suggestedPackages[j] = NULL;
-		} else {
-		    pp->suggestedPackages = NULL;
-		}
 	    }
 
 	    psp->num++;
@@ -1375,7 +1339,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	keyDepend = printDepend("C", conflicts[i], conflictsEVR[i], conflictFlags[i]);
 
 	rc = unsatisfiedDepend(ts, "Conflicts", keyDepend,
-		conflicts[i], conflictsEVR[i], conflictFlags[i], NULL);
+		conflicts[i], conflictsEVR[i], conflictFlags[i]);
 
 	/* 1 == unsatisfied, 0 == satsisfied */
 	switch (rc) {
@@ -1398,7 +1362,6 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 		pp->needsVersion = xstrdup(conflictsEVR[i]);
 		pp->needsFlags = conflictFlags[i];
 		pp->sense = RPMDEP_SENSE_CONFLICTS;
-		pp->suggestedPackages = NULL;
 	    }
 
 	    psp->num++;
@@ -1812,7 +1775,6 @@ int rpmdepOrder(rpmTransactionSet ts)
     int i, j;
 
     alMakeIndex(&ts->addedPackages);
-    alMakeIndex(&ts->availablePackages);
 
     /* T1. Initialize. */
     loopcheck = npkgs;
@@ -2149,7 +2111,6 @@ int rpmdepCheck(rpmTransactionSet ts,
     *numConflicts = 0;
 
     alMakeIndex(&ts->addedPackages);
-    alMakeIndex(&ts->availablePackages);
 
     /*
      * Look at all of the added packages and make sure their dependencies

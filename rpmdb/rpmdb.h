@@ -311,7 +311,6 @@ struct rpmdb_s {
     int		db_api;		/*!< Berkeley API type */
 /*@owned@*/ const char * db_errpfx;
     int		db_remove_env;
-    int		db_filter_dups;
     int		db_chrootDone;	/*!< If chroot(2) done, ignore db_root. */
     void (*db_errcall) (const char *db_errpfx, char *buffer)
 	/*@*/;
