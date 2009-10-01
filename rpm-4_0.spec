@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt77.M40.26
+Release: alt77.M40.27
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -475,6 +475,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Oct 01 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.27
+- Removed support for availablePackages/suggestedPackages.
+- Removed rebuilddb db_filter_dups code (Panu Matilainen).
+
 * Tue Sep 29 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt77.M40.26
 - rpmio, rpmbuild: Added support for .xz/.lzma compressed sources and patches.
 - Removed old scripts in /usr/lib/rpm.
