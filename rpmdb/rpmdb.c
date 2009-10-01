@@ -48,7 +48,6 @@ static int _debug = 0;
 /*@unchecked@*/
 static int _rebuildinprogress = 0;
 /*@unchecked@*/
-static int _db_filter_dups = 0;
 
 #define	_DBI_FLAGS	0
 #define	_DBI_PERMS	0644
@@ -883,17 +882,15 @@ static /*@only@*/ /*@null@*/
 rpmdb newRpmdb(/*@kept@*/ /*@null@*/ const char * root,
 		/*@kept@*/ /*@null@*/ const char * home,
 		int mode, int perms, int flags)
-	/*@globals _db_filter_dups, rpmGlobalMacroContext @*/
-	/*@modifies _db_filter_dups, rpmGlobalMacroContext @*/
+	/*@globals rpmGlobalMacroContext @*/
+	/*@modifies rpmGlobalMacroContext @*/
 {
     rpmdb db = xcalloc(sizeof(*db), 1);
     const char * epfx = _DB_ERRPFX;
     static int _initialized = 0;
 
-    if (!_initialized) {
-	_db_filter_dups = rpmExpandNumeric("%{?_filterdbdups}");
+    if (!_initialized)
 	_initialized = 1;
-    }
 
     /*@-assignexpose@*/
     *db = dbTemplate;	/* structure assignment */
@@ -922,7 +919,6 @@ rpmdb newRpmdb(/*@kept@*/ /*@null@*/ const char * root,
     db->db_errpfx = rpmExpand( (epfx && *epfx ? epfx : _DB_ERRPFX), NULL);
     /*@=nullpass@*/
     db->db_remove_env = 0;
-    db->db_filter_dups = _db_filter_dups;
     db->db_ndbi = dbiTagsMax;
     db->_dbi = xcalloc(db->db_ndbi, sizeof(*db->_dbi));
     /*@-globstate@*/ return db; /*@=globstate@*/
@@ -3354,32 +3350,6 @@ int rpmdbRebuild(const char * prefix)
 			_("record number %u in database is bad -- skipping.\n"),
 			_RECNUM);
 		continue;
-	    }
-
-	    /* Filter duplicate entries ? (bug in pre rpm-3.0.4) */
-	    if (_db_filter_dups || newdb->db_filter_dups) {
-		const char * name, * version, * release;
-		int skip = 0;
-
-		(void) headerNVR(h, &name, &version, &release);
-
-		/*@-shadow@*/
-		{   rpmdbMatchIterator mi;
-		    mi = rpmdbInitIterator(newdb, RPMTAG_NAME, name, 0);
-		    (void) rpmdbSetIteratorRE(mi, RPMTAG_VERSION,
-				RPMMIRE_DEFAULT, version);
-		    (void) rpmdbSetIteratorRE(mi, RPMTAG_RELEASE,
-				RPMMIRE_DEFAULT, release);
-		    while (rpmdbNextIterator(mi)) {
-			skip = 1;
-			/*@innerbreak@*/ break;
-		    }
-		    mi = rpmdbFreeIterator(mi);
-		}
-		/*@=shadow@*/
-
-		if (skip)
-		    continue;
 	    }
 
 	    /* Deleted entries are eliminated in legacy headers by copy. */
