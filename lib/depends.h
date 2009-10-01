@@ -151,8 +151,6 @@ struct rpmTransactionSet_s {
     int allocedRemovedPackages;		/*!< Size of removed packages array. */
     struct availableList_s addedPackages;
 				/*!< Set of packages being installed. */
-    struct availableList_s availablePackages;
-				/*!< Universe of possible packages. */
 /*@only@*/ transactionElement order;
 				/*!< Packages sorted by dependencies. */
     int orderCount;		/*!< No. of transaction elements. */
