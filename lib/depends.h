@@ -80,8 +80,8 @@ struct availableIndexEntry {
  * Index of all available items.
  */
 struct availableIndex {
-/*@null@*/ struct availableIndexEntry * index; /*!< Array of available items. */
     int size;				/*!< No. of available items. */
+    struct availableIndexEntry index[1]; /*!< Array of available items. */
 } ;
 
 /** \ingroup rpmdep
@@ -107,10 +107,10 @@ typedef struct dirInfo_s {
  */
 typedef /*@abstract@*/ struct availableList_s {
 /*@owned@*/ /*@null@*/ struct availablePackage * list;	/*!< Set of packages. */
-    struct availableIndex index;	/*!< Set of available items. */
     int size;				/*!< No. of pkgs in list. */
-    int numDirs;			/*!< No. of directories. */
 /*@owned@*/ /*@null@*/ dirInfo dirs;	/*!< Set of directories. */
+    int numDirs;			/*!< No. of directories. */
+    struct availableIndex *index;	/*!< Set of available items. */
 } * availableList;
 
 /** \ingroup rpmdep

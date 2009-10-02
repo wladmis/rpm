@@ -104,10 +104,7 @@ struct orderListIndex {
 static void alFreeIndex(availableList al)
 	/*@modifies al @*/
 {
-    if (al->index.size) {
-	al->index.index = _free(al->index.index);
-	al->index.size = 0;
-    }
+    al->index = _free(al->index);
 }
 
 /**
@@ -117,14 +114,11 @@ static void alFreeIndex(availableList al)
 static void alCreate(availableList al)
 	/*@modifies al @*/
 {
-    al->size = 0;
     al->list = NULL;
-
-    al->index.index = NULL;
-    al->index.size = 0;
-
-    al->numDirs = 0;
+    al->size = 0;
     al->dirs = NULL;
+    al->numDirs = 0;
+    al->index = NULL;
 }
 
 /**
@@ -389,31 +383,33 @@ static int indexcmp(const void * one, const void * two)		/*@*/
 static void alMakeIndex(availableList al)
 	/*@modifies al @*/
 {
-    struct availableIndex * ai = &al->index;
+    if (al->index) // got an index
+	return;
+
     int i, j, k;
-
-    if (ai->size || al->list == NULL) return;
-
+    int ai_size = 0;
     for (i = 0; i < al->size; i++) 
-	ai->size += al->list[i].providesCount;
+	ai_size += al->list[i].providesCount;
+    if (ai_size == 0)
+	return;
 
-    if (ai->size) {
-	ai->index = xcalloc(ai->size, sizeof(*ai->index));
+    struct availableIndex *ai = al->index =
+	    xmalloc(sizeof(*ai) + sizeof(*ai->index) * (ai_size - 1));
+    ai->size = ai_size;
 
-	k = 0;
-	for (i = 0; i < al->size; i++) {
-	    for (j = 0; j < al->list[i].providesCount; j++) {
-		ai->index[k].package = al->list + i;
-		ai->index[k].entry = al->list[i].provides[j];
-		ai->index[k].entryLen = strlen(al->list[i].provides[j]);
-		ai->index[k].entryIx = j;
-		ai->index[k].type = IET_PROVIDES;
-		k++;
-	    }
+    k = 0;
+    for (i = 0; i < al->size; i++) {
+	for (j = 0; j < al->list[i].providesCount; j++) {
+	    ai->index[k].package = al->list + i;
+	    ai->index[k].entry = al->list[i].provides[j];
+	    ai->index[k].entryLen = strlen(al->list[i].provides[j]);
+	    ai->index[k].entryIx = j;
+	    ai->index[k].type = IET_PROVIDES;
+	    k++;
 	}
-
-	qsort(ai->index, ai->size, sizeof(*ai->index), indexcmp);
     }
+
+    qsort(ai->index, ai->size, sizeof(*ai->index), indexcmp);
 }
 
 /* parseEVR() moved to rpmvercmp.c */
@@ -930,7 +926,6 @@ alAllSatisfiesDepend(const availableList al,
 		const char * keyName, const char * keyEVR, int keyFlags)
 	/*@*/
 {
-    struct availableIndexEntry needle, * match;
     struct availablePackage * p, ** ret = NULL;
     int i, rc, found;
 
@@ -941,21 +936,23 @@ alAllSatisfiesDepend(const availableList al,
 	    return ret;
     }
 
-    if (!al->index.size || al->index.index == NULL) return NULL;
+    const struct availableIndex *ai = al->index;
+    if (ai == NULL)
+	return NULL;
 
+    struct availableIndexEntry needle, * match;
     needle.entry = keyName;
     needle.entryLen = strlen(keyName);
-    match = bsearch(&needle, al->index.index, al->index.size,
-		    sizeof(*al->index.index), indexcmp);
-
-    if (match == NULL) return NULL;
+    match = bsearch(&needle, ai->index, ai->size, sizeof(*ai->index), indexcmp);
+    if (match == NULL)
+	return NULL;
 
     /* rewind to the first match */
-    while (match > al->index.index && indexcmp(match-1, &needle) == 0)
+    while (match > ai->index && indexcmp(match-1, &needle) == 0)
 	match--;
 
     for (ret = NULL, found = 0;
-	 match < al->index.index + al->index.size &&
+	 match < ai->index + ai->size &&
 		indexcmp(match, &needle) == 0;
 	 match++)
     {
