@@ -64,27 +64,6 @@ struct availablePackage {
 } ;
 
 /** \ingroup rpmdep
- * A single available item (e.g. a Provides: dependency).
- */
-struct availableIndexEntry {
-/*@dependent@*/ struct availablePackage * package; /*!< Containing package. */
-/*@dependent@*/ const char * entry;	/*!< Available item name. */
-    int entryLen;			/*!< No. of bytes in name. */
-    int entryIx;			/*!< Item index. */
-    enum indexEntryType {
-	IET_PROVIDES=1		/*!< A Provides: dependency. */
-    } type;				/*!< Type of available item. */
-} ;
-
-/** \ingroup rpmdep
- * Index of all available items.
- */
-struct availableIndex {
-    int size;				/*!< No. of available items. */
-    struct availableIndexEntry index[1]; /*!< Array of available items. */
-} ;
-
-/** \ingroup rpmdep
  * A file to be installed/removed.
  */
 struct fileIndexEntry {
