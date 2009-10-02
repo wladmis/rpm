@@ -710,7 +710,6 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
     const char * name;
     int count;
     const char ** obsoletes;
-    int alNum;
 
     /*
      * FIXME: handling upgrades like this is *almost* okay. It doesn't
@@ -726,8 +725,9 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
     if (ts->addedPackages.list == NULL)
 	return 0;
 
-    alNum = alAddPackage(&ts->addedPackages, h, key, fd, relocs) -
-    		ts->addedPackages.list;
+    struct availablePackage *alp =
+	    alAddPackage(&ts->addedPackages, h, key, fd, relocs);
+    int alNum = alp - ts->addedPackages.list;
     ts->order[ts->orderCount++].u.addedIndex = alNum;
 
     if (!upgrade || ts->rpmdb == NULL)
