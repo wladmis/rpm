@@ -1,8 +1,105 @@
 #include "system.h"
 #include "rpmlib.h"
+#include "debug.h"
 
 #include "depends.h"
 #include "al.h"
+
+struct alEntry {
+    const char *name;
+    int len;
+    /* entry-specific members */
+};
+
+struct alIndex {
+    int sorted;
+    int size;
+    /* flexible array of entries */
+};
+
+/**
+ * Compare two available index entries by name (qsort/bsearch).
+ * @param one		1st available prov entry
+ * @param two		2nd available prov entry
+ * @return		result of comparison
+ */
+static inline
+int nameCmp(const void * one, const void * two)		/*@*/
+{
+    const struct alEntry *a = one, *b = two;
+    int lencmp = a->len - b->len;
+    if (lencmp)
+	return lencmp;
+    return strcmp(a->name, b->name);
+}
+
+static
+void *axSearch(void *index, int esize, const char *name, int *nfound)
+{
+    if (nfound)
+	*nfound = 0;
+
+    struct alIndex *ax = index;
+    if (ax == NULL)
+	return NULL;
+    assert(ax->size > 0);
+
+    char *entries = (char *)(ax + 1);
+    struct alEntry needle = { name, strlen(name) };
+    if (ax->size == 1) {
+	if (nameCmp(entries, &needle))
+	    return NULL;
+	if (nfound)
+	    *nfound = 1;
+	return entries;
+    }
+    if (!ax->sorted) {
+	qsort(entries, ax->size, esize, nameCmp);
+	ax->sorted = 1;
+    }
+
+    char *first, *last;
+    first = last = bsearch(&needle, entries, ax->size, esize, nameCmp);
+    if (first == NULL)
+	return NULL;
+
+    if (nfound) {
+	*nfound = 1;
+
+	/* rewind to the first match */
+	while (first > entries) {
+	    if (nameCmp(first - esize, &needle))
+		break;
+	    first -= esize;
+	    (*nfound)++;
+	}
+
+	/* rewind to the last match */
+	while (last + esize < entries + esize * ax->size) {
+	    if (nameCmp(last + esize, &needle))
+		break;
+	    last += esize;
+	    (*nfound)++;
+	}
+    }
+
+    return first;
+}
+
+static
+void *axGrow(void *index, int esize, int more)
+{
+    struct alIndex *ax = index;
+    if (ax) {
+	assert(ax->size > 0);
+	ax = xrealloc(ax, sizeof(*ax) + esize * (ax->size + more));
+    }
+    else {
+	ax = xmalloc(sizeof(*ax) + esize * more);
+	ax->size = 0;
+    }
+    return ax;
+}
 
 /** \ingroup rpmdep
  * A single available item (e.g. a Provides: dependency).
