@@ -255,6 +255,7 @@ rpmTransactionSet rpmtransCreateSet(rpmdb rpmdb, const char * rootDir)
     ts->chrootDone = 0;
 
     alCreate(&ts->addedPackages);
+    alCreate(&ts->erasedPackages);
 
     ts->orderCount = 0;
     ts->order = NULL;
@@ -294,14 +295,30 @@ static int removePackage(rpmTransactionSet ts, int dboffset, int depends)
 	    return 0;
     }
 
+    /* Fetch header. */
+    rpmdbMatchIterator mi = rpmdbInitIterator(ts->rpmdb,
+	    RPMDBI_PACKAGES, &dboffset, sizeof(dboffset));
+    Header h = rpmdbNextIterator(mi);
+    if (h)
+	h = headerLink(h);
+    mi = rpmdbFreeIterator(mi);
+    if (h == NULL)
+	return 1;
+
+    struct availablePackage *alp =
+	    alAddPackage(&ts->erasedPackages, h, NULL, NULL, NULL);
+    int alNum = alp - ts->erasedPackages.list;
+
     AUTO_REALLOC(ts->removedPackages, ts->numRemovedPackages);
     ts->removedPackages[ts->numRemovedPackages++] = dboffset;
     qsort(ts->removedPackages, ts->numRemovedPackages, sizeof(int), intcmp);
 
     AUTO_REALLOC(ts->order, ts->orderCount);
-    ts->order[ts->orderCount].type = TR_REMOVED;
-    ts->order[ts->orderCount].u.removed.dboffset = dboffset;
-    ts->order[ts->orderCount++].u.removed.dependsOnIndex = depends;
+    transactionElement te = &ts->order[ts->orderCount++];
+    te->type = TR_REMOVED;
+    te->u.removed.dboffset = dboffset;
+    te->u.removed.dependsOnIndex = depends;
+    te->u.removed.erasedIndex = alNum;
 
     return 0;
 }
@@ -424,6 +441,7 @@ rpmTransactionSet rpmtransFree(rpmTransactionSet ts)
 {
     if (ts) {
 	alFree(&ts->addedPackages);
+	alFree(&ts->erasedPackages);
 	ts->di = _free(ts->di);
 	ts->removedPackages = _free(ts->removedPackages);
 	ts->order = _free(ts->order);

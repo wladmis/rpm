@@ -85,6 +85,7 @@ struct transactionElement_s {
 /*@unused@*/ struct {
 	    int dboffset;
 	    int dependsOnIndex;
+	    int erasedIndex;
 	} removed;
     } u;
 } ;
@@ -105,6 +106,8 @@ struct rpmTransactionSet_s {
 /*@kept@*/ /*@null@*/ rpmdb rpmdb;	/*!< Database handle. */
 /*@only@*/ int * removedPackages;	/*!< Set of packages being removed. */
     int numRemovedPackages;		/*!< No. removed rpmdb instances. */
+    struct availableList_s erasedPackages;
+				/*!< Set of packages being removed. */
     struct availableList_s addedPackages;
 				/*!< Set of packages being installed. */
 /*@only@*/ transactionElement order;
