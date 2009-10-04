@@ -1205,8 +1205,6 @@ int rpmdepOrder(rpmTransactionSet ts)
     int qlen;
     int i, j;
 
-    alMakeIndex(&ts->addedPackages);
-
     /* T1. Initialize. */
     loopcheck = npkgs;
 
@@ -1538,8 +1536,6 @@ int rpmdepCheck(rpmTransactionSet ts,
 
     *conflicts = NULL;
     *numConflicts = 0;
-
-    alMakeIndex(&ts->addedPackages);
 
     /*
      * Look at all of the added packages and make sure their dependencies

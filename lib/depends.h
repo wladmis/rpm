@@ -89,7 +89,7 @@ typedef /*@abstract@*/ struct availableList_s {
     int size;				/*!< No. of pkgs in list. */
 /*@owned@*/ /*@null@*/ dirInfo dirs;	/*!< Set of directories. */
     int numDirs;			/*!< No. of directories. */
-    struct availableIndex *index;	/*!< Set of available items. */
+    struct alProvIndex *provIndex;	/*!< Provides index. */
 } * availableList;
 
 /** \ingroup rpmdep

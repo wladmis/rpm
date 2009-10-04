@@ -104,81 +104,54 @@ void *axGrow(void *index, int esize, int more)
 /** \ingroup rpmdep
  * A single available item (e.g. a Provides: dependency).
  */
-struct availableIndexEntry {
-/*@dependent@*/ struct availablePackage * package; /*!< Containing package. */
-/*@dependent@*/ const char * entry;	/*!< Available item name. */
-    int entryLen;			/*!< No. of bytes in name. */
-    int entryIx;			/*!< Item index. */
-    enum indexEntryType {
-	IET_PROVIDES=1		/*!< A Provides: dependency. */
-    } type;				/*!< Type of available item. */
+struct alProvEntry {
+/*@dependent@*/ const char * name;	/*!< Provides name. */
+    int len;				/*!< No. of bytes in name. */
+    int pkgIx;				/*!< Containing package index. */
+    int provIx;				/*!< Provides index in package. */
 } ;
 
 /** \ingroup rpmdep
  * Index of all available items.
  */
-struct availableIndex {
+struct alProvIndex {
+    int sorted;
     int size;				/*!< No. of available items. */
-    struct availableIndexEntry index[1]; /*!< Array of available items. */
+    struct alProvEntry prov[1];		/*!< Array of available items. */
 } ;
 
-/**
- * Compare two available index entries by name (qsort/bsearch).
- * @param one		1st available index entry
- * @param two		2nd available index entry
- * @return		result of comparison
- */
-static int indexcmp(const void * one, const void * two)		/*@*/
+static
+void alIndexPkgProvides(availableList al, int pkgIx)
 {
-    const struct availableIndexEntry * a = one;
-    const struct availableIndexEntry * b = two;
-    int lenchk = a->entryLen - b->entryLen;
-
-    if (lenchk)
-	return lenchk;
-
-    return strcmp(a->entry, b->entry);
-}
-
-void alMakeIndex(availableList al)
-{
-    if (al->index) // got an index
+    const struct availablePackage *alp = &al->list[pkgIx];
+    if (alp->providesCount == 0)
 	return;
 
-    int i, j, k;
-    int ai_size = 0;
-    for (i = 0; i < al->size; i++) 
-	ai_size += al->list[i].providesCount;
-    if (ai_size == 0)
-	return;
+    struct alProvIndex *px = al->provIndex =
+	    axGrow(al->provIndex, sizeof(*px->prov), alp->providesCount);
 
-    struct availableIndex *ai = al->index =
-	    xmalloc(sizeof(*ai) + sizeof(*ai->index) * (ai_size - 1));
-    ai->size = ai_size;
-
-    k = 0;
-    for (i = 0; i < al->size; i++) {
-	for (j = 0; j < al->list[i].providesCount; j++) {
-	    ai->index[k].package = al->list + i;
-	    ai->index[k].entry = al->list[i].provides[j];
-	    ai->index[k].entryLen = strlen(al->list[i].provides[j]);
-	    ai->index[k].entryIx = j;
-	    ai->index[k].type = IET_PROVIDES;
-	    k++;
-	}
+    int provIx;
+    for (provIx = 0; provIx < alp->providesCount; provIx++) {
+	struct alProvEntry *pe = &px->prov[px->size++];
+	pe->name = alp->provides[provIx];
+	pe->len = strlen(pe->name);
+	pe->pkgIx = pkgIx;
+	pe->provIx = provIx;
     }
 
-    qsort(ai->index, ai->size, sizeof(*ai->index), indexcmp);
+    px->sorted = 0;
 }
 
-/**
- * Destroy available item index.
- * @param al		available list
- */
-static void alFreeIndex(availableList al)
-	/*@modifies al @*/
+static
+struct alProvEntry *alSearchProv(availableList al, const char *name, int *n)
 {
-    al->index = _free(al->index);
+    return axSearch(al->provIndex, sizeof(*al->provIndex->prov), name, n);
+}
+
+static
+void alFreeProvIndex(availableList al)
+{
+    al->provIndex = _free(al->provIndex);
 }
 
 /**
@@ -283,8 +256,8 @@ alAllSatisfiesDepend(const availableList al,
 		const char * keyType, const char * keyDepend,
 		const char * keyName, const char * keyEVR, int keyFlags)
 {
-    struct availablePackage * p, ** ret = NULL;
-    int i, rc, found;
+    struct availablePackage ** ret = NULL;
+    int i, n;
 
     if (*keyName == '/') {
 	ret = alAllFileSatisfiesDepend(al, keyType, keyName);
@@ -293,55 +266,25 @@ alAllSatisfiesDepend(const availableList al,
 	    return ret;
     }
 
-    const struct availableIndex *ai = al->index;
-    if (ai == NULL)
-	return NULL;
-
-    struct availableIndexEntry needle, * match;
-    needle.entry = keyName;
-    needle.entryLen = strlen(keyName);
-    match = bsearch(&needle, ai->index, ai->size, sizeof(*ai->index), indexcmp);
-    if (match == NULL)
-	return NULL;
-
-    /* rewind to the first match */
-    while (match > ai->index && indexcmp(match-1, &needle) == 0)
-	match--;
-
-    for (ret = NULL, found = 0;
-	 match < ai->index + ai->size &&
-		indexcmp(match, &needle) == 0;
-	 match++)
-    {
-
-	p = match->package;
-	rc = 0;
-	switch (match->type) {
-	case IET_PROVIDES:
-	    i = match->entryIx;
-	    {	const char * proEVR;
-		int proFlags;
-
-		proEVR = (p->providesEVR ? p->providesEVR[i] : NULL);
-		proFlags = (p->provideFlags ? p->provideFlags[i] : 0);
-		if ((keyFlags & RPMSENSE_SENSEMASK) && !(proFlags & RPMSENSE_SENSEMASK))
-		    proFlags |= RPMSENSE_EQUAL;
-		rc = rpmRangesOverlap(p->provides[i], proEVR, proFlags,
+    int found = 0;
+    const struct alProvEntry *pe = alSearchProv(al, keyName, &n);
+    for (i = 0, ret = NULL; pe && i < n; i++, pe++) {
+	struct availablePackage *alp = &al->list[pe->pkgIx];
+	int provIx = pe->provIx;
+	const char *provName = alp->provides[provIx];
+	const char *provEVR = alp->providesEVR ? alp->providesEVR[provIx] : NULL;
+	int provFlags = alp->provideFlags ? alp->provideFlags[provIx] : 0;
+	if ((keyFlags & RPMSENSE_SENSEMASK) && !(provFlags & RPMSENSE_SENSEMASK))
+	    provFlags |= RPMSENSE_EQUAL;
+	int rc = rpmRangesOverlap(provName, provEVR, provFlags,
 				keyName, keyEVR, keyFlags);
-		if (rc)
-		    /*@switchbreak@*/ break;
-	    }
-	    if (keyType && keyDepend && rc)
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provide)\n"),
-				keyType, keyDepend+2);
-	    break;
-	}
-
-	if (rc) {
-	    ret = xrealloc(ret, (found + 2) * sizeof(*ret));
-	    if (ret)	/* can't happen */
-		ret[found++] = p;
-	}
+	if (rc == 0)
+	    continue;
+	if (keyType && keyDepend)
+	    rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provide)\n"),
+			    keyType, keyDepend+2);
+	ret = xrealloc(ret, (found + 2) * sizeof(*ret));
+	ret[found++] = alp;
     }
 
     if (ret)
@@ -500,8 +443,7 @@ alAddPackage(availableList al,
 	p->relocs = NULL;
     }
 
-    alFreeIndex(al);
-
+    alIndexPkgProvides(al, pkgNum);
     return p;
 }
 
@@ -550,5 +492,5 @@ void alFree(availableList al)
     al->dirs = _free(al->dirs);
     al->numDirs = 0;
     al->list = _free(al->list);
-    alFreeIndex(al);
+    alFreeProvIndex(al);
 }

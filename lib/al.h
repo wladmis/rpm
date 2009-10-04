@@ -13,7 +13,7 @@ void alCreate(availableList al)
     al->size = 0;
     al->dirs = NULL;
     al->numDirs = 0;
-    al->index = NULL;
+    al->provIndex = NULL;
 }
 
 /**
@@ -37,13 +37,6 @@ alAddPackage(availableList al,
 		Header h, /*@null@*/ /*@dependent@*/ const void * key,
 		/*@null@*/ FD_t fd, /*@null@*/ rpmRelocation * relocs)
 	/*@modifies al, h @*/;
-
-/**
- * Generate index for available list.
- * @param al		available list
- */
-void alMakeIndex(availableList al)
-	/*@modifies al @*/;
 
 /**
  * Check added package file lists for package(s) that have a provide.
