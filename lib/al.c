@@ -284,55 +284,46 @@ void alFreeDirIndex(availableList al)
     }
 }
 
-/**
- * Check added package file lists for package(s) that provide a file.
- * @param al		available list
- * @param keyType	type of dependency
- * @param fileName	file name to search for
- * @return		available package pointer
- */
-static /*@only@*/ /*@null@*/ struct availablePackage **
-alAllFileSatisfiesDepend(const availableList al,
-		const char * keyType, const char * fileName)
-	/*@*/
-{
-    struct availablePackage ** ret = NULL;
-    int i, n;
-    int found = 0;
-    const struct alFileEntry *fe = alSearchFile(al, fileName, &n);
-    for (i = 0, ret = NULL; fe && i < n; i++, fe++) {
-	struct availablePackage *alp = &al->list[fe->pkgIx];
-	if (keyType)
-	    rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added files)\n"),
-		    keyType, fileName);
-	ret = xrealloc(ret, (found+2) * sizeof(*ret));
-	ret[found++] = alp;
-    }
-
-    if (ret)
-	ret[found] = NULL;
-    return ret;
-}
-
 struct availablePackage **
 alAllSatisfiesDepend(const availableList al,
 		const char * keyType, const char * keyDepend,
 		const char * keyName, const char * keyEVR, int keyFlags)
 {
     struct availablePackage ** ret = NULL;
+    int found = 0;
     int i, n;
 
-    if (*keyName == '/') {
-	ret = alAllFileSatisfiesDepend(al, keyType, keyName);
-	/* XXX Provides: /path was broken with added packages (#52183). */
-	if (ret != NULL && *ret != NULL)
-	    return ret;
+    if (*keyName == '/' && (keyFlags & RPMSENSE_SENSEMASK) == 0) {
+	const struct alFileEntry *fe = alSearchFile(al, keyName, &n);
+	for (i = 0; fe && i < n; i++, fe++) {
+	    struct availablePackage *alp = &al->list[fe->pkgIx];
+	    int j, already = 0;
+	    for (j = 0; j < found; j++)
+		if (ret[j] == alp) {
+		    already = 1;
+		    break;
+		}
+	    if (already)
+		continue;
+	    if (keyType)
+		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added files)\n"),
+			keyType, keyName);
+	    ret = xrealloc(ret, (found + 2) * sizeof(*ret));
+	    ret[found++] = alp;
+	}
     }
 
-    int found = 0;
     const struct alProvEntry *pe = alSearchProv(al, keyName, &n);
-    for (i = 0, ret = NULL; pe && i < n; i++, pe++) {
+    for (i = 0; pe && i < n; i++, pe++) {
 	struct availablePackage *alp = &al->list[pe->pkgIx];
+	int j, already = 0;
+	for (j = 0; j < found; j++)
+	    if (ret[j] == alp) {
+		already = 1;
+		break;
+	    }
+	if (already)
+	    continue;
 	int provIx = pe->provIx;
 	const char *provName = alp->provides[provIx];
 	const char *provEVR = alp->providesEVR ? alp->providesEVR[provIx] : NULL;
@@ -352,7 +343,6 @@ alAllSatisfiesDepend(const availableList al,
 
     if (ret)
 	ret[found] = NULL;
-
     return ret;
 }
 
