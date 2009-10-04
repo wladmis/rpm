@@ -581,9 +581,11 @@ static int unsatisfiedDepend(rpmTransactionSet ts,
 	goto unsatisfied;
     }
 
-    if (alSatisfiesDepend(&ts->addedPackages, keyType, keyDepend,
-		keyName, keyEVR, keyFlags))
+    if (alSatisfiesDepend(&ts->addedPackages, keyName, keyEVR, keyFlags))
     {
+	/* XXX here we do not discern between files and provides */
+	rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provide)\n"),
+			keyType, keyDepend+2);
 	goto exit;
     }
 
@@ -1098,7 +1100,7 @@ static inline int addRelation( const rpmTransactionSet ts,
     if (!p->requires || !p->requiresEVR || !p->requireFlags)
 	return 0;
 
-    q = alSatisfiesDepend(&ts->addedPackages, NULL, NULL,
+    q = alSatisfiesDepend(&ts->addedPackages,
 		p->requires[j], p->requiresEVR[j], p->requireFlags[j]);
 
     /* Ordering depends only on added package relations. */

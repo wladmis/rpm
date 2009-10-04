@@ -286,7 +286,6 @@ void alFreeDirIndex(availableList al)
 
 struct availablePackage **
 alAllSatisfiesDepend(const availableList al,
-		const char * keyType, const char * keyDepend,
 		const char * keyName, const char * keyEVR, int keyFlags)
 {
     struct availablePackage ** ret = NULL;
@@ -305,9 +304,6 @@ alAllSatisfiesDepend(const availableList al,
 		}
 	    if (already)
 		continue;
-	    if (keyType)
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added files)\n"),
-			keyType, keyName);
 	    ret = xrealloc(ret, (found + 2) * sizeof(*ret));
 	    ret[found++] = alp;
 	}
@@ -334,9 +330,6 @@ alAllSatisfiesDepend(const availableList al,
 				keyName, keyEVR, keyFlags);
 	if (rc == 0)
 	    continue;
-	if (keyType && keyDepend)
-	    rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provide)\n"),
-			    keyType, keyDepend+2);
 	ret = xrealloc(ret, (found + 2) * sizeof(*ret));
 	ret[found++] = alp;
     }

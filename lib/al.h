@@ -40,8 +40,6 @@ alAddPackage(availableList al,
 /**
  * Check added package file lists for package(s) that have a provide.
  * @param al		available list
- * @param keyType	type of dependency
- * @param keyDepend	dependency string representation
  * @param keyName	dependency name string
  * @param keyEVR	dependency [epoch:]version[-release] string
  * @param keyFlags	dependency logical range qualifiers
@@ -49,7 +47,6 @@ alAddPackage(availableList al,
  */
 /*@only@*/ /*@null@*/ struct availablePackage **
 alAllSatisfiesDepend(const availableList al,
-		const char * keyType, const char * keyDepend,
 		const char * keyName, const char * keyEVR, int keyFlags)
 	/*@*/;
 
@@ -57,8 +54,6 @@ alAllSatisfiesDepend(const availableList al,
  * Check added package file lists for first package that has a provide.
  * @todo Eliminate.
  * @param al		available list
- * @param keyType	type of dependency
- * @param keyDepend	dependency string representation
  * @param keyName	dependency name string
  * @param keyEVR	dependency [epoch:]version[-release] string
  * @param keyFlags	dependency logical range qualifiers
@@ -66,13 +61,12 @@ alAllSatisfiesDepend(const availableList al,
  */
 static inline /*@only@*/ /*@null@*/ struct availablePackage *
 alSatisfiesDepend(const availableList al,
-		const char * keyType, const char * keyDepend,
 		const char * keyName, const char * keyEVR, int keyFlags)
 	/*@*/
 {
     struct availablePackage * ret;
     struct availablePackage ** tmp =
-	alAllSatisfiesDepend(al, keyType, keyDepend, keyName, keyEVR, keyFlags);
+	alAllSatisfiesDepend(al, keyName, keyEVR, keyFlags);
 
     if (tmp) {
 	ret = tmp[0];
