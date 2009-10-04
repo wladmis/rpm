@@ -43,7 +43,6 @@ struct availablePackage {
 /*@owned@*//*@null@*/ const char ** requires;	/*!< Requires: name strings. */
 /*@owned@*//*@null@*/ const char ** requiresEVR;/*!< Requires: [epoch:]version[-release] strings. */
 /*@dependent@*//*@null@*/ int * requireFlags;	/*!< Requires: logical range qualifiers. */
-/*@owned@*//*@null@*/ const char ** baseNames;	/*!< Header file basenames. */
 /*@dependent@*//*@null@*/ int_32 * epoch;	/*!< Header epoch (if any). */
     int providesCount;			/*!< No. of Provide:'s in header. */
     int requiresCount;			/*!< No. of Require:'s in header. */
@@ -64,55 +63,13 @@ struct availablePackage {
 } ;
 
 /** \ingroup rpmdep
- * A single available item (e.g. a Provides: dependency).
- */
-struct availableIndexEntry {
-/*@dependent@*/ struct availablePackage * package; /*!< Containing package. */
-/*@dependent@*/ const char * entry;	/*!< Available item name. */
-    int entryLen;			/*!< No. of bytes in name. */
-    int entryIx;			/*!< Item index. */
-    enum indexEntryType {
-	IET_PROVIDES=1		/*!< A Provides: dependency. */
-    } type;				/*!< Type of available item. */
-} ;
-
-/** \ingroup rpmdep
- * Index of all available items.
- */
-struct availableIndex {
-/*@null@*/ struct availableIndexEntry * index; /*!< Array of available items. */
-    int size;				/*!< No. of available items. */
-} ;
-
-/** \ingroup rpmdep
- * A file to be installed/removed.
- */
-struct fileIndexEntry {
-    int pkgNum;				/*!< Containing package number. */
-/*@dependent@*/ /*@null@*/ const char * baseName;	/*!< File basename. */
-} ;
-
-/** \ingroup rpmdep
- * A directory to be installed/removed.
- */
-typedef struct dirInfo_s {
-/*@owned@*/ const char * dirName;	/*!< Directory path (+ trailing '/'). */
-    int dirNameLen;			/*!< No. bytes in directory path. */
-/*@owned@*/ struct fileIndexEntry * files; /*!< Array of files in directory. */
-    int numFiles;			/*!< No. files in directory. */
-} * dirInfo ;
-
-/** \ingroup rpmdep
  * Set of available packages, items, and directories.
  */
 typedef /*@abstract@*/ struct availableList_s {
 /*@owned@*/ /*@null@*/ struct availablePackage * list;	/*!< Set of packages. */
-    struct availableIndex index;	/*!< Set of available items. */
-    int delta;				/*!< Delta for pkg list reallocation. */
     int size;				/*!< No. of pkgs in list. */
-    int alloced;			/*!< No. of pkgs allocated for list. */
-    int numDirs;			/*!< No. of directories. */
-/*@owned@*/ /*@null@*/ dirInfo dirs;	/*!< Set of directories. */
+    struct alDirIndex *dirIndex;	/*!< Files index. */
+    struct alProvIndex *provIndex;	/*!< Provides index. */
 } * availableList;
 
 /** \ingroup rpmdep
@@ -148,20 +105,17 @@ struct rpmTransactionSet_s {
 /*@kept@*/ /*@null@*/ rpmdb rpmdb;	/*!< Database handle. */
 /*@only@*/ int * removedPackages;	/*!< Set of packages being removed. */
     int numRemovedPackages;		/*!< No. removed rpmdb instances. */
-    int allocedRemovedPackages;		/*!< Size of removed packages array. */
     struct availableList_s addedPackages;
 				/*!< Set of packages being installed. */
 /*@only@*/ transactionElement order;
 				/*!< Packages sorted by dependencies. */
     int orderCount;		/*!< No. of transaction elements. */
-    int orderAlloced;		/*!< No. of allocated transaction elements. */
 /*@only@*/ TFI_t flList;	/*!< Transaction element(s) file info. */
     int flEntries;		/*!< No. of transaction elements. */
     int chrootDone;		/*!< Has chroot(2) been been done? */
 /*@only@*/ const char * rootDir;/*!< Path to top of install tree. */
 /*@only@*/ const char * currDir;/*!< Current working directory. */
 /*@null@*/ FD_t scriptFd;	/*!< Scriptlet stdout/stderr. */
-    int delta;			/*!< Delta for reallocation. */
     int id;			/*!< Transaction id. */
 } ;
 
@@ -171,7 +125,6 @@ struct rpmTransactionSet_s {
 typedef /*@abstract@*/ struct problemsSet_s {
     rpmDependencyConflict problems;	/*!< Problems encountered. */
     int num;			/*!< No. of problems found. */
-    int alloced;		/*!< No. of problems allocated. */
 } * problemsSet;
 
 #ifdef __cplusplus
@@ -195,5 +148,12 @@ int headerMatchesDepFlags(Header h,
 #ifdef __cplusplus
 }
 #endif
+
+#define REALLOC_DELTA 8
+#define AUTO_REALLOC(ptr, size) \
+    do { \
+	if (((size) & (REALLOC_DELTA - 1)) == 0) \
+	    ptr = xrealloc((ptr), sizeof(*(ptr)) * ((size) + REALLOC_DELTA)); \
+    } while (0)
 
 #endif	/* H_DEPENDS */

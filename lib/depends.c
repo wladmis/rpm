@@ -8,6 +8,7 @@
 #include "rpmmacro.h"		/* XXX for rpmExpand() */
 
 #include "depends.h"
+#include "al.h"
 #include "rpmdb.h"		/* XXX response cache needs dbiOpen et al. */
 
 #include "debug.h"
@@ -96,331 +97,6 @@ struct orderListIndex {
     int alIndex;
     int orIndex;
 };
-
-/**
- * Destroy available item index.
- * @param al		available list
- */
-static void alFreeIndex(availableList al)
-	/*@modifies al @*/
-{
-    if (al->index.size) {
-	al->index.index = _free(al->index.index);
-	al->index.size = 0;
-    }
-}
-
-/**
- * Initialize available packckages, items, and directories list.
- * @param al		available list
- */
-static void alCreate(availableList al)
-	/*@modifies al @*/
-{
-    al->alloced = al->delta;
-    al->size = 0;
-    al->list = xcalloc(al->alloced, sizeof(*al->list));
-
-    al->index.index = NULL;
-    al->index.size = 0;
-
-    al->numDirs = 0;
-    al->dirs = NULL;
-}
-
-/**
- * Free available packages, items, and directories members.
- * @param al		available list
- */
-static void alFree(availableList al)
-	/*@modifies al @*/
-{
-    HFD_t hfd = headerFreeData;
-    struct availablePackage * p;
-    rpmRelocation * r;
-    int i;
-
-    if ((p = al->list) != NULL)
-    for (i = 0; i < al->size; i++, p++) {
-
-	{   tsortInfo tsi;
-	    while ((tsi = p->tsi.tsi_next) != NULL) {
-		p->tsi.tsi_next = tsi->tsi_next;
-		tsi->tsi_next = NULL;
-		tsi = _free(tsi);
-	    }
-	}
-
-	p->provides = hfd(p->provides, -1);
-	p->providesEVR = hfd(p->providesEVR, -1);
-	p->requires = hfd(p->requires, -1);
-	p->requiresEVR = hfd(p->requiresEVR, -1);
-	p->baseNames = hfd(p->baseNames, -1);
-	p->h = headerFree(p->h);
-
-	if (p->relocs) {
-	    for (r = p->relocs; (r->oldPath || r->newPath); r++) {
-		r->oldPath = _free(r->oldPath);
-		r->newPath = _free(r->newPath);
-	    }
-	    p->relocs = _free(p->relocs);
-	}
-	if (p->fd != NULL)
-	    p->fd = fdFree(p->fd, "alAddPackage (alFree)");
-    }
-
-    if (al->dirs != NULL)
-    for (i = 0; i < al->numDirs; i++) {
-	al->dirs[i].dirName = _free(al->dirs[i].dirName);
-	al->dirs[i].files = _free(al->dirs[i].files);
-    }
-
-    al->dirs = _free(al->dirs);
-    al->numDirs = 0;
-    al->list = _free(al->list);
-    al->alloced = 0;
-    alFreeIndex(al);
-}
-
-/**
- * Compare two directory info entries by name (qsort/bsearch).
- * @param one		1st directory info
- * @param two		2nd directory info
- * @return		result of comparison
- */
-static int dirInfoCompare(const void * one, const void * two)	/*@*/
-{
-    const dirInfo a = (const dirInfo) one;
-    const dirInfo b = (const dirInfo) two;
-    int lenchk = a->dirNameLen - b->dirNameLen;
-
-    if (lenchk)
-	return lenchk;
-
-    /* XXX FIXME: this might do "backward" strcmp for speed */
-    return strcmp(a->dirName, b->dirName);
-}
-
-/**
- * Add package to available list.
- * @param al		available list
- * @param h		package header
- * @param key		package private data
- * @param fd		package file handle
- * @param relocs	package file relocations
- * @return		available package pointer
- */
-static /*@exposed@*/ struct availablePackage *
-alAddPackage(availableList al,
-		Header h, /*@null@*/ /*@dependent@*/ const void * key,
-		/*@null@*/ FD_t fd, /*@null@*/ rpmRelocation * relocs)
-	/*@modifies al, h @*/
-{
-    HGE_t hge = (HGE_t)headerGetEntryMinMemory;
-    HFD_t hfd = headerFreeData;
-    rpmTagType dnt, bnt;
-    struct availablePackage * p;
-    rpmRelocation * r;
-    int i;
-    int_32 * dirIndexes;
-    const char ** dirNames;
-    int numDirs, dirNum;
-    int * dirMapping;
-    struct dirInfo_s dirNeedle;
-    dirInfo dirMatch;
-    int first, last, fileNum;
-    int origNumDirs;
-    int pkgNum;
-
-    if (al->size == al->alloced) {
-	al->alloced += al->delta;
-	al->list = xrealloc(al->list, sizeof(*al->list) * al->alloced);
-    }
-
-    pkgNum = al->size++;
-    p = al->list + pkgNum;
-    p->h = headerLink(h);	/* XXX reference held by transaction set */
-    p->depth = p->npreds = 0;
-    memset(&p->tsi, 0, sizeof(p->tsi));
-
-    (void) headerNVR(p->h, &p->name, &p->version, &p->release);
-
-    if (!hge(h, RPMTAG_EPOCH, NULL, (void **) &p->epoch, NULL))
-	p->epoch = NULL;
-
-    if (!hge(h, RPMTAG_BUILDTIME, NULL, (void **) &p->buildtime, NULL))
-	p->buildtime = NULL;
-
-    if (!hge(h, RPMTAG_PROVIDENAME, NULL, (void **) &p->provides,
-	&p->providesCount)) {
-	p->providesCount = 0;
-	p->provides = NULL;
-	p->providesEVR = NULL;
-	p->provideFlags = NULL;
-    } else {
-	if (!hge(h, RPMTAG_PROVIDEVERSION,
-			NULL, (void **) &p->providesEVR, NULL))
-	    p->providesEVR = NULL;
-	if (!hge(h, RPMTAG_PROVIDEFLAGS,
-			NULL, (void **) &p->provideFlags, NULL))
-	    p->provideFlags = NULL;
-    }
-
-    if (!hge(h, RPMTAG_REQUIRENAME, NULL, (void **) &p->requires,
-	&p->requiresCount)) {
-	p->requiresCount = 0;
-	p->requires = NULL;
-	p->requiresEVR = NULL;
-	p->requireFlags = NULL;
-    } else {
-	if (!hge(h, RPMTAG_REQUIREVERSION,
-			NULL, (void **) &p->requiresEVR, NULL))
-	    p->requiresEVR = NULL;
-	if (!hge(h, RPMTAG_REQUIREFLAGS,
-			NULL, (void **) &p->requireFlags, NULL))
-	    p->requireFlags = NULL;
-    }
-
-    if (!hge(h, RPMTAG_BASENAMES, &bnt, (void **)&p->baseNames, &p->filesCount))
-    {
-	p->filesCount = 0;
-	p->baseNames = NULL;
-    } else {
-	(void) hge(h, RPMTAG_DIRNAMES, &dnt, (void **) &dirNames, &numDirs);
-	(void) hge(h, RPMTAG_DIRINDEXES, NULL, (void **) &dirIndexes, NULL);
-
-	/* XXX FIXME: We ought to relocate the directory list here */
-
-	dirMapping = alloca(sizeof(*dirMapping) * numDirs);
-
-	/* allocated enough space for all the directories we could possible
-	   need to add */
-	al->dirs = xrealloc(al->dirs, 
-			    sizeof(*al->dirs) * (al->numDirs + numDirs));
-	origNumDirs = al->numDirs;
-
-	for (dirNum = 0; dirNum < numDirs; dirNum++) {
-	    dirNeedle.dirName = (char *) dirNames[dirNum];
-	    dirNeedle.dirNameLen = strlen(dirNames[dirNum]);
-	    dirMatch = bsearch(&dirNeedle, al->dirs, origNumDirs,
-			       sizeof(dirNeedle), dirInfoCompare);
-	    if (dirMatch) {
-		dirMapping[dirNum] = dirMatch - al->dirs;
-	    } else {
-		dirMapping[dirNum] = al->numDirs;
-		al->dirs[al->numDirs].dirName = xstrdup(dirNames[dirNum]);
-		al->dirs[al->numDirs].dirNameLen = strlen(dirNames[dirNum]);
-		al->dirs[al->numDirs].files = NULL;
-		al->dirs[al->numDirs].numFiles = 0;
-		al->numDirs++;
-	    }
-	}
-
-	dirNames = hfd(dirNames, dnt);
-
-	first = 0;
-	while (first < p->filesCount) {
-	    last = first;
-	    while ((last + 1) < p->filesCount) {
-		if (dirIndexes[first] != dirIndexes[last + 1])
-		    /*@innerbreak@*/ break;
-		last++;
-	    }
-
-	    dirMatch = al->dirs + dirMapping[dirIndexes[first]];
-	    dirMatch->files = xrealloc(dirMatch->files,
-		sizeof(*dirMatch->files) * 
-		    (dirMatch->numFiles + last - first + 1));
-	    if (p->baseNames != NULL)	/* XXX can't happen */
-	    for (fileNum = first; fileNum <= last; fileNum++) {
-		dirMatch->files[dirMatch->numFiles].baseName =
-		    p->baseNames[fileNum];
-		dirMatch->files[dirMatch->numFiles].pkgNum = pkgNum;
-		dirMatch->numFiles++;
-	    }
-
-	    first = last + 1;
-	}
-
-	if (origNumDirs + al->numDirs)
-	    qsort(al->dirs, al->numDirs, sizeof(dirNeedle), dirInfoCompare);
-
-    }
-
-    p->key = key;
-    p->fd = (fd != NULL ? fdLink(fd, "alAddPackage") : NULL);
-
-    if (relocs) {
-	for (i = 0, r = relocs; r->oldPath || r->newPath; i++, r++)
-	    {};
-	p->relocs = xmalloc((i + 1) * sizeof(*p->relocs));
-
-	for (i = 0, r = relocs; r->oldPath || r->newPath; i++, r++) {
-	    p->relocs[i].oldPath = r->oldPath ? xstrdup(r->oldPath) : NULL;
-	    p->relocs[i].newPath = r->newPath ? xstrdup(r->newPath) : NULL;
-	}
-	p->relocs[i].oldPath = NULL;
-	p->relocs[i].newPath = NULL;
-    } else {
-	p->relocs = NULL;
-    }
-
-    alFreeIndex(al);
-
-    return p;
-}
-
-/**
- * Compare two available index entries by name (qsort/bsearch).
- * @param one		1st available index entry
- * @param two		2nd available index entry
- * @return		result of comparison
- */
-static int indexcmp(const void * one, const void * two)		/*@*/
-{
-    const struct availableIndexEntry * a = one;
-    const struct availableIndexEntry * b = two;
-    int lenchk = a->entryLen - b->entryLen;
-
-    if (lenchk)
-	return lenchk;
-
-    return strcmp(a->entry, b->entry);
-}
-
-/**
- * Generate index for available list.
- * @param al		available list
- */
-static void alMakeIndex(availableList al)
-	/*@modifies al @*/
-{
-    struct availableIndex * ai = &al->index;
-    int i, j, k;
-
-    if (ai->size || al->list == NULL) return;
-
-    for (i = 0; i < al->size; i++) 
-	ai->size += al->list[i].providesCount;
-
-    if (ai->size) {
-	ai->index = xcalloc(ai->size, sizeof(*ai->index));
-
-	k = 0;
-	for (i = 0; i < al->size; i++) {
-	    for (j = 0; j < al->list[i].providesCount; j++) {
-		ai->index[k].package = al->list + i;
-		ai->index[k].entry = al->list[i].provides[j];
-		ai->index[k].entryLen = strlen(al->list[i].provides[j]);
-		ai->index[k].entryIx = j;
-		ai->index[k].type = IET_PROVIDES;
-		k++;
-	    }
-	}
-
-	qsort(ai->index, ai->size, sizeof(*ai->index), indexcmp);
-    }
-}
 
 /* parseEVR() moved to rpmvercmp.c */
 
@@ -536,7 +212,7 @@ static int rangeMatchesDepFlags (Header h,
 	    continue;
 
 	if (!(provideFlags[i] & RPMSENSE_SENSEMASK))
-	    provideFlags[i] |= RPMSENSE_EQUAL;
+	    provideFlags[i] |= RPMSENSE_EQUAL; /* ALT21-139-g6cb9a9a */
 	result = rpmRangesOverlap(provides[i], providesEVR[i], provideFlags[i],
 			reqName, reqEVR, reqFlags);
 
@@ -595,12 +271,9 @@ rpmTransactionSet rpmtransCreateSet(rpmdb rpmdb, const char * rootDir)
     /*@=assignexpose@*/
     ts->scriptFd = NULL;
     ts->id = 0;
-    ts->delta = 5;
 
     ts->numRemovedPackages = 0;
-    ts->allocedRemovedPackages = ts->delta;
-    ts->removedPackages = xcalloc(ts->allocedRemovedPackages,
-			sizeof(*ts->removedPackages));
+    ts->removedPackages = NULL;
 
     /* This canonicalizes the root */
     rootLen = strlen(rootDir);
@@ -617,12 +290,10 @@ rpmTransactionSet rpmtransCreateSet(rpmdb rpmdb, const char * rootDir)
     ts->currDir = NULL;
     ts->chrootDone = 0;
 
-    ts->addedPackages.delta = ts->delta;
     alCreate(&ts->addedPackages);
 
-    ts->orderAlloced = ts->delta;
     ts->orderCount = 0;
-    ts->order = xcalloc(ts->orderAlloced, sizeof(*ts->order));
+    ts->order = NULL;
 
     return ts;
 }
@@ -659,22 +330,11 @@ static int removePackage(rpmTransactionSet ts, int dboffset, int depends)
 	    return 0;
     }
 
-    if (ts->numRemovedPackages == ts->allocedRemovedPackages) {
-	ts->allocedRemovedPackages += ts->delta;
-	ts->removedPackages = xrealloc(ts->removedPackages,
-		sizeof(int *) * ts->allocedRemovedPackages);
-    }
+    AUTO_REALLOC(ts->removedPackages, ts->numRemovedPackages);
+    ts->removedPackages[ts->numRemovedPackages++] = dboffset;
+    qsort(ts->removedPackages, ts->numRemovedPackages, sizeof(int), intcmp);
 
-    if (ts->removedPackages != NULL) {	/* XXX can't happen. */
-	ts->removedPackages[ts->numRemovedPackages++] = dboffset;
-	qsort(ts->removedPackages, ts->numRemovedPackages, sizeof(int), intcmp);
-    }
-
-    if (ts->orderCount == ts->orderAlloced) {
-	ts->orderAlloced += ts->delta;
-	ts->order = xrealloc(ts->order, sizeof(*ts->order) * ts->orderAlloced);
-    }
-
+    AUTO_REALLOC(ts->order, ts->orderCount);
     ts->order[ts->orderCount].type = TR_REMOVED;
     ts->order[ts->orderCount].u.removed.dboffset = dboffset;
     ts->order[ts->orderCount++].u.removed.dependsOnIndex = depends;
@@ -710,7 +370,6 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
     const char * name;
     int count;
     const char ** obsoletes;
-    int alNum;
 
     /*
      * FIXME: handling upgrades like this is *almost* okay. It doesn't
@@ -718,16 +377,11 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
      * makes it difficult to generate a return code based on the number of
      * packages which failed.
      */
-    if (ts->orderCount == ts->orderAlloced) {
-	ts->orderAlloced += ts->delta;
-	ts->order = xrealloc(ts->order, sizeof(*ts->order) * ts->orderAlloced);
-    }
+    struct availablePackage *alp =
+	    alAddPackage(&ts->addedPackages, h, key, fd, relocs);
+    int alNum = alp - ts->addedPackages.list;
+    AUTO_REALLOC(ts->order, ts->orderCount);
     ts->order[ts->orderCount].type = TR_ADDED;
-    if (ts->addedPackages.list == NULL)
-	return 0;
-
-    alNum = alAddPackage(&ts->addedPackages, h, key, fd, relocs) -
-    		ts->addedPackages.list;
     ts->order[ts->orderCount++].u.addedIndex = alNum;
 
     if (!upgrade || ts->rpmdb == NULL)
@@ -839,221 +493,6 @@ rpmDependencyConflict rpmdepFreeConflicts(rpmDependencyConflict conflicts,
 }
 
 /**
- * Check added package file lists for package(s) that provide a file.
- * @param al		available list
- * @param keyType	type of dependency
- * @param fileName	file name to search for
- * @return		available package pointer
- */
-static /*@only@*/ /*@null@*/ struct availablePackage **
-alAllFileSatisfiesDepend(const availableList al,
-		const char * keyType, const char * fileName)
-	/*@*/
-{
-    int i, found;
-    const char * dirName;
-    const char * baseName;
-    struct dirInfo_s dirNeedle;
-    dirInfo dirMatch;
-    struct availablePackage ** ret;
-
-    /* Solaris 2.6 bsearch sucks down on this. */
-    if (al->numDirs == 0 || al->dirs == NULL || al->list == NULL)
-	return NULL;
-
-    {	char * t;
-	dirName = t = xstrdup(fileName);
-	if ((t = strrchr(t, '/')) != NULL) {
-	    t++;		/* leave the trailing '/' */
-	    *t = '\0';
-	}
-    }
-
-    dirNeedle.dirName = (char *) dirName;
-    dirNeedle.dirNameLen = strlen(dirName);
-    dirMatch = bsearch(&dirNeedle, al->dirs, al->numDirs,
-		       sizeof(dirNeedle), dirInfoCompare);
-    if (dirMatch == NULL) {
-	dirName = _free(dirName);
-	return NULL;
-    }
-
-    /* rewind to the first match */
-    while (dirMatch > al->dirs && dirInfoCompare(dirMatch-1, &dirNeedle) == 0)
-	dirMatch--;
-
-    /*@-nullptrarith@*/		/* FIX: fileName NULL ??? */
-    baseName = strrchr(fileName, '/') + 1;
-    /*@=nullptrarith@*/
-
-    for (found = 0, ret = NULL;
-	 dirMatch <= al->dirs + al->numDirs &&
-		dirInfoCompare(dirMatch, &dirNeedle) == 0;
-	 dirMatch++)
-    {
-	/* XXX FIXME: these file lists should be sorted and bsearched */
-	for (i = 0; i < dirMatch->numFiles; i++) {
-	    if (dirMatch->files[i].baseName == NULL ||
-			strcmp(dirMatch->files[i].baseName, baseName))
-		continue;
-
-	    if (keyType)
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added files)\n"),
-			keyType, fileName);
-
-	    ret = xrealloc(ret, (found+2) * sizeof(*ret));
-	    if (ret)	/* can't happen */
-		ret[found++] = al->list + dirMatch->files[i].pkgNum;
-	    /*@innerbreak@*/ break;
-	}
-    }
-
-    dirName = _free(dirName);
-    /*@-mods@*/		/* FIX: al->list might be modified. */
-    if (ret)
-	ret[found] = NULL;
-    /*@=mods@*/
-    return ret;
-}
-
-#ifdef	DYING
-/**
- * Check added package file lists for first package that provides a file.
- * @param al		available list
- * @param keyType	type of dependency
- * @param fileName	file name to search for
- * @return		available package pointer
- */
-/*@unused@*/ static /*@dependent@*/ /*@null@*/ struct availablePackage *
-alFileSatisfiesDepend(const availableList al,
-		const char * keyType, const char * fileName)
-	/*@*/
-{
-    struct availablePackage * ret;
-    struct availablePackage ** tmp =
-		alAllFileSatisfiesDepend(al, keyType, fileName);
-
-    if (tmp) {
-	ret = tmp[0];
-	tmp = _free(tmp);
-	return ret;
-    }
-    return NULL;
-}
-#endif	/* DYING */
-
-/**
- * Check added package file lists for package(s) that have a provide.
- * @param al		available list
- * @param keyType	type of dependency
- * @param keyDepend	dependency string representation
- * @param keyName	dependency name string
- * @param keyEVR	dependency [epoch:]version[-release] string
- * @param keyFlags	dependency logical range qualifiers
- * @return		available package pointer
- */
-static /*@only@*/ /*@null@*/ struct availablePackage **
-alAllSatisfiesDepend(const availableList al,
-		const char * keyType, const char * keyDepend,
-		const char * keyName, const char * keyEVR, int keyFlags)
-	/*@*/
-{
-    struct availableIndexEntry needle, * match;
-    struct availablePackage * p, ** ret = NULL;
-    int i, rc, found;
-
-    if (*keyName == '/') {
-	ret = alAllFileSatisfiesDepend(al, keyType, keyName);
-	/* XXX Provides: /path was broken with added packages (#52183). */
-	if (ret != NULL && *ret != NULL)
-	    return ret;
-    }
-
-    if (!al->index.size || al->index.index == NULL) return NULL;
-
-    needle.entry = keyName;
-    needle.entryLen = strlen(keyName);
-    match = bsearch(&needle, al->index.index, al->index.size,
-		    sizeof(*al->index.index), indexcmp);
-
-    if (match == NULL) return NULL;
-
-    /* rewind to the first match */
-    while (match > al->index.index && indexcmp(match-1, &needle) == 0)
-	match--;
-
-    for (ret = NULL, found = 0;
-	 match < al->index.index + al->index.size &&
-		indexcmp(match, &needle) == 0;
-	 match++)
-    {
-
-	p = match->package;
-	rc = 0;
-	switch (match->type) {
-	case IET_PROVIDES:
-	    i = match->entryIx;
-	    {	const char * proEVR;
-		int proFlags;
-
-		proEVR = (p->providesEVR ? p->providesEVR[i] : NULL);
-		proFlags = (p->provideFlags ? p->provideFlags[i] : 0);
-		if ((keyFlags & RPMSENSE_SENSEMASK) && !(proFlags & RPMSENSE_SENSEMASK))
-		    proFlags |= RPMSENSE_EQUAL;
-		rc = rpmRangesOverlap(p->provides[i], proEVR, proFlags,
-				keyName, keyEVR, keyFlags);
-		if (rc)
-		    /*@switchbreak@*/ break;
-	    }
-	    if (keyType && keyDepend && rc)
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provide)\n"),
-				keyType, keyDepend+2);
-	    break;
-	}
-
-	if (rc) {
-	    ret = xrealloc(ret, (found + 2) * sizeof(*ret));
-	    if (ret)	/* can't happen */
-		ret[found++] = p;
-	}
-    }
-
-    if (ret)
-	ret[found] = NULL;
-
-    return ret;
-}
-
-/**
- * Check added package file lists for first package that has a provide.
- * @todo Eliminate.
- * @param al		available list
- * @param keyType	type of dependency
- * @param keyDepend	dependency string representation
- * @param keyName	dependency name string
- * @param keyEVR	dependency [epoch:]version[-release] string
- * @param keyFlags	dependency logical range qualifiers
- * @return		available package pointer
- */
-static inline /*@only@*/ /*@null@*/ struct availablePackage *
-alSatisfiesDepend(const availableList al,
-		const char * keyType, const char * keyDepend,
-		const char * keyName, const char * keyEVR, int keyFlags)
-	/*@*/
-{
-    struct availablePackage * ret;
-    struct availablePackage ** tmp =
-	alAllSatisfiesDepend(al, keyType, keyDepend, keyName, keyEVR, keyFlags);
-
-    if (tmp) {
-	ret = tmp[0];
-	tmp = _free(tmp);
-	return ret;
-    }
-    return NULL;
-}
-
-/**
  * Check key for an unsatisfied dependency.
  * @todo Eliminate rpmrc provides.
  * @param ts		transaction set
@@ -1142,9 +581,11 @@ static int unsatisfiedDepend(rpmTransactionSet ts,
 	goto unsatisfied;
     }
 
-    if (alSatisfiesDepend(&ts->addedPackages, keyType, keyDepend,
-		keyName, keyEVR, keyFlags))
+    if (alSatisfiesDepend(&ts->addedPackages, keyName, keyEVR, keyFlags))
     {
+	/* XXX here we do not discern between files and provides */
+	rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provide)\n"),
+			keyType, keyDepend+2);
 	goto exit;
     }
 
@@ -1286,11 +727,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	    rpmMessage(RPMMESS_DEBUG, _("package %s-%s-%s require not satisfied: %s\n"),
 		    name, version, release, keyDepend+2);
 
-	    if (psp->num == psp->alloced) {
-		psp->alloced += 5;
-		psp->problems = xrealloc(psp->problems, sizeof(*psp->problems) *
-			    psp->alloced);
-	    }
+	    AUTO_REALLOC(psp->problems, psp->num);
 
 	    {	rpmDependencyConflict pp = psp->problems + psp->num;
 		pp->byHeader = headerLink(h);
@@ -1347,11 +784,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	    rpmMessage(RPMMESS_DEBUG, _("package %s conflicts: %s\n"),
 		    name, keyDepend+2);
 
-	    if (psp->num == psp->alloced) {
-		psp->alloced += 5;
-		psp->problems = xrealloc(psp->problems,
-					sizeof(*psp->problems) * psp->alloced);
-	    }
+	    AUTO_REALLOC(psp->problems, psp->num);
 
 	    {	rpmDependencyConflict pp = psp->problems + psp->num;
 		pp->byHeader = headerLink(h);
@@ -1667,7 +1100,7 @@ static inline int addRelation( const rpmTransactionSet ts,
     if (!p->requires || !p->requiresEVR || !p->requireFlags)
 	return 0;
 
-    q = alSatisfiesDepend(&ts->addedPackages, NULL, NULL,
+    q = alSatisfiesDepend(&ts->addedPackages,
 		p->requires[j], p->requiresEVR[j], p->requireFlags[j]);
 
     /* Ordering depends only on added package relations. */
@@ -1773,8 +1206,6 @@ int rpmdepOrder(rpmTransactionSet ts)
     int depth;
     int qlen;
     int i, j;
-
-    alMakeIndex(&ts->addedPackages);
 
     /* T1. Initialize. */
     loopcheck = npkgs;
@@ -2050,7 +1481,6 @@ rescan:
 
     ts->order = _free(ts->order);
     ts->order = newOrder;
-    ts->orderAlloced = ts->orderCount;
     orderList = _free(orderList);
 
     return 0;
@@ -2103,14 +1533,11 @@ int rpmdepCheck(rpmTransactionSet ts,
     npkgs = ts->addedPackages.size;
 
     ps = xcalloc(1, sizeof(*ps));
-    ps->alloced = 5;
     ps->num = 0;
-    ps->problems = xcalloc(ps->alloced, sizeof(*ps->problems));
+    ps->problems = NULL;
 
     *conflicts = NULL;
     *numConflicts = 0;
-
-    alMakeIndex(&ts->addedPackages);
 
     /*
      * Look at all of the added packages and make sure their dependencies

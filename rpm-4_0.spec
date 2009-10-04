@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt95.M41.29
+Release: alt95.M41.30
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -497,6 +497,12 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Oct 04 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.30
+- depends.c: avoid expression dependent on evaluation order
+- depends.c: implemented automatic realloc
+- al.c: factored from depends.c
+- al.c: reimplemented alProvIndex and alDirIndex/alFileIndex routines
+
 * Thu Oct 01 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt95.M41.29
 - Removed support for availablePackages/suggestedPackages.
 - Removed rebuilddb db_filter_dups code (Panu Matilainen).
