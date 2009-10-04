@@ -154,23 +154,134 @@ void alFreeProvIndex(availableList al)
     al->provIndex = _free(al->provIndex);
 }
 
-/**
- * Compare two directory info entries by name (qsort/bsearch).
- * @param one		1st directory info
- * @param two		2nd directory info
- * @return		result of comparison
+/** \ingroup rpmdep
+ * A file to be installed/removed.
  */
-static int dirInfoCompare(const void * one, const void * two)	/*@*/
+struct alFileEntry {
+    const char *basename;		/*!< File basename. */
+    int len;				/*!< Basename length. */
+    int pkgIx;				/*!< Containing package number. */
+};
+
+struct alFileIndex {
+    int sorted;
+    int size;
+    struct alFileEntry files[1];
+};
+
+/** \ingroup rpmdep
+ * A directory which contains some files.
+ */
+struct alDirEntry {
+    const char *dirname;		/*!< Directory path (+ trailing '/'). */
+    int len;				/*!< No. bytes in directory path. */
+    struct alFileIndex *fx;		/*!< Files index this directory. */
+};
+
+struct alDirIndex {
+    int sorted;
+    int size;
+    struct alDirEntry dirs[1];
+};
+
+static
+void alIndexPkgFiles(availableList al, int pkgIx)
 {
-    const dirInfo a = (const dirInfo) one;
-    const dirInfo b = (const dirInfo) two;
-    int lenchk = a->dirNameLen - b->dirNameLen;
+    const struct availablePackage *alp = &al->list[pkgIx];
+    if (alp->filesCount == 0)
+	return;
 
-    if (lenchk)
-	return lenchk;
+    const HGE_t hge = (HGE_t)headerGetEntryMinMemory;
+    const HFD_t hfd = headerFreeData;
+    const char **bn = NULL, **dn = NULL;
+    const int *di = NULL;
+    rpmTagType bnt = 0, dnt = 0, dit = 0;
+    int bnc = 0, dnc = 0, dic = 0;
+    if (!hge(alp->h, RPMTAG_BASENAMES, &bnt, (void**)&bn, &bnc))
+	goto exit;
+    if (!hge(alp->h, RPMTAG_DIRNAMES, &dnt, (void**)&dn, &dnc))
+	goto exit;
+    if (!hge(alp->h, RPMTAG_DIRINDEXES, &dit, (void**)&di, &dic))
+	goto exit;
+    if (bnc != dic)
+	goto exit;
 
-    /* XXX FIXME: this might do "backward" strcmp for speed */
-    return strcmp(a->dirName, b->dirName);
+    /* XXX FIXME: We ought to relocate the directory list here */
+
+    struct alDirIndex *dx = al->dirIndex =
+	    axGrow(al->dirIndex, sizeof(*dx->dirs), dnc);
+
+    int i = 0;
+    while (i < bnc) {
+	/* maybe a few files under the same dir */
+	int j = i;
+	while (j + 1 < bnc) {
+	    if (di[i] != di[j + 1])
+		break;
+	    j++;
+	}
+	/* find or create dir entry */
+	const char *d = dn[di[i]];
+	struct alDirEntry *de = (dx->size == 0) ? NULL :
+		axSearch(dx, sizeof(*dx->dirs), d, NULL);
+	if (de == NULL) {
+	    de = &dx->dirs[dx->size++];
+	    de->dirname = d;
+	    de->len = strlen(d);
+	    de->fx = NULL;
+	    dx->sorted = 0;
+	}
+	struct alFileIndex *fx = de->fx =
+		axGrow(de->fx, sizeof(*fx->files), j - i + 1);
+	while (i <= j) {
+	    /* add file entries */
+	    const char *b = bn[i++];
+	    struct alFileEntry *fe = &fx->files[fx->size++];
+	    fe->basename = b;
+	    fe->len = strlen(b);
+	    fe->pkgIx = pkgIx;
+	}
+	fx->sorted = 0;
+    }
+
+exit:
+    /* XXX strings point to header memory */
+    bn = hfd(bn, bnt);
+    dn = hfd(dn, dnt);
+    di = hfd(di, dit);
+}
+
+static
+struct alFileEntry *alSearchFile(availableList al, const char *fname, int *n)
+{
+    /* need to preserve trailing slahs in d */
+    const char *b = strrchr(fname, '/') + 1;
+    int dlen = b - fname;
+    char *d = alloca(dlen + 1);
+    memcpy(d, fname, dlen);
+    d[dlen] = '\0';
+
+    struct alDirEntry *de = axSearch(al->dirIndex, sizeof(*de), d, NULL);
+    if (de == NULL) {
+	*n = 0;
+	return NULL;
+    }
+    assert(de->fx);
+    return axSearch(de->fx, sizeof(*de->fx->files), b, n);
+}
+
+static
+void alFreeDirIndex(availableList al)
+{
+    struct alDirIndex *dx = al->dirIndex;
+    if (dx) {
+	int i;
+	for (i = 0; i < dx->size; i++) {
+	    struct alDirEntry *de = &dx->dirs[i];
+	    de->fx = _free(de->fx);
+	}
+	al->dirIndex = _free(al->dirIndex);
+    }
 }
 
 /**
@@ -185,69 +296,21 @@ alAllFileSatisfiesDepend(const availableList al,
 		const char * keyType, const char * fileName)
 	/*@*/
 {
-    int i, found;
-    const char * dirName;
-    const char * baseName;
-    struct dirInfo_s dirNeedle;
-    dirInfo dirMatch;
-    struct availablePackage ** ret;
-
-    /* Solaris 2.6 bsearch sucks down on this. */
-    if (al->numDirs == 0 || al->dirs == NULL || al->list == NULL)
-	return NULL;
-
-    {	char * t;
-	dirName = t = xstrdup(fileName);
-	if ((t = strrchr(t, '/')) != NULL) {
-	    t++;		/* leave the trailing '/' */
-	    *t = '\0';
-	}
+    struct availablePackage ** ret = NULL;
+    int i, n;
+    int found = 0;
+    const struct alFileEntry *fe = alSearchFile(al, fileName, &n);
+    for (i = 0, ret = NULL; fe && i < n; i++, fe++) {
+	struct availablePackage *alp = &al->list[fe->pkgIx];
+	if (keyType)
+	    rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added files)\n"),
+		    keyType, fileName);
+	ret = xrealloc(ret, (found+2) * sizeof(*ret));
+	ret[found++] = alp;
     }
 
-    dirNeedle.dirName = (char *) dirName;
-    dirNeedle.dirNameLen = strlen(dirName);
-    dirMatch = bsearch(&dirNeedle, al->dirs, al->numDirs,
-		       sizeof(dirNeedle), dirInfoCompare);
-    if (dirMatch == NULL) {
-	dirName = _free(dirName);
-	return NULL;
-    }
-
-    /* rewind to the first match */
-    while (dirMatch > al->dirs && dirInfoCompare(dirMatch-1, &dirNeedle) == 0)
-	dirMatch--;
-
-    /*@-nullptrarith@*/		/* FIX: fileName NULL ??? */
-    baseName = strrchr(fileName, '/') + 1;
-    /*@=nullptrarith@*/
-
-    for (found = 0, ret = NULL;
-	 dirMatch <= al->dirs + al->numDirs &&
-		dirInfoCompare(dirMatch, &dirNeedle) == 0;
-	 dirMatch++)
-    {
-	/* XXX FIXME: these file lists should be sorted and bsearched */
-	for (i = 0; i < dirMatch->numFiles; i++) {
-	    if (dirMatch->files[i].baseName == NULL ||
-			strcmp(dirMatch->files[i].baseName, baseName))
-		continue;
-
-	    if (keyType)
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added files)\n"),
-			keyType, fileName);
-
-	    ret = xrealloc(ret, (found+2) * sizeof(*ret));
-	    if (ret)	/* can't happen */
-		ret[found++] = al->list + dirMatch->files[i].pkgNum;
-	    /*@innerbreak@*/ break;
-	}
-    }
-
-    dirName = _free(dirName);
-    /*@-mods@*/		/* FIX: al->list might be modified. */
     if (ret)
 	ret[found] = NULL;
-    /*@=mods@*/
     return ret;
 }
 
@@ -299,19 +362,9 @@ alAddPackage(availableList al,
 		/*@null@*/ FD_t fd, /*@null@*/ rpmRelocation * relocs)
 {
     HGE_t hge = (HGE_t)headerGetEntryMinMemory;
-    HFD_t hfd = headerFreeData;
-    rpmTagType dnt, bnt;
     struct availablePackage * p;
     rpmRelocation * r;
     int i;
-    int_32 * dirIndexes;
-    const char ** dirNames;
-    int numDirs, dirNum;
-    int * dirMapping;
-    struct dirInfo_s dirNeedle;
-    dirInfo dirMatch;
-    int first, last, fileNum;
-    int origNumDirs;
     int pkgNum;
 
     AUTO_REALLOC(al->list, al->size);
@@ -359,71 +412,8 @@ alAddPackage(availableList al,
 	    p->requireFlags = NULL;
     }
 
-    if (!hge(h, RPMTAG_BASENAMES, &bnt, (void **)&p->baseNames, &p->filesCount))
-    {
+    if (!hge(h, RPMTAG_BASENAMES, NULL, NULL, &p->filesCount))
 	p->filesCount = 0;
-	p->baseNames = NULL;
-    } else {
-	(void) hge(h, RPMTAG_DIRNAMES, &dnt, (void **) &dirNames, &numDirs);
-	(void) hge(h, RPMTAG_DIRINDEXES, NULL, (void **) &dirIndexes, NULL);
-
-	/* XXX FIXME: We ought to relocate the directory list here */
-
-	dirMapping = alloca(sizeof(*dirMapping) * numDirs);
-
-	/* allocated enough space for all the directories we could possible
-	   need to add */
-	al->dirs = xrealloc(al->dirs, 
-			    sizeof(*al->dirs) * (al->numDirs + numDirs));
-	origNumDirs = al->numDirs;
-
-	for (dirNum = 0; dirNum < numDirs; dirNum++) {
-	    dirNeedle.dirName = (char *) dirNames[dirNum];
-	    dirNeedle.dirNameLen = strlen(dirNames[dirNum]);
-	    dirMatch = bsearch(&dirNeedle, al->dirs, origNumDirs,
-			       sizeof(dirNeedle), dirInfoCompare);
-	    if (dirMatch) {
-		dirMapping[dirNum] = dirMatch - al->dirs;
-	    } else {
-		dirMapping[dirNum] = al->numDirs;
-		al->dirs[al->numDirs].dirName = xstrdup(dirNames[dirNum]);
-		al->dirs[al->numDirs].dirNameLen = strlen(dirNames[dirNum]);
-		al->dirs[al->numDirs].files = NULL;
-		al->dirs[al->numDirs].numFiles = 0;
-		al->numDirs++;
-	    }
-	}
-
-	dirNames = hfd(dirNames, dnt);
-
-	first = 0;
-	while (first < p->filesCount) {
-	    last = first;
-	    while ((last + 1) < p->filesCount) {
-		if (dirIndexes[first] != dirIndexes[last + 1])
-		    /*@innerbreak@*/ break;
-		last++;
-	    }
-
-	    dirMatch = al->dirs + dirMapping[dirIndexes[first]];
-	    dirMatch->files = xrealloc(dirMatch->files,
-		sizeof(*dirMatch->files) * 
-		    (dirMatch->numFiles + last - first + 1));
-	    if (p->baseNames != NULL)	/* XXX can't happen */
-	    for (fileNum = first; fileNum <= last; fileNum++) {
-		dirMatch->files[dirMatch->numFiles].baseName =
-		    p->baseNames[fileNum];
-		dirMatch->files[dirMatch->numFiles].pkgNum = pkgNum;
-		dirMatch->numFiles++;
-	    }
-
-	    first = last + 1;
-	}
-
-	if (origNumDirs + al->numDirs)
-	    qsort(al->dirs, al->numDirs, sizeof(dirNeedle), dirInfoCompare);
-
-    }
 
     p->key = key;
     p->fd = (fd != NULL ? fdLink(fd, "alAddPackage") : NULL);
@@ -444,6 +434,7 @@ alAddPackage(availableList al,
     }
 
     alIndexPkgProvides(al, pkgNum);
+    alIndexPkgFiles(al, pkgNum);
     return p;
 }
 
@@ -469,7 +460,6 @@ void alFree(availableList al)
 	p->providesEVR = hfd(p->providesEVR, -1);
 	p->requires = hfd(p->requires, -1);
 	p->requiresEVR = hfd(p->requiresEVR, -1);
-	p->baseNames = hfd(p->baseNames, -1);
 	p->h = headerFree(p->h);
 
 	if (p->relocs) {
@@ -483,14 +473,7 @@ void alFree(availableList al)
 	    p->fd = fdFree(p->fd, "alAddPackage (alFree)");
     }
 
-    if (al->dirs != NULL)
-    for (i = 0; i < al->numDirs; i++) {
-	al->dirs[i].dirName = _free(al->dirs[i].dirName);
-	al->dirs[i].files = _free(al->dirs[i].files);
-    }
-
-    al->dirs = _free(al->dirs);
-    al->numDirs = 0;
     al->list = _free(al->list);
     alFreeProvIndex(al);
+    alFreeDirIndex(al);
 }

@@ -43,7 +43,6 @@ struct availablePackage {
 /*@owned@*//*@null@*/ const char ** requires;	/*!< Requires: name strings. */
 /*@owned@*//*@null@*/ const char ** requiresEVR;/*!< Requires: [epoch:]version[-release] strings. */
 /*@dependent@*//*@null@*/ int * requireFlags;	/*!< Requires: logical range qualifiers. */
-/*@owned@*//*@null@*/ const char ** baseNames;	/*!< Header file basenames. */
 /*@dependent@*//*@null@*/ int_32 * epoch;	/*!< Header epoch (if any). */
     int providesCount;			/*!< No. of Provide:'s in header. */
     int requiresCount;			/*!< No. of Require:'s in header. */
@@ -64,31 +63,12 @@ struct availablePackage {
 } ;
 
 /** \ingroup rpmdep
- * A file to be installed/removed.
- */
-struct fileIndexEntry {
-    int pkgNum;				/*!< Containing package number. */
-/*@dependent@*/ /*@null@*/ const char * baseName;	/*!< File basename. */
-} ;
-
-/** \ingroup rpmdep
- * A directory to be installed/removed.
- */
-typedef struct dirInfo_s {
-/*@owned@*/ const char * dirName;	/*!< Directory path (+ trailing '/'). */
-    int dirNameLen;			/*!< No. bytes in directory path. */
-/*@owned@*/ struct fileIndexEntry * files; /*!< Array of files in directory. */
-    int numFiles;			/*!< No. files in directory. */
-} * dirInfo ;
-
-/** \ingroup rpmdep
  * Set of available packages, items, and directories.
  */
 typedef /*@abstract@*/ struct availableList_s {
 /*@owned@*/ /*@null@*/ struct availablePackage * list;	/*!< Set of packages. */
     int size;				/*!< No. of pkgs in list. */
-/*@owned@*/ /*@null@*/ dirInfo dirs;	/*!< Set of directories. */
-    int numDirs;			/*!< No. of directories. */
+    struct alDirIndex *dirIndex;	/*!< Files index. */
     struct alProvIndex *provIndex;	/*!< Provides index. */
 } * availableList;
 

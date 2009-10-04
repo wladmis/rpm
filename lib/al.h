@@ -11,8 +11,7 @@ void alCreate(availableList al)
 {
     al->list = NULL;
     al->size = 0;
-    al->dirs = NULL;
-    al->numDirs = 0;
+    al->dirIndex = NULL;
     al->provIndex = NULL;
 }
 
