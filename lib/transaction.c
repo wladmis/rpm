@@ -1431,27 +1431,6 @@ static int tsGetOc(void * a)
 }
 
 /**
- * Return transaction element available package pointer.
- * @param a		transaction element iterator
- * @return		available package pointer
- */
-static /*@dependent@*/ struct availablePackage * tsGetAlp(void * a)
-	/*@*/
-{
-    struct tsIterator_s * iter = a;
-    struct availablePackage * alp = NULL;
-    int oc = iter->ocsave;
-
-    if (oc != -1) {
-	rpmTransactionSet ts = iter->ts;
-	TFI_t fi = ts->flList + oc;
-	if (ts->addedPackages.list && fi->type == TR_ADDED)
-	    alp = ts->addedPackages.list + ts->order[oc].u.addedIndex;
-    }
-    return alp;
-}
-
-/**
  * Destroy transaction element iterator.
  * @param a		transaction element iterator
  * @return		NULL always
@@ -1533,7 +1512,6 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     int numShared;
     int nexti;
     int lastFailed;
-    int oc;
     fingerPrintCache fpc;
     struct psm_s psmbuf;
     PSM_t psm = &psmbuf;
@@ -1683,20 +1661,12 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 
     }
 
-    /* FIXME: it seems a bit silly to read in all of these headers twice */
-    /* The ordering doesn't matter here */
-    if (ts->numRemovedPackages > 0) {
-	rpmdbMatchIterator mi;
-	Header h;
-	int fileCount;
-
-	mi = rpmdbInitIterator(ts->rpmdb, RPMDBI_PACKAGES, NULL, 0);
-	(void) rpmdbAppendIterator(mi, ts->removedPackages, ts->numRemovedPackages);
-	while ((h = rpmdbNextIterator(mi)) != NULL) {
-	    if (headerGetEntry(h, RPMTAG_BASENAMES, NULL, NULL, &fileCount))
-		totalFileCount += fileCount;
-	}
-	mi = rpmdbFreeIterator(mi);
+    if (ts->erasedPackages.list != NULL)
+    for (alp = ts->erasedPackages.list;
+	(alp - ts->erasedPackages.list) < ts->erasedPackages.size;
+	alp++)
+    {
+	totalFileCount += alp->filesCount;
     }
 
     /* ===============================================
@@ -1712,16 +1682,12 @@ int rpmRunTransactions(	rpmTransactionSet ts,
      */
     tsi = tsInitIterator(ts);
     while ((fi = tsNextIterator(tsi)) != NULL) {
-	oc = tsGetOc(tsi);
+	int oc = tsGetOc(tsi);
 	fi->magic = TFIMAGIC;
-
-	/* XXX watchout: fi->type must be set for tsGetAlp() to "work" */
 	fi->type = ts->order[oc].type;
 	switch (fi->type) {
 	case TR_ADDED:
-	    i = ts->order[oc].u.addedIndex;
-	    /* XXX watchout: fi->type must be set for tsGetAlp() to "work" */
-	    fi->ap = tsGetAlp(tsi);
+	    fi->ap = ts->addedPackages.list + ts->order[oc].u.addedIndex;
 	    fi->record = 0;
 	    loadFi(fi->ap->h, fi);
 	    if (fi->fc == 0)
@@ -1735,22 +1701,9 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 	    skipFiles(ts, fi);
 	    break;
 	case TR_REMOVED:
-	    fi->ap = NULL;
+	    fi->ap = ts->erasedPackages.list + ts->order[oc].u.removed.erasedIndex;
 	    fi->record = ts->order[oc].u.removed.dboffset;
-	    {	rpmdbMatchIterator mi;
-
-		mi = rpmdbInitIterator(ts->rpmdb, RPMDBI_PACKAGES,
-				&fi->record, sizeof(fi->record));
-		if ((fi->h = rpmdbNextIterator(mi)) != NULL)
-		    fi->h = headerLink(fi->h);
-		mi = rpmdbFreeIterator(mi);
-	    }
-	    if (fi->h == NULL) {
-		/* ACK! */
-		continue;
-	    }
-	    /* XXX header arg unused. */
-	    loadFi(fi->h, fi);
+	    loadFi(fi->ap->h, fi);
 	    break;
 	}
 
@@ -2006,14 +1959,13 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     tsi = tsInitIterator(ts);
     while ((fi = tsNextIterator(tsi)) != NULL) {
 	Header h;
-	int gotfd;
-
-	gotfd = 0;
+	int oc = tsGetOc(tsi);
+	int gotfd = 0;
 	psm->fi = fi;
 	switch (fi->type)
 	{
 	case TR_ADDED:
-	    alp = tsGetAlp(tsi);
+	    alp = ts->addedPackages.list + ts->order[oc].u.addedIndex;
 assert(alp == fi->ap);
 	    i = alp - ts->addedPackages.list;
 
@@ -2080,7 +2032,6 @@ assert(alp == fi->ap);
 	    }
 	    break;
 	case TR_REMOVED:
-	    oc = tsGetOc(tsi);
 	    /* If install failed, then we shouldn't erase. */
 	    if (ts->order[oc].u.removed.dependsOnIndex == lastFailed)
 		break;
