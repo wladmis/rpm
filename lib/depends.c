@@ -212,7 +212,7 @@ static int rangeMatchesDepFlags (Header h,
 	    continue;
 
 	if (!(provideFlags[i] & RPMSENSE_SENSEMASK))
-	    provideFlags[i] |= RPMSENSE_EQUAL;
+	    provideFlags[i] |= RPMSENSE_EQUAL; /* ALT21-139-g6cb9a9a */
 	result = rpmRangesOverlap(provides[i], providesEVR[i], provideFlags[i],
 			reqName, reqEVR, reqFlags);
 

@@ -320,16 +320,19 @@ alAllSatisfiesDepend(const availableList al,
 	    }
 	if (already)
 	    continue;
-	int provIx = pe->provIx;
-	const char *provName = alp->provides[provIx];
-	const char *provEVR = alp->providesEVR ? alp->providesEVR[provIx] : NULL;
-	int provFlags = alp->provideFlags ? alp->provideFlags[provIx] : 0;
-	if ((keyFlags & RPMSENSE_SENSEMASK) && !(provFlags & RPMSENSE_SENSEMASK))
-	    provFlags |= RPMSENSE_EQUAL;
-	int rc = rpmRangesOverlap(provName, provEVR, provFlags,
-				keyName, keyEVR, keyFlags);
-	if (rc == 0)
-	    continue;
+	if ((keyFlags & RPMSENSE_SENSEMASK)) {
+	    const char *provName = pe->name;
+	    const char *provEVR = alp->providesEVR ?
+		    alp->providesEVR[pe->provIx] : NULL;
+	    int provFlags = alp->provideFlags ?
+		    alp->provideFlags[pe->provIx] : 0;
+	    if (!(provFlags & RPMSENSE_SENSEMASK))
+		provFlags |= RPMSENSE_EQUAL; /* ALT21-139-g6cb9a9a */
+	    int rc = rpmRangesOverlap(provName, provEVR, provFlags,
+				    keyName, keyEVR, keyFlags);
+	    if (rc == 0)
+		continue;
+	}
 	ret = xrealloc(ret, (found + 2) * sizeof(*ret));
 	ret[found++] = alp;
     }
