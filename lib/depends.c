@@ -117,9 +117,8 @@ static void alFreeIndex(availableList al)
 static void alCreate(availableList al)
 	/*@modifies al @*/
 {
-    al->alloced = al->delta;
     al->size = 0;
-    al->list = xcalloc(al->alloced, sizeof(*al->list));
+    al->list = NULL;
 
     al->index.index = NULL;
     al->index.size = 0;
@@ -178,7 +177,6 @@ static void alFree(availableList al)
     al->dirs = _free(al->dirs);
     al->numDirs = 0;
     al->list = _free(al->list);
-    al->alloced = 0;
     alFreeIndex(al);
 }
 
@@ -232,11 +230,7 @@ alAddPackage(availableList al,
     int origNumDirs;
     int pkgNum;
 
-    if (al->size == al->alloced) {
-	al->alloced += al->delta;
-	al->list = xrealloc(al->list, sizeof(*al->list) * al->alloced);
-    }
-
+    AUTO_REALLOC(al->list, al->size);
     pkgNum = al->size++;
     p = al->list + pkgNum;
     p->h = headerLink(h);	/* XXX reference held by transaction set */
@@ -595,12 +589,9 @@ rpmTransactionSet rpmtransCreateSet(rpmdb rpmdb, const char * rootDir)
     /*@=assignexpose@*/
     ts->scriptFd = NULL;
     ts->id = 0;
-    ts->delta = 5;
 
     ts->numRemovedPackages = 0;
-    ts->allocedRemovedPackages = ts->delta;
-    ts->removedPackages = xcalloc(ts->allocedRemovedPackages,
-			sizeof(*ts->removedPackages));
+    ts->removedPackages = NULL;
 
     /* This canonicalizes the root */
     rootLen = strlen(rootDir);
@@ -617,12 +608,10 @@ rpmTransactionSet rpmtransCreateSet(rpmdb rpmdb, const char * rootDir)
     ts->currDir = NULL;
     ts->chrootDone = 0;
 
-    ts->addedPackages.delta = ts->delta;
     alCreate(&ts->addedPackages);
 
-    ts->orderAlloced = ts->delta;
     ts->orderCount = 0;
-    ts->order = xcalloc(ts->orderAlloced, sizeof(*ts->order));
+    ts->order = NULL;
 
     return ts;
 }
@@ -659,22 +648,11 @@ static int removePackage(rpmTransactionSet ts, int dboffset, int depends)
 	    return 0;
     }
 
-    if (ts->numRemovedPackages == ts->allocedRemovedPackages) {
-	ts->allocedRemovedPackages += ts->delta;
-	ts->removedPackages = xrealloc(ts->removedPackages,
-		sizeof(int *) * ts->allocedRemovedPackages);
-    }
+    AUTO_REALLOC(ts->removedPackages, ts->numRemovedPackages);
+    ts->removedPackages[ts->numRemovedPackages++] = dboffset;
+    qsort(ts->removedPackages, ts->numRemovedPackages, sizeof(int), intcmp);
 
-    if (ts->removedPackages != NULL) {	/* XXX can't happen. */
-	ts->removedPackages[ts->numRemovedPackages++] = dboffset;
-	qsort(ts->removedPackages, ts->numRemovedPackages, sizeof(int), intcmp);
-    }
-
-    if (ts->orderCount == ts->orderAlloced) {
-	ts->orderAlloced += ts->delta;
-	ts->order = xrealloc(ts->order, sizeof(*ts->order) * ts->orderAlloced);
-    }
-
+    AUTO_REALLOC(ts->order, ts->orderCount);
     ts->order[ts->orderCount].type = TR_REMOVED;
     ts->order[ts->orderCount].u.removed.dboffset = dboffset;
     ts->order[ts->orderCount++].u.removed.dependsOnIndex = depends;
@@ -717,17 +695,11 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
      * makes it difficult to generate a return code based on the number of
      * packages which failed.
      */
-    if (ts->orderCount == ts->orderAlloced) {
-	ts->orderAlloced += ts->delta;
-	ts->order = xrealloc(ts->order, sizeof(*ts->order) * ts->orderAlloced);
-    }
-    ts->order[ts->orderCount].type = TR_ADDED;
-    if (ts->addedPackages.list == NULL)
-	return 0;
-
     struct availablePackage *alp =
 	    alAddPackage(&ts->addedPackages, h, key, fd, relocs);
     int alNum = alp - ts->addedPackages.list;
+    AUTO_REALLOC(ts->order, ts->orderCount);
+    ts->order[ts->orderCount].type = TR_ADDED;
     ts->order[ts->orderCount++].u.addedIndex = alNum;
 
     if (!upgrade || ts->rpmdb == NULL)
@@ -1286,11 +1258,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	    rpmMessage(RPMMESS_DEBUG, _("package %s-%s-%s require not satisfied: %s\n"),
 		    name, version, release, keyDepend+2);
 
-	    if (psp->num == psp->alloced) {
-		psp->alloced += 5;
-		psp->problems = xrealloc(psp->problems, sizeof(*psp->problems) *
-			    psp->alloced);
-	    }
+	    AUTO_REALLOC(psp->problems, psp->num);
 
 	    {	rpmDependencyConflict pp = psp->problems + psp->num;
 		pp->byHeader = headerLink(h);
@@ -1347,11 +1315,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	    rpmMessage(RPMMESS_DEBUG, _("package %s conflicts: %s\n"),
 		    name, keyDepend+2);
 
-	    if (psp->num == psp->alloced) {
-		psp->alloced += 5;
-		psp->problems = xrealloc(psp->problems,
-					sizeof(*psp->problems) * psp->alloced);
-	    }
+	    AUTO_REALLOC(psp->problems, psp->num);
 
 	    {	rpmDependencyConflict pp = psp->problems + psp->num;
 		pp->byHeader = headerLink(h);
@@ -2050,7 +2014,6 @@ rescan:
 
     ts->order = _free(ts->order);
     ts->order = newOrder;
-    ts->orderAlloced = ts->orderCount;
     orderList = _free(orderList);
 
     return 0;
@@ -2103,9 +2066,8 @@ int rpmdepCheck(rpmTransactionSet ts,
     npkgs = ts->addedPackages.size;
 
     ps = xcalloc(1, sizeof(*ps));
-    ps->alloced = 5;
     ps->num = 0;
-    ps->problems = xcalloc(ps->alloced, sizeof(*ps->problems));
+    ps->problems = NULL;
 
     *conflicts = NULL;
     *numConflicts = 0;

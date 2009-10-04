@@ -108,9 +108,7 @@ typedef struct dirInfo_s {
 typedef /*@abstract@*/ struct availableList_s {
 /*@owned@*/ /*@null@*/ struct availablePackage * list;	/*!< Set of packages. */
     struct availableIndex index;	/*!< Set of available items. */
-    int delta;				/*!< Delta for pkg list reallocation. */
     int size;				/*!< No. of pkgs in list. */
-    int alloced;			/*!< No. of pkgs allocated for list. */
     int numDirs;			/*!< No. of directories. */
 /*@owned@*/ /*@null@*/ dirInfo dirs;	/*!< Set of directories. */
 } * availableList;
@@ -148,20 +146,17 @@ struct rpmTransactionSet_s {
 /*@kept@*/ /*@null@*/ rpmdb rpmdb;	/*!< Database handle. */
 /*@only@*/ int * removedPackages;	/*!< Set of packages being removed. */
     int numRemovedPackages;		/*!< No. removed rpmdb instances. */
-    int allocedRemovedPackages;		/*!< Size of removed packages array. */
     struct availableList_s addedPackages;
 				/*!< Set of packages being installed. */
 /*@only@*/ transactionElement order;
 				/*!< Packages sorted by dependencies. */
     int orderCount;		/*!< No. of transaction elements. */
-    int orderAlloced;		/*!< No. of allocated transaction elements. */
 /*@only@*/ TFI_t flList;	/*!< Transaction element(s) file info. */
     int flEntries;		/*!< No. of transaction elements. */
     int chrootDone;		/*!< Has chroot(2) been been done? */
 /*@only@*/ const char * rootDir;/*!< Path to top of install tree. */
 /*@only@*/ const char * currDir;/*!< Current working directory. */
 /*@null@*/ FD_t scriptFd;	/*!< Scriptlet stdout/stderr. */
-    int delta;			/*!< Delta for reallocation. */
     int id;			/*!< Transaction id. */
 } ;
 
@@ -171,7 +166,6 @@ struct rpmTransactionSet_s {
 typedef /*@abstract@*/ struct problemsSet_s {
     rpmDependencyConflict problems;	/*!< Problems encountered. */
     int num;			/*!< No. of problems found. */
-    int alloced;		/*!< No. of problems allocated. */
 } * problemsSet;
 
 #ifdef __cplusplus
@@ -195,5 +189,12 @@ int headerMatchesDepFlags(Header h,
 #ifdef __cplusplus
 }
 #endif
+
+#define REALLOC_DELTA 8
+#define AUTO_REALLOC(ptr, size) \
+    do { \
+	if (((size) & (REALLOC_DELTA - 1)) == 0) \
+	    ptr = xrealloc((ptr), sizeof(*(ptr)) * ((size) + REALLOC_DELTA)); \
+    } while (0)
 
 #endif	/* H_DEPENDS */
