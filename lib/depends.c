@@ -25,15 +25,7 @@
 
 static int _cacheDependsRC = 1;
 
-/**
- * Return formatted dependency string.
- * @param depend	type of dependency ("R" == Requires, "C" == Conflcts)
- * @param key		dependency name string
- * @param keyEVR	dependency [epoch:]version[-release] string
- * @param keyFlags	dependency logical range qualifiers
- * @return		formatted dependency (malloc'ed)
- */
-static /*@only@*/ char * printDepend(const char * depend, const char * key,
+/*@only@*/ char * printDepend(const char * depend, const char * key,
 		const char * keyEVR, int keyFlags)
 	/*@*/
 {
