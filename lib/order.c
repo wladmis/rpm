@@ -136,8 +136,6 @@ static inline /*@observer@*/ const char * identifyDepend(int_32 f)
 	return "Requires(postun):";
     if (f & RPMSENSE_SCRIPT_VERIFY)
 	return "Requires(verify):";
-    if (f & RPMSENSE_FIND_REQUIRES)
-	return "Requires(auto):";
     return "Requires:";
 }
 
