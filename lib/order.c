@@ -184,6 +184,11 @@ zapRelation(struct availablePackage * q, struct availablePackage * p,
 	 * Attempt to unravel a dependency loop by eliminating Requires's.
 	 */
 	if (zap && !(p->requireFlags[j] & RPMSENSE_PREREQ)) {
+	    /* The above RPMSENSE_PREREQ test works properly only because,
+	     * on one hand, rpmbuild marks all scriptlet-like dependencies
+	     * with RPMSENSE_PREREQ (see rpmsenseFlags_e in rpmlib.h);
+	     * and, on the other, since only %pre/%post dependencies are added
+	     * for installed packages, but not %preun/%postun (see below). */
 	    rpmMessage(RPMMESS_DEBUG,
 			_("removing %s-%s-%s \"%s\" from tsort relations.\n"),
 			p->name, p->version, p->release, dp);
@@ -354,7 +359,8 @@ int rpmdepOrder(rpmTransactionSet ts)
 
 	/* T2. Next "q <- p" relation. */
 
-	/* First, do pre-requisites. */
+	/* First, do pre-requisites.
+	 * This is required for selected[] optimization to work properly. */
 	for (j = 0; j < p->requiresCount; j++) {
 
 	    if (p->requireFlags == NULL) continue;	/* XXX can't happen */
