@@ -24,7 +24,7 @@ Release: alt98.23
 %define enable_cdb create cdb
 
 Summary: The RPM package management system
-Summary(ru_RU.KOI8-R): Менеджер пакетов RPM
+Summary(ru_RU.UTF-8): п°п╣п╫п╣п╢п╤п╣я─ п©п╟п╨п╣я┌п╬п╡ RPM
 License: GPL
 Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
@@ -52,7 +52,7 @@ BuildRequires: bzlib-devel-static libbeecrypt-devel-static libdb4.7-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
-Summary(ru_RU.KOI8-R): Файлы, необходимые для разработки приложений, взаимодействующих с RPM-пакетами
+Summary(ru_RU.UTF-8): п╓п╟п╧п╩я▀, п╫п╣п╬п╠я┘п╬п╢п╦п╪я▀п╣ п╢п╩я▐ я─п╟п╥я─п╟п╠п╬я┌п╨п╦ п©я─п╦п╩п╬п╤п╣п╫п╦п╧, п╡п╥п╟п╦п╪п╬п╢п╣п╧я│я┌п╡я┐я▌я┴п╦я┘ я│ RPM-п©п╟п╨п╣я┌п╟п╪п╦
 License: GPL/LGPL
 Group: System/Libraries
 PreReq: zlib >= 1.1.4
@@ -63,14 +63,14 @@ PreReq: libdb4.7
 
 %package -n librpmbuild
 Summary: Shared library required for applications which will build RPM packages
-Summary(ru_RU.KOI8-R): Разделяемая библиотека для разработки приложений, собирающих RPM-пакеты
+Summary(ru_RU.UTF-8): п═п╟п╥п╢п╣п╩я▐п╣п╪п╟я▐ п╠п╦п╠п╩п╦п╬я┌п╣п╨п╟ п╢п╩я▐ я─п╟п╥я─п╟п╠п╬я┌п╨п╦ п©я─п╦п╩п╬п╤п╣п╫п╦п╧, я│п╬п╠п╦я─п╟я▌я┴п╦я┘ RPM-п©п╟п╨п╣я┌я▀
 License: GPL/LGPL
 Group: System/Libraries
 Requires: lib%name = %version-%release
 
 %package -n lib%name-devel
 Summary: Development files for applications which will manipulate RPM packages
-Summary(ru_RU.KOI8-R): Файлы, необходимые для разработки приложений, взаимодействующих с RPM-пакетами
+Summary(ru_RU.UTF-8): п╓п╟п╧п╩я▀, п╫п╣п╬п╠я┘п╬п╢п╦п╪я▀п╣ п╢п╩я▐ я─п╟п╥я─п╟п╠п╬я┌п╨п╦ п©я─п╦п╩п╬п╤п╣п╫п╦п╧, п╡п╥п╟п╦п╪п╬п╢п╣п╧я│я┌п╡я┐я▌я┴п╦я┘ я│ RPM-п©п╟п╨п╣я┌п╟п╪п╦
 License: GPL/LGPL
 Group: Development/C
 Provides: %name-devel = %version-%release
@@ -80,7 +80,7 @@ Requires: libpopt-devel
 
 %package -n lib%name-devel-static
 Summary: Static libraries for developing statically linked applications which will manipulate RPM packages
-Summary(ru_RU.KOI8-R): Статические библиотеки, необходимые для разработки статических приложений, взаимодействующих с RPM-пакетами
+Summary(ru_RU.UTF-8): п║я┌п╟я┌п╦я┤п╣я│п╨п╦п╣ п╠п╦п╠п╩п╦п╬я┌п╣п╨п╦, п╫п╣п╬п╠я┘п╬п╢п╦п╪я▀п╣ п╢п╩я▐ я─п╟п╥я─п╟п╠п╬я┌п╨п╦ я│я┌п╟я┌п╦я┤п╣я│п╨п╦я┘ п©я─п╦п╩п╬п╤п╣п╫п╦п╧, п╡п╥п╟п╦п╪п╬п╢п╣п╧я│я┌п╡я┐я▌я┴п╦я┘ я│ RPM-п©п╟п╨п╣я┌п╟п╪п╦
 License: GPL/LGPL
 Group: Development/C
 Requires: lib%name-devel = %version-%release
@@ -88,7 +88,7 @@ Requires: bzlib-devel-static, libbeecrypt-devel-static, libdb4.7-devel-static, l
 
 %package build
 Summary: Scripts and executable programs used to build packages
-Summary(ru_RU.KOI8-R): Файлы, необходимые для установки SRPM-пакетов и сборки RPM-пакетов
+Summary(ru_RU.UTF-8): п╓п╟п╧п╩я▀, п╫п╣п╬п╠я┘п╬п╢п╦п╪я▀п╣ п╢п╩я▐ я┐я│я┌п╟п╫п╬п╡п╨п╦ SRPM-п©п╟п╨п╣я┌п╬п╡ п╦ я│п╠п╬я─п╨п╦ RPM-п©п╟п╨п╣я┌п╬п╡
 License: GPL
 Group: Development/Other
 Obsoletes: spec-helper
@@ -114,14 +114,14 @@ Conflicts: rpm-build-mono <= 1.0
 
 %package build-topdir
 Summary: RPM package installation and build directory tree
-Summary(ru_RU.KOI8-R): Сборочное дерево, используемое для установки SRPM-пакетов и сборки RPM-пакетов
+Summary(ru_RU.UTF-8): п║п╠п╬я─п╬я┤п╫п╬п╣ п╢п╣я─п╣п╡п╬, п╦я│п©п╬п╩я▄п╥я┐п╣п╪п╬п╣ п╢п╩я▐ я┐я│я┌п╟п╫п╬п╡п╨п╦ SRPM-п©п╟п╨п╣я┌п╬п╡ п╦ я│п╠п╬я─п╨п╦ RPM-п©п╟п╨п╣я┌п╬п╡
 License: GPL
 Group: Development/Other
 PreReq: %name-build = %version-%release
 
 %package static
 Summary: Static version of the RPM package management system
-Summary(ru_RU.KOI8-R): Статическая версия менеджера пакетов RPM
+Summary(ru_RU.UTF-8): п║я┌п╟я┌п╦я┤п╣я│п╨п╟я▐ п╡п╣я─я│п╦я▐ п╪п╣п╫п╣п╢п╤п╣я─п╟ п©п╟п╨п╣я┌п╬п╡ RPM
 License: GPL
 Group: System/Configuration/Packaging
 PreReq: %name = %version-%release
@@ -133,11 +133,11 @@ verifying, querying, and updating software packages.  Each software
 package consists of an archive of files along with information about
 the package like its version, a description, etc.
 
-%description -l ru_RU.KOI8-R
-RPM - это мощный неинтерактивный менеджер пакетов, используемый для сборки,
-установки, инспекции, проверки, обновления и удаления отдельных программных
-пакетов.  Каждый такой пакет состоит из набора файлов и информации о пакете,
-включающей название, версию, описание пакета, и т.д.
+%description -l ru_RU.UTF-8
+RPM - я█я┌п╬ п╪п╬я┴п╫я▀п╧ п╫п╣п╦п╫я┌п╣я─п╟п╨я┌п╦п╡п╫я▀п╧ п╪п╣п╫п╣п╢п╤п╣я─ п©п╟п╨п╣я┌п╬п╡, п╦я│п©п╬п╩я▄п╥я┐п╣п╪я▀п╧ п╢п╩я▐ я│п╠п╬я─п╨п╦,
+я┐я│я┌п╟п╫п╬п╡п╨п╦, п╦п╫я│п©п╣п╨я├п╦п╦, п©я─п╬п╡п╣я─п╨п╦, п╬п╠п╫п╬п╡п╩п╣п╫п╦я▐ п╦ я┐п╢п╟п╩п╣п╫п╦я▐ п╬я┌п╢п╣п╩я▄п╫я▀я┘ п©я─п╬пЁя─п╟п╪п╪п╫я▀я┘
+п©п╟п╨п╣я┌п╬п╡.  п п╟п╤п╢я▀п╧ я┌п╟п╨п╬п╧ п©п╟п╨п╣я┌ я│п╬я│я┌п╬п╦я┌ п╦п╥ п╫п╟п╠п╬я─п╟ я└п╟п╧п╩п╬п╡ п╦ п╦п╫я└п╬я─п╪п╟я├п╦п╦ п╬ п©п╟п╨п╣я┌п╣,
+п╡п╨п╩я▌я┤п╟я▌я┴п╣п╧ п╫п╟п╥п╡п╟п╫п╦п╣, п╡п╣я─я│п╦я▌, п╬п©п╦я│п╟п╫п╦п╣ п©п╟п╨п╣я┌п╟, п╦ я┌.п╢.
 
 %description -n lib%name
 This package contains shared libraries required to run dynamically linked
@@ -181,7 +181,7 @@ This package contains statically linked version of the RPM program.
 %package -n python-module-rpm
 Version: %{rpm_version}_%__python_version
 Summary: Python bindings for apps which will manipulate RPM packages
-Summary(ru_RU.KOI8-R): Интерфейс для разработки Python-приложений, взаимодействующих с RPM-пакетами
+Summary(ru_RU.UTF-8): п≤п╫я┌п╣я─я└п╣п╧я│ п╢п╩я▐ я─п╟п╥я─п╟п╠п╬я┌п╨п╦ Python-п©я─п╦п╩п╬п╤п╣п╫п╦п╧, п╡п╥п╟п╦п╪п╬п╢п╣п╧я│я┌п╡я┐я▌я┴п╦я┘ я│ RPM-п©п╟п╨п╣я┌п╟п╪п╦
 License: GPL/LGPL
 Group: Development/Python
 PreReq: lib%name = %rpm_version-%release
