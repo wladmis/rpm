@@ -1004,14 +1004,14 @@ static int is_pentiumN(void)
 	return 0;
     cpuid(1, &eax, &ebx, &ecx, &edx);
     family = (eax >> 8) & 0x0f;
-    model = (eax >> 4) & 0x0f;
+    model = ((eax >> 12) & 0xf0) | ((eax >> 4) & 0x0f);
     if (family == 6)
 	switch (model)
 	{
-	    case 7:	// Pentium III, Pentium III Xeon (model 7)
-	    case 8:	// Pentium III, Pentium III Xeon, Celeron (model 8)
+	    case 0x7:	// Pentium III, Pentium III Xeon
+	    case 0x8:	// Pentium III, Pentium III Xeon, Celeron
 		return 3;
-	    case 9:	// Pentium M, Celeron M
+	    case 0x9:	// Pentium M, Celeron M
 			/*
 			    Intel recently announced its new technology for mobile platforms,
 			    named Centrino, and presents it as a big advance in mobile PCs.
@@ -1025,12 +1025,17 @@ static int is_pentiumN(void)
 						    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 			*/
 		return 4;
-	    case 10:	// Pentium III Xeon (model A)
-	    case 11:	// Pentium III (model B)
+	    case 0xA:	// Pentium III Xeon
+	    case 0xB:	// Pentium III
 		return 3;
-	    case 13:	// Pentium M, Celeron M (90 nm)
-	    case 14:	// Core Duo, Core Solo (65 nm)
-	    case 15:	// Core2 Duo (65 nm)
+	    case 0xD:	// Pentium M, Celeron M (90 nm)
+	    case 0xE:	// Core Duo, Core Solo (65 nm)
+	    case 0xF:	// Core2 Duo (65 nm)
+	    case 0x16:	// Celeron (65 nm)
+	    case 0x17:	// Core2 Extreme (45 nm)
+	    case 0x1A:	// Core i7 (45 nm)
+	    case 0x1C:	// Atom (45 nm)
+	    case 0x1D:	// Xeon MP (45 nm)
 		return 4;
 	}
     if (family == 15)
