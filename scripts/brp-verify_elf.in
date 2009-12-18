@@ -34,42 +34,25 @@ export VERIFY_ELF_UNRESOLVED=normal
 for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	case "$t" in
 		no|none|skip)
+			Info 'ELF verification disabled'
 			exit 0
 			;;
-		arch)
-			VERIFY_ELF_ARCH=normal
-			;;
-		arch=*)
+		arch=?*)
 			VERIFY_ELF_ARCH="${t#arch=}"
 			;;
-		fhs)
-			VERIFY_ELF_FHS=normal
-			;;
-		fhs=*)
+		fhs=?*)
 			VERIFY_ELF_FHS="${t#fhs=}"
 			;;
-		rpath)
-			VERIFY_ELF_RPATH=normal
-			;;
-		rpath=*)
+		rpath=?*)
 			VERIFY_ELF_RPATH="${t#rpath=}"
 			;;
-		stack)
-			VERIFY_ELF_STACK=normal
-			;;
-		stack=*)
+		stack=?*)
 			VERIFY_ELF_STACK="${t#stack=}"
 			;;
-		textrel)
-			VERIFY_ELF_TEXTREL=normal
-			;;
-		textrel=*)
+		textrel=?*)
 			VERIFY_ELF_TEXTREL="${t#textrel=}"
 			;;
-		unresolved)
-			VERIFY_ELF_UNRESOLVED=normal
-			;;
-		unresolved=*)
+		unresolved=?*)
 			VERIFY_ELF_UNRESOLVED="${t#unresolved=}"
 			;;
 		normal)
@@ -105,19 +88,6 @@ done
 # No stack verification available on arm*
 [ -z "$RPM_TARGET_ARCH" -o -n "${RPM_TARGET_ARCH##arm*}" ] ||
 	VERIFY_ELF_STACK=no
-
-[ "$VERIFY_ELF_ARCH" != no ] || VERIFY_ELF_ARCH=
-[ -z "$RPM_VERIFY_ELF_ARCH" ] || VERIFY_ELF_ARCH="$RPM_VERIFY_ELF_ARCH"
-[ "$VERIFY_ELF_FHS" != no ] || VERIFY_ELF_FHS=
-[ -z "$RPM_VERIFY_ELF_FHS" ] || VERIFY_ELF_FHS="$RPM_VERIFY_ELF_FHS"
-[ "$VERIFY_ELF_RPATH" != no ] || VERIFY_ELF_RPATH=
-[ -z "$RPM_VERIFY_ELF_RPATH" ] || VERIFY_ELF_RPATH="$RPM_VERIFY_ELF_RPATH"
-[ "$VERIFY_ELF_STACK" != no ] || VERIFY_ELF_STACK=
-[ -z "$RPM_VERIFY_ELF_STACK" ] || VERIFY_ELF_STACK="$RPM_VERIFY_ELF_STACK"
-[ "$VERIFY_ELF_TEXTREL" != no ] || VERIFY_ELF_TEXTREL=
-[ -z "$RPM_VERIFY_ELF_TEXTREL" ] || VERIFY_ELF_TEXTREL="$RPM_VERIFY_ELF_TEXTREL"
-[ "$VERIFY_ELF_UNRESOLVED" != no ] || VERIFY_ELF_UNRESOLVED=
-[ -z "$RPM_VERIFY_ELF_UNRESOLVED" ] || VERIFY_ELF_UNRESOLVED="$RPM_VERIFY_ELF_UNRESOLVED"
 
 : ${RPM_VERIFY_ELF_TOPDIR:=}
 : ${RPM_VERIFY_ELF_SKIPLIST:=}

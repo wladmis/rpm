@@ -57,19 +57,19 @@ VerifyELF()
 	fname="${f#$RPM_BUILD_ROOT}"
 	fname="${fname#.}"
 
-	if [ -n "$VERIFY_ELF_ARCH" -a "$RPM_TARGET_ARCH" = noarch ]; then
+	if [ "${VERIFY_ELF_ARCH:=normal}" != no ] && [ "$RPM_TARGET_ARCH" = noarch ]; then
 		[ "$VERIFY_ELF_ARCH" = relaxed ] && prefix=WARNING || prefix=ERROR
 		[ "$VERIFY_ELF_ARCH" = relaxed ] || rc=1
 		Info "$prefix: $f: ELF object for \"$RPM_TARGET_ARCH\" architecture"
 	fi
 
-	if [ -n "$VERIFY_ELF_FHS" ] && [ -z "${fname##/usr/share/*}" -o -z "${fname##/etc/*}" ]; then
+	if [ "${VERIFY_ELF_FHS:=normal}" != no ] && [ -z "${fname##/usr/share/*}" -o -z "${fname##/etc/*}" ]; then
 		[ "$VERIFY_ELF_FHS" = relaxed ] && prefix=WARNING || prefix=ERROR
 		[ "$VERIFY_ELF_FHS" = relaxed ] || rc=1
 		Info "$prefix: $f: ELF object out of allowed directory tree"
 	fi
 
-	if [ -n "$VERIFY_ELF_RPATH" ]; then
+	if [ "${VERIFY_ELF_RPATH:=normal}" != no ]; then
 		rpath="$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}')"
 		if [ -n "$rpath" ]; then
 			prefix=
@@ -106,7 +106,7 @@ VerifyELF()
 		fi
 	fi
 	
-	if [ -n "$VERIFY_ELF_STACK" ]; then
+	if [ "${VERIFY_ELF_STACK:=normal}" != no ]; then
 		if [ -z "${t##*ELF* executable*}" -o -z "${t##*ELF* shared object*}" ]; then
 			stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
 			if [ -z "$stack" ]; then
@@ -122,7 +122,7 @@ VerifyELF()
 		fi
 	fi
 
-	if [ -n "$VERIFY_ELF_TEXTREL" ]; then
+	if [ "${VERIFY_ELF_TEXTREL:=normal}" != no ]; then
 		textrel="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*TEXTREL[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
 		if [ -n "$textrel" ]; then
 			[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR
@@ -131,7 +131,7 @@ VerifyELF()
 		fi
 	fi
 
-	if [ -n "$VERIFY_ELF_UNRESOLVED" ]; then
+	if [ "${VERIFY_ELF_UNRESOLVED:=normal}" != no ]; then
 		while [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; do
 			rpath="$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
 			if [ -n "$rpath" ]; then
