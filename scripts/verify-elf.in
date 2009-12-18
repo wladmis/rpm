@@ -58,14 +58,12 @@ VerifyELF()
 	fname="${fname#.}"
 
 	if [ "${VERIFY_ELF_ARCH:=normal}" != no ] && [ "$RPM_TARGET_ARCH" = noarch ]; then
-		[ "$VERIFY_ELF_ARCH" = relaxed ] && prefix=WARNING || prefix=ERROR
-		[ "$VERIFY_ELF_ARCH" = relaxed ] || rc=1
+		[ "$VERIFY_ELF_ARCH" = relaxed ] && prefix=WARNING || prefix=ERROR rc=1
 		Info "$prefix: $f: ELF object for \"$RPM_TARGET_ARCH\" architecture"
 	fi
 
 	if [ "${VERIFY_ELF_FHS:=normal}" != no ] && [ -z "${fname##/usr/share/*}" -o -z "${fname##/etc/*}" ]; then
-		[ "$VERIFY_ELF_FHS" = relaxed ] && prefix=WARNING || prefix=ERROR
-		[ "$VERIFY_ELF_FHS" = relaxed ] || rc=1
+		[ "$VERIFY_ELF_FHS" = relaxed ] && prefix=WARNING || prefix=ERROR rc=1
 		Info "$prefix: $f: ELF object out of allowed directory tree"
 	fi
 
@@ -74,8 +72,7 @@ VerifyELF()
 		# Pass LD_ORIGIN_PATH to make it work without /proc.
 		if ! lint_info=$(LD_ORIGIN_PATH=/usr/bin eu-elflint --gnu-ld "$f" 2>&1); then
 			printf '%s\n' "$lint_info" >&2
-			[ "$VERIFY_ELF_LINT" = relaxed ] && prefix=WARNING || prefix=ERROR
-			[ "$VERIFY_ELF_LINT" = relaxed ] || rc=1
+			[ "$VERIFY_ELF_LINT" = relaxed ] && prefix=WARNING || prefix=ERROR rc=1
 			Info "$prefix: $f: eu-elflint failed"
 		fi
 	fi
@@ -97,8 +94,7 @@ VerifyELF()
 				rc=1
 			fi
 			if [ rc = 0 ] && printf %s "$rpath" |fgrep -qs :; then
-				[ "$VERIFY_ELF_RPATH" = relaxed ] && prefix=WARNING || prefix=ERROR
-				[ "$VERIFY_ELF_RPATH" = relaxed ] || rc=1
+				[ "$VERIFY_ELF_RPATH" = relaxed ] && prefix=WARNING || prefix=ERROR rc=1
 				Info "$prefix: $f: RPATH entry contains \":\": $rpath"
 			fi
 
@@ -110,8 +106,7 @@ VerifyELF()
 			done
 
 			if [ -z "$prefix" -a rc = 0 ]; then
-				[ "$VERIFY_ELF_RPATH" = strict ] && prefix=ERROR || prefix=WARNING
-				[ "$VERIFY_ELF_RPATH" = strict ] && rc=1 ||:
+				[ "$VERIFY_ELF_RPATH" = strict ] && prefix=ERROR rc=1 || prefix=WARNING
 				Info "$prefix: $f: RPATH entry found: $rpath"
 			fi
 		fi
@@ -121,12 +116,10 @@ VerifyELF()
 		if [ -z "${t##*ELF* executable*}" -o -z "${t##*ELF* shared object*}" ]; then
 			stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
 			if [ -z "$stack" ]; then
-				[ "$VERIFY_ELF_STACK" = strict ] && prefix=ERROR || prefix=WARNING
-				[ "$VERIFY_ELF_STACK" = strict ] && rc=1 ||:
+				[ "$VERIFY_ELF_STACK" = strict ] && prefix=ERROR rc=1 || prefix=WARNING
 				Info "$prefix: $f: STACK entry not found"
 			elif [ "$stack" = on ]; then
-				[ "$VERIFY_ELF_STACK" = strict ] && prefix=ERROR || prefix=WARNING
-				[ "$VERIFY_ELF_STACK" = strict ] && rc=1 ||:
+				[ "$VERIFY_ELF_STACK" = strict ] && prefix=ERROR rc=1 || prefix=WARNING
 				stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+.*\)/\1/p')"
 				Info "$prefix: $f: found executable STACK entry: $stack"
 			fi
@@ -137,8 +130,7 @@ VerifyELF()
 		textrel="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*TEXTREL[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
 		if [ -n "$textrel" ]; then
 			LD_ORIGIN_PATH=/usr/bin eu-findtextrel "$f" >&2 ||:
-			[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR
-			[ "$VERIFY_ELF_TEXTREL" = relaxed ] || rc=1
+			[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR rc=1
 			Info "$prefix: $f: TEXTREL entry found: $textrel"
 		fi
 	fi
