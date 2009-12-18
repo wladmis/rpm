@@ -69,6 +69,17 @@ VerifyELF()
 		Info "$prefix: $f: ELF object out of allowed directory tree"
 	fi
 
+	if [ "${VERIFY_ELF_LINT:=normal}" != no ]; then
+		# Internally, eu-elflint uses $ORIGIN to dlopen its backends.
+		# Pass LD_ORIGIN_PATH to make it work without /proc.
+		if ! lint_info=$(LD_ORIGIN_PATH=/usr/bin eu-elflint --gnu-ld "$f" 2>&1); then
+			printf '%s\n' "$lint_info" >&2
+			[ "$VERIFY_ELF_LINT" = relaxed ] && prefix=WARNING || prefix=ERROR
+			[ "$VERIFY_ELF_LINT" = relaxed ] || rc=1
+			Info "$prefix: $f: eu-elflint failed"
+		fi
+	fi
+
 	if [ "${VERIFY_ELF_RPATH:=normal}" != no ]; then
 		rpath="$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}')"
 		if [ -n "$rpath" ]; then
