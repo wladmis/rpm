@@ -22,8 +22,6 @@
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
-: ${RPM_VERIFY_ELF_SKIPLIST:=}
-
 elf_ldd='@RPMCONFIGDIR@/ldd'
 
 lookup_path()
@@ -40,28 +38,24 @@ lookup_path()
 }
 
 rc=0
-for f in "$@"; do
-	if [ ! -f "$f" ]; then
-		Info "ERROR: $f: file unavailable"
+
+VerifyELF()
+{
+	f="$1"
+
+	if ! t=$(file -b "$f"); then
+		Info "ERROR: ${t:-$f: file type not available}"
 		rc=1
+		continue
+	fi
+
+	if ! objdump_info=$(objdump -p "$f"); then
+		Info "WARNING: $f: objdump failed"
 		continue
 	fi
 
 	fname="${f#$RPM_BUILD_ROOT}"
 	fname="${fname#.}"
-
-	if [ -n "$RPM_VERIFY_ELF_SKIPLIST" ]; then
-		for skip in $RPM_VERIFY_ELF_SKIPLIST; do
-			if [ -z "${fname##$skip}" ]; then
-				continue 2
-			fi
-		done
-	fi
-
-	t="$(file -b "$f")"
-	[ -z "${t##ELF *}" -o -z "${t##* ELF *}" ] || continue
-
-	objdump_info=$(objdump -p "$f") || continue
 
 	if [ -n "$VERIFY_ELF_ARCH" -a "$RPM_TARGET_ARCH" = noarch ]; then
 		[ "$VERIFY_ELF_ARCH" = relaxed ] && prefix=WARNING || prefix=ERROR
@@ -207,6 +201,16 @@ END {
 			break
 		done
 	fi
-done
+}
+
+if [ $# -gt 0 ]; then
+	for f; do
+		VerifyELF "$f"
+	done
+else
+	while read -r f; do
+		VerifyELF "$f"
+	done
+fi
 
 exit $rc

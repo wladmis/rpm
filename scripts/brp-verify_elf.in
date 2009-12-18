@@ -120,6 +120,7 @@ done
 [ -z "$RPM_VERIFY_ELF_UNRESOLVED" ] || VERIFY_ELF_UNRESOLVED="$RPM_VERIFY_ELF_UNRESOLVED"
 
 : ${RPM_VERIFY_ELF_TOPDIR:=}
+: ${RPM_VERIFY_ELF_SKIPLIST:=}
 [ -d "$RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR" ] || exit 0
 
 echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (arch=$VERIFY_ELF_ARCH,fhs=$VERIFY_ELF_FHS,rpath=$VERIFY_ELF_RPATH,stack=$VERIFY_ELF_STACK,textrel=$VERIFY_ELF_TEXTREL,unresolved=$VERIFY_ELF_UNRESOLVED)"
@@ -129,4 +130,18 @@ RPM_VERIFY_ELF_LDD_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT")"
 RPM_VERIFY_ELF_LDD_RPATH="$RPM_VERIFY_ELF_LDD_RPATH /$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
 export RPM_VERIFY_ELF_LDD_RPATH
 
-find .$RPM_VERIFY_ELF_TOPDIR -type f -print0 |xargs -r0 @RPMCONFIGDIR@/verify-elf
+find .$RPM_VERIFY_ELF_TOPDIR -type f |
+file -NF$'\t' -f - |
+while IFS=$'\t' read -r f t; do
+	case " $t" in
+		*' ELF '*) ;;
+		*) continue ;;
+	esac
+	for skip in $RPM_VERIFY_ELF_SKIPLIST; do
+		case "${f#.}" in
+			$skip) continue 2 ;;
+		esac
+	done
+	printf '%s\n' "$f"
+done |
+@RPMCONFIGDIR@/verify-elf
