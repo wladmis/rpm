@@ -100,13 +100,14 @@ Requires: procps psmisc sed service texinfo which
 Requires: bash >= 0:3.1.17-alt4
 Requires: bzip2 >= 1:1.0.2-alt4
 Requires: gzip >= 0:1.3.3-alt2
-Requires: info-install >= 0:4.5-alt2
 Requires: mktemp >= 1:1.3.1
 Requires: patch >= 2.5
-Requires: pkgconfig-reqprov pkgconfig-recursion
 Requires: tar >= 0:1.13.22-alt1
 Requires: %_bindir/subst
 Requires: alternatives >= 0.3.2
+Requires: elfutils >= 0.143-alt1
+Requires: info-install >= 4.11
+Requires: pkgconfig-reqprov pkgconfig-recursion
 Requires: rpm-build-perl >= 0.6.2
 Requires: rpm-build-python >= 0.31
 Conflicts: rpm-build-tcl <= 0.2
