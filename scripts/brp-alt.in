@@ -43,11 +43,11 @@ cd "$RPM_BUILD_ROOT"
 # Adjust library links.
 @RPMCONFIGDIR@/brp-adjust_libraries
  
-# Verify ELF objects.
-@RPMCONFIGDIR@/brp-verify_elf
-
 # Strip ELF binaries.
 @RPMCONFIGDIR@/brp-strip
+
+# Verify ELF objects.
+@RPMCONFIGDIR@/brp-verify_elf
 
 # Re-bytecompile python modules.
 @RPMCONFIGDIR@/brp-bytecompile_python
