@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.24
+Release: alt98.25
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,12 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Dec 20 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.25
+- verify-elf: Implemented new "lint" method using "eu-elflint --gnu-ld";
+  for now, enabled lint=relaxed mode (just warnings) by default.
+- verify-elf: Improved "textrel" diagnostics by using eu-findtextrel.
+- verify-elf: Fixed typos in "rpath" method.
+
 * Tue Dec 01 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.24
 - Recoded README.ALT-ru_RU.KOI8-R -> README.ALT-ru_RU.UTF-8.
 - Rebuilt with python-2.6.x.
