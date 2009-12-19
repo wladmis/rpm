@@ -94,8 +94,8 @@ VerifyELF()
 				Info "ERROR: $f: RPATH contains \"::\": $rpath"
 				rc=1
 			fi
-			if [ rc = 0 ] && printf %s "$rpath" |fgrep -qs :; then
-				[ "$VERIFY_ELF_RPATH" = relaxed ] && prefix=WARNING || prefix=ERROR rc=1
+			if [ $rc = 0 ] && [ -z "${rpath##*:*}" ]; then
+				[ "$VERIFY_ELF_RPATH" = strict ] && prefix=ERROR rc=1 || prefix=WARNING
 				Info "$prefix: $f: RPATH entry contains \":\": $rpath"
 			fi
 
@@ -106,7 +106,7 @@ VerifyELF()
 				fi
 			done
 
-			if [ -z "$prefix" -a rc = 0 ]; then
+			if [ -z "$prefix" ] && [ $rc = 0 ]; then
 				[ "$VERIFY_ELF_RPATH" = strict ] && prefix=ERROR rc=1 || prefix=WARNING
 				Info "$prefix: $f: RPATH entry found: $rpath"
 			fi
