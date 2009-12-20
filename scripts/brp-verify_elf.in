@@ -27,7 +27,7 @@ cd "$RPM_BUILD_ROOT"
 
 export VERIFY_ELF_ARCH=normal
 export VERIFY_ELF_FHS=normal
-export VERIFY_ELF_LINT=normal
+export VERIFY_ELF_LINT=relaxed
 export VERIFY_ELF_RPATH=normal
 export VERIFY_ELF_STACK=normal
 export VERIFY_ELF_TEXTREL=normal
@@ -59,6 +59,15 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 			;;
 		unresolved=?*)
 			VERIFY_ELF_UNRESOLVED="${t#unresolved=}"
+			;;
+		default)
+			VERIFY_ELF_ARCH=normal
+			VERIFY_ELF_FHS=normal
+			VERIFY_ELF_LINT=relaxed
+			VERIFY_ELF_RPATH=normal
+			VERIFY_ELF_STACK=normal
+			VERIFY_ELF_TEXTREL=normal
+			VERIFY_ELF_UNRESOLVED=normal
 			;;
 		normal)
 			VERIFY_ELF_ARCH=normal
