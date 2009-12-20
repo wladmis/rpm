@@ -130,7 +130,7 @@ VerifyELF()
 	if [ "${VERIFY_ELF_TEXTREL:=normal}" != no ]; then
 		textrel="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*TEXTREL[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
 		if [ -n "$textrel" ]; then
-			LD_ORIGIN_PATH=/usr/bin eu-findtextrel "$f" >&2 ||:
+			LD_ORIGIN_PATH=/usr/bin eu-findtextrel "$f" 2>&1 |uniq >&2
 			[ "$VERIFY_ELF_TEXTREL" = relaxed ] && prefix=WARNING || prefix=ERROR rc=1
 			Info "$prefix: $f: TEXTREL entry found: $textrel"
 		fi
