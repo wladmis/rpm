@@ -46,7 +46,7 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 			VERIFY_ELF_FHS="${t#fhs=}"
 			;;
 		lint=?*)
-			VERIFY_ELF_FHS="${t#lint=}"
+			VERIFY_ELF_LINT="${t#lint=}"
 			;;
 		rpath=?*)
 			VERIFY_ELF_RPATH="${t#rpath=}"
