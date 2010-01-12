@@ -385,8 +385,13 @@
 @alt@# Licenses.
 @alt@%_licensedir	%{_datadir}/license
 @alt@
+@alt@# Systemwide directory for aclocal(1) files.
+@alt@%_aclocaldir	%{_datadir}/aclocal
+@alt@
 @alt@# Common lock directory.
 @alt@%_lockdir	%{_var}/lock
+@alt@# Subsystem lock directory.
+@alt@%_locksubsysdir	%{_var}/lock/subsys
 @alt@
 @alt@# Common log directory.
 @alt@%_logdir	%{_var}/log
