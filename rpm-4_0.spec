@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.27
+Release: alt98.28
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,12 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Wed Jan 13 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.28
+- lib.req: Recognize STB_GNU_UNIQUE symbols and add rtld(GNU_UNIQUE)
+  requirement for objects that contain such symbols.
+- platform.in: Added %%_aclocaldir and %%_locksubsysdir macros
+  (closes: #22710).
+
 * Mon Dec 21 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.27
 - brp-bytecompile_python: Hadlink indentical .pyc and .pyo files.
 
