@@ -443,6 +443,7 @@ typedef enum rpmTag_e {
     RPMTAG_DEPENDSDICT		= 1145,
     RPMTAG_SOURCEPKGID		= 1146,
     RPMTAG_DISTTAG		= 1155, /* s */
+    RPMTAG_VCS			= 5034, /* s */
     RPMTAG_AUTOINSTALLED	= 5094, /* i */
     RPMTAG_IDENTITY		= 5095, /* s */
 /*@-enummemuse@*/

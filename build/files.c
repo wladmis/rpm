@@ -2012,6 +2012,7 @@ void initSourceHeader(Spec spec)
 	case RPMTAG_CHANGELOGNAME:
 	case RPMTAG_CHANGELOGTEXT:
 	case RPMTAG_URL:
+	case RPMTAG_VCS:
 	case RPMTAG_BUILDHOST:
 	case HEADER_I18NTABLE:
 	    if (ptr)
