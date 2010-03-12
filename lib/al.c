@@ -7,7 +7,7 @@
 
 struct alEntry {
     const char *name;
-    int len;
+    unsigned int fasthash;
     /* entry-specific members */
 };
 
@@ -16,6 +16,18 @@ struct alIndex {
     int size;
     /* flexible array of entries */
 };
+
+static inline
+unsigned int fasthash(const char *name)
+{
+    /* The "fast hash" is used below to avoid extra strcmp calls.  Initially it
+     * was just a string length.  To improve the performance without resorting
+     * to full-fledged hashing, we now combine string length with its middle
+     * character. */
+    unsigned int len = strlen(name);
+    unsigned char c = name[len >> 1];
+    return (len << 8) | c;
+}
 
 /**
  * Compare two available index entries by name (qsort/bsearch).
@@ -27,9 +39,10 @@ static inline
 int nameCmp(const void * one, const void * two)		/*@*/
 {
     const struct alEntry *a = one, *b = two;
-    int lencmp = a->len - b->len;
-    if (lencmp)
-	return lencmp;
+    if (a->fasthash > b->fasthash)
+	return 1;
+    if (a->fasthash < b->fasthash)
+	return -1;
     return strcmp(a->name, b->name);
 }
 
@@ -45,7 +58,7 @@ void *axSearch(void *index, int esize, const char *name, int *nfound)
     assert(ax->size > 0);
 
     char *entries = (char *)(ax + 1);
-    struct alEntry needle = { name, strlen(name) };
+    struct alEntry needle = { name, fasthash(name) };
     if (ax->size == 1) {
 	if (nameCmp(entries, &needle))
 	    return NULL;
@@ -106,7 +119,7 @@ void *axGrow(void *index, int esize, int more)
  */
 struct alProvEntry {
 /*@dependent@*/ const char * name;	/*!< Provides name. */
-    int len;				/*!< No. of bytes in name. */
+    unsigned int fasthash;
     int pkgIx;				/*!< Containing package index. */
     int provIx;				/*!< Provides index in package. */
 } ;
@@ -134,7 +147,7 @@ void alIndexPkgProvides(availableList al, int pkgIx)
     for (provIx = 0; provIx < alp->providesCount; provIx++) {
 	struct alProvEntry *pe = &px->prov[px->size++];
 	pe->name = alp->provides[provIx];
-	pe->len = strlen(pe->name);
+	pe->fasthash = fasthash(pe->name);
 	pe->pkgIx = pkgIx;
 	pe->provIx = provIx;
     }
@@ -159,7 +172,7 @@ void alFreeProvIndex(availableList al)
  */
 struct alFileEntry {
     const char *basename;		/*!< File basename. */
-    int len;				/*!< Basename length. */
+    unsigned int fasthash;
     int pkgIx;				/*!< Containing package number. */
 };
 
@@ -174,7 +187,7 @@ struct alFileIndex {
  */
 struct alDirEntry {
     const char *dirname;		/*!< Directory path (+ trailing '/'). */
-    int len;				/*!< No. bytes in directory path. */
+    unsigned int fasthash;
     struct alFileIndex *fx;		/*!< Files index this directory. */
 };
 
@@ -227,7 +240,7 @@ void alIndexPkgFiles(availableList al, int pkgIx)
 	if (de == NULL) {
 	    de = &dx->dirs[dx->size++];
 	    de->dirname = d;
-	    de->len = strlen(d);
+	    de->fasthash = fasthash(d);
 	    de->fx = NULL;
 	    dx->sorted = 0;
 	}
@@ -238,7 +251,7 @@ void alIndexPkgFiles(availableList al, int pkgIx)
 	    const char *b = bn[i++];
 	    struct alFileEntry *fe = &fx->files[fx->size++];
 	    fe->basename = b;
-	    fe->len = strlen(b);
+	    fe->fasthash = fasthash(b);
 	    fe->pkgIx = pkgIx;
 	}
 	fx->sorted = 0;
