@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.28
+Release: alt98.29
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri Mar 12 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.29
+- al.c: Introduced "fasthash" to improve bsearch performance.
+
 * Wed Jan 13 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.28
 - lib.req: Recognize STB_GNU_UNIQUE symbols and add rtld(GNU_UNIQUE)
   requirement for objects that contain such symbols.
