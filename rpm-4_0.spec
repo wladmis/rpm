@@ -496,7 +496,7 @@ fi
   (closes: #22710).
 
 * Mon Dec 21 2009 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.27
-- brp-bytecompile_python: Hadlink indentical .pyc and .pyo files.
+- brp-bytecompile_python: Hardlink identical .pyc and .pyo files.
 
 * Sun Dec 20 2009 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.26
 - rpmrc.c (is_pentiumN): Added models with nonzero extended model
