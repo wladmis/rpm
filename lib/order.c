@@ -562,6 +562,8 @@ rescan:
 	    rpmMessage(RPMMESS_DEBUG, _("========== continuing tsort ...\n"));
 	    goto rescan;
 	}
+
+	rpmMessage(RPMMESS_ERROR, _("ordering failed, %d elements remain\n"), loopcheck);
 	return 1;
     }
 
