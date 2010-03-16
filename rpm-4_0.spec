@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.30
+Release: alt98.31
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Mar 16 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.31
+- rpmpopt.in: Do remove extra newline before %%{CHANGELOGTEXT} (4.0.4-alt93).
+
 * Tue Mar 16 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.30
 - order.c: Factored from depends.c.
 - order.c: Added missing error message.
