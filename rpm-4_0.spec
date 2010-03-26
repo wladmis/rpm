@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.32
+Release: alt98.33
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sat Mar 27 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.33
+- brp-strip: Speed up by optimizing file(1) invocations.
+
 * Fri Mar 26 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.32
 - build/files.c (checkHdrIntersect): Avoid quadratic behaviour.
 
