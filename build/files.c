@@ -3146,33 +3146,53 @@ static
 void checkHdrIntersect(Header h1, Header h2)
 {
     MyFileList l1 = {0}, l2 = {0};
-    const char *N1 = NULL, *N2 = NULL;
-    int_32 i1, i2;
     if (fillMyFileList(&l1, h1) != 0)
 	return;
     if (fillMyFileList(&l2, h2) != 0) {
 	freeMyFileList(&l1);
 	return;
     }
-    for (i1 = 0; i1 < l1.bnc; i1++) {
-		const mode_t m1 = l1.md[i1];
-		const char  *b1 = l1.bn[i1];
-		const char  *d1 = l1.dn[l1.di[i1]];
-		if (S_ISDIR(m1))
-		    continue;
-	for (i2 = 0; i2 < l2.bnc; i2++) {
-		const mode_t m2 = l2.md[i2];
-		const char  *b2 = l2.bn[i2];
-		const char  *d2 = l2.dn[l2.di[i2]];
-		if (S_ISDIR(m2))
-		    continue;
-	    if (strcmp(b1, b2) || strcmp(d1, d2))
-		continue;
-	    if (!N1) headerNVR(h1, &N1, NULL, NULL);
-	    if (!N2) headerNVR(h2, &N2, NULL, NULL);
-	    rpmMessage(RPMMESS_WARNING,
-		    _("file %s%s is packaged into both %s and %s\n"),
-		    d1, b1, N1, N2);
+    char f1[PATH_MAX], f2[PATH_MAX];
+    int i1 = 0, i2 = 0;
+    if (i1 < l1.bnc) {
+	strcpy(f1, l1.dn[l1.di[i1]]);
+	strcat(f1, l1.bn[i1]);
+    }
+    if (i2 < l2.bnc) {
+	strcpy(f2, l2.dn[l2.di[i2]]);
+	strcat(f2, l2.bn[i2]);
+    }
+    const char *N1 = NULL, *N2 = NULL;
+    while (i1 < l1.bnc && i2 < l2.bnc) {
+	int cmp = strcmp(f1, f2);
+	if (cmp < 0) {
+	    if (++i1 < l1.bnc) {
+		strcpy(f1, l1.dn[l1.di[i1]]);
+		strcat(f1, l1.bn[i1]);
+	    }
+	}
+	else if (cmp > 0) {
+	    if (++i2 < l2.bnc) {
+		strcpy(f2, l2.dn[l2.di[i2]]);
+		strcat(f2, l2.bn[i2]);
+	    }
+	}
+	else {
+	    if (!(S_ISDIR(l1.md[i1]) && S_ISDIR(l2.md[i2]))) {
+		if (!N1) headerNVR(h1, &N1, NULL, NULL);
+		if (!N2) headerNVR(h2, &N2, NULL, NULL);
+		rpmMessage(RPMMESS_WARNING,
+			_("file %s is packaged into both %s and %s\n"),
+			f1, N1, N2);
+	    }
+	    if (++i1 < l1.bnc) {
+		strcpy(f1, l1.dn[l1.di[i1]]);
+		strcat(f1, l1.bn[i1]);
+	    }
+	    if (++i2 < l2.bnc) {
+		strcpy(f2, l2.dn[l2.di[i2]]);
+		strcat(f2, l2.bn[i2]);
+	    }
 	}
     }
     freeMyFileList(&l1);
