@@ -32,7 +32,11 @@ DoStrip()
 }
 
 rc=0
-for f in "$@"; do
+
+StripFile()
+{
+	f="$1"
+
 	if [ ! -f "$f" ]; then
 		Info "$f: file unavailable"
 		rc=1
@@ -79,6 +83,16 @@ for f in "$@"; do
 		fi
 		continue
 	fi
-done
+}
+
+if [ $# -gt 0 ]; then
+	for f; do
+		StripFile "$f"
+	done
+else
+	while read -r f; do
+		StripFile "$f"
+	done
+fi
 
 exit $rc

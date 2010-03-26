@@ -230,7 +230,13 @@ fi
 StripTree()
 {
 	echo "Stripping binaries in $1 ($SHOW_METHODS)"
-	find "$1" -type f -print0 |xargs -r0 @RPMCONFIGDIR@/strip_files || return 1
+	local space=' '
+	find "$1" -type f |
+	file -NF$'\t' -f - |
+	LC_ALL=C fgrep "${space}ELF${space}
+${space}current ar archive" |
+	cut -f1 |
+	@RPMCONFIGDIR@/strip_files
 }
 
 if [ -n "$*" ]; then
