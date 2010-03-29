@@ -757,7 +757,7 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
  */
 typedef const struct PreambleRec_s {
     rpmTag tag;
-    int multiLang;
+    unsigned type;
     unsigned len;
 /*@observer@*/ /*@null@*/ const char * token;
 } * PreambleRec;
@@ -791,8 +791,8 @@ static struct PreambleRec_s const preambleList[] = {
     {RPMTAG_EXCLUSIVEOS,	0, LEN_AND_STR("exclusiveos")},
     {RPMTAG_ICON,		0, LEN_AND_STR("icon")},
     {RPMTAG_PROVIDEFLAGS,	0, LEN_AND_STR("provides")},
-    {RPMTAG_REQUIREFLAGS,	1, LEN_AND_STR("requires")},
-    {RPMTAG_PREREQ,		1, LEN_AND_STR("prereq")},
+    {RPMTAG_REQUIREFLAGS,	2, LEN_AND_STR("requires")},
+    {RPMTAG_PREREQ,		2, LEN_AND_STR("prereq")},
     {RPMTAG_CONFLICTFLAGS,	0, LEN_AND_STR("conflicts")},
     {RPMTAG_OBSOLETEFLAGS,	0, LEN_AND_STR("obsoletes")},
     {RPMTAG_PREFIXES,		0, LEN_AND_STR("prefixes")},
@@ -801,8 +801,8 @@ static struct PreambleRec_s const preambleList[] = {
     {RPMTAG_BUILDARCHS,		0, LEN_AND_STR("buildarchitectures")},
     {RPMTAG_BUILDARCHS,		0, LEN_AND_STR("buildarch")},
     {RPMTAG_BUILDCONFLICTS,	0, LEN_AND_STR("buildconflicts")},
-    {RPMTAG_BUILDPREREQ,	1, LEN_AND_STR("buildprereq")},
-    {RPMTAG_BUILDREQUIRES,	1, LEN_AND_STR("buildrequires")},
+    {RPMTAG_BUILDPREREQ,	2, LEN_AND_STR("buildprereq")},
+    {RPMTAG_BUILDREQUIRES,	2, LEN_AND_STR("buildrequires")},
     {RPMTAG_AUTOREQPROV,	0, LEN_AND_STR("autoreqprov")},
     {RPMTAG_AUTOREQ,		0, LEN_AND_STR("autoreq")},
     {RPMTAG_AUTOPROV,		0, LEN_AND_STR("autoprov")},
@@ -832,7 +832,7 @@ static int findPreambleTag(Spec spec, /*@out@*/int * tag,
     s = spec->line + p->len;
     SKIPSPACE(s);
 
-    switch (p->multiLang) {
+    switch (p->type) {
     default:
     case 0:
 	/* Unless this is a source or a patch, a ':' better be next */
@@ -842,8 +842,10 @@ static int findPreambleTag(Spec spec, /*@out@*/int * tag,
 	*lang = '\0';
 	break;
     case 1:	/* Parse optional ( <token> ). */
+    case 2:
 	if (*s == ':') {
-	    strcpy(lang, RPMBUILD_DEFAULT_LANG);
+	    /* Type 1 is multilang, 2 is qualifiers with no defaults */
+	    strcpy(lang, (p->type == 1) ? RPMBUILD_DEFAULT_LANG : "");
 	    break;
 	}
 	if (*s != '(') return 1;
