@@ -3061,9 +3061,11 @@ static int rpmdbMoveDatabase(const char * prefix,
 	/*@modifies fileSystem @*/
 {
     int i;
+    struct stat st;
     char * ofilename, * nfilename;
     int rc = 0;
     int xx;
+    int selinux = (is_selinux_enabled() > 0) && (matchpathcon_init(NULL) != -1);
  
     i = strlen(olddbpath);
     /*@-branchstate@*/
@@ -3114,8 +3116,16 @@ static int rpmdbMoveDatabase(const char * prefix,
 		continue;
 	    sprintf(nfilename, "%s/%s/%s", prefix, newdbpath, base);
 	    (void)rpmCleanPath(nfilename);
-	    if ((xx = Rename(ofilename, nfilename)) != 0)
+
+	    if (Rename(ofilename, nfilename) != 0)
 		rc = 1;
+	    else if (selinux && stat(nfilename, &st) == 0) {
+		security_context_t scon = NULL;
+		if (matchpathcon(nfilename, st.st_mode, &scon) != -1) {
+		    (void) setfilecon(nfilename, scon);
+		    freecon(scon);
+		}
+	    }
 	}
 	for (i = 0; i < 16; i++) {
 	    sprintf(ofilename, "%s/%s/__db.%03d", prefix, olddbpath, i);
@@ -3138,6 +3148,10 @@ static int rpmdbMoveDatabase(const char * prefix,
     case 0:
 	break;
     }
+
+    if (selinux)
+        (void) matchpathcon_fini();
+
     if (rc || _olddbapi == _newdbapi)
 	return rc;
 

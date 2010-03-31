@@ -246,6 +246,25 @@ extern int _tolower(int) __THROW	/*@*/;
 #include <malloc.h>
 #endif
 
+#if WITH_SELINUX
+#include <selinux/selinux.h>
+#else
+typedef char * security_context_t;
+
+#define freecon(_c)
+
+#define setfilecon(_fn, _c) (-1)
+#define lsetfilecon(_fn, _c)    (-1)
+
+#define is_selinux_enabled()    (0)
+
+#define matchpathcon_init(_fn)          (-1)
+#define matchpathcon_fini()         (0)
+#define matchpathcon(_fn, _fm, _c)      (-1)
+
+#define rpm_execcon(_v, _fn, _av, _envp)    (0)
+#endif
+
 /*@-declundef -incondefs @*/ /* FIX: these are macros */
 /**
  */

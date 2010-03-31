@@ -882,7 +882,11 @@ static int runScript(PSM_t psm, Header h,
 	    }
 	    (void) chdir("/");
 	    (void) umask(022);
-	    xx = execv(argv[0], (char *const *)argv);
+	    /* Permit libselinux to do the scriptlet exec. */
+	    if (ts->selinuxEnabled)
+		xx = rpm_execcon(0, argv[0], (char *const *)argv, environ);
+	    else
+		xx = execv(argv[0], (char *const *)argv);
 	    break;
 	default:
 	    break;

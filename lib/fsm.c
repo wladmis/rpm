@@ -518,6 +518,26 @@ int fsmTeardown(FSM_t fsm) {
     /*@=nullstate@*/
 }
 
+static int fsmMapFContext(FSM_t fsm)
+{
+    rpmTransactionSet ts = fsmGetTs(fsm);
+    struct stat * st;
+    st = &fsm->sb;
+
+    /*
+     * Find file security context (if not disabled).
+     */
+    fsm->fcontext = NULL;
+    if (ts != NULL && !(ts->transFlags & RPMTRANS_FLAG_NOCONTEXTS)) {
+        security_context_t scon = NULL;
+
+        if (matchpathcon(fsm->path, st->st_mode, &scon) == 0 && scon != NULL) {
+            fsm->fcontext = scon;
+        }
+    }
+    return 0;
+}
+
 int fsmMapPath(FSM_t fsm)
 {
     TFI_t fi = fsmGetFi(fsm);	/* XXX const except for fstates */
@@ -1140,10 +1160,26 @@ static int fsmMkdirs(/*@special@*/ FSM_t fsm)
 		*te = '\0';
 		st->st_mode = S_IFDIR | (fi->dperms & 07777);
 		rc = fsmStage(fsm, FSM_MKDIR);
-		if (!rc)
-		    rpmMessage(RPMMESS_DEBUG,
-			_("%s directory created with perms %04o.\n"),
-			fsm->path, (unsigned)(st->st_mode & 07777));
+		if (!rc) {
+			/* XXX FIXME? only new dir will have context set. */
+			/* Get file security context from patterns. */
+			rc = fsmMapFContext(fsm);
+			if (!rc && fsm->fcontext)
+				rc = fsmStage(fsm, FSM_LSETFCON);
+
+			if (fsm->fcontext == NULL)
+				rpmMessage(RPMMESS_DEBUG,
+				_("%s directory created with perms %04o.\n"),
+				fsm->path, (unsigned)(st->st_mode & 07777));
+			else {
+				rpmMessage(RPMMESS_DEBUG,
+				_("%s directory created with perms %04o, context %s.\n"),
+				fsm->path, (unsigned)(st->st_mode & 07777),
+				fsm->fcontext);
+				freecon(fsm->fcontext);
+				fsm->fcontext = NULL;
+			}
+		}
 		*te = '/';
 	    }
 	    if (rc)
@@ -1743,6 +1779,17 @@ if (!(fsm->mapFlags & CPIO_ALL_HARDLINKS)) break;
 		}
 		fsm->opath = _free(fsm->opath);
 	    }
+	    /*
+	     * Set file security context (if not disabled).
+	     */
+	    if (!rc && !getuid()) {
+		rc = fsmMapFContext(fsm);
+		if (!rc) {
+		    rc = fsmStage(fsm, FSM_LSETFCON);
+		    freecon(fsm->fcontext);
+		}
+		fsm->fcontext = NULL;
+	    }
 	    if (S_ISLNK(st->st_mode)) {
 		if (!rc && !getuid())
 		    rc = fsmStage(fsm, FSM_LCHOWN);
@@ -1887,6 +1934,19 @@ if (!(fsm->mapFlags & CPIO_ALL_HARDLINKS)) break;
 	    rpmMessage(RPMMESS_DEBUG, " %8s (%s) %s\n", cur,
 		fsm->path, (rc < 0 ? strerror(errno) : ""));
 	if (rc < 0)	rc = CPIOERR_RMDIR_FAILED;
+	break;
+    case FSM_LSETFCON:
+	if (fsm->fcontext == NULL
+	    || *fsm->fcontext == '\0'
+	    || !strcmp(fsm->fcontext, "<<none>>"))
+		break;
+	rc = lsetfilecon(fsm->path, fsm->fcontext);
+	if (_fsm_debug && (stage & FSM_SYSCALL))
+	    rpmMessage(RPMMESS_DEBUG, " %8s (%s, %s) %s\n", cur,
+		       fsm->path, fsm->fcontext,
+		       (rc < 0 ? strerror(errno) : ""));
+	if (rc < 0)
+	    rc = (errno == EOPNOTSUPP ? 0 : CPIOERR_LSETFCON_FAILED);
 	break;
     case FSM_CHOWN:
 	rc = chown(fsm->path, st->st_uid, st->st_gid);
@@ -2175,6 +2235,7 @@ if (!(fsm->mapFlags & CPIO_ALL_HARDLINKS)) break;
     case FSM_RENAME:	return "Rename";
     case FSM_MKDIR:	return "Mkdir";
     case FSM_RMDIR:	return "rmdir";
+    case FSM_LSETFCON:	return "lsetfcon";
     case FSM_CHOWN:	return "chown";
     case FSM_LCHOWN:	return "lchown";
     case FSM_CHMOD:	return "chmod";

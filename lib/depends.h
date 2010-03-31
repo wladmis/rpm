@@ -120,6 +120,7 @@ struct rpmTransactionSet_s {
 /*@only@*/ const char * currDir;/*!< Current working directory. */
 /*@null@*/ FD_t scriptFd;	/*!< Scriptlet stdout/stderr. */
     int id;			/*!< Transaction id. */
+    int selinuxEnabled;		/*!< Is SE linux enabled? */
 } ;
 
 /** \ingroup rpmdep

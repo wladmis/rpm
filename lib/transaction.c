@@ -1528,6 +1528,17 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     if (ts->transFlags & RPMTRANS_FLAG_JUSTDB)
 	ts->transFlags |= (_noTransScripts | _noTransTriggers);
 
+    /* if SELinux isn't enabled or init fails, don't bother... */
+    if (!ts->selinuxEnabled)
+        ts->transFlags |= RPMTRANS_FLAG_NOCONTEXTS;
+
+    if (!(ts->transFlags & RPMTRANS_FLAG_NOCONTEXTS)) {
+        const char *fn = rpmGetPath("%{?_install_file_context_path}", NULL);
+        if (matchpathcon_init(fn) == -1)
+            ts->transFlags |= RPMTRANS_FLAG_NOCONTEXTS;
+        fn = _free(fn);
+    }
+
     ts->notify = notify;
     ts->notifyData = notifyData;
     /*@-assignexpose@*/
@@ -2054,6 +2065,9 @@ assert(alp == fi->ap);
 
     ts->flList = freeFl(ts, ts->flList);
     ts->flEntries = 0;
+
+    if (!(ts->transFlags & RPMTRANS_FLAG_NOCONTEXTS))
+        matchpathcon_fini();
 
     /*@-nullstate@*/
     if (ourrc)

@@ -638,6 +638,31 @@ if test $withval = yes ; then
   LIBS="$LIBS -ldmalloc"
 fi
 
+WITH_SELINUX_LIB=
+AC_ARG_WITH(selinux, [AS_HELP_STRING([--with-selinux],[build with selinux support])],
+[case "$with_selinux" in
+yes|no) ;;
+*) AC_MSG_ERROR([invalid argument to --with-selinux])
+ ;;
+esac],
+[with_selinux=no])
+
+AS_IF([test "$with_selinux" = yes],[
+  AC_CHECK_HEADER([selinux/selinux.h],[
+    AC_CHECK_LIB(selinux,[is_selinux_enabled],[with_selinux=yes],[
+      AC_MSG_ERROR([--with-selinux given, but libselinux not found])])
+  ],[
+    AC_MSG_ERROR([--with-selinux given, but selinux/selinux.h not found])
+  ])
+])
+
+AS_IF([test "$with_selinux" = yes],[
+  AC_DEFINE(WITH_SELINUX, 1, [Build with selinux support?])
+  WITH_SELINUX_LIB="-lselinux"
+])
+AC_SUBST(WITH_SELINUX_LIB)
+AM_CONDITIONAL(SELINUX,[test "$with_selinux" = yes])
+
 AC_CHECK_FUNCS(setlocale)
 
 dnl XXX Solaris <= 2.6 only permits 8 chars in password.

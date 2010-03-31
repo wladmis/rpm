@@ -160,6 +160,9 @@ struct poptOption rpmInstallPoptTable[] = {
 	N_("do not reorder package installation to satisfy dependencies"),
 	NULL},
 
+ { "nocontexts", '\0', POPT_BIT_SET, &rpmIArgs.transFlags, RPMTRANS_FLAG_NOCONTEXTS,
+	N_("don't install file security contexts"), NULL},
+
  { "noscripts", '\0', POPT_BIT_SET, &rpmIArgs.transFlags,
 	(_noTransScripts|_noTransTriggers),
 	N_("do not execute package scriptlet(s)"), NULL },

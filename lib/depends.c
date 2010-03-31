@@ -261,6 +261,8 @@ rpmTransactionSet rpmtransCreateSet(rpmdb rpmdb, const char * rootDir)
     ts->orderCount = 0;
     ts->order = NULL;
 
+    ts->selinuxEnabled = is_selinux_enabled() > 0;
+
     return ts;
 }
 

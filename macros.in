@@ -294,6 +294,20 @@
 # Note: The default value should be 0 for legacy compatibility.
 %_unpackaged_files_terminate_build	0
 
+# Desired selinux policy tree
+%__policy_tree %(sed -rn 's;^[[:blank:]]*SELINUXTYPE=([^[:blank:]]+).*$;\\1;p' %{_sysconfdir}/selinux/config)
+
+# Path to selinux file context patterns.
+%__file_context_path /etc/selinux/%{__policy_tree}/contexts/files/file_contexts
+
+#
+# Path to selinux file context patterns used to set
+# (or override package content) file contexts when installing.
+#
+# Undefined, missing or %{nil} will use package content (if available).
+%_install_file_context_path     %{__file_context_path}
+
+
 #==============================================================================
 # ---- Package version macro.
 #	The type of package to produce, for compatibility with legacy

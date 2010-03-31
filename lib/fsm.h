@@ -66,6 +66,7 @@ typedef enum fileStage_e {
     FSM_STAT	=  _fs(46),
     FSM_READLINK=  _fs(47),
     FSM_CHROOT	=  _fs(48),
+    FSM_LSETFCON=  _fs(49),
 
     FSM_NEXT	=  _fd(65),
     FSM_EAT	=  _fd(66),
@@ -160,6 +161,7 @@ struct fsm_s {
 /*@shared@*/ const char * dirName;	/*!< File directory name. */
 /*@shared@*/ const char * baseName;	/*!< File base name. */
 /*@shared@*/ const char * fmd5sum;	/*!< File MD5 sum (NULL disables). */
+    security_context_t fcontext;	/*!< File security context (NULL disables). */
     unsigned fflags;			/*!< File flags. */
     fileAction action;			/*!< File disposition. */
     fileStage goal;			/*!< Package state machine goal. */
