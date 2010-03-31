@@ -18,6 +18,7 @@ Release: alt98.44
 %def_without apidocs
 %def_without db
 %def_without build_topdir
+%def_with selinux
 
 # XXX enable at your own risk, CDB access to rpmdb isn't cooked yet.
 %define enable_cdb create cdb
@@ -43,6 +44,7 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_python:BuildPreReq: python-devel}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
+%{?_with_selinux:BuildPreReq: libselinux-devel-static}
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
 BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
@@ -215,6 +217,7 @@ export ac_cv_path___SSH=/usr/bin/ssh
 	%{?_with_python} %{?_without_python} \
 	%{?_with_apidocs} %{?_without_apidocs} \
 	%{?_with_db} %{?_without_db} \
+	%{subst_with selinux} \
 	--program-transform-name=
 
 %make_build YACC='bison -y'
