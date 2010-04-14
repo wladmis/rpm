@@ -103,8 +103,10 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 done
 
 # No stack verification available on arm*
-[ -z "$RPM_TARGET_ARCH" -o -n "${RPM_TARGET_ARCH##arm*}" ] ||
+if [ -n "$RPM_TARGET_ARCH" -a -z "${RPM_TARGET_ARCH##arm*}" ]; then
+	VERIFY_ELF_LINT=no
 	VERIFY_ELF_STACK=no
+fi
 
 : ${RPM_VERIFY_ELF_TOPDIR:=}
 : ${RPM_VERIFY_ELF_SKIPLIST:=}
