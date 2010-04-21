@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.35
+Release: alt98.36
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Wed Apr 21 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.36
+- rpmdb.c: Make rpmdb index list hard-wired, remove unused require-
+  and provideversion indexes (Panu Matilainen).
+
 * Wed Apr 14 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.35
 - brp-verify_elf: Disabled lint check on ARM.
 
