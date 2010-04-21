@@ -702,10 +702,8 @@ typedef /*@abstract@*/ struct _dbiIndexSet * dbiIndexSet;
 /** \ingroup rpmdb
  * Tags for which rpmdb indices will be built.
  */
-/*@unchecked@*/
-/*@only@*/ /*@null@*/ extern int * dbiTags;
-/*@unchecked@*/
-extern int dbiTagsMax;
+extern const int dbiTags[];
+extern const int dbiTagsMax;
 
 /** \ingroup rpmdb
  * Open rpm database.
