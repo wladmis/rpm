@@ -18,11 +18,21 @@
 
 . @RPMCONFIGDIR@/functions
 
-undefined=
+warn=
+bind_now=
+debug=
+
 while test $# -gt 0; do
   case "$1" in
   --undefined)
-    undefined=1
+    warn=1
+    bind_now=1
+    shift
+    ;;
+  --bindings)
+    warn=1
+    bind_now=1
+    debug=bindings
     shift
     ;;
   --)		# Stop option processing.
@@ -72,7 +82,7 @@ verify_out="$("$rtld" --verify "$file")"
 [ "$?" = 0 -o "$?" = 2 ] ||
 	Fatal "$file: trace failed"
 
-LD_TRACE_LOADED_OBJECTS=1 LD_WARN="$undefined" LD_BIND_NOW="$undefined" LD_LIBRARY_VERSION="$verify_out" \
+LD_TRACE_LOADED_OBJECTS=1 LD_WARN=$warn LD_BIND_NOW=$bind_now LD_DEBUG=$debug LD_LIBRARY_VERSION=$verify_out \
 	"$rtld" --library-path "$rpath" "$file" ||
 	Fatal "$file: trace failed"
 
