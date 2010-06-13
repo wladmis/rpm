@@ -167,14 +167,14 @@ ArgvFileAction()
 		for av_f; do
 			[ -n "$av_f" -a -z "${av_f##/*}" ] || av_f=$(CanonPath "$av_f")
 			Debug "processing $av_f"
-			"$av_action" "$av_f"
+			"$av_action" "$av_f" </dev/null
 		done
 	else
 		[ -t 0 ] && Info "reading file list from standard input"
 		while IFS= read -r av_f; do
 			[ -n "$av_f" -a -z "${av_f##/*}" ] || av_f=$(CanonPath "$av_f")
 			Debug "processing $av_f"
-			"$av_action" "$av_f"
+			"$av_action" "$av_f" </dev/null
 		done
 	fi
 }
