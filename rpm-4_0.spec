@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.36
+Release: alt98.37
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,12 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Jul 01 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.37
+- shebang.req (ShebangReq): Ensure that interpreter is specified
+  as an absolute pathname (closes: #20096).
+- platform.in: Enabled %%check in buildreq mode (closes: #23030).
+- pkgconfig.req (PkgconfigReqProv): Relaxed version check.
+
 * Wed Apr 21 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.36
 - rpmdb.c: Make rpmdb index list hard-wired, remove unused require-
   and provideversion indexes (Panu Matilainen).
