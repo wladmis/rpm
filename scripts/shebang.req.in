@@ -26,10 +26,10 @@ ShebangReq()
 	CheckInterp()
 	{
 		case "$1" in
-			*"$CR") ;;
-			*) return 0 ;;
+			*"$CR") Fatal "$f: trailing <CR> in interpreter: $line" ;;
+			/*) return 0 ;;
+			*) Fatal "$f: interpreter must be an absolute pathname: $line" ;;
 		esac
-		Fatal "$f: trailing <CR> in interpreter: $line"
 	}
 
 	CheckArgs()
