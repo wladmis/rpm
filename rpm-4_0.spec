@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.37
+Release: alt98.38
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sat Jul 03 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.38
+- shebang.req (ShebangReq): fixed the check for absolute pathname
+  introduced in previous release (closes: #23716).
+
 * Thu Jul 01 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.37
 - shebang.req (ShebangReq): Ensure that interpreter is specified
   as an absolute pathname (closes: #20096).
