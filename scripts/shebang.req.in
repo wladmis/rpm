@@ -26,10 +26,10 @@ ShebangReq()
 	CheckInterp()
 	{
 		case "$1" in
-			*"$CR") Fatal "$f: trailing <CR> in interpreter: $line" ;;
-			/*) return 0 ;;
-			*) Fatal "$f: interpreter must be an absolute pathname: $line" ;;
+			*"$CR") ;;
+			*) return 0 ;;
 		esac
+		Fatal "$f: trailing <CR> in interpreter: $line"
 	}
 
 	CheckArgs()
@@ -64,6 +64,9 @@ ShebangReq()
 			FindPackage "$f" "$1"
 			;;
 	esac
+
+	[ -z "${1##/*}" ] ||
+		Fatal "$f: interpreter must be an absolute pathname: $line"
 }
 
 ArgvFileAction ShebangReq "$@"
