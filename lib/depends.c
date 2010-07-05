@@ -456,6 +456,40 @@ rpmDependencyConflict rpmdepFreeConflicts(rpmDependencyConflict conflicts,
     return (conflicts = _free(conflicts));
 }
 
+/* Cached rpmdb provide lookup, returns 0 if satisfied, 1 otherwise */
+static
+int dbSatisfiesDepend(rpmTransactionSet ts,
+		const char * keyName, const char * keyEVR, int keyFlags)
+{
+    rpmdbMatchIterator mi;
+    Header h;
+    int rc = 1;
+
+    if (*keyName == '/' && (keyFlags & RPMSENSE_SENSEMASK) == 0) {
+	mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_BASENAMES, keyName, 0);
+	rpmdbPruneIterator(mi, ts->removedPackages, ts->numRemovedPackages, 1);
+	while ((h = rpmdbNextIterator(mi)) != NULL) {
+	    rc = 0;
+	    break;
+	}
+	mi = rpmdbFreeIterator(mi);
+    }
+
+    if (rc == 1) {
+	mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_PROVIDENAME, keyName, 0);
+	rpmdbPruneIterator(mi, ts->removedPackages, ts->numRemovedPackages, 1);
+	while ((h = rpmdbNextIterator(mi)) != NULL) {
+	    if (rangeMatchesDepFlags(h, keyName, keyEVR, keyFlags)) {
+		rc = 0;
+		break;
+	    }
+	}
+	mi = rpmdbFreeIterator(mi);
+    }
+
+    return rc;
+}
+
 /**
  * Check key for an unsatisfied dependency.
  * @todo Eliminate rpmrc provides.
@@ -467,15 +501,11 @@ rpmDependencyConflict rpmdepFreeConflicts(rpmDependencyConflict conflicts,
  * @param keyFlags	dependency logical range qualifiers
  * @return		0 if satisfied, 1 if not satisfied, 2 if error
  */
-static int unsatisfiedDepend(rpmTransactionSet ts,
+static int tsSatisfiesDepend(rpmTransactionSet ts,
 		const char * keyType, const char * keyDepend,
 		const char * keyName, const char * keyEVR, int keyFlags)
 	/*@modifies ts @*/
 {
-    rpmdbMatchIterator mi;
-    Header h;
-    int rc = 0;	/* assume dependency is satisfied */
-
     /*
      * New features in rpm packaging implicitly add versioned dependencies
      * on rpmlib provides. The dependencies look like "rpmlib(YaddaYadda)".
@@ -485,58 +515,26 @@ static int unsatisfiedDepend(rpmTransactionSet ts,
 	if (rpmCheckRpmlibProvides(keyName, keyEVR, keyFlags)) {
 	    rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (rpmlib provides)\n"),
 			keyType, keyDepend+2);
-	    goto exit;
+	    return 0;
 	}
 	goto unsatisfied;
     }
 
-    if (alSatisfiesDepend(&ts->addedPackages, keyName, keyEVR, keyFlags))
-    {
-	/* XXX here we do not discern between files and provides */
-	rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provide)\n"),
+    if (alSatisfiesDepend(&ts->addedPackages, keyName, keyEVR, keyFlags)) {
+	rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provides)\n"),
 			keyType, keyDepend+2);
-	goto exit;
+	return 0;
     }
 
-    /* XXX only the installer does not have the database open here. */
-    if (ts->rpmdb != NULL) {
-	if (*keyName == '/' && (keyFlags & RPMSENSE_SENSEMASK) == 0) {
-
-	    mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_BASENAMES, keyName, 0);
-
-	    (void) rpmdbPruneIterator(mi,
-			ts->removedPackages, ts->numRemovedPackages, 1);
-
-	    while ((h = rpmdbNextIterator(mi)) != NULL) {
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (db files)\n"),
+    if (dbSatisfiesDepend(ts, keyName, keyEVR, keyFlags) == 0) {
+	rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (rpmdb provides)\n"),
 			keyType, keyDepend+2);
-		mi = rpmdbFreeIterator(mi);
-		goto exit;
-	    }
-	    mi = rpmdbFreeIterator(mi);
-	}
-
-	mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_PROVIDENAME, keyName, 0);
-	(void) rpmdbPruneIterator(mi,
-			ts->removedPackages, ts->numRemovedPackages, 1);
-	while ((h = rpmdbNextIterator(mi)) != NULL) {
-	    if (rangeMatchesDepFlags(h, keyName, keyEVR, keyFlags)) {
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (db provides)\n"),
-			keyType, keyDepend+2);
-		mi = rpmdbFreeIterator(mi);
-		goto exit;
-	    }
-	}
-	mi = rpmdbFreeIterator(mi);
-
+	return 0;
     }
 
 unsatisfied:
     rpmMessage(RPMMESS_DEBUG, _("%s: %-45s NO\n"), keyType, keyDepend+2);
-    rc = 1;	/* dependency is unsatisfied */
-
-exit:
-    return rc;
+    return 1;
 }
 
 /**
@@ -589,7 +587,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	keyDepend = printDepend("R",
 		requires[i], requiresEVR[i], requireFlags[i]);
 
-	rc = unsatisfiedDepend(ts, " Requires", keyDepend,
+	rc = tsSatisfiesDepend(ts, " Requires", keyDepend,
 		requires[i], requiresEVR[i], requireFlags[i]);
 
 	switch (rc) {
@@ -647,7 +645,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 
 	keyDepend = printDepend("C", conflicts[i], conflictsEVR[i], conflictFlags[i]);
 
-	rc = unsatisfiedDepend(ts, "Conflicts", keyDepend,
+	rc = tsSatisfiesDepend(ts, "Conflicts", keyDepend,
 		conflicts[i], conflictsEVR[i], conflictFlags[i]);
 
 	/* 1 == unsatisfied, 0 == satsisfied */
