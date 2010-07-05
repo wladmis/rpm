@@ -485,6 +485,17 @@ int dbSatisfiesDepend(rpmTransactionSet ts,
     Header h;
     int rc = 1;
 
+    /* Lookup dbProvCache by keyName. */
+    const void ** cacheData = NULL;
+    if (htGetEntry(dbProvCache, keyName, &cacheData, NULL, NULL) == 0) {
+	if (*cacheData == NULL)
+	    /* cache value is NULL (for "no"), the dependency is not satisfied */
+	    return 1;
+	if ((keyFlags & RPMSENSE_SENSEMASK) == 0)
+	    /* cache value is "yes", unversioned dependency is satisfied */
+	    return 0;
+    }
+
     if (*keyName == '/' && (keyFlags & RPMSENSE_SENSEMASK) == 0) {
 	mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_BASENAMES, keyName, 0);
 	rpmdbPruneIterator(mi, ts->removedPackages, ts->numRemovedPackages, 1);
@@ -503,11 +514,21 @@ int dbSatisfiesDepend(rpmTransactionSet ts,
 		rc = 0;
 		break;
 	    }
+	    else {
+		/* version did not match */
+		rc = -1;
+	    }
 	}
 	mi = rpmdbFreeIterator(mi);
     }
 
-    return rc;
+    /* Update dbProvCache.
+     * When versions did not match, it is still okay to say "yes" for the name. */
+    if (cacheData == NULL)
+	/* XXX keyName points to header memory, no need for strdup */
+	htAddEntry(dbProvCache, keyName, rc < 1 ? "yes" : NULL);
+
+    return rc ? 1 : 0;
 }
 
 /**
