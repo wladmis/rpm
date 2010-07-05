@@ -62,24 +62,6 @@
     return tbuf;
 }
 
-#ifdef	UNUSED
-static /*@only@*/ const char *buildEVR(int_32 *e, const char *v, const char *r)
-{
-    const char *pEVR;
-    char *p;
-
-    pEVR = p = xmalloc(21 + strlen(v) + 1 + strlen(r) + 1);
-    *p = '\0';
-    if (e) {
-	sprintf(p, "%d:", *e);
-	while (*p)
-	    p++;
-    }
-    (void) stpcpy( stpcpy( stpcpy(p, v) , "-") , r);
-    return pEVR;
-}
-#endif
-
 /* parseEVR() moved to rpmvercmp.c */
 
 const char *rpmNAME = PACKAGE;
@@ -494,31 +476,6 @@ static int unsatisfiedDepend(rpmTransactionSet ts,
     Header h;
     int rc = 0;	/* assume dependency is satisfied */
 
-#ifdef	DYING
-  { static /*@observer@*/ const char noProvidesString[] = "nada";
-    static /*@observer@*/ const char * rcProvidesString = noProvidesString;
-    const char * start;
-    int i;
-
-    if (rcProvidesString == noProvidesString)
-	rcProvidesString = rpmGetVar(RPMVAR_PROVIDES);
-
-    if (rcProvidesString != NULL && !(keyFlags & RPMSENSE_SENSEMASK)) {
-	i = strlen(keyName);
-	/*@-observertrans -mayaliasunique@*/
-	while ((start = strstr(rcProvidesString, keyName))) {
-	/*@=observertrans =mayaliasunique@*/
-	    if (xisspace(start[i]) || start[i] == '\0' || start[i] == ',') {
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (rpmrc provides)\n"),
-			keyType, keyDepend+2);
-		goto exit;
-	    }
-	    rcProvidesString = start + 1;
-	}
-    }
-  }
-#endif
-
     /*
      * New features in rpm packaging implicitly add versioned dependencies
      * on rpmlib provides. The dependencies look like "rpmlib(YaddaYadda)".
@@ -571,21 +528,6 @@ static int unsatisfiedDepend(rpmTransactionSet ts,
 	    }
 	}
 	mi = rpmdbFreeIterator(mi);
-
-#ifndef DYING
-	mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_NAME, keyName, 0);
-	(void) rpmdbPruneIterator(mi,
-			ts->removedPackages, ts->numRemovedPackages, 1);
-	while ((h = rpmdbNextIterator(mi)) != NULL) {
-	    if (rangeMatchesDepFlags(h, keyName, keyEVR, keyFlags)) {
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (db package)\n"),
-			keyType, keyDepend+2);
-		mi = rpmdbFreeIterator(mi);
-		goto exit;
-	    }
-	}
-	mi = rpmdbFreeIterator(mi);
-#endif
 
     }
 
