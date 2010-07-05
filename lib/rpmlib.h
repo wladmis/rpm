@@ -220,7 +220,7 @@ extern const struct headerSprintfExtension_s rpmHeaderFormats[];
  * Pseudo-tags used by the rpmdb iterator API.
  */
 #define	RPMDBI_PACKAGES		0	/*!< Installed package headers. */
-#define	RPMDBI_DEPENDS		1	/*!< Dependency resolution cache. */
+#define	___DBI_DEPENDS		1	/*!< Dependency resolution cache. */
 #define	RPMDBI_LABEL		2	/*!< Fingerprint search marker. */
 #define	RPMDBI_ADDED		3	/*!< Added package headers. */
 #define	RPMDBI_REMOVED		4	/*!< Removed package headers. */

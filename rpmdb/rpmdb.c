@@ -51,7 +51,6 @@ static int _rebuildinprogress = 0;
 
 const int dbiTags[] = {
     RPMDBI_PACKAGES,
-    RPMDBI_DEPENDS, /* XXX for depends.c */
     RPMTAG_NAME,
     RPMTAG_BASENAMES,
     RPMTAG_GROUP,
@@ -932,7 +931,6 @@ static int openDatabase(/*@null@*/ const char * prefix,
 	    case RPMDBI_AVAILABLE:
 	    case RPMDBI_ADDED:
 	    case RPMDBI_REMOVED:
-	    case RPMDBI_DEPENDS:
 		continue;
 		/*@notreached@*/ /*@switchbreak@*/ break;
 	    default:
@@ -2345,7 +2343,6 @@ int rpmdbRemove(rpmdb db, /*@unused@*/ int rid, unsigned int hdrNum)
 	    case RPMDBI_AVAILABLE:
 	    case RPMDBI_ADDED:
 	    case RPMDBI_REMOVED:
-	    case RPMDBI_DEPENDS:
 		continue;
 		/*@notreached@*/ /*@switchbreak@*/ break;
 	    case RPMDBI_PACKAGES:
@@ -2663,7 +2660,6 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 	    case RPMDBI_AVAILABLE:
 	    case RPMDBI_ADDED:
 	    case RPMDBI_REMOVED:
-	    case RPMDBI_DEPENDS:
 		continue;
 		/*@notreached@*/ /*@switchbreak@*/ break;
 	    case RPMDBI_PACKAGES:
@@ -3100,7 +3096,6 @@ static int rpmdbMoveDatabase(const char * prefix,
 	    case RPMDBI_AVAILABLE:
 	    case RPMDBI_ADDED:
 	    case RPMDBI_REMOVED:
-	    case RPMDBI_DEPENDS:
 		continue;
 		/*@notreached@*/ /*@switchbreak@*/ break;
 	    default:

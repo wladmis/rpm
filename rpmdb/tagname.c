@@ -17,9 +17,6 @@ const char * tagName(int tag)
     case RPMDBI_PACKAGES:
 	strcpy(nameBuf, "Packages");
 	break;
-    case RPMDBI_DEPENDS:
-	strcpy(nameBuf, "Depends");
-	break;
     case RPMDBI_ADDED:
 	strcpy(nameBuf, "Added");
 	break;
@@ -54,8 +51,6 @@ int tagValue(const char * tagstr)
 
     if (!xstrcasecmp(tagstr, "Packages"))
 	return RPMDBI_PACKAGES;
-    if (!xstrcasecmp(tagstr, "Depends"))
-	return RPMDBI_DEPENDS;
     if (!xstrcasecmp(tagstr, "Added"))
 	return RPMDBI_ADDED;
     if (!xstrcasecmp(tagstr, "Removed"))
