@@ -688,24 +688,22 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 }
 
 /**
- * Check dependency against installed packages.
- * Adding: check name/provides key against each conflict match,
- * Erasing: check name/provides/filename key against each requiredby match.
+ * Erasing: check provides key against tag (requires or conflicts) matches.
  * @param ts		transaction set
  * @param psp		dependency problems
- * @param key		dependency name
- * @param mi		rpm database iterator
+ * @param tag		RPMTAG_REQUIRENAME or RPMTAG_CONFLICTNAME
+ * @param key		requires name
  * @return		0 no problems found
  */
-static int checkPackageSet(rpmTransactionSet ts, problemsSet psp,
-		const char * key, /*@only@*/ /*@null@*/ rpmdbMatchIterator mi)
-	/*@modifies ts, mi, psp @*/
+static int checkDependent(rpmTransactionSet ts, problemsSet psp,
+		rpmTag tag, const char * key)
+	/*@modifies ts, psp @*/
 {
+    rpmdbMatchIterator mi = rpmdbInitIterator(ts->rpmdb, tag, key, 0);
+    rpmdbPruneIterator(mi, ts->removedPackages, ts->numRemovedPackages, 1);
+
     Header h;
     int rc = 0;
-
-    (void) rpmdbPruneIterator(mi,
-		ts->removedPackages, ts->numRemovedPackages, 1);
     while ((h = rpmdbNextIterator(mi)) != NULL) {
 	if (checkPackageDeps(ts, psp, h, key)) {
 	    rc = 1;
@@ -713,45 +711,6 @@ static int checkPackageSet(rpmTransactionSet ts, problemsSet psp,
 	}
     }
     mi = rpmdbFreeIterator(mi);
-
-    return rc;
-}
-
-/**
- * Erasing: check name/provides/filename key against requiredby matches.
- * @param ts		transaction set
- * @param psp		dependency problems
- * @param key		requires name
- * @return		0 no problems found
- */
-static int checkDependentPackages(rpmTransactionSet ts,
-			problemsSet psp, const char * key)
-	/*@modifies ts, psp @*/
-{
-    rpmdbMatchIterator mi;
-    mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_REQUIRENAME, key, 0);
-    return checkPackageSet(ts, psp, key, mi);
-}
-
-/**
- * Adding: check name/provides key against conflicts matches.
- * @param ts		transaction set
- * @param psp		dependency problems
- * @param key		conflicts name
- * @return		0 no problems found
- */
-static int checkDependentConflicts(rpmTransactionSet ts,
-		problemsSet psp, const char * key)
-	/*@modifies ts, psp @*/
-{
-    int rc = 0;
-
-    if (ts->rpmdb) {	/* XXX is this necessary? */
-	rpmdbMatchIterator mi;
-	mi = rpmdbInitIterator(ts->rpmdb, RPMTAG_CONFLICTNAME, key, 0);
-	rc = checkPackageSet(ts, psp, key, mi);
-    }
-
     return rc;
 }
 
@@ -792,7 +751,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 	    goto exit;
 
 	/* Adding: check name against conflicts matches. */
-	rc = checkDependentConflicts(ts, ps, p->name);
+	rc = checkDependent(ts, ps, RPMTAG_CONFLICTNAME, p->name);
 	if (rc)
 	    goto exit;
 
@@ -802,7 +761,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 	rc = 0;
 	for (j = 0; j < p->providesCount; j++) {
 	    /* Adding: check provides key against conflicts matches. */
-	    if (!checkDependentConflicts(ts, ps, p->provides[j]))
+	    if (!checkDependent(ts, ps, RPMTAG_CONFLICTNAME, p->provides[j]))
 		continue;
 	    rc = 1;
 	    /*@innerbreak@*/ break;
@@ -826,7 +785,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 		name, version, release);
 
 	    /* Erasing: check name against requiredby matches. */
-	    rc = checkDependentPackages(ts, ps, name);
+	    rc = checkDependent(ts, ps, RPMTAG_REQUIRENAME, name);
 	    if (rc)
 		goto exit;
 	}
@@ -841,7 +800,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 		rc = 0;
 		for (j = 0; j < providesCount; j++) {
 		    /* Erasing: check provides against requiredby matches. */
-		    if (!checkDependentPackages(ts, ps, provides[j]))
+		    if (!checkDependent(ts, ps, RPMTAG_REQUIRENAME, provides[j]))
 			continue;
 		    rc = 1;
 		    /*@innerbreak@*/ break;
@@ -876,7 +835,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 		    *fileName = '\0';
 		    (void) stpcpy( stpcpy(fileName, dirNames[dirIndexes[j]]) , baseNames[j]);
 		    /* Erasing: check filename against requiredby matches. */
-		    if (!checkDependentPackages(ts, ps, fileName))
+		    if (!checkDependent(ts, ps, RPMTAG_REQUIRENAME, fileName))
 			continue;
 		    rc = 1;
 		    /*@innerbreak@*/ break;
