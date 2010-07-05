@@ -737,15 +737,10 @@ int rpmdepCheck(rpmTransactionSet ts,
 {
     HGE_t hge = (HGE_t)headerGetEntryMinMemory;
     HFD_t hfd = headerFreeData;
-    rpmdbMatchIterator mi = NULL;
-    Header h = NULL;
     struct availablePackage * p;
     problemsSet ps;
-    int npkgs;
     int i, j;
     int rc;
-
-    npkgs = ts->addedPackages.size;
 
     ps = xcalloc(1, sizeof(*ps));
     ps->num = 0;
@@ -759,7 +754,7 @@ int rpmdepCheck(rpmTransactionSet ts,
      * are satisfied.
      */
     if ((p = ts->addedPackages.list) != NULL)
-    for (i = 0; i < npkgs; i++, p++)
+    for (i = 0; i < ts->addedPackages.size; i++, p++)
     {
 
         rpmMessage(RPMMESS_DEBUG,  "========== +++ %s-%s-%s\n" ,
@@ -791,11 +786,10 @@ int rpmdepCheck(rpmTransactionSet ts,
     /*
      * Look at the removed packages and make sure they aren't critical.
      */
-    if (ts->numRemovedPackages > 0) {
-      mi = rpmdbInitIterator(ts->rpmdb, RPMDBI_PACKAGES, NULL, 0);
-      (void) rpmdbAppendIterator(mi,
-			ts->removedPackages, ts->numRemovedPackages);
-      while ((h = rpmdbNextIterator(mi)) != NULL) {
+    if ((p = ts->erasedPackages.list) != NULL)
+    for (i = 0; i < ts->erasedPackages.size; i++, p++)
+    {
+	Header h = p->h;
 
 	{   const char * name, * version, * release;
 	    (void) headerNVR(h, &name, &version, &release);
@@ -866,9 +860,6 @@ int rpmdepCheck(rpmTransactionSet ts,
 		    goto exit;
 	    }
 	}
-
-      }
-      mi = rpmdbFreeIterator(mi);
     }
 
     if (ps->num) {
@@ -879,7 +870,6 @@ int rpmdepCheck(rpmTransactionSet ts,
     rc = 0;
 
 exit:
-    mi = rpmdbFreeIterator(mi);
     ps->problems = _free(ps->problems);
     ps = _free(ps);
     return rc;
