@@ -158,6 +158,12 @@ void alIndexPkgProvides(availableList al, int pkgIx)
 static
 struct alProvEntry *alSearchProv(availableList al, const char *name, int *n)
 {
+    /* first time lookup, create provIndex */
+    if (al->provIndex == NULL) {
+	int i;
+	for (i = 0; i < al->size; i++)
+	    alIndexPkgProvides(al, i);
+    }
     return axSearch(al->provIndex, sizeof(*al->provIndex->prov), name, n);
 }
 
@@ -267,6 +273,13 @@ exit:
 static
 struct alFileEntry *alSearchFile(availableList al, const char *fname, int *n)
 {
+    /* first time lookup, create dirIndex */
+    if (al->dirIndex == NULL) {
+	int i;
+	for (i = 0; i < al->size; i++)
+	    alIndexPkgFiles(al, i);
+    }
+
     /* need to preserve trailing slahs in d */
     const char *b = strrchr(fname, '/') + 1;
     int dlen = b - fname;
@@ -432,8 +445,13 @@ alAddPackage(availableList al,
 	p->relocs = NULL;
     }
 
-    alIndexPkgProvides(al, pkgNum);
-    alIndexPkgFiles(al, pkgNum);
+    /* Only update the index if it is already created.
+     * Otherwise, the index will be constructed upon the first time lookup. */
+    if (al->provIndex)
+	alIndexPkgProvides(al, pkgNum);
+    if (al->dirIndex)
+	alIndexPkgFiles(al, pkgNum);
+
     return p;
 }
 
