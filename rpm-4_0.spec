@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.38
+Release: alt98.39
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Jul 12 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.39
+- depends.c: Introduced ts->erasedPackages list of headers.
+- depends.c: Replaced dbi-based dependes cache with rpmhash-based
+  providename cache (based on rpm.org changes by Panu Matilainen).
+
 * Sat Jul 03 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.38
 - shebang.req (ShebangReq): fixed the check for absolute pathname
   introduced in previous release (closes: #23716).
