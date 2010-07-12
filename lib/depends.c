@@ -9,12 +9,9 @@
 
 #include "depends.h"
 #include "al.h"
-#include "rpmdb.h"		/* XXX response cache needs dbiOpen et al. */
 
 #include "debug.h"
 
-/*@access dbiIndex@*/		/* XXX compared with NULL */
-/*@access dbiIndexSet@*/	/* XXX compared with NULL */
 /*@access Header@*/		/* XXX compared with NULL */
 /*@access FD_t@*/		/* XXX compared with NULL */
 /*@access rpmdb@*/		/* XXX compared with NULL */
@@ -22,8 +19,6 @@
 /*@access rpmTransactionSet@*/
 /*@access rpmDependencyConflict@*/
 /*@access availableList@*/
-
-static int _cacheDependsRC = 1;
 
 /*@only@*/ char * printDepend(const char * depend, const char * key,
 		const char * keyEVR, int keyFlags)
@@ -499,36 +494,6 @@ static int unsatisfiedDepend(rpmTransactionSet ts,
     Header h;
     int rc = 0;	/* assume dependency is satisfied */
 
-    /*
-     * Check if dbiOpen/dbiPut failed (e.g. permissions), we can't cache.
-     */
-    if (_cacheDependsRC) {
-	dbiIndex dbi;
-	dbi = dbiOpen(ts->rpmdb, RPMDBI_DEPENDS, 0);
-	if (dbi == NULL)
-	    _cacheDependsRC = 0;
-	else {
-	    DBC * dbcursor = NULL;
-	    size_t keylen = strlen(keyDepend);
-	    void * datap = NULL;
-	    size_t datalen = 0;
-	    int xx;
-	    xx = dbiCopen(dbi, &dbcursor, 0);
-	    /*@-mods@*/		/* FIX: keyDepends mod undocumented. */
-	    xx = dbiGet(dbi, dbcursor, (void **)&keyDepend, &keylen, &datap, &datalen, 0);
-	    /*@=mods@*/
-	    if (xx == 0 && datap && datalen == 4) {
-		memcpy(&rc, datap, datalen);
-		rpmMessage(RPMMESS_DEBUG, _("%s: %-45s %-s (cached)\n"),
-			keyType, keyDepend, (rc ? _("NO ") : _("YES")));
-		xx = dbiCclose(dbi, NULL, 0);
-
-		return rc;
-	    }
-	    xx = dbiCclose(dbi, dbcursor, 0);
-	}
-    }
-
 #ifdef	DYING
   { static /*@observer@*/ const char noProvidesString[] = "nada";
     static /*@observer@*/ const char * rcProvidesString = noProvidesString;
@@ -629,28 +594,6 @@ unsatisfied:
     rc = 1;	/* dependency is unsatisfied */
 
 exit:
-    /*
-     * If dbiOpen/dbiPut fails (e.g. permissions), we can't cache.
-     */
-    if (_cacheDependsRC) {
-	dbiIndex dbi;
-	dbi = dbiOpen(ts->rpmdb, RPMDBI_DEPENDS, 0);
-	if (dbi == NULL) {
-	    _cacheDependsRC = 0;
-	} else {
-	    DBC * dbcursor = NULL;
-	    int xx;
-	    xx = dbiCopen(dbi, &dbcursor, DBI_WRITECURSOR);
-	    xx = dbiPut(dbi, dbcursor, keyDepend, strlen(keyDepend), &rc, sizeof(rc), 0);
-	    if (xx)
-		_cacheDependsRC = 0;
-#if 0	/* XXX NOISY */
-	    else
-		rpmMessage(RPMMESS_DEBUG, _("%s: (%s, %s) added to Depends cache.\n"), keyType, keyDepend, (rc ? _("NO ") : _("YES")));
-#endif
-	    xx = dbiCclose(dbi, dbcursor, DBI_WRITECURSOR);
-	}
-    }
     return rc;
 }
 
@@ -872,37 +815,6 @@ static int checkDependentConflicts(rpmTransactionSet ts,
     return rc;
 }
 
-/**
- * Close a single database index.
- * @param db		rpm database
- * @param rpmtag	rpm tag
- * @return              0 on success
- */
-static int rpmdbCloseDBI(/*@null@*/ rpmdb db, int rpmtag)
-	/*@ modifies db, fileSystem @*/
-{
-    int dbix;
-    int rc = 0;
-
-    if (db == NULL || db->_dbi == NULL || dbiTags == NULL)
-	return 0;
-
-    for (dbix = 0; dbix < dbiTagsMax; dbix++) {
-	if (dbiTags[dbix] != rpmtag)
-	    continue;
-	if (db->_dbi[dbix] != NULL) {
-	    int xx;
-	    /*@-unqualifiedtrans@*/		/* FIX: double indirection. */
-	    xx = dbiClose(db->_dbi[dbix], 0);
-	    if (xx && rc == 0) rc = xx;
-	    db->_dbi[dbix] = NULL;
-	    /*@=unqualifiedtrans@*/
-	}
-	break;
-    }
-    return rc;
-}
-
 int rpmdepCheck(rpmTransactionSet ts,
 		rpmDependencyConflict * conflicts, int * numConflicts)
 {
@@ -1053,7 +965,5 @@ exit:
     mi = rpmdbFreeIterator(mi);
     ps->problems = _free(ps->problems);
     ps = _free(ps);
-    if (_cacheDependsRC)
-	(void) rpmdbCloseDBI(ts->rpmdb, RPMDBI_DEPENDS);
     return rc;
 }
