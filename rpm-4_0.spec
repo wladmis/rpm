@@ -4,7 +4,7 @@
 
 Name: %rpm_name
 Version: %rpm_version
-Release: alt98.39
+Release: alt98.40
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -489,6 +489,12 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Aug 05 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.40
+- build/files.c (parseForSimple): Fix potential NULL pointer dereference
+  (Dmitry V. Levin, ALT#23813).
+- depends.c (dbSatisfiesDepend): Use strdup for dbProvCache keys
+  to avoid dangling pointers (ALT#23811).
+
 * Mon Jul 12 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.39
 - depends.c: Introduced ts->erasedPackages list of headers.
 - depends.c: Replaced dbi-based dependes cache with rpmhash-based
