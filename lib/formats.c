@@ -124,7 +124,7 @@ static /*@only@*/ char * armorFormat(int_32 type, const void * data,
     char * t;
     char * val;
     int atype;
-    int lc, ns, nt;
+    size_t lc, ns, nt;
 
     switch (type) {
     case RPM_BIN_TYPE:

@@ -45,10 +45,11 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
 
-BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, rpm >= 3.0.6-ipl24mdk, %_bindir/subst
+BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
+BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 
 # Automatically added by buildreq on Thu Apr 23 2009 and edited manually.
-BuildRequires: bzlib-devel-static libbeecrypt-devel-static libdb4.7-devel-static libelf-devel-static liblzma-devel-static libpopt-devel-static python-devel zlib-devel-static
+BuildRequires: bzlib-devel-static libdb4.7-devel-static libelf-devel-static liblzma-devel-static libpopt-devel-static python-devel zlib-devel-static
 
 %package -n lib%name
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -58,7 +59,6 @@ Group: System/Libraries
 PreReq: zlib >= 1.1.4
 PreReq: bzlib >= 1:1.0.2-alt2
 PreReq: libpopt >= 1:1.7-alt3
-PreReq: libbeecrypt >= 2.2.0-alt1
 PreReq: libdb4.7
 
 %package -n librpmbuild

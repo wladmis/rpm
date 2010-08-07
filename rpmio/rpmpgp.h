@@ -13,7 +13,6 @@
 #include <beecrypt/base64.h>
 #include <beecrypt/dsa.h>
 #include <beecrypt/endianness.h>
-#include <beecrypt/mp32.h>
 #include <beecrypt/rsa.h>
 #include <beecrypt/rsapk.h>
 
@@ -994,19 +993,19 @@ struct pgpDig_s {
     size_t md5len;		/*!< (rsa) V3 signature hash length. */
 
     /* DSA parameters. */
-    mp32barrett p;
-    mp32barrett q;
-    mp32number g;
-    mp32number y;
-    mp32number hm;
-    mp32number r;
-    mp32number s;
+    mpbarrett p;
+    mpbarrett q;
+    mpnumber g;
+    mpnumber y;
+    mpnumber hm;
+    mpnumber r;
+    mpnumber s;
 
     /* RSA parameters. */
     rsapk rsa_pk;
-    mp32number m;
-    mp32number c;
-    mp32number rsahm;
+    mpnumber m;
+    mpnumber c;
+    mpnumber rsahm;
 };
 
 
@@ -1267,10 +1266,10 @@ int pgpIsPkt(const byte * p)
 /**
  */
 /*@unused@*/ static inline
-uint32 pgpCRC(const byte *octets, size_t len)
+unsigned int pgpCRC(const byte *octets, size_t len)
 	/*@*/
 {
-    uint32 crc = CRC24_INIT;
+    uint32_t crc = CRC24_INIT;
     int i;
 
     while (len--) {
