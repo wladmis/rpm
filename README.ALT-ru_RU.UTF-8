@@ -342,12 +342,6 @@ BuildRoot.
    %_build_xauthority:
           значение переменной XAUTHORITY;
 
-   %__ccache_cc:
-          значение переменной CCACHE_CC;
-
-   %__ccache_dir:
-          значение переменной CCACHE_DIR.
-
 Версии некоторых установленных в системе пакетов.
 
    glibc:
