@@ -941,5 +941,6 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt
   ]
 )
 
+rm -f find-provides find-requires
 ln -s ${srcdir}/autodeps/linux.prov ./find-provides
 ln -s ${srcdir}/autodeps/linux.req ./find-requires

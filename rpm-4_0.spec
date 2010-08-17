@@ -1,9 +1,8 @@
-%define rpm_name rpm
+# python-module-rpm overrides %%version
 %define rpm_version 4.0.4
-%define srcname %rpm_name-4_0-%rpm_version
 
-Name: %rpm_name
-Version: %rpm_version
+Name: rpm
+Version: 4.0.4
 Release: alt98.41
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
@@ -31,7 +30,7 @@ Url: http://www.rpm.org/
 Packager: Dmitry V. Levin <ldv@altlinux.org>
 
 # http://git.altlinux.org/people/ldv/packages/?p=rpm.git
-Source: %srcname.tar
+Source: rpm-%version-%release.tar
 
 Provides: %_rpmlibdir/macros.d, %_sysconfdir/%name/macros.d
 
@@ -197,16 +196,11 @@ the Python programming language to use the interface supplied by RPM
 %endif #with python
 
 %prep
-%setup -q -n %srcname
-
-find -type d -name CVS -print0 |
-	xargs -r0 rm -rf --
-find -type f \( -name .cvsignore -o -name \*~ -o -name \*.orig \) -print0 |
-	xargs -r0 rm -f --
+%setup -q -n rpm-%rpm_version-%release
 
 %build
 touch config.rpath
-gettextize --force --quiet
+gettextize --force --quiet --no-changelog --symlink
 install -pv -m644 /usr/share/automake/mkinstalldirs .
 install -pv -m644 /usr/share/gettext/intl/Makevars* po/Makevars
 autoreconf -fisv -I m4
@@ -222,22 +216,6 @@ export ac_cv_path___SSH=/usr/bin/ssh
 	%{?_with_apidocs} %{?_without_apidocs} \
 	%{?_with_db} %{?_without_db} \
 	--program-transform-name=
-
-# fix buggy requires if any
-find scripts -type f -print0 |
-	xargs -r0 grep -EZl '(/usr/ucb|/usr/local/bin/perl|/usr/local/lib/rpm/bash)' -- |
-	xargs -r0 subst 's|/usr/ucb|%_bindir|g;s|/usr/local/bin/perl|/usr/bin/perl|g;s|/usr/local/lib/rpm/bash|/bin/sh|g' --
-find -type f -print0 |
-	xargs -r0 grep -FZl /usr/sbin/lsattr -- |
-	xargs -r0 subst 's|/usr/sbin/lsattr|/usr/bin/lsattr|g' --
-
-# fix vendor
-find -type f -print0 |
-	xargs -r0 grep -FZl '%_host_cpu-pc-%_host_os' -- |
-	xargs -r0 subst 's/%_host_cpu-pc-%_host_os/%_host_cpu-alt-%_host_os/g' --
-find -type f -name config.\* -print0 |
-	xargs -r0 grep -FZl '=pc' -- |
-	xargs -r0 subst 's/=pc/=alt/g' --
 
 %make_build YACC='bison -y'
 %if_with apidocs
@@ -275,9 +253,9 @@ done
 touch %buildroot%_localstatedir/%name/files-awaiting-filetriggers
 
 # Prepare documentation.
-bzip2 -9 CHANGES ||:
+bzip2 -9k CHANGES ||:
 mkdir -p %buildroot%_docdir/%name-%rpm_version
-install -p -m644 CHANGES* CREDITS README README.ALT* \
+install -p -m644 CHANGES.bz2 CREDITS README README.ALT* \
 	%buildroot%_docdir/%name-%rpm_version/
 cp -a doc/manual %buildroot%_docdir/%name-%rpm_version/
 rm -f %buildroot%_docdir/%name-%rpm_version/manual/{Makefile*,buildroot}

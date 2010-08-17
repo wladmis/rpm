@@ -243,3 +243,5 @@ cscope:
 	cscope -b -R
 
 cref: ctags cscope
+
+ACLOCAL_AMFLAGS = -I m4
