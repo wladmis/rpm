@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt98.41
+Release: alt98.42
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -467,6 +467,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Aug 17 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.42
+- Added .gitignore file, improved support for in-tree building.
+- Removed %%__ccache* macros (rpm will use default ccache settings).
+
 * Fri Aug 13 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.41
 - Migrated to beecrypt-4.2.1 (by Kirill A. Shutemov).
 
