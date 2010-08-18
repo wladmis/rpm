@@ -803,7 +803,7 @@ int rpmdepCheck(rpmTransactionSet ts,
     struct availablePackage * p;
     problemsSet ps;
     int i, j;
-    int rc;
+    int rc = 0;
 
     ps = xcalloc(1, sizeof(*ps));
     ps->num = 0;
@@ -822,22 +822,11 @@ int rpmdepCheck(rpmTransactionSet ts,
     if ((p = ts->addedPackages.list) != NULL)
     for (i = 0; i < ts->addedPackages.size; i++, p++)
     {
-
         rpmMessage(RPMMESS_DEBUG,  "========== +++ %s-%s-%s\n" ,
 		p->name, p->version, p->release);
 	rc = checkPackageDeps(ts, ps, p->h, NULL);
 	if (rc)
 	    goto exit;
-
-	/* Adding: check name against conflicts matches. */
-	rc = checkDependent(ts, ps, RPMTAG_CONFLICTNAME, p->name);
-	if (rc)
-	    goto exit;
-
-	if (p->providesCount == 0 || p->provides == NULL)
-	    continue;
-
-	rc = 0;
 	for (j = 0; j < p->providesCount; j++) {
 	    /* Adding: check provides key against conflicts matches. */
 	    if (!checkDependent(ts, ps, RPMTAG_CONFLICTNAME, p->provides[j]))
@@ -855,38 +844,14 @@ int rpmdepCheck(rpmTransactionSet ts,
     if ((p = ts->erasedPackages.list) != NULL)
     for (i = 0; i < ts->erasedPackages.size; i++, p++)
     {
-	Header h = p->h;
-
-	{   const char * name, * version, * release;
-	    (void) headerNVR(h, &name, &version, &release);
-	    rpmMessage(RPMMESS_DEBUG,  "========== --- %s-%s-%s\n" ,
-		name, version, release);
-
-	    /* Erasing: check name against requiredby matches. */
-	    rc = checkDependent(ts, ps, RPMTAG_REQUIRENAME, name);
-	    if (rc)
-		goto exit;
-	}
-
-	{   const char ** provides;
-	    int providesCount;
-	    rpmTagType pnt;
-
-	    if (hge(h, RPMTAG_PROVIDENAME, &pnt, (void **) &provides,
-				&providesCount))
-	    {
-		rc = 0;
-		for (j = 0; j < providesCount; j++) {
-		    /* Erasing: check provides against requiredby matches. */
-		    if (!checkDependent(ts, ps, RPMTAG_REQUIRENAME, provides[j]))
-			continue;
-		    rc = 1;
-		    /*@innerbreak@*/ break;
-		}
-		provides = hfd(provides, pnt);
-		if (rc)
-		    goto exit;
-	    }
+	rpmMessage(RPMMESS_DEBUG,  "========== --- %s-%s-%s\n" ,
+		p->name, p->version, p->release);
+	for (j = 0; j < p->providesCount; j++) {
+	    /* Erasing: check provides against requiredby matches. */
+	    if (!checkDependent(ts, ps, RPMTAG_REQUIRENAME, p->provides[j]))
+		continue;
+	    rc = 1;
+	    /*@innerbreak@*/ break;
 	}
 
 	{   const char ** baseNames, ** dirNames;
@@ -896,13 +861,13 @@ int rpmdepCheck(rpmTransactionSet ts,
 	    char * fileName = NULL;
 	    int fileAlloced = 0;
 	    int len;
+	    Header h = p->h;
 
 	    if (hge(h, RPMTAG_BASENAMES, &bnt, (void **) &baseNames, &fileCount))
 	    {
 		(void) hge(h, RPMTAG_DIRNAMES, &dnt, (void **) &dirNames, NULL);
 		(void) hge(h, RPMTAG_DIRINDEXES, NULL, (void **) &dirIndexes,
 				NULL);
-		rc = 0;
 		for (j = 0; j < fileCount; j++) {
 		    len = strlen(baseNames[j]) + 1 + 
 			  strlen(dirNames[dirIndexes[j]]);
