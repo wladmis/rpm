@@ -537,7 +537,8 @@ int dbSatisfiesDepend(rpmTransactionSet ts,
  * Check key for an unsatisfied dependency.
  * @todo Eliminate rpmrc provides.
  * @param ts		transaction set
- * @param keyType	type of dependency
+ * @param h		header the dependency comes from
+ * @param tag		RPMTAG_REQUIRENAME, PROVIDENAME or OBSOLETENAME
  * @param keyDepend	dependency string representation
  * @param keyName	dependency name string
  * @param keyEVR	dependency [epoch:]version[-release] string
@@ -545,10 +546,24 @@ int dbSatisfiesDepend(rpmTransactionSet ts,
  * @return		0 if satisfied, 1 if not satisfied, 2 if error
  */
 static int tsSatisfiesDepend(rpmTransactionSet ts,
-		const char * keyType, const char * keyDepend,
+		Header h, rpmTag tag, const char * keyDepend,
 		const char * keyName, const char * keyEVR, int keyFlags)
 	/*@modifies ts @*/
 {
+    const char *keyType;
+    switch (tag) {
+    case RPMTAG_REQUIRENAME:
+	keyType = " Requires";
+	break;
+    case RPMTAG_CONFLICTNAME:
+	keyType = " Conflicts";
+	break;
+    default:
+	assert(tag == RPMTAG_OBSOLETENAME);
+	keyType = " Obsoletes";
+	break;
+    }
+
     /*
      * New features in rpm packaging implicitly add versioned dependencies
      * on rpmlib provides. The dependencies look like "rpmlib(YaddaYadda)".
@@ -563,10 +578,31 @@ static int tsSatisfiesDepend(rpmTransactionSet ts,
 	goto unsatisfied;
     }
 
-    if (alSatisfiesDepend(&ts->addedPackages, keyName, keyEVR, keyFlags)) {
-	rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provides)\n"),
-			keyType, keyDepend+2);
-	return 0;
+    struct availablePackage **all =
+	    alAllSatisfiesDepend(&ts->addedPackages, keyName, keyEVR, keyFlags);
+    if (all) {
+	int ret = 1;
+	if (tag == RPMTAG_REQUIRENAME)
+	    ret = 0;
+	else {
+	    struct availablePackage **alpp;
+	    for (alpp = all; *alpp; alpp++) {
+		// Conflicts are Obsoletes do not self match.
+		if ((*alpp)->h == h)
+		    continue;
+		// Obsoletes match only against packags names, not Provides.
+		if (tag == RPMTAG_OBSOLETENAME && strcmp((*alpp)->name, keyName))
+		    continue;
+		ret = 0;
+		break;
+	    }
+	}
+	all = _free(all);
+	if (ret == 0) {
+	    rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (added provides)\n"),
+			    keyType, keyDepend+2);
+	    return 0;
+	}
     }
 
     if (dbSatisfiesDepend(ts, keyName, keyEVR, keyFlags) == 0) {
@@ -630,7 +666,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	keyDepend = printDepend("R",
 		requires[i], requiresEVR[i], requireFlags[i]);
 
-	rc = tsSatisfiesDepend(ts, " Requires", keyDepend,
+	rc = tsSatisfiesDepend(ts, h, RPMTAG_REQUIRENAME, keyDepend,
 		keyName ?: requires[i], // points to added/erased header memory
 		requiresEVR[i], requireFlags[i]);
 
@@ -689,7 +725,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 
 	keyDepend = printDepend("C", conflicts[i], conflictsEVR[i], conflictFlags[i]);
 
-	rc = tsSatisfiesDepend(ts, "Conflicts", keyDepend,
+	rc = tsSatisfiesDepend(ts, h, RPMTAG_CONFLICTNAME, keyDepend,
 		keyName ?: conflicts[i], // points to added/erased header memory
 		conflictsEVR[i], conflictFlags[i]);
 
