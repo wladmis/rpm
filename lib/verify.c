@@ -459,15 +459,14 @@ exit:
 static int verifyDependencies(rpmdb rpmdb, Header h)
 	/*@modifies h @*/
 {
-    rpmTransactionSet ts;
-    rpmDependencyConflict conflicts;
-    int numConflicts;
-    int rc = 0;		/* assume no problems */
-    int i;
-
-    ts = rpmtransCreateSet(rpmdb, NULL);
+    rpmTransactionSet ts = rpmtransCreateSet(rpmdb, NULL);
+    unsigned int offset = headerGetInstance(h);
+    if (offset > 0)
+	rpmtransRemovePackage(ts, offset);
     (void) rpmtransAddPackage(ts, h, NULL, NULL, 0, NULL);
 
+    rpmDependencyConflict conflicts;
+    int numConflicts;
     (void) rpmdepCheck(ts, &conflicts, &numConflicts);
     ts = rpmtransFree(ts);
 
@@ -478,6 +477,7 @@ static int verifyDependencies(rpmdb rpmdb, Header h)
 	int nb = 512;
 	(void) headerNVR(h, &n, &v, &r);
 
+	int i;
 	for (i = 0; i < numConflicts; i++) {
 	    nb += strlen(conflicts[i].needsName) + sizeof(", ") - 1;
 	    if (conflicts[i].needsFlags)
@@ -508,10 +508,10 @@ static int verifyDependencies(rpmdb rpmdb, Header h)
 	    te = t;
 	    *t = '\0';
 	}
-	rc = 1;
+	return 1;
     }
     /*@=branchstate@*/
-    return rc;
+    return 0;
 }
 
 int showVerifyPackage(QVA_t qva, rpmdb rpmdb, Header h)
