@@ -712,6 +712,21 @@ void * headerFreeData( /*@only@*/ /*@null@*/ const void * data, rpmTagType type)
     return NULL;
 }
 
+/** \ingroup header
+ * Return header instance, ie is the header from rpmdb.
+ * @param h		header
+ * @return		rpmdb record number or 0
+ */
+unsigned int headerGetInstance(Header h);
+
+/** \ingroup header
+ * Set header instance (rpmdb record number)
+ * @param h		header
+ * @param instance	record number
+ */
+__attribute__((visibility("hidden")))
+void headerSetInstance(Header h, unsigned int instance);
+
 #if !defined(__HEADER_PROTOTYPES__)
 #include "hdrinline.h"
 #endif

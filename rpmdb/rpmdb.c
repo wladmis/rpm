@@ -2034,6 +2034,7 @@ top:
 	    goto top;
 	return NULL;
     }
+    headerSetInstance(mi->mi_h, mi->mi_offset);
 
     mi->mi_prevoffset = mi->mi_offset;
     mi->mi_modified = 0;
@@ -2856,6 +2857,10 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 	/*@=nullpass =nullptrarith =nullderef @*/
 
 	rec = _free(rec);
+
+	/* If everthing ok, mark header as installed now */
+	if (rc == 0)
+	    headerSetInstance(h, hdrNum);
     }
 
 exit:

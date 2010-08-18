@@ -180,6 +180,7 @@ Header headerNew(void)
     h->blob = NULL;
     h->indexAlloced = INDEX_MALLOC_SIZE;
     h->indexUsed = 0;
+    h->instance = 0;
     h->flags = HEADERFLAG_SORTED;
 
     h->index = (h->indexAlloced
@@ -906,6 +907,7 @@ Header headerLoad(/*@kept@*/ void * uh)
     /*@=assignexpose =kepttrans@*/
     h->indexAlloced = il + 1;
     h->indexUsed = il;
+    h->instance = 0;
     h->index = xcalloc(h->indexAlloced, sizeof(*h->index));
     h->flags = HEADERFLAG_SORTED;
     h->nrefs = 0;
@@ -3360,6 +3362,16 @@ int headerNextIterator(HeaderIterator hi,
 
     /* XXX 1 on success */
     return ((rc == 1) ? 1 : 0);
+}
+
+unsigned int headerGetInstance(Header h)
+{
+    return h ? h->instance : 0;
+}
+
+void headerSetInstance(Header h, unsigned int instance)
+{
+    h->instance = instance;
 }
 
 /** \ingroup header
