@@ -525,7 +525,8 @@ int dbSatisfiesDepend(rpmTransactionSet ts,
     /* Update dbProvCache.
      * When versions did not match, it is still okay to say "yes" for the name. */
     if (cacheData == NULL)
-	htAddEntry(dbProvCache, xstrdup(keyName), rc < 1 ? "yes" : NULL);
+	/* XXX keyName points to header memory, no need for strdup */
+	htAddEntry(dbProvCache, keyName, rc < 1 ? "yes" : NULL);
 
     return rc ? 1 : 0;
 }
@@ -900,6 +901,6 @@ int rpmdepCheck(rpmTransactionSet ts,
 exit:
     ps->problems = _free(ps->problems);
     ps = _free(ps);
-    dbProvCache = htFree(dbProvCache, _free, NULL);
+    dbProvCache = htFree(dbProvCache, NULL, NULL);
     return rc;
 }
