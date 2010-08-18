@@ -475,10 +475,12 @@ rpmDependencyConflict rpmdepFreeConflicts(rpmDependencyConflict conflicts,
     return (conflicts = _free(conflicts));
 }
 
+static __thread
+hashTable dbProvCache;
+
 /* Cached rpmdb provide lookup, returns 0 if satisfied, 1 otherwise */
 static
 int dbSatisfiesDepend(rpmTransactionSet ts,
-		hashTable dbProvCache,
 		const char * keyName, const char * keyEVR, int keyFlags)
 {
     rpmdbMatchIterator mi;
@@ -543,7 +545,6 @@ int dbSatisfiesDepend(rpmTransactionSet ts,
  * @return		0 if satisfied, 1 if not satisfied, 2 if error
  */
 static int tsSatisfiesDepend(rpmTransactionSet ts,
-		hashTable dbProvCache,
 		const char * keyType, const char * keyDepend,
 		const char * keyName, const char * keyEVR, int keyFlags)
 	/*@modifies ts @*/
@@ -568,7 +569,7 @@ static int tsSatisfiesDepend(rpmTransactionSet ts,
 	return 0;
     }
 
-    if (dbSatisfiesDepend(ts, dbProvCache, keyName, keyEVR, keyFlags) == 0) {
+    if (dbSatisfiesDepend(ts, keyName, keyEVR, keyFlags) == 0) {
 	rpmMessage(RPMMESS_DEBUG, _("%s: %-45s YES (rpmdb provides)\n"),
 			keyType, keyDepend+2);
 	return 0;
@@ -588,7 +589,6 @@ unsatisfied:
  * @return		0 no problems found
  */
 static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
-		hashTable dbProvCache,
 		Header h, const char * keyName)
 	/*@modifies ts, h, psp */
 {
@@ -630,7 +630,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	keyDepend = printDepend("R",
 		requires[i], requiresEVR[i], requireFlags[i]);
 
-	rc = tsSatisfiesDepend(ts, dbProvCache, " Requires", keyDepend,
+	rc = tsSatisfiesDepend(ts, " Requires", keyDepend,
 		keyName ?: requires[i], // points to added/erased header memory
 		requiresEVR[i], requireFlags[i]);
 
@@ -689,7 +689,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 
 	keyDepend = printDepend("C", conflicts[i], conflictsEVR[i], conflictFlags[i]);
 
-	rc = tsSatisfiesDepend(ts, dbProvCache, "Conflicts", keyDepend,
+	rc = tsSatisfiesDepend(ts, "Conflicts", keyDepend,
 		keyName ?: conflicts[i], // points to added/erased header memory
 		conflictsEVR[i], conflictFlags[i]);
 
@@ -741,7 +741,6 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
  * @return		0 no problems found
  */
 static int checkDependent(rpmTransactionSet ts, problemsSet psp,
-		hashTable dbProvCache,
 		rpmTag tag, const char * key)
 	/*@modifies ts, psp @*/
 {
@@ -751,7 +750,7 @@ static int checkDependent(rpmTransactionSet ts, problemsSet psp,
     Header h;
     int rc = 0;
     while ((h = rpmdbNextIterator(mi)) != NULL) {
-	if (checkPackageDeps(ts, psp, dbProvCache, h, key)) {
+	if (checkPackageDeps(ts, psp, h, key)) {
 	    rc = 1;
 	    break;
 	}
@@ -778,7 +777,7 @@ int rpmdepCheck(rpmTransactionSet ts,
     *numConflicts = 0;
 
     /* XXX figure some kind of heuristic for the cache size */
-    hashTable dbProvCache = htCreate(1024, hashFunctionString, hashEqualityString);
+    dbProvCache = htCreate(1024, hashFunctionString, hashEqualityString);
 
     /*
      * Look at all of the added packages and make sure their dependencies
@@ -790,12 +789,12 @@ int rpmdepCheck(rpmTransactionSet ts,
 
         rpmMessage(RPMMESS_DEBUG,  "========== +++ %s-%s-%s\n" ,
 		p->name, p->version, p->release);
-	rc = checkPackageDeps(ts, ps, dbProvCache, p->h, NULL);
+	rc = checkPackageDeps(ts, ps, p->h, NULL);
 	if (rc)
 	    goto exit;
 
 	/* Adding: check name against conflicts matches. */
-	rc = checkDependent(ts, ps, dbProvCache, RPMTAG_CONFLICTNAME, p->name);
+	rc = checkDependent(ts, ps, RPMTAG_CONFLICTNAME, p->name);
 	if (rc)
 	    goto exit;
 
@@ -805,7 +804,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 	rc = 0;
 	for (j = 0; j < p->providesCount; j++) {
 	    /* Adding: check provides key against conflicts matches. */
-	    if (!checkDependent(ts, ps, dbProvCache, RPMTAG_CONFLICTNAME, p->provides[j]))
+	    if (!checkDependent(ts, ps, RPMTAG_CONFLICTNAME, p->provides[j]))
 		continue;
 	    rc = 1;
 	    /*@innerbreak@*/ break;
@@ -828,7 +827,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 		name, version, release);
 
 	    /* Erasing: check name against requiredby matches. */
-	    rc = checkDependent(ts, ps, dbProvCache, RPMTAG_REQUIRENAME, name);
+	    rc = checkDependent(ts, ps, RPMTAG_REQUIRENAME, name);
 	    if (rc)
 		goto exit;
 	}
@@ -843,7 +842,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 		rc = 0;
 		for (j = 0; j < providesCount; j++) {
 		    /* Erasing: check provides against requiredby matches. */
-		    if (!checkDependent(ts, ps, dbProvCache, RPMTAG_REQUIRENAME, provides[j]))
+		    if (!checkDependent(ts, ps, RPMTAG_REQUIRENAME, provides[j]))
 			continue;
 		    rc = 1;
 		    /*@innerbreak@*/ break;
@@ -878,7 +877,7 @@ int rpmdepCheck(rpmTransactionSet ts,
 		    *fileName = '\0';
 		    (void) stpcpy( stpcpy(fileName, dirNames[dirIndexes[j]]) , baseNames[j]);
 		    /* Erasing: check filename against requiredby matches. */
-		    if (!checkDependent(ts, ps, dbProvCache, RPMTAG_REQUIRENAME, fileName))
+		    if (!checkDependent(ts, ps, RPMTAG_REQUIRENAME, fileName))
 			continue;
 		    rc = 1;
 		    /*@innerbreak@*/ break;
