@@ -631,7 +631,8 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 		requires[i], requiresEVR[i], requireFlags[i]);
 
 	rc = tsSatisfiesDepend(ts, dbProvCache, " Requires", keyDepend,
-		requires[i], requiresEVR[i], requireFlags[i]);
+		keyName ?: requires[i], // points to added/erased header memory
+		requiresEVR[i], requireFlags[i]);
 
 	switch (rc) {
 	case 0:		/* requirements are satisfied. */
@@ -689,7 +690,8 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	keyDepend = printDepend("C", conflicts[i], conflictsEVR[i], conflictFlags[i]);
 
 	rc = tsSatisfiesDepend(ts, dbProvCache, "Conflicts", keyDepend,
-		conflicts[i], conflictsEVR[i], conflictFlags[i]);
+		keyName ?: conflicts[i], // points to added/erased header memory
+		conflictsEVR[i], conflictFlags[i]);
 
 	/* 1 == unsatisfied, 0 == satsisfied */
 	switch (rc) {
