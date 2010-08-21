@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt98.43
+Release: alt98.44
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -467,6 +467,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Aug 22 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.44
+- depends.c: Permit self-conflicting packages.
+- verify.c: Updated verifyDependencies() for self-conflicting packages.
+
 * Wed Aug 18 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.43
 - depends.c: A better solution to dbProvCache dangling pointers without
   resorting to strdup (ALT#23811).
