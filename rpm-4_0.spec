@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt98.44
+Release: alt98.45
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -44,7 +44,7 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_python:BuildPreReq: python-devel}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
-%{?_with_selinux:BuildPreReq: libselinux-devel-static}
+%{?_with_selinux:BuildPreReq: libselinux-devel-static >= 2.0.96}
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
 BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
@@ -470,6 +470,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Wed Aug 25 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.45
+- Added SELinux support (by Mikhail Efremov and me).
+
 * Sun Aug 22 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.44
 - depends.c: Permit self-conflicting packages.
 - verify.c: Updated verifyDependencies() for self-conflicting packages.
