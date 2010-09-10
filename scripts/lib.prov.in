@@ -33,79 +33,67 @@ Debug "DEF_RPM_FINDPROV_LIB_PATH=$DEF_RPM_FINDPROV_LIB_PATH"
 RPM_FINDPROV_LIB_PATH="$(IFS="$IFS:"; echo '' ${RPM_FINDPROV_LIB_PATH-} $DEF_RPM_FINDPROV_LIB_PATH '')"
 Debug "RPM_FINDPROV_LIB_PATH=$RPM_FINDPROV_LIB_PATH"
 
-# Normalize buildroot.
-[ -z "${RPM_BUILD_ROOT-}" ] && real_buildroot= ||
-real_buildroot="$(cd "$RPM_BUILD_ROOT" && /bin/pwd)" || exit 1
-
-# Note this works for both a.out and ELF executables.
-FindLibProvs()
+LibProv()
 {
-	local braces dir dump f name suffix
-	f="$1"
-	local fname="${f#${RPM_BUILD_ROOT-}}"
-	dir="${fname%/*}"
-	[ -n "$dir" ] || return 0
-	name="${fname##*/}"
-	[ -n "$name" ] || return 0
+	local f="$1" fname dir basename
+	fname=${f#${RPM_BUILD_ROOT-}}
+	dir=${fname%/*}
+	basename=${fname##*/}
 
+	# Check library location.
+	[ -n "$dir" ] && [ -n "$basename" ] || return 0
 	[ "$dir" = "/$RPM_LIB/security" ] || [ -z "${RPM_FINDPROV_LIB_PATH##* $dir *}" ] || return 0
 
-	if dump="$(objdump -p "$f")"; then
-		if [ "$dir" = "/$RPM_LIB/security" ]; then
-			printf 'PAM(%s)\n' "$name"
-			return 0
-		fi
-		local soname
-		soname="$(printf %s\\n "$dump" |sed -ne 's/^[[:space:]]*SONAME[[:space:]]\+\([^[:space:]]\+\)[[:space:]]*$/\1/p')" || return 1
-		suffix="$(printf %s\\n "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')" || return 1
-		[ -z "$suffix" ] && braces= || braces='()'
-		while :; do
-			# For libraries with soname, ignore all but files named as soname.
-			[ -z "$soname" -o "$soname" = "$name" ] || break
-
-			# Treat symlinks specially.
-			if [ -L "$f" ]; then
-				[ -n "$soname" ] || break
-				local real realpath realdir
-				realpath=$(readlink -fv "$f") || break
-				real="${realpath#$real_buildroot}"
-				# Ignore symlinks leading out of buildroot.
-				[ -z "$real_buildroot" ] || [ "$real" != "$realpath" ] || break
-				realdir="${real%/*}"
-				# Ignore symlinks to shorter locations.
-				[ "${#dir}" -le "${#realdir}" ] || break
-			fi
-
-			# soname is either empty or equal to name
-			soname="$name"
-
-			# Check for non-default path.
-			local nondefdir=
-			[ -z "${DEF_RPM_FINDPROV_LIB_PATH##* $dir *}" ] || nondefdir="$dir"
-
-			# Output soname.
-			if [ -z "$nondefdir" ]; then
-				printf '%s\n' "$soname$braces$suffix"
-			else
-				printf '%s/%s\n' "$nondefdir" "$soname$braces$suffix"
-			fi
-
-			# Output version definitions.
-			printf %s\\n "$dump" | awk "-vsoname=$soname" "-vnondefdir=$nondefdir" "-vsuffix=$suffix" '
-				BEGIN {start=0;}
-				/^Version definitions:$/ {start=1;}
-				/^[0-9]/ && (start==1) && ($4!="") && ($4!=soname) {
-					if (nondefdir=="")
-						printf("%s(%s)%s\n",soname,$4,suffix)
-					else
-						printf("%s/%s(%s)%s\n",nondefdir,soname,$4,suffix)
-				}
-				/^$/ {start=0;}
-			' || return 1
-
-			break
-		done
+	# Obtain objdump info.
+	local dump
+	if ! dump=$(objdump -p "$f"); then
+		Warning "$f: objdump failed"
+		return 0
 	fi
+
+	# Special case for PAM plugins.
+	if [ "$dir" = "/$RPM_LIB/security" ]; then
+		printf 'PAM(%s)\n' "$basename"
+		return 0
+	fi
+
+	local soname suffix braces
+	soname=$(printf %s\\n "$dump" |sed -ne 's/^[[:space:]]*SONAME[[:space:]]\+\([^[:space:]]\+\)[[:space:]]*$/\1/p')
+	suffix=$(printf %s\\n "$dump" |sed -ne 's/^.*file format \(elf64\).*$/(64bit)/p')
+	[ -z "$suffix" ] && braces= || braces='()'
+
+	# For libraries with soname, ignore all but files named as soname.
+	[ -z "$soname" ] || [ "$soname" = "$basename" ] || return 0
+
+	# Treat symlinks specially.
+	if [ -L "$f" ]; then
+		[ -n "$soname" ] || return 0
+		# Ignore symlinks leading out of buildroot.
+		local realpath
+		realpath=$(readlink -fv "$f")
+		[ -z "${realpath##${RPM_BUILD_ROOT-}/*}" ] || return 0
+		# Ignore symlinks to shorter locations.
+		local realdir
+		realdir=${realpath##${RPM_BUILD_ROOT-}}
+		realdir=${realdir%/*}
+		[ "${#dir}" -le "${#realdir}" ] || return 0
+	fi
+
+	# soname is either empty or equal to basename, so...
+	soname=$basename
+
+	# Check for non-default path.
+	local provdir=
+	[ -z "${DEF_RPM_FINDPROV_LIB_PATH##* $dir *}" ] || provdir=$dir/
+
+	# Output soname.
+	printf %s\\n "$provdir$soname$braces$suffix"
+
+	# Output version definitions.
+	printf %s\\n "$dump" |
+	sed -n '/^Version definitions:$/,/^$/{/^[0-9]/p}' |
+	awk -v provdir="$provdir" -v soname="$soname" -v suffix="$suffix" \
+		'NF==4 && $4!=soname {printf "%s%s(%s)%s\n", provdir, soname, $4, suffix}'
 }
 
-ArgvFileAction FindLibProvs "$@"
+ArgvFileAction LibProv "$@"
