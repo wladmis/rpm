@@ -86,14 +86,61 @@ LibProv()
 	local provdir=
 	[ -z "${DEF_RPM_FINDPROV_LIB_PATH##* $dir *}" ] || provdir=$dir/
 
-	# Output soname.
-	printf %s\\n "$provdir$soname$braces$suffix"
-
 	# Output version definitions.
 	printf %s\\n "$dump" |
 	sed -n '/^Version definitions:$/,/^$/{/^[0-9]/p}' |
 	awk -v provdir="$provdir" -v soname="$soname" -v suffix="$suffix" \
 		'NF==4 && $4!=soname {printf "%s%s(%s)%s\n", provdir, soname, $4, suffix}'
+
+	# Do main provides entry.
+	local provname="$provdir$soname$braces$suffix"
+	local sym="$(ProvidedSymbols "$f")"
+	if [ -n "$sym" ]; then
+		local n bpp set
+		n=$(printf '%s\n' "$sym" |wc -l)
+		Verbose "$f: $n symbols"
+		bpp=$(SuggestBPP "$n")
+		set=$(printf '%s\n' "$sym" |@RPMCONFIGDIR@/mkset "$bpp")
+		printf '%s = %s\n' "$provname" "$set"
+	else
+		Warning "$f: no symbols"
+		printf '%s\n' "$provname"
+	fi
+}
+
+ProvidedSymbols()
+{
+	readelf --wide --dyn-syms "$1" |
+	LC_ALL=C egrep '^ *[0-9]+: ' |
+	awk 'NF>=8 &&
+		# dl-lookup.c: /st_value
+		($2!="00000000" && $2!="0000000000000000" || $4=="TLS") &&
+		# dl-lookup.c: /st_shndx
+		($7!="UND") &&
+		# dl-lookup.c: /ALLOWED_STT
+		($4=="NOTYPE" || $4=="OBJECT" || $4 == "FUNC" || $4=="COMMON" || $4=="TLS" || $4=="IFUNC") &&
+		# dl-lookup.c: /hidden
+		($6=="DEFAULT" || $6=="PROTECTED") &&
+		# dl-lookup.c: /switch.*ST_BIND
+		($5=="GLOBAL" || $5=="WEAK" || $5 == "UNIQUE") &&
+		# Ignore special symbols found in each library:
+		($8!="__bss_start" && $8!="_edata" && $8!="_end" && $8!="_fini" && $8!="_init") {
+			sym = $8
+			# No symbol versioning yet.
+			ix = index(sym, "@")
+			if (ix > 1)
+				sym = substr(sym, 0, ix-1)
+			print sym
+		}' |
+	LC_ALL=C sort -u
+}
+
+SuggestBPP()
+{
+	# For the number of symbols in the range 2^{m-1}..2^m-1,
+	# use m+10 bits per symbol.  Upper bound on the error rate
+	# is 2{-10} (about 0.1%).
+	perl -le 'print int log(shift) / log(2) + 11' "$1"
 }
 
 ArgvFileAction LibProv "$@"

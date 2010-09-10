@@ -113,6 +113,8 @@ Requires: rpm-build-perl >= 0.6.2
 Requires: rpm-build-python >= 0.31
 Conflicts: rpm-build-tcl <= 0.2
 Conflicts: rpm-build-mono <= 1.0
+# Due to 'readelf --dyn-syms':
+Requires: binutils >= 1:2.20.51.0.7
 
 %package build-topdir
 Summary: RPM package installation and build directory tree
