@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt98.45
+Release: alt98.46
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -475,6 +475,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sat Sep 11 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.46
+- set.c: Implemented base62, golomb, and set-string routines.
+- depends.c (rpmRangesOverlap): Added support for set-versions.
+- rpmlibprov.c: Added rpmlib(SetVersions) feature.
+- %_rpmlibdir/mkset: Command-line helper for making set-versions.
+- lib.prov: Implemented soname set-versioning with exported symbols.
+
 * Wed Aug 25 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.45
 - Added SELinux support (by Mikhail Efremov and me).
 
