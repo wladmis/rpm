@@ -445,6 +445,9 @@ fi
 %rpmattr %_rpmlibdir/symlinks.*
 %rpmattr %_rpmlibdir/verify-elf
 %rpmattr %_rpmlibdir/*.awk
+# set-version helpers
+%rpmattr %_rpmlibdir/mkset
+%rpmattr %_rpmlibdir/setcmp
 
 %_mandir/man?/gendiff.*
 %_man8dir/rpmbuild.*

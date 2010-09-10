@@ -28,7 +28,7 @@ noinst_PROGRAMS = \
 	dump dumpdb rpmarchive rpmheader rpmlead rpmsignature
 
 pkgbindir = @RPMCONFIGDIR@
-pkgbin_PROGRAMS = javadeps filesize dump_ld_config relative pdeath_execute
+pkgbin_PROGRAMS = javadeps filesize dump_ld_config relative pdeath_execute mkset setcmp
 bin_PROGRAMS = rpmvercmp rpmevrcmp
 
 javadeps_SOURCES = javadeps.c
@@ -44,6 +44,9 @@ dump_ld_config_LDADD =
 
 pdeath_execute_SOURCES = pdeath_execute.c
 pdeath_execute_LDADD =
+
+mkset_SOURCES = mkset.c
+setcmp_SOURCES = setcmp.c
 
 rpmvercmp_SOURCES = rpmvercmp.c
 
