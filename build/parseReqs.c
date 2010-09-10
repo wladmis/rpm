@@ -183,7 +183,13 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	    return RPMERR_BADSPEC;
 	}
 
-	(void) addReqProv(spec, h, flags, req, version, index);
+	if (addReqProv(spec, h, flags, req, version, index) == 0) {
+	    // Set-versions need their rpmlib feature.
+	    if (version && strncmp(version, "set:", 4) == 0)
+		// Except for provides, to facilitate bootstrap.
+		if (tag != RPMTAG_PROVIDEFLAGS)
+		    rpmlibNeedsFeature(h, "SetVersions", NULL);
+	}
 
 	req = _free(req);
 	version = _free(version);

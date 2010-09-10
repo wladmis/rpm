@@ -379,7 +379,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	versions = hfd(versions, dvt);
 	names = hfd(names, dnt);
 	if (duplicate)
-	    return 0;
+	    return 1;
     }
 
 	/* Do not add NEW provided requires. */
@@ -427,7 +427,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		versions = hfd (versions, dvt);
 		names = hfd (names, dnt);
 		if (skip)
-			return 0;
+			return 1;
 
 		if (*depName == '/' && !(depFlags & RPMSENSE_SENSEMASK))
 		{
@@ -481,7 +481,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		}
 
 		if (skip)
-			return 0;
+			return 1;
 	}
 
 	/* Remove OLD provided requires. */

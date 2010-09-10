@@ -401,7 +401,7 @@ int lookupPackage(Spec spec, /*@null@*/ const char * name, int flag,
  * @param depName	(e.g. Requires: foo < 0:1.2-3, "foo")
  * @param depEVR	(e.g. Requires: foo < 0:1.2-3, "0:1.2-3")
  * @param index		(0 always)
- * @return		0 always
+ * @return		0 if added, 1 if skipped (optimized out)
  */
 int addReqProv(/*@unused@*/Spec spec, Header h,
 		rpmsenseFlags depFlags, const char * depName,
