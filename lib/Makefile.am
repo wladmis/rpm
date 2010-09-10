@@ -16,7 +16,7 @@ pkginc_HEADERS = \
 noinst_HEADERS = \
 	al.h cpio.h depends.h fsm.h header_internal.h \
 	manifest.h psm.h \
-	rpmlead.h signature.h
+	rpmlead.h set.h signature.h
 
 mylibpaths = \
 	-L$(top_builddir)/lib/.libs \
@@ -32,7 +32,7 @@ librpm_la_SOURCES = \
 	header_internal.c manifest.c misc.c order.c package.c \
 	problems.c poptI.c poptK.c poptQV.c psm.c query.c \
 	rpmchecksig.c rpminstall.c rpmlead.c rpmlibprov.c rpmrc.c \
-	signature.c stringbuf.c transaction.c \
+	set.c signature.c stringbuf.c transaction.c \
 	verify.c
 librpm_la_LDFLAGS = -release @VERSION@
 librpm_la_LIBADD = $(top_builddir)/rpmdb/librpmdb.la $(top_builddir)/rpmio/librpmio.la @LIBPOPT@ @WITH_SELINUX_LIB@
