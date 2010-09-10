@@ -46,6 +46,9 @@ static struct rpmlibProvides_s {
     { "rpmlib(PosttransFiletriggers)",  "4.0.4",
 	(                RPMSENSE_EQUAL),
     N_("package installs post-transaction filetrigger.") },
+    { "rpmlib(SetVersions)",  "4.0.4-alt98",
+	(                RPMSENSE_EQUAL),
+    N_("dependencies support set/subset versions.") },
     { NULL,				NULL, 0,	NULL }
 };
 
