@@ -69,6 +69,8 @@ const char *rpmNAME = PACKAGE;
 const char *rpmEVR = VERSION;
 int rpmFLAGS = RPMSENSE_EQUAL;
 
+#include "set.h"
+
 int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 	const char * BName, const char * BEVR, int BFlags)
 {
@@ -94,22 +96,60 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
     if (!AEVR) AEVR = "";
     if (!BEVR) BEVR = "";
 
-    /* Optimize: when both EVRs are non-existent or empty, always overlap. */
-    if (!(*AEVR || *BEVR)) {
+    if (*AEVR && *BEVR) {
+	/* equal version strings => equal versions */
+	if (strcmp(AEVR, BEVR) == 0) {
+	    sense = 0;
+	    goto sense_result;
+	}
+    }
+    /* something beats nothing */
+    else if (*AEVR) {
+	sense = 1;
+	goto sense_result;
+    }
+    else if (*BEVR) {
+	sense = -1 ;
+	goto sense_result;
+    }
+    else {
+	/* both EVRs are non-existent or empty, always overlap */
 	result = 1;
 	goto exit;
     }
 
-    /* Both AEVR and BEVR exist. */
-    aEVR = xstrdup(AEVR);
-    parseEVR(aEVR, &aE, &aV, &aR);
-    bEVR = xstrdup(BEVR);
-    parseEVR(bEVR, &bE, &bV, &bR);
-    /* rpmEVRcmp() is also shared; the code moved to rpmvercmp.c */
-    sense = rpmEVRcmp(aE, aV, aR, aDepend, bE, bV, bR, bDepend);
-    aEVR = _free(aEVR);
-    bEVR = _free(bEVR);
+    int aset = strncmp(AEVR, "set:", 4) == 0;
+    int bset = strncmp(BEVR, "set:", 4) == 0;
+    if (aset && bset) {
+	sense = rpmsetcmp(AEVR, BEVR);
+	if (sense < -1) {
+	    if (sense == -3)
+		rpmMessage(RPMMESS_WARNING, _("failed to decode %s\n"), AEVR);
+	    if (sense == -4)
+		rpmMessage(RPMMESS_WARNING, _("failed to decode %s\n"), BEVR);
+	    /* neither is subset of each other */
+	    result = 0;
+	    goto exit;
+	}
+    }
+    else if (aset || bset) {
+	/* no overlap between a set and non-set */
+	result = 0;
+	goto exit;
+    }
+    else {
+	/* Both AEVR and BEVR exist. */
+	aEVR = xstrdup(AEVR);
+	parseEVR(aEVR, &aE, &aV, &aR);
+	bEVR = xstrdup(BEVR);
+	parseEVR(bEVR, &bE, &bV, &bR);
+	/* rpmEVRcmp() is also shared; the code moved to rpmvercmp.c */
+	sense = rpmEVRcmp(aE, aV, aR, aDepend, bE, bV, bR, bDepend);
+	aEVR = _free(aEVR);
+	bEVR = _free(bEVR);
+    }
 
+sense_result:
     /* Detect overlap of {A,B} range. */
     result = 0;
     if (sense < 0 && ((AFlags & RPMSENSE_GREATER) || (BFlags & RPMSENSE_LESS))) {
