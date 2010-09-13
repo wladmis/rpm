@@ -661,7 +661,7 @@ int rpmsetcmp(const char *str1, const char *str2)
 	if (c1 < 0)
 	    return -3;
 	int c2 = decode_set(str2, Mshift2, v2);
-	if (c1 < 0)
+	if (c2 < 0)
 	    return -4;
 	// adjust for comparison
 	if (bpp1 > bpp2) {
