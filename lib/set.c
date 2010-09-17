@@ -219,15 +219,15 @@ void test_base62()
  * The idea is as follows.  Input values are assumed to be small integers.
  * Each value is split into two parts: an integer resulting from its higher
  * bits and an integer resulting from its lower bits (with the number of lower
- * bits specified by the Mshift parameter).  The fist integer is then stored
+ * bits specified by the Mshift parameter).  The frist integer is then stored
  * in unary coding (which is a variable-length sequence of '0' followed by a
  * terminating '1'); the second part is stored in normal binary coding (using
  * Mshift bits).
  *
  * The method is justified by the fact that, since most of the values are
- * small, their first part sequences will be short (typically 1..3 bits).
- * In particular, the method is known to be optimal for uniformly distributed
- * hash values (after the values are sorted and delta-encoded).  See e.g.
+ * small, their first parts will be short (typically 1..3 bits).  In particular,
+ * the method is known to be optimal for uniformly distributed hash values,
+ * after the values are sorted and delta-encoded.  See e.g.
  * Putze, F.; Sanders, P.; Singler, J. (2007),
  * "Cache-, Hash- and Space-Efficient Bloom Filters",
  * http://algo2.iti.uni-karlsruhe.de/singler/publications/cacheefficientbloomfilters-wea2007.pdf
@@ -794,7 +794,7 @@ const char *set_fini(struct set *set, int bpp)
     for (i = 0; i < set->c - 1; i++) {
 	if (set->sv[i].v != set->sv[i+1].v)
 	    continue;
-	if (strcmp(set->sv[i].s, set->sv[i+1].s)== 0)
+	if (strcmp(set->sv[i].s, set->sv[i+1].s) == 0)
 	    continue;
 	fprintf(stderr, "warning: hash collision: %s %s\n",
 		set->sv[i].s, set->sv[i+1].s);
