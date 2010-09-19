@@ -86,15 +86,16 @@ fi
 
 # All the rest is perl cleanup stuff.
 
-cd ./usr/lib/perl5 >/dev/null 2>&1 || exit 0
+set -- ./usr/*/perl5/
+[ -d "$1" ] || exit 0
 
-find -type f -name .packlist -print0 |
+find "$@" -type f -name .packlist -print0 |
 	xargs -r0 rm -vf --
 
-find -type f -name \*.bs -size 0 -print0 |
+find "$@" -type f -name \*.bs -size 0 -print0 |
 	xargs -r0 rm -vf --
 
-f="$(find -type f -name \*.bs)"
+f="$(find "$@" -type f -name \*.bs)"
 if [ -n "$f" ]; then
 	echo "$PROG: non empty *.bs file(s) found:"
 	printf %s\\n "$f"
