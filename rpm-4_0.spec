@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt98.46
+Release: alt98.47
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -475,6 +475,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Sep 20 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.47
+- set.c (rpmsetcmp): Fixed check for set2 decoding error.
+- brp-cleanup: Updated for /usr/lib64/perl5 and /usr/share/perl5.
+
 * Sat Sep 11 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.46
 - set.c: Implemented base62, golomb, and set-string routines.
 - depends.c (rpmRangesOverlap): Added support for set-versions.
