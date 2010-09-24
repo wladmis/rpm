@@ -23,5 +23,6 @@
 /etc/syslog.d	syslog-common
 /etc/udev/rules.d	udev-rules
 /etc/xinetd.d	xinetd
+/lib/udev/rules.d	udev-rules
 /usr/lib/rpm	librpm
 /usr/lib/rpm/macros.d	rpm
