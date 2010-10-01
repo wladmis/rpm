@@ -1,7 +1,7 @@
 #!/bin/sh -efu
 #
 # Copyright (C) 2000-2006  Dmitry V. Levin <ldv@altlinux.org>
-# Copyright (C) 2007-2008  Alexey Tourbin <at@altlinux.org>
+# Copyright (C) 2007-2010  Alexey Tourbin <at@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,6 +32,20 @@ RPM_FINDREQ_RPATH="/$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
 [ -z "${RPM_BUILD_ROOT-}" ] ||
 RPM_FINDREQ_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT") $RPM_FINDREQ_RPATH"
 Debug "RPM_FINDREQ_RPATH=$RPM_FINDREQ_RPATH"
+
+Cleanup()
+{
+	rm -rf "$tmpdir"
+	exit $1
+}
+
+tmpdir=$(mktemp -dt "$PROG.XXXXXXXX")
+trap 'Cleanup $?' EXIT
+trap 'Cleanup 143' HUP INT QUIT PIPE TERM
+
+>"$tmpdir"/lib2dep
+>"$tmpdir"/sym2lib
+>"$tmpdir"/versioned
 
 LibReq()
 {
@@ -98,6 +112,8 @@ LibReq()
 		sed -e 's/^:\+//; s/:\+$//')"
 	deps="$("$elf_ldd" -- "$f" "$rpath")" || return 1
 	# Shared library dependencies, version references.
+	rm -rf "$tmpdir"/a
+	mkdir "$tmpdir"/a
 	for vers in `printf '%s\n' "$dump" |"$shlib_req"`; do
 		name="$(printf %s "$vers" |cut -d: -f1)"
 		vers="$(printf %s "$vers" |cut -d: -f2-)"
@@ -110,6 +126,7 @@ NF==2 && ($1==name || basename($1)==name) && $1~"^/" && $2~"^[(]0x" {print $1}
 			Warning "$fname: library $name not found"
 			continue
 		fi
+		local orig_pathname="$pathname"
 		pathname=$(CanonPath "$pathname")
 		Verbose "$fname: $name -> $pathname"
 		local under_buildroot=
@@ -143,13 +160,158 @@ NF==2 && ($1==name || basename($1)==name) && $1~"^/" && $2~"^[(]0x" {print $1}
 			printf '%s\n' "$pathname"
 			continue
 		fi
+		# Postpone main requires entry.
+		local dep="$(printf '%s%s%s%s\n' "$prefix" "$name" "$braces" "$suffix")"
+		printf '%s\t%s\n' "$orig_pathname" "$dep" >>"$tmpdir"/a/lib2dep
+		# Print versioned references.
 		v=
 		for v in `printf %s "$vers" |tr : ' '`; do
 			printf '%s%s(%s)%s\n' "$prefix" "$name" "$v" "$suffix"
 		done
-		[ -n "$v" ] ||
-			printf '%s%s%s%s\n' "$prefix" "$name" "$braces" "$suffix"
+		# Remember versioned sonames.
+		if [ -n "$v" ]; then
+			printf '%s\n' "$dep" |
+			LC_ALL=C sort -u -m -o "$tmpdir"/versioned{,} -
+		fi
 	done
+	[ -s "$tmpdir"/a/lib2dep ] || return 0
+	# Deal with symbols.
+	$elf_ldd --bindings -- "$f" "$rpath" 2>&1 |
+		LC_ALL=C fgrep "binding file $f [" |
+		awk '($4!=$7){print$11"\t"$7}' |
+		sed -e "s/[\`']//g" >"$tmpdir"/a/sym2lib
+	if ! [ -s "$tmpdir"/a/sym2lib ]; then
+		Warning "$f: no symbol bindings"
+		return 0
+	fi
+	# Diagnose overlinking.
+	LC_ALL=C sort -t$'\t' -u -k1,1 -k2,2 -o "$tmpdir"/a/lib2dep{,}
+	LC_ALL=C sort -t$'\t' -u -k2,2 -k1,1 -o "$tmpdir"/a/sym2lib{,}
+	local libs
+	libs=$(LC_ALL=C join -t$'\t' -11 -22 -v1 -o 1.1 "$tmpdir"/a/{lib2dep,sym2lib} )
+	if [ -n "$libs" ]; then
+		# extra libraries from objdump
+		libs=$(printf '%s\n' "$libs" |LC_ALL=C sort -u)
+		Warning "$f: overlinked libraries:" $libs
+	fi
+	# Exclude weak undefined symbols.
+	nm -D "$f" |awk 'NF==2&&($1=="w"||$1=="v"){print$2}' >"$tmpdir"/a/weak
+	if [ -s "$tmpdir"/a/weak ]; then
+		LC_ALL=C sort -u -o "$tmpdir"/a/weak{,}
+		LC_ALL=C sort -u -o "$tmpdir"/a/sym2lib{,}
+		LC_ALL=C join -t$'\t' -v1 -o 1.1,1.2 "$tmpdir"/a/{sym2lib,weak} >"$tmpdir"/a/sym2lib+
+		mv -f "$tmpdir"/a/sym2lib{+,}
+		LC_ALL=C sort -t$'\t' -u -k2,2 -k1,1 -o "$tmpdir"/a/sym2lib{,}
+	fi
+	# Diagnose underlinking.
+	libs=$(LC_ALL=C join -t$'\t' -11 -22 -v2 -o 2.2 "$tmpdir"/a/{lib2dep,sym2lib} )
+	if [ -n "$libs" ]; then
+		# extra libraries from ldd
+		libs=$(printf '%s\n' "$libs" |LC_ALL=C sort -u)
+		Warning "$f: underlinked libraries:" $libs
+	fi
+	# Append.
+	LC_ALL=C sort -t$'\t' -m -u -k1,1 -k2,2 -o "$tmpdir"/lib2dep{,} "$tmpdir"/a/lib2dep
+	LC_ALL=C sort -t$'\t' -m -u -k2,2 -k1,1 -o "$tmpdir"/sym2lib{,} "$tmpdir"/a/sym2lib
+}
+
+ProvidedSymbols()
+{
+	readelf --wide --dyn-syms "$1" |
+	LC_ALL=C egrep '^ *[0-9]+: ' |
+	awk 'NF>=8 &&
+		# dl-lookup.c: /st_value
+		($2!="00000000" && $2!="0000000000000000" || $4=="TLS") &&
+		# dl-lookup.c: /st_shndx
+		($7!="UND") &&
+		# dl-lookup.c: /ALLOWED_STT
+		($4=="NOTYPE" || $4=="OBJECT" || $4 == "FUNC" || $4=="COMMON" || $4=="TLS" || $4=="IFUNC") &&
+		# dl-lookup.c: /hidden
+		($6=="DEFAULT" || $6=="PROTECTED") &&
+		# dl-lookup.c: /switch.*ST_BIND
+		($5=="GLOBAL" || $5=="WEAK" || $5 == "UNIQUE") &&
+		# Ignore special symbols found in each library:
+		($8!="__bss_start" && $8!="_edata" && $8!="_end" && $8!="_fini" && $8!="_init") {
+			sym = $8
+			# No symbol versioning yet.
+			ix = index(sym, "@")
+			if (ix > 1)
+				sym = substr(sym, 0, ix-1)
+			print sym
+		}' |
+	LC_ALL=C sort -u
+}
+
+SuggestBPP()
+{
+	# For the number of symbols in the range 2^{m-1}..2^m-1,
+	# use m+10 bits per symbol.  Upper bound on the error rate
+	# is 2^{-10} (about 0.1%).
+	perl -le 'print int log(shift) / log(2) + 11' "$1"
 }
 
 ArgvFileAction LibReq "$@"
+[ -s "$tmpdir"/lib2dep ] || exit 0
+
+# Some standard libraries which use symbol versioning.
+cat >"$tmpdir"/stddep <<EOF
+libc.so.6
+libc.so.6()(64bit)
+libpthread.so.0
+libpthread.so.0()(64bit)
+libm.so.6
+libm.so.6()(64bit)
+libdl.so.2
+libdl.so.2()(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6
+libstdc++.so.6()(64bit)
+EOF
+
+# Some non-standard symbols found in standard libraries.
+cat >"$tmpdir"/nonstdsym <<EOF
+strlcat
+strlcpy
+EOF
+
+while IFS=$'\t' read -r lib dep; do
+	# Deal with bpp.
+	provsym=$(ProvidedSymbols "$lib")
+	if [ -n "$provsym" ]; then
+		provn=$(printf '%s\n' "$provsym" |wc -l)
+		bpp=$(SuggestBPP "$provn")
+	else
+		Warning "$lib provides no symbols"
+		bpp=10
+	fi
+	# Deal with required symbols.
+	reqsym=$(printf '%s\n' "$lib" |LC_ALL=C join -t$'\t' -12 -o 1.1 "$tmpdir"/sym2lib -)
+	if [ -z "$reqsym" ]; then
+		LC_ALL=C fgrep -qs -x -e "$dep" "$tmpdir"/versioned ||
+			printf '%s\n' "$dep"
+		continue
+	fi
+	# Handle standard libraries.
+	if LC_ALL=C fgrep -qs -x -e "$dep" "$tmpdir"/stddep; then
+		if ! reqsym=$(printf '%s\n' "$reqsym" |fgrep -x -f "$tmpdir"/nonstdsym); then
+			LC_ALL=C fgrep -qs -x -e "$dep" "$tmpdir"/versioned ||
+				printf '%s\n' "$dep"
+			continue
+		fi
+	fi
+	# See if this dep is provided.
+	if [ -z "${lib##${RPM_BUILD_ROOT:-foo}/*}" ] ||
+	   rpmquery --whatprovides --provides -- "$dep" |fgrep -qs -e "$dep = set:"; then
+		: good
+	else
+		Warning "$dep is not yet set-versioned"
+		LC_ALL=C fgrep -qs -x -e "$dep" "$tmpdir"/versioned ||
+			printf '%s\n' "$dep"
+		continue
+	fi
+	# Make set-versioned soname dependency.
+	#printf '%s\n' "$reqsym" |LC_ALL=C sort -c -u
+	set=$(printf '%s\n' "$reqsym" |@RPMCONFIGDIR@/mkset "$bpp")
+	printf '%s >= %s\n' "$dep" "$set"
+done <"$tmpdir"/lib2dep
