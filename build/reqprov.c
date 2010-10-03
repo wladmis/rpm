@@ -79,6 +79,8 @@ static dep_compare_t compare_sense_flags (rpmTag tag, int cmp,
 	}
 }
 
+#include "set.h"
+
 static dep_compare_t compare_deps (rpmTag tag,
 	const char *Aevr, rpmsenseFlags Aflags,
 	const char *Bevr, rpmsenseFlags Bflags)
@@ -186,14 +188,33 @@ static dep_compare_t compare_deps (rpmTag tag,
 	}
 
 	/* 8. compare versions. */
-	aEVR = xstrdup(Aevr);
-	parseEVR(aEVR, &aE, &aV, &aR);
-	bEVR = xstrdup(Bevr);
-	parseEVR(bEVR, &bE, &bV, &bR);
+	int aset = strncmp(Aevr, "set:", 4) == 0;
+	int bset = strncmp(Bevr, "set:", 4) == 0;
+	if (aset && bset) {
+	    sense = rpmsetcmp(Aevr, Bevr);
+	    if (sense < -1)
+		return DEP_UN;
+	}
+	else if (aset) {
+	    if (*Bevr)
+		return DEP_UN;
+	    sense = 1;
+	}
+	else if (bset) {
+	    if (*Aevr)
+		return DEP_UN;
+	    sense = -1;
+	}
+	else {
+	    aEVR = xstrdup(Aevr);
+	    parseEVR(aEVR, &aE, &aV, &aR);
+	    bEVR = xstrdup(Bevr);
+	    parseEVR(bEVR, &bE, &bV, &bR);
 
-	sense = rpmEVRcmp(aE, aV, aR, Aevr, bE, bV, bR, Bevr);
-	aEVR = _free(aEVR);
-	bEVR = _free(bEVR);
+	    sense = rpmEVRcmp(aE, aV, aR, Aevr, bE, bV, bR, Bevr);
+	    aEVR = _free(aEVR);
+	    bEVR = _free(bEVR);
+	}
 
 	/* 9. detect overlaps. */
 	cmp_rc = compare_sense_flags (tag, sense, Asense, Bsense);
