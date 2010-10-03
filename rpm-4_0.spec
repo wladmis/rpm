@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt98.48
+Release: alt98.49
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -475,6 +475,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Oct 04 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.49
+- lib.req: Implemented set-versions for soname dependencies.
+- build/parseReqs.c: Enabled dependencies on rpmlib(SetVersions).
+
 * Fri Sep 24 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt98.48
 - 0common-files.req.list: Added /etc/sysctl.d, /lib/udev/rules.d,
   /lib64/udev and /lib64/udev/rules.d entries.
