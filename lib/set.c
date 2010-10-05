@@ -737,7 +737,7 @@ void set_add(struct set *set, const char *sym)
     set->c++;
 }
 
-void *set_free(struct set *set)
+struct set *set_free(struct set *set)
 {
     if (set) {
 	int i;

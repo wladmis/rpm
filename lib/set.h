@@ -26,6 +26,6 @@ void set_add(struct set *set, const char *sym);
 const char *set_fini(struct set *set, int bpp);
 
 // free set
-void *set_free(struct set *set);
+struct set *set_free(struct set *set);
 
 #endif
