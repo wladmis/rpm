@@ -94,7 +94,7 @@ LibProv()
 
 	# Do main provides entry.
 	local provname="$provdir$soname$braces$suffix"
-	ENABLE_SET_VERSIONS=1
+	ENABLE_SET_VERSIONS=
 	if [ -z "$ENABLE_SET_VERSIONS" ]; then
 		printf '%s\n' "$provname"
 		return 0
