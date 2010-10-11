@@ -283,6 +283,12 @@ strlcpy
 EOF
 
 while IFS=$'\t' read -r lib dep; do
+	ENABLE_SET_VERSIONS=1
+	if [ -z "$ENABLE_SET_VERSIONS" ]; then
+		LC_ALL=C fgrep -qs -x -e "$dep" "$tmpdir"/versioned ||
+			printf '%s\n' "$dep"
+		continue
+	fi
 	# Deal with bpp.
 	provsym=$(ProvidedSymbols "$lib")
 	if [ -n "$provsym" ]; then

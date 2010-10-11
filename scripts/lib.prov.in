@@ -94,6 +94,11 @@ LibProv()
 
 	# Do main provides entry.
 	local provname="$provdir$soname$braces$suffix"
+	ENABLE_SET_VERSIONS=1
+	if [ -z "$ENABLE_SET_VERSIONS" ]; then
+		printf '%s\n' "$provname"
+		return 0
+	fi
 	local sym="$(ProvidedSymbols "$f")"
 	if [ -n "$sym" ]; then
 		local n bpp set
