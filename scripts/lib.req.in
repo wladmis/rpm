@@ -307,7 +307,7 @@ while IFS=$'\t' read -r lib dep; do
 	fi
 	# Handle standard libraries.
 	if LC_ALL=C fgrep -qs -x -e "$dep" "$tmpdir"/stddep; then
-		if ! reqsym=$(printf '%s\n' "$reqsym" |fgrep -x -f "$tmpdir"/nonstdsym); then
+		if ! reqsym=$(printf '%s\n' "$reqsym" |LC_ALL=C fgrep -x -f "$tmpdir"/nonstdsym); then
 			LC_ALL=C fgrep -qs -x -e "$dep" "$tmpdir"/versioned ||
 				printf '%s\n' "$dep"
 			continue
@@ -315,7 +315,7 @@ while IFS=$'\t' read -r lib dep; do
 	fi
 	# See if this dep is provided.
 	if [ -z "${lib##${RPM_BUILD_ROOT:-foo}/*}" ] ||
-	   rpmquery --whatprovides --provides -- "$dep" |fgrep -qs -e "$dep = set:"; then
+	   rpmquery --whatprovides --provides -- "$dep" |LC_ALL=C fgrep -qs -e "$dep = set:"; then
 		: good
 	else
 		Warning "$dep is not yet set-versioned"
