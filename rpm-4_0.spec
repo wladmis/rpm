@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt98.49
+Release: alt100.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -475,6 +475,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Wed Oct 20 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.1
+- Changed release numeration:
+  alt99.M51 series is for branch 5.1, alt100 is for Sisyphus (Alexey Tourbin).
+- rpmrc: Updated for ARM (Mihail Yakushin).
+
 * Mon Oct 04 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt98.49
 - lib.req: Implemented set-versions for soname dependencies.
 - build/parseReqs.c: Enabled dependencies on rpmlib(SetVersions).
