@@ -18,7 +18,7 @@ Release: alt100.1
 %def_without apidocs
 %def_without db
 %def_without build_topdir
-%def_with selinux
+%def_without selinux
 
 # XXX enable at your own risk, CDB access to rpmdb isn't cooked yet.
 %define enable_cdb create cdb
