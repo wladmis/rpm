@@ -35,7 +35,7 @@ librpm_la_SOURCES = \
 	set.c signature.c stringbuf.c transaction.c \
 	verify.c
 librpm_la_LDFLAGS = -release @VERSION@
-librpm_la_LIBADD = $(top_builddir)/rpmdb/librpmdb.la $(top_builddir)/rpmio/librpmio.la @LIBPOPT@ @WITH_SELINUX_LIB@
+librpm_la_LIBADD = $(top_builddir)/rpmdb/librpmdb.la $(top_builddir)/rpmio/librpmio.la @LIBPOPT@ @LIBBEECRYPT@ @WITH_SELINUX_LIB@
 librpm_la_DEPENDENCIES = $(top_builddir)/rpmdb/librpmdb.la $(top_builddir)/rpmio/librpmio.la
 
 getdate.c: getdate.y
