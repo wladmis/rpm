@@ -13,7 +13,8 @@ INCLUDES = -I. \
 
 noinst_HEADERS = db-py.h hash.h header-py.c header-py.h upgrade.h
 
-mylibs= \
+mylibs= $(top_builddir)/rpmio/librpmio.la \
+	$(top_builddir)/rpmdb/librpmdb.la \
 	$(top_builddir)/lib/librpm.la
 
 LDADD =
@@ -23,6 +24,7 @@ python_LTLIBRARIES = rpmmodule.la
 
 rpmmodule_la_LDFLAGS = -module -avoid-version
 rpmmodule_la_LIBADD = $(mylibs) $(LIBS) -lpython${PYVER}
+librpmbuild_la_DEPENDENCIES = $(mylibs)
 
 rpmmodule_la_SOURCES = rpmmodule.c hash.c upgrade.c header-py.c db-py.c
 
