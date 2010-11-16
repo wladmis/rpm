@@ -39,21 +39,26 @@ int encode_base62_size(int bitc)
     return (bitc >> 2) + 2;
 }
 
+static inline
+void put_digit(char **base62, int c)
+{
+    assert(c >= 0 && c <= 61);
+
+    if (c < 10)
+	**base62 = c + '0';
+    else if (c < 36)
+	**base62 = c - 10 + 'a';
+    else
+	**base62 = c - 36 + 'A';
+
+    (*base62)++;
+}
+
 /* Main base62 encoding routine: pack bitv into base62 string. */
 static
 int encode_base62(int bitc, const char *bitv, char *base62)
 {
     char *base62_start = base62;
-    void put_digit(int c)
-    {
-	assert(c >= 0 && c <= 61);
-	if (c < 10)
-	    *base62++ = c + '0';
-	else if (c < 36)
-	    *base62++ = c - 10 + 'a';
-	else if (c < 62)
-	    *base62++ = c - 36 + 'A';
-    }
     int bits2 = 0; /* number of high bits set */
     int bits6 = 0; /* number of regular bits set */
     int num6b = 0; /* pending 6-bit number */
@@ -64,21 +69,21 @@ int encode_base62(int bitc, const char *bitv, char *base62)
 	    switch (num6b) {
 	    case 61:
 		/* escape */
-		put_digit(61);
+		put_digit(&base62, 61);
 		/* extra "00...." high bits (in the next character) */
 		bits2 = 2;
 		bits6 = 0;
 		num6b = 0;
 		break;
 	    case 62:
-		put_digit(61);
+		put_digit(&base62, 61);
 		/* extra "01...." hight bits */
 		bits2 = 2;
 		bits6 = 0;
 		num6b = 16;
 		break;
 	    case 63:
-		put_digit(61);
+		put_digit(&base62, 61);
 		/* extra "10...." hight bits */
 		bits2 = 2;
 		bits6 = 0;
@@ -86,7 +91,7 @@ int encode_base62(int bitc, const char *bitv, char *base62)
 		break;
 	    default:
 		assert(num6b < 61);
-		put_digit(num6b);
+		put_digit(&base62, num6b);
 		bits2 = 0;
 		bits6 = 0;
 		num6b = 0;
@@ -96,7 +101,7 @@ int encode_base62(int bitc, const char *bitv, char *base62)
     }
     if (bits6 + bits2) {
 	assert(num6b < 61);
-	put_digit(num6b);
+	put_digit(&base62, num6b);
     }
     *base62 = '\0';
     return base62 - base62_start;
@@ -111,37 +116,34 @@ int decode_base62_size(const char *base62)
     return (len << 2) + (len << 1);
 }
 
+static inline
+int char_to_num(int c)
+{
+    if (c >= '0' && c <= '9')
+	return c - '0';
+    if (c >= 'a' && c <= 'z')
+	return c - 'a' + 10;
+    if (c >= 'A' && c <= 'Z')
+	return c - 'A' + 36;
+    return -1;
+}
+
+static inline
+void putbits(char **bitv, int n, int c)
+{
+    int i;
+
+    for(i = 0; i < n; i++) {
+	**bitv = (c >> i) & 1;
+	(*bitv)++;
+    }
+}
+
 /* Main base62 decoding routine: unpack base62 string into bitv. */
 static
 int decode_base62(const char *base62, char *bitv)
 {
     char *bitv_start = bitv;
-    int char_to_num(int c)
-    {
-	if (c >= '0' && c <= '9')
-	    return c - '0';
-	if (c >= 'a' && c <= 'z')
-	    return c - 'a' + 10;
-	if (c >= 'A' && c <= 'Z')
-	    return c - 'A' + 36;
-	return -1;
-    }
-    void put6bits(int c)
-    {
-	*bitv++ = (c >> 0) & 1;
-	*bitv++ = (c >> 1) & 1;
-	*bitv++ = (c >> 2) & 1;
-	*bitv++ = (c >> 3) & 1;
-	*bitv++ = (c >> 4) & 1;
-	*bitv++ = (c >> 5) & 1;
-    }
-    void put4bits(int c)
-    {
-	*bitv++ = (c >> 0) & 1;
-	*bitv++ = (c >> 1) & 1;
-	*bitv++ = (c >> 2) & 1;
-	*bitv++ = (c >> 3) & 1;
-    }
     int c;
     while ((c = *base62++)) {
 	int num6b = char_to_num(c);
@@ -156,22 +158,22 @@ int decode_base62(const char *base62, char *bitv)
 		return -3;
 	    switch (num6b & (16 + 32)) {
 	    case 0:
-		put6bits(61);
+		putbits(&bitv, 6, 61);
 		break;
 	    case 16:
-		put6bits(62);
+		putbits(&bitv, 6, 62);
 		break;
 	    case 32:
-		put6bits(63);
+		putbits(&bitv, 6, 63);
 		break;
 	    default:
 		return -4;
 		break;
 	    }
-	    put4bits(num6b);
+	    putbits(&bitv, 4, num6b);
 	}
 	else {
-	    put6bits(num6b);
+	    putbits(&bitv, 6, num6b);
 	}
     }
     return bitv - bitv_start;
@@ -235,17 +237,19 @@ void test_base62()
  * http://algo2.iti.uni-karlsruhe.de/singler/publications/cacheefficientbloomfilters-wea2007.pdf
  */
 
+static inline
+int log2i(int n)
+{
+    int m = 0;
+    while (n >>= 1)
+	m++;
+    return m;
+}
+
 /* Calculate Mshift paramter for encoding. */
 static
 int encode_golomb_Mshift(int c, int bpp)
 {
-    int log2i(int n)
-    {
-	int m = 0;
-	while (n >>= 1)
-	    m++;
-	return m;
-    }
     /*
      * XXX Slightly better Mshift estimations are probably possible.
      * Recheck "Compression and coding algorithms" by Moffat & Turpin.
@@ -446,19 +450,21 @@ void maskv(int c, unsigned *v, unsigned mask)
 }
 
 static
+int cmpv(const void *arg1, const void *arg2)
+{
+    unsigned v1 = *(unsigned *) arg1;
+    unsigned v2 = *(unsigned *) arg2;
+    if (v1 > v2)
+	return 1;
+    if (v1 < v2)
+	return -1;
+    return 0;
+}
+
+static
 void sortv(int c, unsigned *v)
 {
-    int cmp(const void *arg1, const void *arg2)
-    {
-	unsigned v1 = *(unsigned *) arg1;
-	unsigned v2 = *(unsigned *) arg2;
-	if (v1 > v2)
-	    return 1;
-	if (v1 < v2)
-	    return -1;
-	return 0;
-    }
-    qsort(v, c, sizeof *v, cmp);
+    qsort(v, c, sizeof *v, cmpv);
 }
 
 static
@@ -811,6 +817,35 @@ struct set *set_free(struct set *set)
     return NULL;
 }
 
+/* Jenkins' one-at-a-time hash */
+static inline
+unsigned int jenkins_hash(const char *str)
+{
+    unsigned int hash = 0x9e3779b9;
+    const unsigned char *p = (const unsigned char *) str;
+    while (*p) {
+	hash += *p++;
+	hash += (hash << 10);
+	hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    return hash;
+}
+
+static inline
+int cmp_sv(const void *arg1, const void *arg2)
+{
+    struct sv *sv1 = (struct sv *) arg1;
+    struct sv *sv2 = (struct sv *) arg2;
+    if (sv1->v > sv2->v)
+	return 1;
+    if (sv2->v > sv1->v)
+	return -1;
+    return 0;
+}
+
 /* This routine does the whole job. */
 const char *set_fini(struct set *set, int bpp)
 {
@@ -821,38 +856,12 @@ const char *set_fini(struct set *set, int bpp)
     if (bpp > 32)
 	return NULL;
     unsigned mask = (bpp < 32) ? (1u << bpp) - 1 : ~0u;
-    /* Jenkins' one-at-a-time hash */
-    inline
-    unsigned int hash(const char *str)
-    {
-	unsigned int hash = 0x9e3779b9;
-	const unsigned char *p = (const unsigned char *) str;
-	while (*p) {
-	    hash += *p++;
-	    hash += (hash << 10);
-	    hash ^= (hash >> 6);
-	}
-	hash += (hash << 3);
-	hash ^= (hash >> 11);
-	hash += (hash << 15);
-	return hash;
-    }
     /* hash sv strings */
     int i;
     for (i = 0; i < set->c; i++)
-	set->sv[i].v = hash(set->sv[i].s) & mask;
+	set->sv[i].v = jenkins_hash(set->sv[i].s) & mask;
     /* sort by hash value */
-    int cmp(const void *arg1, const void *arg2)
-    {
-	struct sv *sv1 = (struct sv *) arg1;
-	struct sv *sv2 = (struct sv *) arg2;
-	if (sv1->v > sv2->v)
-	    return 1;
-	if (sv2->v > sv1->v)
-	    return -1;
-	return 0;
-    }
-    qsort(set->sv, set->c, sizeof *set->sv, cmp);
+    qsort(set->sv, set->c, sizeof *set->sv, cmp_sv);
     /* warn on hash collisions */
     for (i = 0; i < set->c - 1; i++) {
 	if (set->sv[i].v != set->sv[i+1].v)
