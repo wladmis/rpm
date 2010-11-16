@@ -1,7 +1,9 @@
 #ifndef SET_H
 #define SET_H
 
-/* Compare two set-versions.
+/*
+ * Compare two set-versions.
+ *
  * Return value:
  *  1: set1  >  set2
  *  0: set1 ==  set2
@@ -16,16 +18,16 @@ int rpmsetcmp(const char *set1, const char *set2);
  * API for creating set versions.
  */
 
-// initialize new set
+/* initialize new set */
 struct set *set_new(void);
 
-// add new symbol to set
+/* add new symbol to set */
 void set_add(struct set *set, const char *sym);
 
-// make set-version
+/* make set-version */
 const char *set_fini(struct set *set, int bpp);
 
-// free set
+/* free set */
 struct set *set_free(struct set *set);
 
 #endif
