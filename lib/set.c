@@ -11,6 +11,7 @@
 #include <stdio.h>
 #endif
 
+#include <alloca.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -269,11 +270,13 @@ int log2i(int n)
 static
 int encode_golomb_Mshift(int c, int bpp)
 {
+    int Mshift;
+
     /*
      * XXX Slightly better Mshift estimations are probably possible.
      * Recheck "Compression and coding algorithms" by Moffat & Turpin.
      */
-    int Mshift = bpp - log2i(c) - 1;
+    Mshift = bpp - log2i(c) - 1;
 
     /* Adjust out-of-range values. */
     if (Mshift < 7)
@@ -304,20 +307,20 @@ int encode_golomb(int c, const unsigned *v, int Mshift, char *bitv)
     char *bitv_start = bitv;
     const unsigned mask = (1 << Mshift) - 1;
 
-    while (c > 0) {
-	c--;
-	unsigned v0 = *v++;
+    while (c-- > 0) {
+	unsigned v0, q, r;
 	int i;
-	/* first part: variable-length sequence */
-	unsigned q = v0 >> Mshift;
 
-	for (i = 0; i < (int)q; i++)
+	v0 = *v++;
+
+	/* first part: variable-length sequence */
+	q = v0 >> Mshift;
+	for (i = 0; i < (int) q; i++)
 	    *bitv++ = 0;
 	*bitv++ = 1;
 
 	/* second part: lower Mshift bits */
-	unsigned r = v0 & mask;
-
+	r = v0 & mask;
 	for (i = 0; i < Mshift; i++)
 	    *bitv++ = (r >> i) & 1;
     }
@@ -344,10 +347,13 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 
     /* next value */
     while (bitc > 0) {
-	/* first part */
-	unsigned q = 0;
-	char bit = 0;
+	unsigned q, r;
+	char bit;
+	int i;
 
+	/* first part */
+	q = 0;
+	bit = 0;
 	while (bitc > 0) {
 	    bitc--;
 	    bit = *bitv++;
@@ -366,14 +372,13 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 	    return -1;
 
 	/* second part */
-	unsigned r = 0;
-	int i;
-
+	r = 0;
 	for (i = 0; i < Mshift; i++) {
 	    bitc--;
 	    if (*bitv++)
 		r |= (1 << i);
 	}
+
 	/* the value */
 	*v++ = (q << Mshift) | r;
     }
@@ -575,6 +580,7 @@ int encode_set(int c, unsigned *v, int bpp, char *base62)
     /* XXX v is non-const due to encode_delta */
     int Mshift = encode_golomb_Mshift(c, bpp);
     int bitc = encode_golomb_size(c, Mshift);
+    int len;
     char bitv[bitc];
 
     /* bpp */
@@ -601,7 +607,7 @@ int encode_set(int c, unsigned *v, int bpp, char *base62)
 	return -3;
 
     /* base62 */
-    int len = encode_base62(bitc, bitv, base62);
+    len = encode_base62(bitc, bitv, base62);
     if (len < 0)
 	return -4;
 
@@ -611,15 +617,15 @@ int encode_set(int c, unsigned *v, int bpp, char *base62)
 static
 int decode_set_init(const char *str, int *pbpp, int *pMshift)
 {
-    /* 7..32 values encoded with 'a'..'z' */
-    int bpp = *str++ + 7 - 'a';
+    int bpp, Mshift;
 
+    /* 7..32 values encoded with 'a'..'z' */
+    bpp = *str++ + 7 - 'a';
     if (bpp < 10 || bpp > 32)
 	return -1;
 
     /* golomb parameter */
-    int Mshift = *str++ + 7 - 'a';
-
+    Mshift = *str++ + 7 - 'a';
     if (Mshift < 7 || Mshift > 31)
 	return -2;
 
@@ -638,24 +644,32 @@ int decode_set_init(const char *str, int *pbpp, int *pMshift)
 static inline
 int decode_set_size(const char *str, int Mshift)
 {
+    int bitc;
+
     str += 2;
-    int bitc = decode_base62_size(str);
+    bitc = decode_base62_size(str);
+
     return decode_golomb_size(bitc, Mshift);
 }
 
 static
 int decode_set(const char *str, int Mshift, unsigned *v)
 {
+    char *bitv;
+    int bitc;
+    int c;
+
     str += 2;
+
     /* base62 */
-    char bitv[decode_base62_size(str)];
-    int bitc = decode_base62(str, bitv);
+    bitv = alloca(decode_base62_size(str));
+    bitc = decode_base62(str, bitv);
 
     if (bitc < 0)
 	return -1;
 
     /* golomb */
-    int c = decode_golomb(bitc, bitv, Mshift, v);
+    c = decode_golomb(bitc, bitv, Mshift, v);
     if (c < 0)
 	return -2;
 
@@ -774,31 +788,33 @@ void test_set(void)
 /* main API routine */
 int rpmsetcmp(const char *str1, const char *str2)
 {
+	int bpp1, Mshift1, c1, i1;
+	int bpp2, Mshift2, c2, i2;
+	int ge, le;
+	unsigned *v1, *v2;
+
 	if (strncmp(str1, "set:", 4) == 0)
 	    str1 += 4;
 	if (strncmp(str2, "set:", 4) == 0)
 	    str2 += 4;
 
 	/* initialize decoding */
-	int bpp1, Mshift1;
-	int bpp2, Mshift2;
-
 	if (decode_set_init(str1, &bpp1, &Mshift1) < 0)
 	    return -3;
 	if (decode_set_init(str2, &bpp2, &Mshift2) < 0)
 	    return -4;
 
 	/* make room for hash values */
-	unsigned v1[decode_set_size(str1, Mshift1)];
-	unsigned v2[decode_set_size(str2, Mshift2)];
+	v1 = alloca(sizeof(*v1) * decode_set_size(str1, Mshift1));
+	v2 = alloca(sizeof(*v2) * decode_set_size(str2, Mshift2));
 
 	/* decode hash values
 	   str1 comes on behalf of provides, decode with caching */
-	int c1 = cache_decode_set(str1, Mshift1, v1);
+	c1 = cache_decode_set(str1, Mshift1, v1);
 	if (c1 < 0)
 	    return -3;
 
-	int c2 =       decode_set(str2, Mshift2, v2);
+	c2 =       decode_set(str2, Mshift2, v2);
 	if (c2 < 0)
 	    return -4;
 
@@ -813,9 +829,8 @@ int rpmsetcmp(const char *str1, const char *str2)
 	}
 
 	/* compare */
-	int ge = 1;
-	int le = 1;
-	int i1 = 0, i2 = 0;
+	ge = 1; le = 1;
+	i1 = 0; i2 = 0;
 	while (i1 < c1 && i2 < c2) {
 	    if (v1[i1] < v2[i2]) {
 		le = 0;
@@ -884,14 +899,15 @@ void set_add(struct set *set, const char *sym)
 
 struct set *set_free(struct set *set)
 {
-    if (set) {
-	int i;
+    int i;
 
-	for (i = 0; i < set->c; i++)
-	    set->sv[i].s = _free(set->sv[i].s);
+    if (!set)
+	return NULL;
 
-	set->sv = _free(set->sv);
-    }
+    for (i = 0; i < set->c; i++)
+	set->sv[i].s = _free(set->sv[i].s);
+    set->sv = _free(set->sv);
+
     return NULL;
 }
 
@@ -933,16 +949,20 @@ int cmp_sv(const void *arg1, const void *arg2)
 /* This routine does the whole job. */
 const char *set_fini(struct set *set, int bpp)
 {
+    unsigned mask;
+    unsigned v[set->c];
+    char *base62;
+    int c, len, i;
+
     if (set->c < 1)
 	return NULL;
     if (bpp < 10)
 	return NULL;
     if (bpp > 32)
 	return NULL;
-    unsigned mask = (bpp < 32) ? (1u << bpp) - 1 : ~0u;
+    mask = (bpp < 32) ? (1u << bpp) - 1 : ~0u;
 
     /* hash sv strings */
-    int i;
     for (i = 0; i < set->c; i++)
 	set->sv[i].v = jenkins_hash(set->sv[i].s) & mask;
 
@@ -960,13 +980,12 @@ const char *set_fini(struct set *set, int bpp)
     }
 
     /* encode */
-    unsigned v[set->c];
     for (i = 0; i < set->c; i++)
 	v[i] = set->sv[i].v;
 
-    int c = uniqv(set->c, v);
-    char base62[encode_set_size(c, bpp)];
-    int len = encode_set(c, v, bpp, base62);
+    c = uniqv(set->c, v);
+    base62 = alloca(encode_set_size(c, bpp));
+    len = encode_set(c, v, bpp, base62);
     if (len < 0)
 	return NULL;
 
