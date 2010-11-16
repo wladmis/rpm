@@ -62,48 +62,54 @@ int encode_base62(int bitc, const char *bitv, char *base62)
     int bits2 = 0; /* number of high bits set */
     int bits6 = 0; /* number of regular bits set */
     int num6b = 0; /* pending 6-bit number */
+
     while (bitc-- > 0) {
 	assert(bits6 + bits2 < 6);
 	num6b |= (*bitv++ << bits6++);
-	if (bits6 + bits2 == 6) {
-	    switch (num6b) {
-	    case 61:
-		/* escape */
-		put_digit(&base62, 61);
-		/* extra "00...." high bits (in the next character) */
-		bits2 = 2;
-		bits6 = 0;
-		num6b = 0;
-		break;
-	    case 62:
-		put_digit(&base62, 61);
-		/* extra "01...." hight bits */
-		bits2 = 2;
-		bits6 = 0;
-		num6b = 16;
-		break;
-	    case 63:
-		put_digit(&base62, 61);
-		/* extra "10...." hight bits */
-		bits2 = 2;
-		bits6 = 0;
-		num6b = 32;
-		break;
-	    default:
-		assert(num6b < 61);
-		put_digit(&base62, num6b);
-		bits2 = 0;
-		bits6 = 0;
-		num6b = 0;
-		break;
-	    }
+
+	if (bits6 + bits2 != 6)
+	    continue;
+
+	switch (num6b) {
+	case 61:
+	    /* escape */
+	    put_digit(&base62, 61);
+	    /* extra "00...." high bits (in the next character) */
+	    bits2 = 2;
+	    bits6 = 0;
+	    num6b = 0;
+	    break;
+	case 62:
+	    put_digit(&base62, 61);
+	    /* extra "01...." hight bits */
+	    bits2 = 2;
+	    bits6 = 0;
+	    num6b = 16;
+	    break;
+	case 63:
+	    put_digit(&base62, 61);
+	    /* extra "10...." hight bits */
+	    bits2 = 2;
+	    bits6 = 0;
+	    num6b = 32;
+	    break;
+	default:
+	    assert(num6b < 61);
+	    put_digit(&base62, num6b);
+	    bits2 = 0;
+	    bits6 = 0;
+	    num6b = 0;
+	    break;
 	}
     }
+
     if (bits6 + bits2) {
 	assert(num6b < 61);
 	put_digit(&base62, num6b);
     }
+
     *base62 = '\0';
+
     return base62 - base62_start;
 }
 
@@ -112,6 +118,7 @@ static inline
 int decode_base62_size(const char *base62)
 {
     int len = strlen(base62);
+
     /* Each character will fill at most 6 bits. */
     return (len << 2) + (len << 1);
 }
@@ -125,6 +132,7 @@ int char_to_num(int c)
 	return c - 'a' + 10;
     if (c >= 'A' && c <= 'Z')
 	return c - 'A' + 36;
+
     return -1;
 }
 
@@ -145,37 +153,45 @@ int decode_base62(const char *base62, char *bitv)
 {
     char *bitv_start = bitv;
     int c;
+
     while ((c = *base62++)) {
 	int num6b = char_to_num(c);
+
 	if (num6b < 0)
 	    return -1;
-	if (num6b == 61) {
-	    c = *base62++;
-	    if (c == 0)
-		return -2;
-	    num6b = char_to_num(c);
-	    if (num6b < 0)
-		return -3;
-	    switch (num6b & (16 + 32)) {
-	    case 0:
-		putbits(&bitv, 6, 61);
-		break;
-	    case 16:
-		putbits(&bitv, 6, 62);
-		break;
-	    case 32:
-		putbits(&bitv, 6, 63);
-		break;
-	    default:
-		return -4;
-		break;
-	    }
-	    putbits(&bitv, 4, num6b);
-	}
-	else {
+
+	if (num6b != 61) {
 	    putbits(&bitv, 6, num6b);
+	    continue;
 	}
+
+	c = *base62++;
+
+	if (c == 0)
+	    return -2;
+
+	num6b = char_to_num(c);
+	if (num6b < 0)
+	    return -3;
+
+	switch (num6b & (16 + 32)) {
+	case 0:
+	    putbits(&bitv, 6, 61);
+	    break;
+	case 16:
+	    putbits(&bitv, 6, 62);
+	    break;
+	case 32:
+	    putbits(&bitv, 6, 63);
+	    break;
+	default:
+	    return -4;
+	    break;
+	}
+
+	putbits(&bitv, 4, num6b);
     }
+
     return bitv - bitv_start;
 }
 
@@ -242,8 +258,10 @@ static inline
 int log2i(int n)
 {
     int m = 0;
+
     while (n >>= 1)
 	m++;
+
     return m;
 }
 
@@ -256,11 +274,14 @@ int encode_golomb_Mshift(int c, int bpp)
      * Recheck "Compression and coding algorithms" by Moffat & Turpin.
      */
     int Mshift = bpp - log2i(c) - 1;
+
     /* Adjust out-of-range values. */
     if (Mshift < 7)
 	Mshift = 7;
+
     if (Mshift > 31)
 	Mshift = 31;
+
     assert(Mshift < bpp);
     return Mshift;
 }
@@ -282,20 +303,25 @@ int encode_golomb(int c, const unsigned *v, int Mshift, char *bitv)
 {
     char *bitv_start = bitv;
     const unsigned mask = (1 << Mshift) - 1;
+
     while (c > 0) {
 	c--;
 	unsigned v0 = *v++;
 	int i;
 	/* first part: variable-length sequence */
 	unsigned q = v0 >> Mshift;
+
 	for (i = 0; i < (int)q; i++)
 	    *bitv++ = 0;
 	*bitv++ = 1;
+
 	/* second part: lower Mshift bits */
 	unsigned r = v0 & mask;
+
 	for (i = 0; i < Mshift; i++)
 	    *bitv++ = (r >> i) & 1;
     }
+
     return bitv - bitv_start;
 }
 
@@ -315,11 +341,13 @@ static
 int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 {
     unsigned *v_start = v;
+
     /* next value */
     while (bitc > 0) {
 	/* first part */
 	unsigned q = 0;
 	char bit = 0;
+
 	while (bitc > 0) {
 	    bitc--;
 	    bit = *bitv++;
@@ -328,15 +356,19 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 	    else
 		break;
 	}
+
 	/* trailing zero bits in the input are okay */
 	if (bitc == 0 && bit == 0)
 	    break;
+
 	/* otherwise, incomplete value is not okay */
 	if (bitc < Mshift)
 	    return -1;
+
 	/* second part */
 	unsigned r = 0;
 	int i;
+
 	for (i = 0; i < Mshift; i++) {
 	    bitc--;
 	    if (*bitv++)
@@ -345,6 +377,7 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 	/* the value */
 	*v++ = (q << Mshift) | r;
     }
+
     return v - v_start;
 }
 
@@ -400,8 +433,10 @@ void test_golomb(void)
 static
 void encode_delta(int c, unsigned *v)
 {
-    assert(c > 0);
     unsigned int v0 = *v++;
+
+    assert(c > 0);
+
     while (--c > 0) {
 	*v -= v0;
 	v0 += *v++;
@@ -411,8 +446,10 @@ void encode_delta(int c, unsigned *v)
 static
 void decode_delta(int c, unsigned *v)
 {
-    assert(c > 0);
     unsigned int v0 = *v++;
+
+    assert(c > 0);
+
     while (--c > 0) {
 	*v += v0;
 	v0 = *v++;
@@ -457,10 +494,12 @@ int cmpv(const void *arg1, const void *arg2)
 {
     unsigned v1 = *(unsigned *) arg1;
     unsigned v2 = *(unsigned *) arg2;
+
     if (v1 > v2)
 	return 1;
     if (v1 < v2)
 	return -1;
+
     return 0;
 }
 
@@ -474,11 +513,13 @@ static
 int uniqv(int c, unsigned *v)
 {
     int i, j;
+
     for (i = 0, j = 0; i < c; i++) {
 	while (i + 1 < c && v[i] == v[i+1])
 	    i++;
 	v[j++] = v[i];
     }
+
     assert(j <= c);
     return j;
 }
@@ -523,6 +564,7 @@ int encode_set_size(int c, int bpp)
 {
     int Mshift = encode_golomb_Mshift(c, bpp);
     int bitc = encode_golomb_size(c, Mshift);
+
     /* two leading characters are special */
     return 2 + encode_base62_size(bitc);
 }
@@ -534,27 +576,35 @@ int encode_set(int c, unsigned *v, int bpp, char *base62)
     int Mshift = encode_golomb_Mshift(c, bpp);
     int bitc = encode_golomb_size(c, Mshift);
     char bitv[bitc];
+
     /* bpp */
     if (bpp < 10 || bpp > 32)
 	return -1;
     *base62++ = bpp - 7 + 'a';
+
     /* golomb parameter */
     if (Mshift < 7 || Mshift > 31)
 	return -2;
     *base62++ = Mshift - 7 + 'a';
+
     /* delta */
     encode_delta(c, v);
+
     /* golomb */
     bitc = encode_golomb(c, v, Mshift, bitv);
+
 #ifdef SELF_TEST
     decode_delta(c, v);
 #endif
+
     if (bitc < 0)
 	return -3;
+
     /* base62 */
     int len = encode_base62(bitc, bitv, base62);
     if (len < 0)
 	return -4;
+
     return 2 + len;
 }
 
@@ -563,17 +613,23 @@ int decode_set_init(const char *str, int *pbpp, int *pMshift)
 {
     /* 7..32 values encoded with 'a'..'z' */
     int bpp = *str++ + 7 - 'a';
+
     if (bpp < 10 || bpp > 32)
 	return -1;
+
     /* golomb parameter */
     int Mshift = *str++ + 7 - 'a';
+
     if (Mshift < 7 || Mshift > 31)
 	return -2;
+
     if (Mshift >= bpp)
 	return -3;
+
     /* no empty sets for now */
     if (*str == '\0')
 	return -4;
+
     *pbpp = bpp;
     *pMshift = Mshift;
     return 0;
@@ -594,12 +650,15 @@ int decode_set(const char *str, int Mshift, unsigned *v)
     /* base62 */
     char bitv[decode_base62_size(str)];
     int bitc = decode_base62(str, bitv);
+
     if (bitc < 0)
 	return -1;
+
     /* golomb */
     int c = decode_golomb(bitc, bitv, Mshift, v);
     if (c < 0)
 	return -2;
+
     /* delta */
     decode_delta(c, v);
     return c;
@@ -663,8 +722,10 @@ static
 int downsample_set(int c, unsigned *v, int bpp)
 {
     unsigned mask = (1 << bpp) - 1;
+
     maskv(c, v, mask);
     sortv(c, v);
+
     return uniqv(c, v);
 }
 
@@ -717,24 +778,30 @@ int rpmsetcmp(const char *str1, const char *str2)
 	    str1 += 4;
 	if (strncmp(str2, "set:", 4) == 0)
 	    str2 += 4;
+
 	/* initialize decoding */
 	int bpp1, Mshift1;
 	int bpp2, Mshift2;
+
 	if (decode_set_init(str1, &bpp1, &Mshift1) < 0)
 	    return -3;
 	if (decode_set_init(str2, &bpp2, &Mshift2) < 0)
 	    return -4;
+
 	/* make room for hash values */
 	unsigned v1[decode_set_size(str1, Mshift1)];
 	unsigned v2[decode_set_size(str2, Mshift2)];
+
 	/* decode hash values
 	   str1 comes on behalf of provides, decode with caching */
 	int c1 = cache_decode_set(str1, Mshift1, v1);
 	if (c1 < 0)
 	    return -3;
+
 	int c2 =       decode_set(str2, Mshift2, v2);
 	if (c2 < 0)
 	    return -4;
+
 	/* adjust for comparison */
 	if (bpp1 > bpp2) {
 	    bpp1 = bpp2;
@@ -744,28 +811,30 @@ int rpmsetcmp(const char *str1, const char *str2)
 	    bpp2 = bpp1;
 	    c2 = downsample_set(c2, v2, bpp2);
 	}
+
 	/* compare */
 	int ge = 1;
 	int le = 1;
 	int i1 = 0, i2 = 0;
-	while (i1 < c1 && i2 < c2)
+	while (i1 < c1 && i2 < c2) {
 	    if (v1[i1] < v2[i2]) {
 		le = 0;
 		i1++;
-	    }
-	    else if (v1[i1] > v2[i2]) {
+	    } else if (v1[i1] > v2[i2]) {
 		ge = 0;
 		i2++;
-	    }
-	    else {
+	    } else {
 		i1++;
 		i2++;
 	    }
+	}
+
 	/* return */
 	if (i1 < c1)
 	    le = 0;
 	if (i2 < c2)
 	    ge = 0;
+
 	if (le && ge)
 	    return 0;
 	if (ge)
@@ -794,16 +863,20 @@ struct set {
 struct set *set_new()
 {
     struct set *set = xmalloc(sizeof *set);
+
     set->c = 0;
     set->sv = NULL;
+
     return set;
 }
 
 void set_add(struct set *set, const char *sym)
 {
     const int delta = 1024;
+
     if ((set->c & (delta - 1)) == 0)
 	set->sv = xrealloc(set->sv, sizeof(*set->sv) * (set->c + delta));
+
     set->sv[set->c].s = xstrdup(sym);
     set->sv[set->c].v = 0;
     set->c++;
@@ -813,8 +886,10 @@ struct set *set_free(struct set *set)
 {
     if (set) {
 	int i;
+
 	for (i = 0; i < set->c; i++)
 	    set->sv[i].s = _free(set->sv[i].s);
+
 	set->sv = _free(set->sv);
     }
     return NULL;
@@ -826,14 +901,17 @@ unsigned int jenkins_hash(const char *str)
 {
     unsigned int hash = 0x9e3779b9;
     const unsigned char *p = (const unsigned char *) str;
+
     while (*p) {
 	hash += *p++;
 	hash += (hash << 10);
 	hash ^= (hash >> 6);
     }
+
     hash += (hash << 3);
     hash ^= (hash >> 11);
     hash += (hash << 15);
+
     return hash;
 }
 
@@ -842,10 +920,13 @@ int cmp_sv(const void *arg1, const void *arg2)
 {
     struct sv *sv1 = (struct sv *) arg1;
     struct sv *sv2 = (struct sv *) arg2;
+
     if (sv1->v > sv2->v)
 	return 1;
+
     if (sv2->v > sv1->v)
 	return -1;
+
     return 0;
 }
 
@@ -859,12 +940,15 @@ const char *set_fini(struct set *set, int bpp)
     if (bpp > 32)
 	return NULL;
     unsigned mask = (bpp < 32) ? (1u << bpp) - 1 : ~0u;
+
     /* hash sv strings */
     int i;
     for (i = 0; i < set->c; i++)
 	set->sv[i].v = jenkins_hash(set->sv[i].s) & mask;
+
     /* sort by hash value */
     qsort(set->sv, set->c, sizeof *set->sv, cmp_sv);
+
     /* warn on hash collisions */
     for (i = 0; i < set->c - 1; i++) {
 	if (set->sv[i].v != set->sv[i+1].v)
@@ -874,15 +958,18 @@ const char *set_fini(struct set *set, int bpp)
 	fprintf(stderr, "warning: hash collision: %s %s\n",
 		set->sv[i].s, set->sv[i+1].s);
     }
+
     /* encode */
     unsigned v[set->c];
     for (i = 0; i < set->c; i++)
 	v[i] = set->sv[i].v;
+
     int c = uniqv(set->c, v);
     char base62[encode_set_size(c, bpp)];
     int len = encode_set(c, v, bpp, base62);
     if (len < 0)
 	return NULL;
+
     return xstrdup(base62);
 }
 
