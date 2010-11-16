@@ -180,7 +180,8 @@ int decode_base62(const char *base62, char *bitv)
 }
 
 #ifdef SELF_TEST
-void test_base62()
+static
+void test_base62(void)
 {
     const char rnd_bitv[] = {
 	1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1,
@@ -348,7 +349,8 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 }
 
 #ifdef SELF_TEST
-void test_golomb()
+static
+void test_golomb(void)
 {
     const unsigned rnd_v[] = {
 	/* do re mi fa sol la si */
@@ -418,7 +420,8 @@ void decode_delta(int c, unsigned *v)
 }
 
 #ifdef SELF_TEST
-void test_delta()
+static
+void test_delta(void)
 {
     unsigned v[] = {
 	1, 3, 7, 0
@@ -482,7 +485,7 @@ int uniqv(int c, unsigned *v)
 
 #ifdef SELF_TEST
 static
-void test_aux()
+void test_aux(void)
 {
     unsigned v[] = { 2, 3, 1, 2, 7, 6, 5 };
     int c = sizeof v / sizeof *v;
@@ -667,7 +670,7 @@ int downsample_set(int c, unsigned *v, int bpp)
 
 #ifdef SELF_TEST
 static
-void test_set()
+void test_set(void)
 {
     unsigned rnd_v[] = {
 	0x020a, 0x07e5, 0x3305, 0x35f5,
@@ -885,7 +888,7 @@ const char *set_fini(struct set *set, int bpp)
 
 #ifdef SELF_TEST
 static
-void test_api()
+void test_api(void)
 {
     struct set *set1 = set_new();
     set_add(set1, "mama");
@@ -932,7 +935,7 @@ void test_api()
 #endif
 
 #ifdef SELF_TEST
-int main()
+int main(int argc, char **argv)
 {
     test_base62();
     test_golomb();
