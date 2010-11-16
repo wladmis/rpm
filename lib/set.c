@@ -208,7 +208,7 @@ void test_base62(void)
 	/* trigger some 'Z' */
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     };
-    const int rnd_bitc = sizeof rnd_bitv;
+    const int rnd_bitc = sizeof(rnd_bitv);
     /* encode */
     char base62[encode_base62_size(rnd_bitc)];
     int len = encode_base62(rnd_bitc, rnd_bitv, base62);
@@ -396,7 +396,7 @@ void test_golomb(void)
 	/* koshka sela na taksi */
 	7, 6, 5, 4, 3, 2, 1,
     };
-    const int rnd_c = sizeof rnd_v / sizeof *rnd_v;
+    const int rnd_c = sizeof(rnd_v) / sizeof(*rnd_v);
     int bpp = 10;
     int Mshift = encode_golomb_Mshift(rnd_c, bpp);
     fprintf(stderr, "rnd_c=%d bpp=%d Mshift=%d\n", rnd_c, bpp, Mshift);
@@ -511,7 +511,7 @@ int cmpv(const void *arg1, const void *arg2)
 static
 void sortv(int c, unsigned *v)
 {
-    qsort(v, c, sizeof *v, cmpv);
+    qsort(v, c, sizeof(*v), cmpv);
 }
 
 static
@@ -534,7 +534,7 @@ static
 void test_aux(void)
 {
     unsigned v[] = { 2, 3, 1, 2, 7, 6, 5 };
-    int c = sizeof v / sizeof *v;
+    int c = sizeof(v) / sizeof(*v);
     maskv(c, v, 4 - 1);
     sortv(c, v);
     c = uniqv(c, v);
@@ -753,7 +753,7 @@ void test_set(void)
 	0x82ae, 0x8415, 0xa3e7, 0xb07e,
 	0xb584, 0xb89f, 0xbb40, 0xf39e,
     };
-    int rnd_c = sizeof rnd_v / sizeof *rnd_v;
+    int rnd_c = sizeof(rnd_v) / sizeof(*rnd_v);
     /* encode */
     int bpp = 16;
     char base62[encode_set_size(rnd_c, bpp)];
@@ -877,7 +877,7 @@ struct set {
 
 struct set *set_new()
 {
-    struct set *set = xmalloc(sizeof *set);
+    struct set *set = xmalloc(sizeof(*set));
 
     set->c = 0;
     set->sv = NULL;
@@ -967,7 +967,7 @@ const char *set_fini(struct set *set, int bpp)
 	set->sv[i].v = jenkins_hash(set->sv[i].s) & mask;
 
     /* sort by hash value */
-    qsort(set->sv, set->c, sizeof *set->sv, cmp_sv);
+    qsort(set->sv, set->c, sizeof(*set->sv), cmp_sv);
 
     /* warn on hash collisions */
     for (i = 0; i < set->c - 1; i++) {
