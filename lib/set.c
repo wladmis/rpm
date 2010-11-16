@@ -209,23 +209,29 @@ void test_base62(void)
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     };
     const int rnd_bitc = sizeof(rnd_bitv);
+    char *base62, *bitv;
+    int i, len, bitc;
+
     /* encode */
-    char base62[encode_base62_size(rnd_bitc)];
-    int len = encode_base62(rnd_bitc, rnd_bitv, base62);
+    base62 = alloca(encode_base62_size(rnd_bitc));
+    len = encode_base62(rnd_bitc, rnd_bitv, base62);
     assert(len > 0);
-    assert(len == (int)strlen(base62));
+    assert(len == (int) strlen(base62));
     fprintf(stderr, "len=%d base62=%s\n", len, base62);
+
     /* The length cannot be shorter than 6 bits per symbol. */
     assert(len >= rnd_bitc / 6);
+
     /* Neither too long: each second character must fill at least 4 bits. */
     assert(len <= rnd_bitc / 2 / 4 + rnd_bitc / 2 / 6 + 1);
+
     /* decode */
-    char bitv[decode_base62_size(base62)];
-    int bitc = decode_base62(base62, bitv);
+    bitv = alloca(decode_base62_size(base62));
+    bitc = decode_base62(base62, bitv);
     fprintf(stderr, "rnd_bitc=%d bitc=%d\n", rnd_bitc, bitc);
     assert(bitc >= rnd_bitc);
+
     /* Decoded bits must match. */
-    int i;
     for (i = 0; i < rnd_bitc; i++)
 	assert(rnd_bitv[i] == bitv[i]);
     /* The remaining bits must be zero bits. */
@@ -391,39 +397,47 @@ static
 void test_golomb(void)
 {
     const unsigned rnd_v[] = {
-	/* do re mi fa sol la si */
 	1, 2, 3, 4, 5, 6, 7,
-	/* koshka sela na taksi */
 	7, 6, 5, 4, 3, 2, 1,
     };
     const int rnd_c = sizeof(rnd_v) / sizeof(*rnd_v);
-    int bpp = 10;
-    int Mshift = encode_golomb_Mshift(rnd_c, bpp);
+    char *bitv;
+    unsigned *v;
+    int bpp, Mshift;
+    int alloc_bitc, bitc;
+    int alloc_c, c, golomb_bpp;
+    int i;
+
+    bpp = 10;
+    Mshift = encode_golomb_Mshift(rnd_c, bpp);
     fprintf(stderr, "rnd_c=%d bpp=%d Mshift=%d\n", rnd_c, bpp, Mshift);
     assert(Mshift > 0);
     assert(Mshift < bpp);
+
     /* encode */
-    int alloc_bitc = encode_golomb_size(rnd_c, Mshift);
+    alloc_bitc = encode_golomb_size(rnd_c, Mshift);
     assert(alloc_bitc > rnd_c);
-    char bitv[alloc_bitc];
-    int bitc = encode_golomb(rnd_c, rnd_v, Mshift, bitv);
+    bitv = alloca(alloc_bitc);
+    bitc = encode_golomb(rnd_c, rnd_v, Mshift, bitv);
     fprintf(stderr, "alloc_bitc=%d bitc=%d\n", alloc_bitc, bitc);
     assert(bitc > rnd_c);
     assert(bitc <= alloc_bitc);
+
     /* decode */
-    int alloc_c = decode_golomb_size(bitc, Mshift);
+    alloc_c = decode_golomb_size(bitc, Mshift);
     assert(alloc_c >= rnd_c);
-    unsigned v[alloc_c];
-    int c = decode_golomb(bitc, bitv, Mshift, v);
+    v = alloca(sizeof(*v) * alloc_c);
+    c = decode_golomb(bitc, bitv, Mshift, v);
     fprintf(stderr, "rnd_c=%d alloc_c=%d c=%d\n", rnd_c, alloc_c, c);
     assert(alloc_c >= c);
+
     /* Decoded values must match. */
     assert(rnd_c == c);
-    int i;
     for (i = 0; i < c; i++)
 	assert(rnd_v[i] == v[i]);
+
     /* At the end of the day, did it save your money? */
-    int golomb_bpp = bitc / c;
+    golomb_bpp = bitc / c;
     fprintf(stderr, "bpp=%d golomb_bpp=%d\n", bpp, golomb_bpp);
     assert(golomb_bpp < bpp);
     fprintf(stderr, "%s: golomb test OK\n", __FILE__);
@@ -469,6 +483,7 @@ void test_delta(void)
 	1, 3, 7, 0
     };
     int c = 3;
+
     encode_delta(c, v);
     assert(v[0] == 1);
     assert(v[1] == 2);
@@ -535,6 +550,7 @@ void test_aux(void)
 {
     unsigned v[] = { 2, 3, 1, 2, 7, 6, 5 };
     int c = sizeof(v) / sizeof(*v);
+
     maskv(c, v, 4 - 1);
     sortv(c, v);
     c = uniqv(c, v);
@@ -754,25 +770,32 @@ void test_set(void)
 	0xb584, 0xb89f, 0xbb40, 0xf39e,
     };
     int rnd_c = sizeof(rnd_v) / sizeof(*rnd_v);
+    char *base62;
+    unsigned *v;
+    int bpp, Mshift;
+    int i, len, rc, c;
+
     /* encode */
-    int bpp = 16;
-    char base62[encode_set_size(rnd_c, bpp)];
-    int len = encode_set(rnd_c, rnd_v, bpp, base62);
+    bpp = 16;
+    base62 = alloca(encode_set_size(rnd_c, bpp));
+    len = encode_set(rnd_c, rnd_v, bpp, base62);
     assert(len > 0);
     fprintf(stderr, "len=%d set=%s\n", len, base62);
+
     /* decode */
-    int Mshift = bpp;
-    int rc = decode_set_init(base62, &bpp, &Mshift);
+    Mshift = bpp;
+    rc = decode_set_init(base62, &bpp, &Mshift);
     assert(rc == 0);
     assert(bpp == 16);
     assert(Mshift < bpp);
-    int c = decode_set_size(base62, Mshift);
+
+    c = decode_set_size(base62, Mshift);
     assert(c >= rnd_c);
-    unsigned v[c];
+    v = alloca(sizeof(*v) * c);
     c = decode_set(base62, Mshift, v);
+
     /* Decoded values must match. */
     assert(c == rnd_c);
-    int i;
     for (i = 0; i < c; i++)
 	assert(v[i] == rnd_v[i]);
     fprintf(stderr, "%s: set test OK\n", __FILE__);
@@ -996,35 +1019,38 @@ const char *set_fini(struct set *set, int bpp)
 static
 void test_api(void)
 {
-    struct set *set1 = set_new();
+    struct set *set1, *set2;
+    const char *str10, *str11, *str20, *str21, *str22;
+    int cmp;
+
+    set1 = set_new();
     set_add(set1, "mama");
     set_add(set1, "myla");
     set_add(set1, "ramu");
-    const char *str10 = set_fini(set1, 16);
+    str10 = set_fini(set1, 16);
     fprintf(stderr, "set10=%s\n", str10);
 
-    int cmp;
-    struct set *set2 = set_new();
+    set2 = set_new();
     set_add(set2, "myla");
     set_add(set2, "mama");
-    const char *str20 = set_fini(set2, 16);
+    str20 = set_fini(set2, 16);
     fprintf(stderr, "set20=%s\n", str20);
     cmp = rpmsetcmp(str10, str20);
     assert(cmp == 1);
 
     set_add(set2, "ramu");
-    const char *str21 = set_fini(set2, 16);
+    str21 = set_fini(set2, 16);
     fprintf(stderr, "set21=%s\n", str21);
     cmp = rpmsetcmp(str10, str21);
     assert(cmp == 0);
 
     set_add(set2, "baba");
-    const char *str22 = set_fini(set2, 16);
+    str22 = set_fini(set2, 16);
     cmp = rpmsetcmp(str10, str22);
     assert(cmp == -1);
 
     set_add(set1, "deda");
-    const char *str11 = set_fini(set1, 16);
+    str11 = set_fini(set1, 16);
     cmp = rpmsetcmp(str11, str22);
     assert(cmp == -2);
 
