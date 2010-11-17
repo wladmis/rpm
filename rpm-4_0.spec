@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.2
+Release: alt100.3
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -475,6 +475,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Nov 18 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.3
+- Rebuilt with liblzma.so.5.
+
 * Tue Nov 02 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.2
 - pkgconfig.req: pass --print-requires-private to pkg-config.
 - find-lang: support manpage paths with more than one symbol after dot
