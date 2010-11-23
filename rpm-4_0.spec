@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt99.M51.1
+Release: alt99.M51.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -476,6 +476,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Nov 23 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt99.M51.2
+- Compiled set.c with -O3.
+
 * Wed Oct 20 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt99.M51.1
 - lib.req, lib.prov: Disabled soname set-versions (Alexey Tourbin).
 - Disabled SELinux support.
