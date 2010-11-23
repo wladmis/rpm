@@ -222,6 +222,7 @@ export ac_cv_path___SSH=/usr/bin/ssh
 	%{subst_with selinux} \
 	--program-transform-name=
 
+%{!?_enable_debug:%make_build -C lib set.lo CFLAGS='%optflags -O3'}
 %make_build YACC='bison -y'
 %if_with apidocs
 rm -rf apidocs
