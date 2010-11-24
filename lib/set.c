@@ -21,6 +21,7 @@
 #define BITS_PER_LONG		(sizeof(long) * BITS_PER_BYTE)
 #define BITS_TO_LONGS(nr)	DIV_ROUND_UP(nr, BITS_PER_LONG)
 #define BIT(nr)			(1UL << (nr))
+#define MASK(nbits)		(BIT(nbits) - 1)
 
 static inline
 int get_bit(const unsigned long *bitmap, int offset)
@@ -157,13 +158,22 @@ int char_to_num(int c)
 }
 
 static inline
-void putbits(unsigned long *bitmap, int *offset, int c, int nbits)
+void putbits(unsigned long *bitmap, int *offset, unsigned long c, int nbits)
 {
-    int i;
+    int quot, rem;
 
-    for (i = 0; i < nbits; i++, (*offset)++)
-	if (c & BIT(i))
-	    set_bit(bitmap, *offset);
+    assert(!(c & ~MASK(nbits)));
+
+    quot = *offset / BITS_PER_LONG;
+    rem = *offset % BITS_PER_LONG;
+
+    bitmap[quot] |= c << rem;
+    c >>= BITS_PER_LONG - rem;
+
+    if (nbits + rem > (int) BITS_PER_LONG)
+	bitmap[quot + 1] = c;
+
+    *offset += nbits;
 }
 
 /* Main base62 decoding routine: unpack base62 string into bitmap. */
@@ -208,7 +218,7 @@ int decode_base62(unsigned long *bitmap, const char *base62)
 	    break;
 	}
 
-	putbits(bitmap, &offset, num6b, 4);
+	putbits(bitmap, &offset, num6b & MASK(4), 4);
     }
 
     return offset;
