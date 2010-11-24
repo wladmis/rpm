@@ -16,6 +16,24 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define DIV_ROUND_UP(n,d)	(((n) + (d) - 1) / (d))
+#define BITS_PER_BYTE           8
+#define BITS_PER_LONG		(sizeof(long) * BITS_PER_BYTE)
+#define BITS_TO_LONGS(nr)	DIV_ROUND_UP(nr, BITS_PER_LONG)
+#define BIT(nr)			(1UL << (nr))
+
+static inline
+int get_bit(const unsigned long *bitmap, int offset)
+{
+    return !!(bitmap[offset / BITS_PER_LONG] & BIT(offset % BITS_PER_LONG));
+}
+
+static inline
+void set_bit(unsigned long *bitmap, int offset)
+{
+    bitmap[offset / BITS_PER_LONG] |= BIT(offset % BITS_PER_LONG);
+}
+
 /*
  * Base62 routines - encode bits with alnum characters.
  *
@@ -55,19 +73,20 @@ void put_digit(char **base62, int c)
     (*base62)++;
 }
 
-/* Main base62 encoding routine: pack bitv into base62 string. */
+/* Main base62 encoding routine: pack bitmap into base62 string. */
 static
-int encode_base62(int bitc, const char *bitv, char *base62)
+int encode_base62(char *base62, const unsigned long *bitmap, size_t nbits)
 {
     char *base62_start = base62;
     int bits2 = 0; /* number of high bits set */
     int bits6 = 0; /* number of regular bits set */
     int num6b = 0; /* pending 6-bit number */
+    unsigned int i;
 
-    while (bitc-- > 0) {
+    for(i = 0; i < nbits; i++) {
 	assert(bits6 + bits2 < 6);
-	num6b |= (*bitv++ << bits6++);
 
+	num6b |= (get_bit(bitmap, i) << bits6++);
 	if (bits6 + bits2 != 6)
 	    continue;
 
@@ -138,21 +157,20 @@ int char_to_num(int c)
 }
 
 static inline
-void putbits(char **bitv, int n, int c)
+void putbits(unsigned long *bitmap, int *offset, int c, int nbits)
 {
     int i;
 
-    for(i = 0; i < n; i++) {
-	**bitv = (c >> i) & 1;
-	(*bitv)++;
-    }
+    for (i = 0; i < nbits; i++, (*offset)++)
+	if (c & BIT(i))
+	    set_bit(bitmap, *offset);
 }
 
-/* Main base62 decoding routine: unpack base62 string into bitv. */
+/* Main base62 decoding routine: unpack base62 string into bitmap. */
 static
-int decode_base62(const char *base62, char *bitv)
+int decode_base62(unsigned long *bitmap, const char *base62)
 {
-    char *bitv_start = bitv;
+    int offset = 0;
     int c;
 
     while ((c = *base62++)) {
@@ -162,7 +180,7 @@ int decode_base62(const char *base62, char *bitv)
 	    return -1;
 
 	if (num6b != 61) {
-	    putbits(&bitv, 6, num6b);
+	    putbits(bitmap, &offset, num6b, 6);
 	    continue;
 	}
 
@@ -177,26 +195,36 @@ int decode_base62(const char *base62, char *bitv)
 
 	switch (num6b & (16 + 32)) {
 	case 0:
-	    putbits(&bitv, 6, 61);
+	    putbits(bitmap, &offset, 61, 6);
 	    break;
 	case 16:
-	    putbits(&bitv, 6, 62);
+	    putbits(bitmap, &offset, 62, 6);
 	    break;
 	case 32:
-	    putbits(&bitv, 6, 63);
+	    putbits(bitmap, &offset, 63, 6);
 	    break;
 	default:
 	    return -4;
 	    break;
 	}
 
-	putbits(&bitv, 4, num6b);
+	putbits(bitmap, &offset, num6b, 4);
     }
 
-    return bitv - bitv_start;
+    return offset;
 }
 
 #ifdef SELF_TEST
+static
+void bitv_to_bitmap(unsigned long *bitmap, const char *bitv, size_t n)
+{
+    unsigned int i;
+
+    for (i = 0; i < n; i++)
+	if (bitv[i])
+	    set_bit(bitmap, i);
+}
+
 static
 void test_base62(void)
 {
@@ -208,15 +236,20 @@ void test_base62(void)
 	/* trigger some 'Z' */
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     };
-    const int rnd_bitc = sizeof(rnd_bitv);
-    char *base62, *bitv;
-    int i, len, bitc;
+    const unsigned int rnd_bitc = sizeof(rnd_bitv);
+    unsigned long bitmap[BITS_TO_LONGS(rnd_bitc)];
+    unsigned long *new_bitmap;
+    char *base62;
+    unsigned int i, len, bitc;
+
+    memset(&bitmap, 0, sizeof(bitmap));
+    bitv_to_bitmap(bitmap, rnd_bitv, rnd_bitc);
 
     /* encode */
     base62 = alloca(encode_base62_size(rnd_bitc));
-    len = encode_base62(rnd_bitc, rnd_bitv, base62);
+    len = encode_base62(base62, bitmap, rnd_bitc);
     assert(len > 0);
-    assert(len == (int) strlen(base62));
+    assert(len == strlen(base62));
     fprintf(stderr, "len=%d base62=%s\n", len, base62);
 
     /* The length cannot be shorter than 6 bits per symbol. */
@@ -226,17 +259,17 @@ void test_base62(void)
     assert(len <= rnd_bitc / 2 / 4 + rnd_bitc / 2 / 6 + 1);
 
     /* decode */
-    bitv = alloca(decode_base62_size(base62));
-    bitc = decode_base62(base62, bitv);
+    bitc = decode_base62_size(base62);
+    new_bitmap = alloca(BITS_TO_LONGS(bitc) * sizeof(long));
+    memset(new_bitmap, 0, BITS_TO_LONGS(bitc) * sizeof(long));
+    bitc = decode_base62(new_bitmap, base62);
     fprintf(stderr, "rnd_bitc=%d bitc=%d\n", rnd_bitc, bitc);
     assert(bitc >= rnd_bitc);
 
     /* Decoded bits must match. */
-    for (i = 0; i < rnd_bitc; i++)
-	assert(rnd_bitv[i] == bitv[i]);
-    /* The remaining bits must be zero bits. */
-    for (i = rnd_bitc; i < bitc; i++)
-	assert(bitv[i] == 0);
+    for (i = 0; i < sizeof(bitmap) / sizeof(*bitmap); i++)
+	assert(bitmap[i] == new_bitmap[i]);
+
     fprintf(stderr, "%s: base62 test OK\n", __FILE__);
 }
 #endif
@@ -306,32 +339,32 @@ int encode_golomb_size(int c, int Mshift)
     return (Mshift << 1) * c + 16;
 }
 
-/* Main golomb encoding routine: package integers into bits. */
+/* Main golomb encoding routine: package integers into bitmap. */
 static
-int encode_golomb(int c, const unsigned *v, int Mshift, char *bitv)
+int encode_golomb(int c, const unsigned *v, int Mshift, unsigned long *bitmap)
 {
-    char *bitv_start = bitv;
+    int offset = 0;
     const unsigned mask = (1 << Mshift) - 1;
 
     while (c-- > 0) {
-	unsigned v0, q, r;
+	unsigned v0, r;
 	int i;
 
 	v0 = *v++;
 
 	/* first part: variable-length sequence */
-	q = v0 >> Mshift;
-	for (i = 0; i < (int) q; i++)
-	    *bitv++ = 0;
-	*bitv++ = 1;
+	offset += v0 >> Mshift;
+	set_bit(bitmap, offset++);
 
 	/* second part: lower Mshift bits */
 	r = v0 & mask;
-	for (i = 0; i < Mshift; i++)
-	    *bitv++ = (r >> i) & 1;
+	for (i = 0; i < Mshift; i++, offset++) {
+	    if (r & BIT(i))
+		    set_bit(bitmap, offset);
+	}
     }
 
-    return bitv - bitv_start;
+    return offset;
 }
 
 /* Estimate how many values will emerge. */
@@ -345,11 +378,12 @@ int decode_golomb_size(int bitc, int Mshift)
     return bitc / (Mshift + 1);
 }
 
-/* Main golomb decoding routine: unpackage bits into values. */
+/* Main golomb decoding routine: unpackage bitmap into values. */
 static
-int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
+int decode_golomb(int bitc, const unsigned long *bitmap, int Mshift, unsigned *v)
 {
     unsigned *v_start = v;
+    int offset = 0;
 
     /* next value */
     while (bitc > 0) {
@@ -362,7 +396,7 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 	bit = 0;
 	while (bitc > 0) {
 	    bitc--;
-	    bit = *bitv++;
+	    bit = get_bit(bitmap, offset++);
 	    if (bit == 0)
 		q++;
 	    else
@@ -381,8 +415,8 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 	r = 0;
 	for (i = 0; i < Mshift; i++) {
 	    bitc--;
-	    if (*bitv++)
-		r |= (1 << i);
+	    if (get_bit(bitmap, offset++))
+		r |= BIT(i);
 	}
 
 	/* the value */
@@ -401,7 +435,7 @@ void test_golomb(void)
 	7, 6, 5, 4, 3, 2, 1,
     };
     const int rnd_c = sizeof(rnd_v) / sizeof(*rnd_v);
-    char *bitv;
+    unsigned long *bitmap;
     unsigned *v;
     int bpp, Mshift;
     int alloc_bitc, bitc;
@@ -417,8 +451,9 @@ void test_golomb(void)
     /* encode */
     alloc_bitc = encode_golomb_size(rnd_c, Mshift);
     assert(alloc_bitc > rnd_c);
-    bitv = alloca(alloc_bitc);
-    bitc = encode_golomb(rnd_c, rnd_v, Mshift, bitv);
+    bitmap = alloca(BITS_TO_LONGS(alloc_bitc) * sizeof(long));
+    memset(bitmap, 0, BITS_TO_LONGS(alloc_bitc) * sizeof(long));
+    bitc = encode_golomb(rnd_c, rnd_v, Mshift, bitmap);
     fprintf(stderr, "alloc_bitc=%d bitc=%d\n", alloc_bitc, bitc);
     assert(bitc > rnd_c);
     assert(bitc <= alloc_bitc);
@@ -427,7 +462,7 @@ void test_golomb(void)
     alloc_c = decode_golomb_size(bitc, Mshift);
     assert(alloc_c >= rnd_c);
     v = alloca(sizeof(*v) * alloc_c);
-    c = decode_golomb(bitc, bitv, Mshift, v);
+    c = decode_golomb(bitc, bitmap, Mshift, v);
     fprintf(stderr, "rnd_c=%d alloc_c=%d c=%d\n", rnd_c, alloc_c, c);
     assert(alloc_c >= c);
 
@@ -597,8 +632,9 @@ int encode_set(int c, unsigned *v, int bpp, char *base62)
     int Mshift = encode_golomb_Mshift(c, bpp);
     int bitc = encode_golomb_size(c, Mshift);
     int len;
-    char bitv[bitc];
+    unsigned long bitmap[BITS_TO_LONGS(bitc)];
 
+    memset(bitmap, 0, sizeof(bitmap));
     /* bpp */
     if (bpp < 10 || bpp > 32)
 	return -1;
@@ -613,7 +649,7 @@ int encode_set(int c, unsigned *v, int bpp, char *base62)
     encode_delta(c, v);
 
     /* golomb */
-    bitc = encode_golomb(c, v, Mshift, bitv);
+    bitc = encode_golomb(c, v, Mshift, bitmap);
 
 #ifdef SELF_TEST
     decode_delta(c, v);
@@ -623,7 +659,7 @@ int encode_set(int c, unsigned *v, int bpp, char *base62)
 	return -3;
 
     /* base62 */
-    len = encode_base62(bitc, bitv, base62);
+    len = encode_base62(base62, bitmap, bitc);
     if (len < 0)
 	return -4;
 
@@ -671,21 +707,23 @@ int decode_set_size(const char *str, int Mshift)
 static
 int decode_set(const char *str, int Mshift, unsigned *v)
 {
-    char *bitv;
+    unsigned long *bitmap;
     int bitc;
     int c;
 
     str += 2;
 
     /* base62 */
-    bitv = alloca(decode_base62_size(str));
-    bitc = decode_base62(str, bitv);
+    bitc = decode_base62_size(str);
+    bitmap = alloca(BITS_TO_LONGS(bitc) * sizeof(long));
+    memset(bitmap, 0, BITS_TO_LONGS(bitc) * sizeof(long));
+    bitc = decode_base62(bitmap, str);
 
     if (bitc < 0)
 	return -1;
 
     /* golomb */
-    c = decode_golomb(bitc, bitv, Mshift, v);
+    c = decode_golomb(bitc, bitmap, Mshift, v);
     if (c < 0)
 	return -2;
 
