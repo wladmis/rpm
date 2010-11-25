@@ -396,16 +396,16 @@ int decode_golomb(int bitc, const unsigned long *bitmap, int Mshift, unsigned *v
     int offset = 0;
 
     /* next value */
-    while (bitc > 0) {
+    while (offset < bitc) {
 	unsigned q, r;
 	char bit;
-	int i;
+	int quot, rem;
+	int k;
 
 	/* first part */
 	q = 0;
 	bit = 0;
-	while (bitc > 0) {
-	    bitc--;
+	while (offset < bitc) {
 	    bit = get_bit(bitmap, offset++);
 	    if (bit == 0)
 		q++;
@@ -414,20 +414,22 @@ int decode_golomb(int bitc, const unsigned long *bitmap, int Mshift, unsigned *v
 	}
 
 	/* trailing zero bits in the input are okay */
-	if (bitc == 0 && bit == 0)
+	if (offset == bitc && bit == 0)
 	    break;
 
 	/* otherwise, incomplete value is not okay */
-	if (bitc < Mshift)
+	if (bitc - offset < Mshift)
 	    return -1;
 
+	quot = offset / BITS_PER_LONG;
+	rem = offset % BITS_PER_LONG;
+	k = rem + Mshift - BITS_PER_LONG;
+
 	/* second part */
-	r = 0;
-	for (i = 0; i < Mshift; i++) {
-	    bitc--;
-	    if (get_bit(bitmap, offset++))
-		r |= BIT(i);
-	}
+	r = (bitmap[quot] & (MASK(Mshift) << rem)) >> rem;
+	if (k > 0)
+	    r |= (bitmap[quot + 1] & MASK(k)) << (Mshift - k);
+	offset += Mshift;
 
 	/* the value */
 	*v++ = (q << Mshift) | r;
