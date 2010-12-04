@@ -74,8 +74,8 @@ int rpmFLAGS = RPMSENSE_EQUAL;
 int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 	const char * BName, const char * BEVR, int BFlags)
 {
-    const char *aDepend = printDepend(NULL, AName, AEVR, AFlags);
-    const char *bDepend = printDepend(NULL, BName, BEVR, BFlags);
+    const char *aDepend = NULL;
+    const char *bDepend = NULL;
     char *aEVR, *bEVR;
     const char *aE, *aV, *aR, *bE, *bV, *bR;
     int result;
@@ -144,6 +144,10 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 	bEVR = xstrdup(BEVR);
 	parseEVR(bEVR, &bE, &bV, &bR);
 	/* rpmEVRcmp() is also shared; the code moved to rpmvercmp.c */
+	if (rpmIsDebug()) {
+	    aDepend = printDepend(NULL, AName, AEVR, AFlags);
+	    bDepend = printDepend(NULL, BName, BEVR, BFlags);
+	}
 	sense = rpmEVRcmp(aE, aV, aR, aDepend, bE, bV, bR, bDepend);
 	aEVR = _free(aEVR);
 	bEVR = _free(bEVR);
@@ -164,10 +168,16 @@ sense_result:
     }
 
 exit:
-    rpmMessage(RPMMESS_DEBUG, _("  %s    A %s\tB %s\n"),
-	(result ? _("YES") : _("NO ")), aDepend, bDepend);
-    aDepend = _free(aDepend);
-    bDepend = _free(bDepend);
+    if (rpmIsDebug()) {
+	if (!aDepend)
+	    aDepend = printDepend(NULL, AName, AEVR, AFlags);
+	if (!bDepend)
+	    bDepend = printDepend(NULL, BName, BEVR, BFlags);
+	rpmMessage(RPMMESS_DEBUG, _("  %s    A %s\tB %s\n"),
+	    (result ? _("YES") : _("NO ")), aDepend, bDepend);
+	aDepend = _free(aDepend);
+	bDepend = _free(bDepend);
+    }
     return result;
 }
 
