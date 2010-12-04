@@ -588,6 +588,60 @@ int decode_set(const char *str, int Mshift, unsigned *v)
     return c;
 }
 
+// Special decode_set version with LRU caching.
+static
+int cache_decode_set(const char *str, int Mshift, unsigned *v)
+{
+    struct cache_ent {
+	struct cache_ent *next;
+	const char *str;
+	int c;
+	unsigned v[1];
+    };
+    static __thread
+    struct cache_ent *cache;
+    // lookup in the cache
+    struct cache_ent *cur = cache, *prev = NULL;
+    int count = 0;
+    while (cur) {
+	if (strcmp(str, cur->str) == 0) {
+	    // hit, move to front
+	    if (cur != cache) {
+		prev->next = cur->next;
+		cur->next = cache;
+		cache = cur;
+	    }
+	    memcpy(v, cur->v, cur->c * sizeof(*cur->v));
+	    return cur->c;
+	}
+	count++;
+	if (cur->next == NULL)
+	    break;
+	prev = cur;
+	cur = cur->next;
+    }
+    // miss, decode
+    int c = decode_set(str, Mshift, v);
+    if (c <= 0)
+	return c;
+    // truncate
+    int cache_size = 128;
+    if (count >= cache_size) {
+	free(cur);
+	prev->next = NULL;
+    }
+    // push to front
+    cur = malloc(sizeof(*cur) + strlen(str) + 1 + (c - 1) * sizeof(*v));
+    if (cur == NULL)
+	return c;
+    cur->next = cache;
+    cache = cur;
+    cur->str = strcpy((char *)(cur->v + c), str);
+    cur->c = c;
+    memcpy(cur->v, v, c * sizeof(*v));
+    return c;
+}
+
 static
 int downsample_set(int c, unsigned *v, int bpp)
 {
@@ -657,10 +711,11 @@ int rpmsetcmp(const char *str1, const char *str2)
 	unsigned v1[decode_set_size(str1, Mshift1)];
 	unsigned v2[decode_set_size(str2, Mshift2)];
 	// decode hash values
-	int c1 = decode_set(str1, Mshift1, v1);
+	// str1 comes on behalf of provides, decode with caching
+	int c1 = cache_decode_set(str1, Mshift1, v1);
 	if (c1 < 0)
 	    return -3;
-	int c2 = decode_set(str2, Mshift2, v2);
+	int c2 =       decode_set(str2, Mshift2, v2);
 	if (c2 < 0)
 	    return -4;
 	// adjust for comparison
