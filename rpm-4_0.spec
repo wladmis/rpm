@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.4
+Release: alt100.5
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -476,6 +476,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sat Dec 04 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.5
+- set.c: Implemented LRU caching (2x speed-up, 1M footprint).
+
 * Tue Nov 23 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.4
 - Compiled set.c with -O3.
 
