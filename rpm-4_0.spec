@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.2
+Release: alt100.2.0.M55C.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -475,6 +475,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri Dec 24 2010 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.2.0.M55C.1
+- cert6 rebuild
+
 * Tue Nov 02 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.2
 - pkgconfig.req: pass --print-requires-private to pkg-config.
 - find-lang: support manpage paths with more than one symbol after dot
