@@ -167,6 +167,7 @@ int decode_base62(const char *base62, char *bitv)
 	*bitv++ = (c >> 2) & 1;
 	*bitv++ = (c >> 3) & 1;
     }
+    // ----8<----
     int c;
     while ((c = (unsigned char) *base62++)) {
 	int num6b = char_to_num[c];
@@ -200,6 +201,7 @@ int decode_base62(const char *base62, char *bitv)
 	put6bits(num6b);
 	put4bits(num4b);
     }
+    // ---->8----
     return bitv - bitv_start;
 }
 
@@ -348,7 +350,7 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 	    break;
 	// otherwise, incomplete value is not okay
 	if (bitc < Mshift)
-	    return -1;
+	    return -10;
 	// second part
 	unsigned r = 0;
 	int i;
@@ -363,7 +365,99 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
     return v - v_start;
 }
 
+// Combined base62+golomb decoding routine, no need for bitv[].
+static
+int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
+{
+    unsigned *v_start = v;
+    unsigned q = 0;
+    unsigned r = 0;
+    int rfill = 0;
+    enum { ST_VLEN, ST_MBITS } state = ST_VLEN;
+    inline
+    void putNbits(unsigned c, int n)
+    {
+	if (state == ST_VLEN)
+	    goto vlen;
+	r |= (c << rfill);
+	rfill += n;
+	int left = rfill - Mshift;
+	if (left < 0)
+	    return;
+	r &= (1 << Mshift) - 1;
+	*v++ = (q << Mshift) | r;
+	q = 0;
+	state = ST_VLEN;
+	if (left == 0)
+	    return;
+	c >>= n - left;
+	n = left;
+    vlen:
+	do {
+	    n--;
+	    if (c & 1) {
+		r = (c >> 1);
+		rfill = n;
+		state = ST_MBITS;
+		return;
+	    }
+	    q++;
+	    c >>= 1;
+	}
+	while (n > 0);
+    }
+    inline
+    void put6bits(unsigned c)
+    {
+	putNbits(c, 6);
+    }
+    inline
+    void put4bits(unsigned c)
+    {
+	putNbits(c, 4);
+    }
+    // ----8<----
+    int c;
+    while ((c = (unsigned char) *base62++)) {
+	int num6b = char_to_num[c];
+	if (num6b < 0)
+	    return -1;
+	if (num6b < 61) {
+	    put6bits(num6b);
+	    continue;
+	}
+	assert(num6b == 61);
+	c = (unsigned char) *base62++;
+	if (c == 0)
+	    return -2;
+	int num4b = char_to_num[c];
+	if (num4b < 0)
+	    return -3;
+	switch (num4b & (16 + 32)) {
+	case 0:
+	    break;
+	case 16:
+	    num6b = 62;
+	    num4b &= ~16;
+	    break;
+	case 32:
+	    num6b = 63;
+	    num4b &= ~32;
+	    break;
+	default:
+	    return -4;
+	}
+	put6bits(num6b);
+	put4bits(num4b);
+    }
+    // ---->8----
+    if (state != ST_VLEN)
+	return -10;
+    return v - v_start;
+}
+
 #ifdef SELF_TEST
+static
 void test_golomb()
 {
     const unsigned rnd_v[] = {
@@ -403,6 +497,28 @@ void test_golomb()
     fprintf(stderr, "bpp=%d golomb_bpp=%d\n", bpp, golomb_bpp);
     assert(golomb_bpp < bpp);
     fprintf(stderr, "%s: golomb test OK\n", __FILE__);
+}
+
+static
+void test_base62_golomb()
+{
+    // test combinded base62+golomb decoder
+    const char str[] = "set:hdf7q2P5VZwtLGr9TKxhrEM1";
+    const char *base62 = str + 4 + 2;
+    int Mshift = 10;
+    char bitv[256];
+    int bitc = decode_base62(base62, bitv);
+    assert(bitc > 0);
+    unsigned v1[32], v2[32];
+    int c1 = decode_golomb(bitc, bitv, Mshift, v1);
+    assert(c1 > 0);
+    int c2 = decode_base62_golomb(base62, Mshift, v2);
+    assert(c2 > 0);
+    assert(c1 == c2);
+    int i;
+    for (i = 0; i < c1; i++)
+	assert(v1[i] == v2[i]);
+    fprintf(stderr, "%s: base62_golomb test OK\n", __FILE__);
 }
 #endif
 
@@ -601,16 +717,26 @@ int decode_set_size(const char *str, int Mshift)
 static
 int decode_set(const char *str, int Mshift, unsigned *v)
 {
-    str += 2;
-    // base62
-    char bitv[decode_base62_size(str)];
-    int bitc = decode_base62(str, bitv);
-    if (bitc < 0)
-	return -1;
-    // golomb
-    int c = decode_golomb(bitc, bitv, Mshift, v);
+    const char *base62 = str + 2;
+    // separate base62+golomb stages, for reference
+    if (0) {
+	// base62
+	char bitv[decode_base62_size(base62)];
+	int bitc = decode_base62(base62, bitv);
+	if (bitc < 0)
+	    return bitc;
+	// golomb
+	int c = decode_golomb(bitc, bitv, Mshift, v);
+	if (c < 0)
+	    return c;
+	// delta
+	decode_delta(c, v);
+	return c;
+    }
+    // combined base62+golomb stage
+    int c = decode_base62_golomb(base62, Mshift, v);
     if (c < 0)
-	return -2;
+	return c;
     // delta
     decode_delta(c, v);
     return c;
@@ -947,6 +1073,7 @@ int main()
 {
     test_base62();
     test_golomb();
+    test_base62_golomb();
     test_delta();
     test_aux();
     test_set();
