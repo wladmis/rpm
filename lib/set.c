@@ -108,21 +108,47 @@ int decode_base62_size(const char *base62)
     return (len << 2) + (len << 1);
 }
 
-// Main base62 decoding routine: unpack base62 string into bitv.
+// This table maps alnum characters to their numeric values.
+static
+const int char_to_num[] = {
+    /* 0..15 */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    /* 16..31 */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    /* 32..47 */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    /* 48..57 = '0'..'9' */
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    /* 58..64 */
+    -1, -1, -1, -1, -1, -1, -1,
+    /* 65..90 = 'A'..'Z' */
+    36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+    46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+    56, 57, 58, 59, 60, 61,
+    /* 91..96 */
+    -1, -1, -1, -1, -1, -1,
+    /* 97..122 = 'a'..'z' */
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35,
+    /* 123..127 */
+    -1, -1, -1, -1, -1,
+    /* 128..255 */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+};
+
+// Main base62 decoding routine: unpack base62 string into bitmap.
 static
 int decode_base62(const char *base62, char *bitv)
 {
     char *bitv_start = bitv;
-    int char_to_num(int c)
-    {
-	if (c >= '0' && c <= '9')
-	    return c - '0';
-	if (c >= 'a' && c <= 'z')
-	    return c - 'a' + 10;
-	if (c >= 'A' && c <= 'Z')
-	    return c - 'A' + 36;
-	return -1;
-    }
     inline
     void put6bits(int c)
     {
@@ -142,8 +168,8 @@ int decode_base62(const char *base62, char *bitv)
 	*bitv++ = (c >> 3) & 1;
     }
     int c;
-    while ((c = *base62++)) {
-	int num6b = char_to_num(c);
+    while ((c = (unsigned char) *base62++)) {
+	int num6b = char_to_num[c];
 	if (num6b < 0)
 	    return -1;
 	if (num6b < 61) {
@@ -151,10 +177,10 @@ int decode_base62(const char *base62, char *bitv)
 	    continue;
 	}
 	assert(num6b == 61);
-	c = *base62++;
+	c = (unsigned char) *base62++;
 	if (c == 0)
 	    return -2;
-	int num4b = char_to_num(c);
+	int num4b = char_to_num[c];
 	if (num4b < 0)
 	    return -3;
 	switch (num4b & (16 + 32)) {
