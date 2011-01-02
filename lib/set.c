@@ -56,40 +56,39 @@ int encode_base62(int bitc, const char *bitv, char *base62)
     int bits6 = 0; // number of regular bits set
     int num6b = 0; // pending 6-bit number
     while (bitc-- > 0) {
-	assert(bits6 + bits2 < 6);
 	num6b |= (*bitv++ << bits6++);
-	if (bits6 + bits2 == 6) {
-	    switch (num6b) {
-	    case 61:
-		// escape
-		put_digit(61);
-		// extra "00...." high bits (in the next character)
-		bits2 = 2;
-		bits6 = 0;
-		num6b = 0;
-		break;
-	    case 62:
-		put_digit(61);
-		// extra "01...." hight bits
-		bits2 = 2;
-		bits6 = 0;
-		num6b = 16;
-		break;
-	    case 63:
-		put_digit(61);
-		// extra "10...." hight bits
-		bits2 = 2;
-		bits6 = 0;
-		num6b = 32;
-		break;
-	    default:
-		assert(num6b < 61);
-		put_digit(num6b);
-		bits2 = 0;
-		bits6 = 0;
-		num6b = 0;
-		break;
-	    }
+	if (bits6 + bits2 < 6)
+	    continue;
+	switch (num6b) {
+	case 61:
+	    // escape
+	    put_digit(61);
+	    // extra "00...." high bits (in the next character)
+	    bits2 = 2;
+	    bits6 = 0;
+	    num6b = 0;
+	    break;
+	case 62:
+	    put_digit(61);
+	    // extra "01...." high bits
+	    bits2 = 2;
+	    bits6 = 0;
+	    num6b = 16;
+	    break;
+	case 63:
+	    put_digit(61);
+	    // extra "10...." high bits
+	    bits2 = 2;
+	    bits6 = 0;
+	    num6b = 32;
+	    break;
+	default:
+	    assert(num6b < 61);
+	    put_digit(num6b);
+	    bits2 = 0;
+	    bits6 = 0;
+	    num6b = 0;
+	    break;
 	}
     }
     if (bits6 + bits2) {
@@ -124,6 +123,7 @@ int decode_base62(const char *base62, char *bitv)
 	    return c - 'A' + 36;
 	return -1;
     }
+    inline
     void put6bits(int c)
     {
 	*bitv++ = (c >> 0) & 1;
@@ -133,6 +133,7 @@ int decode_base62(const char *base62, char *bitv)
 	*bitv++ = (c >> 4) & 1;
 	*bitv++ = (c >> 5) & 1;
     }
+    inline
     void put4bits(int c)
     {
 	*bitv++ = (c >> 0) & 1;
@@ -145,32 +146,33 @@ int decode_base62(const char *base62, char *bitv)
 	int num6b = char_to_num(c);
 	if (num6b < 0)
 	    return -1;
-	if (num6b == 61) {
-	    c = *base62++;
-	    if (c == 0)
-		return -2;
-	    num6b = char_to_num(c);
-	    if (num6b < 0)
-		return -3;
-	    switch (num6b & (16 + 32)) {
-	    case 0:
-		put6bits(61);
-		break;
-	    case 16:
-		put6bits(62);
-		break;
-	    case 32:
-		put6bits(63);
-		break;
-	    default:
-		return -4;
-		break;
-	    }
-	    put4bits(num6b);
-	}
-	else {
+	if (num6b < 61) {
 	    put6bits(num6b);
+	    continue;
 	}
+	assert(num6b == 61);
+	c = *base62++;
+	if (c == 0)
+	    return -2;
+	int num4b = char_to_num(c);
+	if (num4b < 0)
+	    return -3;
+	switch (num4b & (16 + 32)) {
+	case 0:
+	    break;
+	case 16:
+	    num6b = 62;
+	    num4b &= ~16;
+	    break;
+	case 32:
+	    num6b = 63;
+	    num4b &= ~32;
+	    break;
+	default:
+	    return -4;
+	}
+	put6bits(num6b);
+	put4bits(num4b);
     }
     return bitv - bitv_start;
 }
