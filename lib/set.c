@@ -531,8 +531,9 @@ static
 void encode_delta(int c, unsigned *v)
 {
     assert(c > 0);
-    unsigned int v0 = *v++;
-    while (--c > 0) {
+    unsigned *v_end = v + c;
+    unsigned v0 = *v++;
+    while (v < v_end) {
 	*v -= v0;
 	v0 += *v++;
     }
@@ -542,8 +543,9 @@ static
 void decode_delta(int c, unsigned *v)
 {
     assert(c > 0);
-    unsigned int v0 = *v++;
-    while (--c > 0) {
+    unsigned *v_end = v + c;
+    unsigned v0 = *v++;
+    while (v < v_end) {
 	*v += v0;
 	v0 = *v++;
     }
@@ -577,7 +579,8 @@ void test_delta()
 static
 void maskv(int c, unsigned *v, unsigned mask)
 {
-    while (c-- > 0)
+    unsigned *v_end = v + c;
+    while (v < v_end)
 	*v++ &= mask;
 }
 
