@@ -749,12 +749,14 @@ int decode_set(const char *str, int Mshift, unsigned *v)
 static
 int cache_decode_set(const char *str, int Mshift, unsigned *v)
 {
+    unsigned *v_start = v, *v_end;
     struct cache_ent {
 	struct cache_ent *next;
-	const char *str;
+	char *str;
 	unsigned hash;
 	int c;
-	unsigned v[1];
+	unsigned *v;
+	unsigned short *dv;
     };
     static __thread
     struct cache_ent *cache;
@@ -770,7 +772,18 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
 		cur->next = cache;
 		cache = cur;
 	    }
-	    memcpy(v, cur->v, cur->c * sizeof(*cur->v));
+	    // stored as values
+	    if (cur->v) {
+		memcpy(v, cur->v, cur->c * sizeof(*cur->v));
+		return cur->c;
+	    }
+	    // stored as short deltas
+	    unsigned short *dv = cur->dv;
+	    unsigned short *dv_end = dv + cur->c;
+	    while (dv < dv_end)
+		*v++ = *dv++;
+	    v = v_start;
+	    decode_delta(cur->c, v);
 	    return cur->c;
 	}
 	count++;
@@ -780,25 +793,54 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
 	cur = cur->next;
     }
     // miss, decode
-    int c = decode_set(str, Mshift, v);
+    int c = decode_base62_golomb(str + 2, Mshift, v);
     if (c <= 0)
 	return c;
+    v_end = v_start + c;
     // truncate
-    int cache_size = 128;
+    int cache_size = 192;
     if (count >= cache_size) {
 	free(cur);
 	prev->next = NULL;
     }
-    // push to front
-    cur = malloc(sizeof(*cur) + strlen(str) + 1 + (c - 1) * sizeof(*v));
-    if (cur == NULL)
+    // check delta
+    int delta = 1;
+    while (v < v_end) {
+	if (*v++ > 65535) {
+	    delta = 0;
+	    break;
+	}
+    }
+    v = v_start;
+    // new entry
+    cur = malloc(sizeof(*cur) + strlen(str) + 1 +
+	    c * (delta ? sizeof *cur->dv : sizeof *cur->v));
+    if (cur == NULL) {
+	decode_delta(c, v);
 	return c;
+    }
+    cur->c = c;
+    if (delta) {
+	cur->v = NULL;
+	unsigned short *dv = cur->dv = (unsigned short *)(cur + 1);
+	while (v < v_end)
+	    *dv++ = *v++;
+	v = v_start;
+	decode_delta(c, v);
+	cur->str = (char *) dv;
+    }
+    else {
+	cur->dv = NULL;
+	cur->v = (unsigned *)(cur + 1);
+	decode_delta(c, v);
+	memcpy(cur->v, v, c * sizeof(*v));
+	cur->str = (char *)(cur->v + c);
+    }
+    strcpy(cur->str, str);
+    cur->hash = hash;
+    // push to front
     cur->next = cache;
     cache = cur;
-    cur->str = strcpy((char *)(cur->v + c), str);
-    cur->hash = hash;
-    cur->c = c;
-    memcpy(cur->v, v, c * sizeof(*v));
     return c;
 }
 
@@ -841,6 +883,11 @@ void test_set()
     // Decoded values must match.
     assert(c == rnd_c);
     int i;
+    for (i = 0; i < c; i++)
+	assert(v[i] == rnd_v[i]);
+    // Cached version.
+    c = cache_decode_set(base62, Mshift, v);
+    assert(c == rnd_c);
     for (i = 0; i < c; i++)
 	assert(v[i] == rnd_v[i]);
     fprintf(stderr, "%s: set test OK\n", __FILE__);
