@@ -206,6 +206,7 @@ int decode_base62(const char *base62, char *bitv)
 }
 
 #ifdef SELF_TEST
+static
 void test_base62()
 {
     const char rnd_bitv[] = {
@@ -552,6 +553,7 @@ void decode_delta(int c, unsigned *v)
 }
 
 #ifdef SELF_TEST
+static
 void test_delta()
 {
     unsigned v[] = {
@@ -712,8 +714,8 @@ int decode_set_init(const char *str, int *pbpp, int *pMshift)
 static inline
 int decode_set_size(const char *str, int Mshift)
 {
-    str += 2;
-    int bitc = decode_base62_size(str);
+    const char *base62 = str + 2;
+    int bitc = decode_base62_size(base62);
     return decode_golomb_size(bitc, Mshift);
 }
 
@@ -1023,7 +1025,6 @@ const char *set_fini(struct set *set, int bpp)
 	return NULL;
     unsigned mask = (bpp < 32) ? (1u << bpp) - 1 : ~0u;
     // Jenkins' one-at-a-time hash
-    inline
     unsigned int hash(const char *str)
     {
 	unsigned int hash = 0x9e3779b9;
