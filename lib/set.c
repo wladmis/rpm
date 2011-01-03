@@ -749,6 +749,7 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
     struct cache_ent {
 	struct cache_ent *next;
 	const char *str;
+	unsigned hash;
 	int c;
 	unsigned v[1];
     };
@@ -756,9 +757,10 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
     struct cache_ent *cache;
     // lookup in the cache
     struct cache_ent *cur = cache, *prev = NULL;
+    unsigned hash = str[0] | (str[2] << 8) | (str[3] << 16);
     int count = 0;
     while (cur) {
-	if (strcmp(str, cur->str) == 0) {
+	if (hash == cur->hash && strcmp(str, cur->str) == 0) {
 	    // hit, move to front
 	    if (cur != cache) {
 		prev->next = cur->next;
@@ -791,6 +793,7 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
     cur->next = cache;
     cache = cur;
     cur->str = strcpy((char *)(cur->v + c), str);
+    cur->hash = hash;
     cur->c = c;
     memcpy(cur->v, v, c * sizeof(*v));
     return c;
