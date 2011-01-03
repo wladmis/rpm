@@ -862,8 +862,8 @@ int rpmsetcmp(const char *str1, const char *str2)
 	if (decode_set_init(str2, &bpp2, &Mshift2) < 0)
 	    return -4;
 	// make room for hash values
-	unsigned v1[decode_set_size(str1, Mshift1)];
-	unsigned v2[decode_set_size(str2, Mshift2)];
+	unsigned v1buf[decode_set_size(str1, Mshift1)], *v1 = v1buf;
+	unsigned v2buf[decode_set_size(str2, Mshift2)], *v2 = v2buf;
 	// decode hash values
 	// str1 comes on behalf of provides, decode with caching
 	int c1 = cache_decode_set(str1, Mshift1, v1);
@@ -884,24 +884,26 @@ int rpmsetcmp(const char *str1, const char *str2)
 	// compare
 	int ge = 1;
 	int le = 1;
-	int i1 = 0, i2 = 0;
-	while (i1 < c1 && i2 < c2)
-	    if (v1[i1] < v2[i2]) {
+	unsigned *v1end = v1 + c1;
+	unsigned *v2end = v2 + c2;
+	while (v1 < v1end && v2 < v2end) {
+	    if (*v1 < *v2) {
 		le = 0;
-		i1++;
+		v1++;
 	    }
-	    else if (v1[i1] > v2[i2]) {
+	    else if (*v1 > *v2) {
 		ge = 0;
-		i2++;
+		v2++;
 	    }
 	    else {
-		i1++;
-		i2++;
+		v1++;
+		v2++;
 	    }
+	}
 	// return
-	if (i1 < c1)
+	if (v1 < v1end)
 	    le = 0;
-	if (i2 < c2)
+	if (v2 < v2end)
 	    ge = 0;
 	if (le && ge)
 	    return 0;
