@@ -82,7 +82,7 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
     int sense;
 
     /* Different names don't overlap. */
-    if (strcmp(AName, BName)) {
+    if (AName != BName && strcmp(AName, BName)) {
 	result = 0;
 	goto exit;
     }
@@ -98,9 +98,12 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 
     if (*AEVR && *BEVR) {
 	/* equal version strings => equal versions */
-	if (strcmp(AEVR, BEVR) == 0) {
-	    sense = 0;
-	    goto sense_result;
+	if ((AFlags & RPMSENSE_SENSEMASK) == RPMSENSE_EQUAL &&
+	    (BFlags & RPMSENSE_SENSEMASK) == RPMSENSE_EQUAL &&
+	    strcmp(AEVR, BEVR) == 0)
+	{
+	    result = 1;
+	    goto exit;
 	}
     }
     /* something beats nothing */
