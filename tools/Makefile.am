@@ -25,7 +25,7 @@ LDADD = \
 	@LIBINTL@
 
 noinst_PROGRAMS = \
-	dump dumpdb rpmarchive rpmheader rpmlead rpmsignature
+	dump dumpdb rpmarchive rpmheader rpmlead rpmsignature setcmp.static
 
 pkgbindir = @RPMCONFIGDIR@
 pkgbin_PROGRAMS = javadeps filesize dump_ld_config relative pdeath_execute mkset setcmp
@@ -47,6 +47,9 @@ pdeath_execute_LDADD =
 
 mkset_SOURCES = mkset.c
 setcmp_SOURCES = setcmp.c
+
+setcmp_static_SOURCES = setcmp.c
+setcmp_static_LDADD = @LDFLAGS_STATIC@ $(LDADD)
 
 rpmvercmp_SOURCES = rpmvercmp.c
 
