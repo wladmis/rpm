@@ -19,6 +19,7 @@ Release: alt100.6
 %def_without db
 %def_without build_topdir
 %def_with selinux
+%def_with profile
 
 # XXX enable at your own risk, CDB access to rpmdb isn't cooked yet.
 %define enable_cdb create cdb
@@ -45,6 +46,7 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
 %{?_with_selinux:BuildPreReq: libselinux-devel-static >= 2.0.96}
+%{?_with_profile:BuildPreReq: coreutils >= 6.0}
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
 BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
@@ -222,8 +224,25 @@ export ac_cv_path___SSH=/usr/bin/ssh
 	%{subst_with selinux} \
 	--program-transform-name=
 
-%{!?_enable_debug:%make_build -C lib set.lo CFLAGS='%optflags -O3'}
+set_c_cflags="$(sed -n 's/^CFLAGS = //p' lib/Makefile) -W -Wno-missing-prototypes %{!?_enable_debug:-O3}"
+%make_build -C lib set.lo CFLAGS="$set_c_cflags"
 %make_build YACC='bison -y'
+
+%if_with profile
+rm lib/set.lo lib/librpm.la tools/setcmp.static
+%make_build -C lib set.lo librpm.la CFLAGS="$set_c_cflags -fprofile-generate"
+%make_build -C tools setcmp.static CFLAGS="$(sed -n 's/^CFLAGS = //p' tools/Makefile) -fprofile-generate"
+rpmquery -a --provides |fgrep '= set:' |sort >P
+rpmquery -a --requires |fgrep '= set:' |sort >R
+join -o 1.3,2.3 P R |sort -R >setcmp-data
+./tools/setcmp <setcmp-data >/dev/null
+./tools/setcmp.static <setcmp-data >/dev/null
+ls -l lib/.libs/set.gcda lib/set.gcda
+rm lib/set.lo lib/librpm.la tools/setcmp.static
+%make_build -C lib set.lo CFLAGS="$set_c_cflags -fprofile-use"
+%make_build
+%endif #with profile
+
 %if_with apidocs
 rm -rf apidocs
 make apidocs
