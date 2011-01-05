@@ -365,11 +365,11 @@ static int removePackage(rpmTransactionSet ts, int dboffset, int depends)
 	    alAddPackage(&ts->erasedPackages, h, NULL, NULL, NULL);
     int alNum = alp - ts->erasedPackages.list;
 
-    AUTO_REALLOC(ts->removedPackages, ts->numRemovedPackages);
+    AUTO_REALLOC(ts->removedPackages, ts->numRemovedPackages, 8);
     ts->removedPackages[ts->numRemovedPackages++] = dboffset;
     qsort(ts->removedPackages, ts->numRemovedPackages, sizeof(int), intcmp);
 
-    AUTO_REALLOC(ts->order, ts->orderCount);
+    AUTO_REALLOC(ts->order, ts->orderCount, 8);
     transactionElement te = &ts->order[ts->orderCount++];
     te->type = TR_REMOVED;
     te->u.removed.dboffset = dboffset;
@@ -417,7 +417,7 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
     struct availablePackage *alp =
 	    alAddPackage(&ts->addedPackages, h, key, fd, relocs);
     int alNum = alp - ts->addedPackages.list;
-    AUTO_REALLOC(ts->order, ts->orderCount);
+    AUTO_REALLOC(ts->order, ts->orderCount, 8);
     ts->order[ts->orderCount].type = TR_ADDED;
     ts->order[ts->orderCount++].u.addedIndex = alNum;
 
@@ -732,7 +732,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	    rpmMessage(RPMMESS_DEBUG, _("package %s-%s-%s require not satisfied: %s\n"),
 		    name, version, release, keyDepend+2);
 
-	    AUTO_REALLOC(psp->problems, psp->num);
+	    AUTO_REALLOC(psp->problems, psp->num, 8);
 
 	    {	rpmDependencyConflict pp = psp->problems + psp->num;
 		pp->byHeader = headerLink(h);
@@ -790,7 +790,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	    rpmMessage(RPMMESS_DEBUG, _("package %s conflicts: %s\n"),
 		    name, keyDepend+2);
 
-	    AUTO_REALLOC(psp->problems, psp->num);
+	    AUTO_REALLOC(psp->problems, psp->num, 8);
 
 	    {	rpmDependencyConflict pp = psp->problems + psp->num;
 		pp->byHeader = headerLink(h);

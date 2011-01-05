@@ -343,6 +343,15 @@ extern void muntrace (void)
 #endif	/* defined(__GNUC__) */
 #endif	/* HAVE_MCHECK_H */
 
+/* Grow array on per-needed basis.
+ * Must be called before each insertion.
+ * Delta must be power of 2. */
+#define AUTO_REALLOC(ptr, size, delta) \
+    do { \
+	if (((size) & ((delta) - 1)) == 0) \
+	    ptr = xrealloc((ptr), sizeof(*(ptr)) * ((size) + (delta))); \
+    } while (0)
+
 #define	setprogname(pn)
 extern const char *__progname;
 

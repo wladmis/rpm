@@ -165,11 +165,4 @@ int headerMatchesDepFlags(Header h,
 }
 #endif
 
-#define REALLOC_DELTA 8
-#define AUTO_REALLOC(ptr, size) \
-    do { \
-	if (((size) & (REALLOC_DELTA - 1)) == 0) \
-	    ptr = xrealloc((ptr), sizeof(*(ptr)) * ((size) + REALLOC_DELTA)); \
-    } while (0)
-
 #endif	/* H_DEPENDS */
