@@ -12,7 +12,7 @@ pkgincdir = $(pkgincludedir)
 pkginc_HEADERS = \
 	rpmio.h rpmurl.h rpmmacro.h rpmlog.h rpmmessages.h rpmerr.h \
 	ugid.h
-noinst_HEADERS = rpmio_internal.h rpmpgp.h
+noinst_HEADERS = bsearch.h rpmio_internal.h rpmpgp.h
 
 lib_LTLIBRARIES = librpmio.la
 librpmio_la_SOURCES = digest.c macro.c rpmio.c rpmlog.c rpmmalloc.c \
