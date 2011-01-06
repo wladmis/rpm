@@ -286,7 +286,7 @@ static int buildForTarget(const char * arg, BTA_t ba,
 
     if (ba->buildAmount & RPMBUILD_MACROREQS) {
 	int i;
-	for (i = 0; i < spec->macros->firstFree; ++i) {
+	for (i = 0; i < spec->macros->macroTableSize; ++i) {
 	    MacroEntry me = spec->macros->macroTable[i];
 
 	    if (me && me->used > 0)
