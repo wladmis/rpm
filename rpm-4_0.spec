@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.7
+Release: alt100.8
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -31,7 +31,7 @@ Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
 Packager: Dmitry V. Levin <ldv@altlinux.org>
 
-# http://git.altlinux.org/people/ldv/packages/?p=rpm.git
+# http://git.altlinux.org/gears/r/rpm.git
 Source: rpm-%version-%release.tar
 
 Provides: %_rpmlibdir/macros.d, %_sysconfdir/%name/macros.d
@@ -495,6 +495,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Jan 06 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.8
+- macro.c: Replaced repeated bsearch+qsort calls with custom
+  bsearch+memmove-like routine; rpm startup time is now 10x faster.
+
 * Tue Jan 04 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.7
 - set.c: Reverted Kirill's changes.
 - set.c: Applied aggressive optimization techniques (30%% speed-up).
