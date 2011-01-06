@@ -770,7 +770,7 @@ freeArgs(MacroBuf mb)
 	me = *mep;
 
 	if (me->level < mb->depth)
-	    continue;
+	    goto skip;
 	if (strlen(me->name) == 1 && strchr("#*0", *me->name)) {
 	    if (*me->name == '*' && me->used > 0)
 		skiptest = 1; /* XXX skip test for %# %* %0 */
@@ -782,6 +782,7 @@ freeArgs(MacroBuf mb)
 #endif
 	}
 	popMacro(mep);
+    skip:
 	if (*mep == NULL)
 	    ndeleted++;
 	else if (ndeleted) {
