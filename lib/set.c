@@ -751,6 +751,8 @@ int decode_set(const char *str, int Mshift, unsigned *v)
 static
 int cache_decode_set(const char *str, int Mshift, unsigned *v)
 {
+    const int cache_size = 192;
+    const int pivot_size = 172;
     unsigned *v_start = v, *v_end;
     struct cache_ent {
 	struct cache_ent *next;
@@ -764,6 +766,7 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
     struct cache_ent *cache;
     // lookup in the cache
     struct cache_ent *cur = cache, *prev = NULL;
+    struct cache_ent *pivot_cur = NULL, *pivot_prev = NULL;
     unsigned hash = str[0] | (str[2] << 8) | (str[3] << 16);
     int count = 0;
     while (cur) {
@@ -793,6 +796,10 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
 	    break;
 	prev = cur;
 	cur = cur->next;
+	if (count == pivot_size) {
+	    pivot_cur = cur;
+	    pivot_prev = prev;
+	}
     }
     // miss, decode
     int c = decode_base62_golomb(str + 2, Mshift, v);
@@ -800,7 +807,6 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
 	return c;
     v_end = v_start + c;
     // truncate
-    int cache_size = 192;
     if (count >= cache_size) {
 	free(cur);
 	prev->next = NULL;
@@ -840,9 +846,16 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
     }
     strcpy(cur->str, str);
     cur->hash = hash;
-    // push to front
-    cur->next = cache;
-    cache = cur;
+    // pivotal insertion!
+    if (count >= cache_size) {
+	cur->next = pivot_cur;
+	pivot_prev->next = cur;
+    }
+    // early bird, push to front
+    else {
+	cur->next = cache;
+	cache = cur;
+    }
     return c;
 }
 
