@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.8
+Release: alt100.9
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -495,6 +495,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri Jan 07 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.9
+- set.c: Tweak LRU first-time insertion policy.
+
 * Thu Jan 06 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.8
 - macro.c: Replaced repeated bsearch+qsort calls with custom
   bsearch+memmove-like routine; rpm startup time is now 10x faster.
