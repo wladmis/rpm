@@ -16,8 +16,6 @@
    along with this program; if not, write to the Free Software Foundation,
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-#include "system.h"
-
 /* Needed for libelf */
 #define _FILE_OFFSET_BITS 64
 
@@ -39,9 +37,8 @@
 #include <gelf.h>
 #include <dwarf.h>
 
-#include <rpm/rpmio.h>
-#include <rpm/rpmpgp.h>
-#include "tools/hashtab.h"
+#include <beecrypt/beecrypt.h>
+#include "hashtab.h"
 
 #define DW_TAG_partial_unit 0x3c
 
@@ -1345,27 +1342,22 @@ error_out:
   return NULL;
 }
 
-static const pgpHashAlgo algorithms[] = { PGPHASHALGO_MD5,
-  PGPHASHALGO_SHA1, PGPHASHALGO_SHA256, PGPHASHALGO_SHA384, PGPHASHALGO_SHA512 };
-
 /* Compute a fresh build ID bit-string from the editted file contents.  */
 static void
 handle_build_id (DSO *dso, Elf_Data *build_id,
 		 size_t build_id_offset, size_t build_id_size)
 {
-  DIGEST_CTX ctx;
-  pgpHashAlgo algorithm;
-  int i = sizeof(algorithms)/sizeof(algorithms[0]);
-  void *digest = NULL;
-  size_t len;
+  hashFunctionContext ctx;
+  const hashFunction *hf = NULL;
+  int i = hashFunctionCount ();
 
   while (i-- > 0)
     {
-      algorithm = algorithms[i];
-      if (rpmDigestLength(algorithm) == build_id_size)
+      hf = hashFunctionGet (i);
+      if (hf != NULL && hf->digestsize == build_id_size)
 	break;
     }
-  if (i < 0)
+  if (hf == NULL)
     {
       fprintf (stderr, "Cannot handle %Zu-byte build ID\n", build_id_size);
       exit (1);
@@ -1384,7 +1376,7 @@ handle_build_id (DSO *dso, Elf_Data *build_id,
   /* Clear the old bits so they do not affect the new hash.  */
   memset ((char *) build_id->d_buf + build_id_offset, 0, build_id_size);
 
-  ctx = rpmDigestInit(algorithm, 0);
+  hashFunctionContextInit (&ctx, hf);
 
   /* Slurp the relevant header bits and section contents and feed them
      into the hash function.  The only bits we ignore are the offset
@@ -1395,6 +1387,12 @@ handle_build_id (DSO *dso, Elf_Data *build_id,
      or Elf64 object, only that we are consistent in what bits feed the
      hash so it comes out the same for the same file contents.  */
   {
+    auto inline void process (const void *data, size_t size);
+    auto inline void process (const void *data, size_t size)
+    {
+      memchunk chunk = { .data = (void *) data, .size = size };
+      hashFunctionContextUpdateMC (&ctx, &chunk);
+    }
     union
     {
       GElf_Ehdr ehdr;
@@ -1423,7 +1421,7 @@ handle_build_id (DSO *dso, Elf_Data *build_id,
 	  goto bad;
 	if (elf64_xlatetom (&x, &x, dso->ehdr.e_ident[EI_DATA]) == NULL)
 	  goto bad;
-	rpmDigestUpdate(ctx, x.d_buf, x.d_size);
+	process (x.d_buf, x.d_size);
       }
 
     x.d_type = ELF_T_SHDR;
@@ -1435,21 +1433,20 @@ handle_build_id (DSO *dso, Elf_Data *build_id,
 	  u.shdr.sh_offset = 0;
 	  if (elf64_xlatetom (&x, &x, dso->ehdr.e_ident[EI_DATA]) == NULL)
 	    goto bad;
-	  rpmDigestUpdate(ctx, x.d_buf, x.d_size);
+	  process (x.d_buf, x.d_size);
 
 	  if (u.shdr.sh_type != SHT_NOBITS)
 	    {
 	      Elf_Data *d = elf_rawdata (dso->scn[i], NULL);
 	      if (d == NULL)
 		goto bad;
-	      rpmDigestUpdate(ctx, d->d_buf, d->d_size);
+	      process (d->d_buf, d->d_size);
 	    }
 	}
   }
 
-  rpmDigestFinal(ctx, &digest, &len, 0);
-  memcpy((unsigned char *)build_id->d_buf + build_id_offset, digest, build_id_size);
-  free(digest);
+  hashFunctionContextDigest (&ctx, (byte *) build_id->d_buf + build_id_offset);
+  hashFunctionContextFree (&ctx);
 
   elf_flagdata (build_id, ELF_C_SET, ELF_F_DIRTY);
 
@@ -1457,9 +1454,15 @@ handle_build_id (DSO *dso, Elf_Data *build_id,
   /* Now format the build ID bits in hex to print out.  */
   {
     const uint8_t * id = (uint8_t *)build_id->d_buf + build_id_offset;
-    char *hex = pgpHexStr(id, build_id_size);
+    char hex[build_id_size * 2 + 1];
+    int n = snprintf (hex, 3, "%02" PRIx8, id[0]);
+    assert (n == 2);
+    for (i = 1; i < (int)build_id_size; ++i)
+      {
+	n = snprintf (&hex[i * 2], 3, "%02" PRIx8, id[i]);
+	assert (n == 2);
+      }
     puts (hex);
-    free(hex);
   }
 }
 
