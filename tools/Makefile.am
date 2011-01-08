@@ -28,7 +28,7 @@ noinst_PROGRAMS = \
 	dump dumpdb rpmarchive rpmheader rpmlead rpmsignature setcmp.static
 
 pkgbindir = @RPMCONFIGDIR@
-pkgbin_PROGRAMS = javadeps filesize dump_ld_config relative pdeath_execute mkset setcmp
+pkgbin_PROGRAMS = javadeps filesize dump_ld_config relative pdeath_execute mkset setcmp debugedit
 bin_PROGRAMS = rpmvercmp rpmevrcmp
 
 javadeps_SOURCES = javadeps.c
@@ -50,6 +50,9 @@ setcmp_SOURCES = setcmp.c
 
 setcmp_static_SOURCES = setcmp.c
 setcmp_static_LDADD = @LDFLAGS_STATIC@ $(LDADD)
+
+debugedit_SOURCES = debugedit.c hashtab.c hashtab.h
+debugedit_LDADD = @WITH_LIBELF_LIB@ @LIBBEECRYPT@ @LIBPOPT@
 
 rpmvercmp_SOURCES = rpmvercmp.c
 

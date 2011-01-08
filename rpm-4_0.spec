@@ -51,6 +51,9 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
 BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 
+# For debugedit.
+BuildPreReq: elfutils-devel
+
 # Automatically added by buildreq on Thu Apr 23 2009 and edited manually.
 BuildRequires: bzlib-devel-static libdb4.7-devel-static libelf-devel-static liblzma-devel-static libpopt-devel-static python-devel zlib-devel-static
 
@@ -441,6 +444,7 @@ fi
 %_bindir/relative
 %_rpmlibdir/rpmt
 %rpmattr %_rpmlibdir/rpmb
+%rpmattr %_rpmlibdir/debugedit
 %rpmattr %_rpmlibdir/dump_ld_config
 %rpmattr %_rpmlibdir/filesize
 %rpmattr %_rpmlibdir/relative
