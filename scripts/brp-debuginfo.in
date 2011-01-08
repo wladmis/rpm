@@ -1,0 +1,27 @@
+#!/bin/sh -efu
+
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
+
+cd "$RPM_BUILD_ROOT"
+
+prune_paths='-path ./usr/share -o -path ./lib/firmware -o -path ./usr/lib/debug'
+find . '(' -path './.*' -o $prune_paths ')' -prune -o -type f -print |
+file -NF$'\t' -f - |sed -n 's/\t.* ELF .* \(executable\|shared object\), .*, not stripped.*//p' |
+xargs -r --delimiter='\n' stat -c '%h %i %n' |
+while read -r nlink ino f; do
+	debugf=./usr/lib/debug${f#.}.debug
+	mkdir -p "${debugf%/*}"
+	if [ "$nlink" -gt 1 ]; then
+		eval f0="\${f0_$ino-}"
+		if [ -n "$f0" ]; then
+			ln -nf "$f0" "$debugf"
+			continue
+		else
+			eval f0_$ino="\$f"
+		fi
+	fi
+	@RPMCONFIGDIR@/debugedit -b "$RPM_BUILD_DIR" -d /usr/src/debug "$f"
+	eu-strip --remove-comment -f "$debugf" "$f"
+	chmod 644 "$debugf"
+done

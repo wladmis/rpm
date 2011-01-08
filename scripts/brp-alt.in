@@ -43,8 +43,8 @@ cd "$RPM_BUILD_ROOT"
 # Adjust library links.
 @RPMCONFIGDIR@/brp-adjust_libraries
  
-# Strip ELF binaries.
-@RPMCONFIGDIR@/brp-strip
+# Strip ELF binaries and make .debug files.
+@RPMCONFIGDIR@/brp-debuginfo
 
 # Verify ELF objects.
 @RPMCONFIGDIR@/brp-verify_elf

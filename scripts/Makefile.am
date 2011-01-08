@@ -7,7 +7,8 @@ EXTRA_DIST = \
 	functions find-package .provides.sh \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
-	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip \
+	brp-cleanup brp-compress brp-debuginfo \
+	brp-fix-perms brp-fixup brp-strip \
 	brp-verify_elf brp-verify-info \
 	compress_files \
 	find-lang \
@@ -36,7 +37,8 @@ config_SCRIPTS = \
 	functions find-package \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
-	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip \
+	brp-cleanup brp-compress brp-debuginfo \
+	brp-fix-perms brp-fixup brp-strip \
 	brp-verify_elf brp-verify-info \
 	compress_files \
 	find-lang \
