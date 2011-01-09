@@ -1,0 +1,30 @@
+#!/bin/sh -efu
+
+. @RPMCONFIGDIR@/functions
+ValidateBuildRoot
+
+cd "$RPM_BUILD_ROOT"
+
+rm -rf .tmp
+mkdir .tmp
+
+>.tmp/src
+
+while read -r f; do
+	f=${f#$RPM_BUILD_ROOT}
+	debugf=./usr/lib/debug$f.debug
+	if [ -L "$debugf" ]; then
+		continue
+	fi
+	if [ -f "$debugf" ]; then
+		printf '%s\n' "${debugf#.}"
+	fi
+	if [ -f .debuginfo/links/"$debugf" ]; then
+		cat .debuginfo/links/"$debugf"
+	fi
+	if [ -s .debuginfo/src/"$debugf" ]; then
+		LC_ALL=C sort -m -u -o .tmp/src .tmp/src .debuginfo/src/"$debugf"
+	fi
+done
+
+cat .tmp/src

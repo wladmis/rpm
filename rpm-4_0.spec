@@ -455,6 +455,7 @@ fi
 %rpmattr %_rpmlibdir/find-lang
 %rpmattr %_rpmlibdir/find-provides
 %rpmattr %_rpmlibdir/find-requires
+%rpmattr %_rpmlibdir/find-debuginfo-files
 %rpmattr %_rpmlibdir/find-scriptlet-requires
 %rpmattr %_rpmlibdir/fixup-*
 %rpmattr %_rpmlibdir/files.*

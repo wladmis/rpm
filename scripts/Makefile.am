@@ -5,6 +5,7 @@ AUTOMAKE_OPTIONS = 1.4 foreign
 EXTRA_DIST = \
 	posttrans-filetriggers 0ldconfig.filetrigger \
 	functions find-package .provides.sh \
+	find-debuginfo-files \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-debuginfo \
@@ -35,6 +36,7 @@ config_DATA = .provides.sh 0common-files.req.list
 config_SCRIPTS = \
 	posttrans-filetriggers 0ldconfig.filetrigger \
 	functions find-package \
+	find-debuginfo-files \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-debuginfo \
