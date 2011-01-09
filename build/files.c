@@ -2709,6 +2709,102 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
     return rc;
 }
 
+static int makeDebugInfo(Spec spec, Package pkg)
+{
+    TFI_t fi = pkg->cpioList;
+    if (fi == NULL || fi->fc == 0)
+	return 0;
+    const char *N = NULL, *A = NULL;
+    headerNEVRA(pkg->header, &N, NULL, NULL, NULL, &A);
+    assert(N && A);
+    if (strcmp(A, "noarch") == 0)
+	return 0;
+    const char *dash = strrchr(N, '-');
+    if (dash && strcmp(dash, "-debuginfo") == 0)
+	return 0;
+
+    char *cmd = rpmExpand("%{?__find_debuginfo_files}", NULL);
+    if (!(cmd && *cmd))
+	return 0;
+
+    StringBuf fileList = newStringBuf();
+    int i;
+    int fileListLen = 0;
+    for (i = 0, fileListLen = 0; i < fi->fc; i++) {
+	appendStringBuf(fileList, fi->dnl[fi->dil[i]]);
+	fileListLen += strlen(fi->dnl[fi->dil[i]]);
+	appendLineStringBuf(fileList, fi->bnl[i]);
+	fileListLen += strlen(fi->bnl[i]) + 1;
+    }
+
+    rpmMessage(RPMMESS_NORMAL, _("Finding debuginfo files (using %s)\n"), cmd);
+
+    int rc = 0;
+    StringBuf out = runPkgScript(pkg, cmd, getStringBuf(fileList), fileListLen);
+    if (!out) {
+	rc = RPMERR_EXEC;
+	rpmError(rc, _("Failed to find debuginfo files\n"));
+	goto exit;
+    }
+
+    if (*getStringBuf(out) == '\0')
+	goto exit;
+
+    rpmMessage(RPMMESS_NORMAL, _("Creating %s-debuginfo package\n"), N);
+
+    /* simulate %include */
+    const char include_fmt[] =
+	"%%package -n %{name}-debuginfo\n"
+	"Version: %{version}\n"
+	"Release: %{release}\n"
+	"%|epoch?{Epoch: %{epoch}\n}|"
+	"Summary: %{summary} (debug files)\n"
+	"Group: Development/Debug\n"
+	"Requires: %{name} = %|epoch?{%{epoch}:}|%{version}-%{release}\n"
+	"AutoReqProv: no\n"
+	"%%description -n %{name}-debuginfo\n"
+	"This package provides debug information for package %{name}.\n"
+	"%%files -n %{name}-debuginfo\n";
+    const char *include = headerSprintf(pkg->header, include_fmt,
+	    rpmTagTable, rpmHeaderFormats, NULL);
+    assert(include);
+
+    char *path = NULL;
+    asprintf(&path, "%s/.include:%s-debuginfo", spec->buildRootURL, N);
+    assert(path);
+    FILE *fp = fopen(path, "w");
+    assert(fp);
+    fputs(include, fp);
+    fputs(getStringBuf(out), fp);
+    fclose(fp);
+
+    OFI_t *ofi = newOpenFileInfo();
+    ofi->fileName = path;
+    ofi->next = spec->fileStack;
+    spec->fileStack = ofi;
+
+    rc = readLine(spec, 0);
+    assert(rc == 0);
+    rc = parsePreamble(spec, 0);
+    assert(rc == PART_DESCRIPTION);
+    rc = parseDescription(spec);
+    assert(rc == PART_FILES);
+    rc = parseFiles(spec);
+    assert(rc == PART_NONE);
+
+    Package dpkg = pkg;
+    while (dpkg->next)
+	dpkg = dpkg->next;
+    int tags[] = { RPMTAG_OS, RPMTAG_ARCH, 0 };
+    headerCopyTags(pkg->header, dpkg->header, tags);
+
+exit:
+    freeStringBuf(fileList);
+    freeStringBuf(out);
+    free(cmd);
+    return rc;
+}
+
 /**
  */
 static void printDepMsg(DepMsg_t * dm, int count, const char ** names,
@@ -2838,6 +2934,9 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	/*@-noeffect@*/
 	printDeps(pkg->header);
 	/*@=noeffect@*/
+
+	rc = makeDebugInfo(spec, pkg);
+	if (rc) break;
     }
 
     if (rc == 0)
