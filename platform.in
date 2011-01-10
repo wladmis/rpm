@@ -679,4 +679,4 @@
 @alt@# flags for compiling kernel
 @alt@%optflags_kernel	%nil
 @alt@
-@alt@%optflags_default	%optflags_core %optflags_warnings %{?_enable_debug:%optflags_debug}%{!?_enable_debug:%{optflags_optimization}}
+@alt@%optflags_default	%optflags_core %optflags_warnings %optflags_debug %{!?_enable_debug:%{optflags_optimization}}
