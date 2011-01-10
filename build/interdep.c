@@ -104,6 +104,25 @@ struct Req *makeRequires(Spec spec)
 	    makeReq1(r, pkg1, pkg2);
 	    makeReq1(r, pkg2, pkg1);
 	}
+    int propagated;
+    do {
+	propagated = 0;
+	int i1, i2;
+	for (i1 = 0; i1 < r->c; i1++)
+	    for (i2 = i1; i2 < r->c; i2++) {
+		struct Pair r1 = r->v[i1];
+		struct Pair r2 = r->v[i2];
+		if (r1.pkg2 == r2.pkg1 && !Requires(r, r1.pkg1, r2.pkg2)) {
+		    addRequires(r, r1.pkg1, r2.pkg2);
+		    propagated++;
+		}
+		if (r2.pkg2 == r1.pkg1 && !Requires(r, r2.pkg1, r1.pkg2)) {
+		    addRequires(r, r2.pkg1, r1.pkg2);
+		    propagated++;
+		}
+	    }
+    }
+    while (propagated);
     return r;
 }
 
