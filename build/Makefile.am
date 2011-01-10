@@ -12,12 +12,12 @@ LIBS =
 
 pkgincdir = $(pkgincludedir)
 pkginc_HEADERS = rpmbuild.h rpmspec.h
-noinst_HEADERS = buildio.h checkFiles.h
+noinst_HEADERS = buildio.h checkFiles.h interdep.h
 
 lib_LTLIBRARIES = librpmbuild.la
 librpmbuild_la_SOURCES = \
-	build.c checkFiles.c expression.c files.c misc.c names.c pack.c \
-	parseBuildInstallClean.c parseChangelog.c parseDescription.c \
+	build.c checkFiles.c expression.c files.c interdep.c misc.c names.c \
+	pack.c parseBuildInstallClean.c parseChangelog.c parseDescription.c \
 	parseFiles.c parsePreamble.c parsePrep.c parseReqs.c parseScript.c \
 	parseSpec.c poptBT.c reqprov.c spec.c
 librpmbuild_la_LDFLAGS = -release @VERSION@.1

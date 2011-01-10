@@ -2909,6 +2909,7 @@ static void printDeps(Header h)
     versions = hfd(versions, dvt);
 }
 
+#include "interdep.h"
 #include "checkFiles.h"
 
 int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
@@ -2938,6 +2939,9 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	rc = makeDebugInfo(spec, pkg);
 	if (rc) break;
     }
+
+    if (rc == 0)
+	rc = processInterdep(spec);
 
     if (rc == 0)
 	rc = checkFiles(spec);
