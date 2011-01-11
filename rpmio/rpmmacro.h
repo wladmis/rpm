@@ -18,8 +18,7 @@ typedef /*@abstract@*/ struct MacroEntry_s {
 /*! The structure used to store the set of macros in a context. */
 typedef /*@abstract@*/ struct MacroContext_s {
 /*@owned@*//*@null@*/ MacroEntry *macroTable;	/*!< Macro entry table for context. */
-    int	macrosAllocated;/*!< No. of allocated macros. */
-    int	firstFree;	/*!< No. of macros. */
+    int	macroTableSize;	/*!< No. of macros. */
 } * MacroContext;
 
 /*@-redecl@*/

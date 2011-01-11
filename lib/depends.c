@@ -74,15 +74,15 @@ int rpmFLAGS = RPMSENSE_EQUAL;
 int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 	const char * BName, const char * BEVR, int BFlags)
 {
-    const char *aDepend = printDepend(NULL, AName, AEVR, AFlags);
-    const char *bDepend = printDepend(NULL, BName, BEVR, BFlags);
+    const char *aDepend = NULL;
+    const char *bDepend = NULL;
     char *aEVR, *bEVR;
     const char *aE, *aV, *aR, *bE, *bV, *bR;
     int result;
     int sense;
 
     /* Different names don't overlap. */
-    if (strcmp(AName, BName)) {
+    if (AName != BName && strcmp(AName, BName)) {
 	result = 0;
 	goto exit;
     }
@@ -98,9 +98,12 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 
     if (*AEVR && *BEVR) {
 	/* equal version strings => equal versions */
-	if (strcmp(AEVR, BEVR) == 0) {
-	    sense = 0;
-	    goto sense_result;
+	if ((AFlags & RPMSENSE_SENSEMASK) == RPMSENSE_EQUAL &&
+	    (BFlags & RPMSENSE_SENSEMASK) == RPMSENSE_EQUAL &&
+	    strcmp(AEVR, BEVR) == 0)
+	{
+	    result = 1;
+	    goto exit;
 	}
     }
     /* something beats nothing */
@@ -144,6 +147,10 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 	bEVR = xstrdup(BEVR);
 	parseEVR(bEVR, &bE, &bV, &bR);
 	/* rpmEVRcmp() is also shared; the code moved to rpmvercmp.c */
+	if (rpmIsDebug()) {
+	    aDepend = printDepend(NULL, AName, AEVR, AFlags);
+	    bDepend = printDepend(NULL, BName, BEVR, BFlags);
+	}
 	sense = rpmEVRcmp(aE, aV, aR, aDepend, bE, bV, bR, bDepend);
 	aEVR = _free(aEVR);
 	bEVR = _free(bEVR);
@@ -164,10 +171,16 @@ sense_result:
     }
 
 exit:
-    rpmMessage(RPMMESS_DEBUG, _("  %s    A %s\tB %s\n"),
-	(result ? _("YES") : _("NO ")), aDepend, bDepend);
-    aDepend = _free(aDepend);
-    bDepend = _free(bDepend);
+    if (rpmIsDebug()) {
+	if (!aDepend)
+	    aDepend = printDepend(NULL, AName, AEVR, AFlags);
+	if (!bDepend)
+	    bDepend = printDepend(NULL, BName, BEVR, BFlags);
+	rpmMessage(RPMMESS_DEBUG, _("  %s    A %s\tB %s\n"),
+	    (result ? _("YES") : _("NO ")), aDepend, bDepend);
+	aDepend = _free(aDepend);
+	bDepend = _free(bDepend);
+    }
     return result;
 }
 
@@ -352,11 +365,11 @@ static int removePackage(rpmTransactionSet ts, int dboffset, int depends)
 	    alAddPackage(&ts->erasedPackages, h, NULL, NULL, NULL);
     int alNum = alp - ts->erasedPackages.list;
 
-    AUTO_REALLOC(ts->removedPackages, ts->numRemovedPackages);
+    AUTO_REALLOC(ts->removedPackages, ts->numRemovedPackages, 8);
     ts->removedPackages[ts->numRemovedPackages++] = dboffset;
     qsort(ts->removedPackages, ts->numRemovedPackages, sizeof(int), intcmp);
 
-    AUTO_REALLOC(ts->order, ts->orderCount);
+    AUTO_REALLOC(ts->order, ts->orderCount, 8);
     transactionElement te = &ts->order[ts->orderCount++];
     te->type = TR_REMOVED;
     te->u.removed.dboffset = dboffset;
@@ -404,7 +417,7 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
     struct availablePackage *alp =
 	    alAddPackage(&ts->addedPackages, h, key, fd, relocs);
     int alNum = alp - ts->addedPackages.list;
-    AUTO_REALLOC(ts->order, ts->orderCount);
+    AUTO_REALLOC(ts->order, ts->orderCount, 8);
     ts->order[ts->orderCount].type = TR_ADDED;
     ts->order[ts->orderCount++].u.addedIndex = alNum;
 
@@ -719,7 +732,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	    rpmMessage(RPMMESS_DEBUG, _("package %s-%s-%s require not satisfied: %s\n"),
 		    name, version, release, keyDepend+2);
 
-	    AUTO_REALLOC(psp->problems, psp->num);
+	    AUTO_REALLOC(psp->problems, psp->num, 8);
 
 	    {	rpmDependencyConflict pp = psp->problems + psp->num;
 		pp->byHeader = headerLink(h);
@@ -777,7 +790,7 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
 	    rpmMessage(RPMMESS_DEBUG, _("package %s conflicts: %s\n"),
 		    name, keyDepend+2);
 
-	    AUTO_REALLOC(psp->problems, psp->num);
+	    AUTO_REALLOC(psp->problems, psp->num, 8);
 
 	    {	rpmDependencyConflict pp = psp->problems + psp->num;
 		pp->byHeader = headerLink(h);

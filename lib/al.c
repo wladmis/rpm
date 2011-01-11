@@ -379,7 +379,7 @@ alAddPackage(availableList al,
     int i;
     int pkgNum;
 
-    AUTO_REALLOC(al->list, al->size);
+    AUTO_REALLOC(al->list, al->size, 8);
     pkgNum = al->size++;
     p = al->list + pkgNum;
     p->h = headerLink(h);	/* XXX reference held by transaction set */

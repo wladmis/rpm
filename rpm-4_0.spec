@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt99.M51.2
+Release: alt100.10
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -19,6 +19,7 @@ Release: alt99.M51.2
 %def_without db
 %def_without build_topdir
 %def_without selinux
+%def_with profile
 
 # XXX enable at your own risk, CDB access to rpmdb isn't cooked yet.
 %define enable_cdb create cdb
@@ -30,7 +31,7 @@ Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
 Packager: Dmitry V. Levin <ldv@altlinux.org>
 
-# http://git.altlinux.org/people/ldv/packages/?p=rpm.git
+# http://git.altlinux.org/gears/r/rpm.git
 Source: rpm-%version-%release.tar
 
 Provides: %_rpmlibdir/macros.d, %_sysconfdir/%name/macros.d
@@ -45,6 +46,7 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
 %{?_with_selinux:BuildPreReq: libselinux-devel-static >= 2.0.96}
+%{?_with_profile:BuildPreReq: coreutils >= 6.0}
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
 BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
@@ -108,7 +110,7 @@ Requires: %_bindir/subst
 Requires: alternatives >= 0.3.2
 Requires: elfutils >= 0.143-alt1
 Requires: info-install >= 4.11
-Requires: pkgconfig-reqprov pkgconfig-recursion
+Requires: pkgconfig-print-requires-private pkgconfig-recursion
 Requires: rpm-build-perl >= 0.6.2
 Requires: rpm-build-python >= 0.31
 Conflicts: rpm-build-tcl <= 0.2
@@ -222,8 +224,25 @@ export ac_cv_path___SSH=/usr/bin/ssh
 	%{subst_with selinux} \
 	--program-transform-name=
 
-%{!?_enable_debug:%make_build -C lib set.lo CFLAGS='%optflags -O3'}
+set_c_cflags="$(sed -n 's/^CFLAGS = //p' lib/Makefile) -W -Wno-missing-prototypes %{!?_enable_debug:-O3}"
+%make_build -C lib set.lo CFLAGS="$set_c_cflags"
 %make_build YACC='bison -y'
+
+%if_with profile
+rm lib/set.lo lib/librpm.la tools/setcmp.static
+%make_build -C lib set.lo librpm.la CFLAGS="$set_c_cflags -fprofile-generate"
+%make_build -C tools setcmp.static CFLAGS="$(sed -n 's/^CFLAGS = //p' tools/Makefile) -fprofile-generate"
+rpmquery -a --provides |fgrep '= set:' |sort >P
+rpmquery -a --requires |fgrep '= set:' |sort >R
+join -o 1.3,2.3 P R |sort -R >setcmp-data
+./tools/setcmp <setcmp-data >/dev/null
+./tools/setcmp.static <setcmp-data >/dev/null
+ls -l lib/.libs/set.gcda lib/set.gcda
+rm lib/set.lo lib/librpm.la tools/setcmp.static
+%make_build -C lib set.lo CFLAGS="$set_c_cflags -fprofile-use"
+%make_build
+%endif #with profile
+
 %if_with apidocs
 rm -rf apidocs
 make apidocs
@@ -476,8 +495,40 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Jan 11 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.10
+- platform.in: fixed %%configure options for noarch packages.
+
+* Fri Jan 07 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.9
+- set.c: Tweak LRU first-time insertion policy.
+
+* Thu Jan 06 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.8
+- macro.c: Replaced repeated bsearch+qsort calls with custom
+  bsearch+memmove-like routine; rpm startup time is now 10x faster.
+
+* Tue Jan 04 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.7
+- set.c: Reverted Kirill's changes.
+- set.c: Applied aggressive optimization techniques (30%% speed-up).
+
+* Tue Dec 07 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.6
+- rpmRangesOverlap: Optimized out unneeded calls to printDepend().
+- set.c: Cleaned up and optimized (Kirill Shutemov).
+
+* Sat Dec 04 2010 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.5
+- set.c: Implemented LRU caching (2x speed-up, 1M footprint).
+
 * Tue Nov 23 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt99.M51.2
 - Compiled set.c with -O3.
+
+* Tue Nov 23 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.4
+- Compiled set.c with -O3.
+
+* Thu Nov 18 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.3
+- Rebuilt with liblzma.so.5.
+
+* Tue Nov 02 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.2
+- pkgconfig.req: pass --print-requires-private to pkg-config.
+- find-lang: support manpage paths with more than one symbol after dot
+  (closes: #24466).
 
 * Wed Oct 20 2010 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt99.M51.1
 - lib.req, lib.prov: Disabled soname set-versions (Alexey Tourbin).
