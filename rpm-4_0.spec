@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.10
+Release: alt99.M51.3
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -495,8 +495,12 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Jan 11 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt99.M51.3
+- Rebuilt for branch 5.1.
+- Reverted "pkg-config --print-requires-private" change introduced in alt100.2.
+
 * Tue Jan 11 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.10
-- platform.in: fixed %%configure options for noarch packages.
+- platform.in: Fixed %%configure options for noarch packages.
 
 * Fri Jan 07 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.9
 - set.c: Tweak LRU first-time insertion policy.
