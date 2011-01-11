@@ -8,6 +8,8 @@ cd "$RPM_BUILD_ROOT"
 rm -rf .tmp
 mkdir .tmp
 
+>.tmp/files
+>.tmp/links
 >.tmp/src
 
 while read -r f; do
@@ -17,14 +19,37 @@ while read -r f; do
 		continue
 	fi
 	if [ -f "$debugf" ]; then
-		printf '%s\n' "${debugf#.}"
+		printf '%s\n' "${debugf#.}" >>.tmp/files
 	fi
 	if [ -f .debuginfo/links/"$debugf" ]; then
-		cat .debuginfo/links/"$debugf"
+		cat .debuginfo/links/"$debugf" >>.tmp/links
 	fi
 	if [ -s .debuginfo/src/"$debugf" ]; then
 		LC_ALL=C sort -m -u -o .tmp/src .tmp/src .debuginfo/src/"$debugf"
 	fi
 done
 
-cat .tmp/src
+sed 's|\(.*\)/.*|\1|' .tmp/files .tmp/links .tmp/src |sort -u |
+while read -r dir; do
+	while [ -n "$dir" ]; do
+		case $dir in
+			/usr/lib/debug/usr/*/*)
+				printf '%s\n' "$dir" ;;
+			/usr/lib/debug/usr/*)
+				break ;;
+			/usr/lib/debug/*/*)
+				printf '%s\n' "$dir" ;;
+			/usr/lib/debug/*)
+				break ;;
+			/usr/src/debug/*)
+				printf '%s\n' "$dir" ;;
+			*)
+				break ;;
+		esac
+		dir=${dir%/*}
+	done
+done |
+sort -u |
+sed 's/^/%dir /'
+
+sort .tmp/files .tmp/links .tmp/src
