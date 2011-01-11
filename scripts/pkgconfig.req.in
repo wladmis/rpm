@@ -1,6 +1,6 @@
 #!/bin/sh -efu
 #
-# Copyright (C) 2006-2010  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2006  Dmitry V. Levin <ldv@altlinux.org>
 # Copyright (C) 2007  Alexey Tourbin <at@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ reqprov=
 PkgconfigReqProv()
 {
 	local f="$1" out=; shift
-	out=$(pkg-config --print-errors $reqprov "$f") ||
+	out=$(pkg-config --print-errors --print-"${reqprov:?}" "$f") ||
 		Fatal "failed to process $f"
 	[ -n "$out" ] || return 0
 	echo "$out" |while read -r line; do
@@ -64,7 +64,7 @@ PkgconfigReqProv()
 }
 
 case "${0##*/}" in
-	pkgconfig.req*) reqprov='--print-requires --print-requires-private' ArgvFileAction PkgconfigReqProv "$@" ;;
-	pkgconfig.prov*) reqprov=--print-provides ArgvFileAction PkgconfigReqProv "$@" ;;
+	pkgconfig.req*) reqprov=requires ArgvFileAction PkgconfigReqProv "$@" ;;
+	pkgconfig.prov*) reqprov=provides ArgvFileAction PkgconfigReqProv "$@" ;;
 	*) Fatal "req/prov method not recognized" ;;
 esac

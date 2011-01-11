@@ -110,7 +110,7 @@ Requires: %_bindir/subst
 Requires: alternatives >= 0.3.2
 Requires: elfutils >= 0.143-alt1
 Requires: info-install >= 4.11
-Requires: pkgconfig-print-requires-private pkgconfig-recursion
+Requires: pkgconfig-reqprov pkgconfig-recursion
 Requires: rpm-build-perl >= 0.6.2
 Requires: rpm-build-python >= 0.31
 Conflicts: rpm-build-tcl <= 0.2
