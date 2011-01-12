@@ -150,6 +150,59 @@ struct Req *freeRequires(struct Req *r)
 static
 void fiPrune(TFI_t fi, char pruned[])
 {
+    int *dil_;
+    const char **bnl, **dnl;
+    int bnc, dnc, dic;
+    int ok =
+       fi->hge(fi->h, RPMTAG_BASENAMES, NULL, (void **) &bnl, &bnc) &&
+       fi->hge(fi->h, RPMTAG_DIRNAMES, NULL, (void **) &dnl, &dnc) &&
+       fi->hge(fi->h, RPMTAG_DIRINDEXES, NULL, (void **) &dil_, &dic);
+    assert(ok);
+    assert(fi->fc == bnc);
+    assert(bnc == dic);
+    int i, j;
+    // dil must be copied, cf. relocateFileList
+    int dil[dic];
+    for (i = 0; i < dic; i++)
+	dil[i] = dil_[i];
+    // mark used dirnames
+    int dirused[dnc];
+    bzero(dirused, dnc * sizeof *dirused);
+    for (i = 0; i < bnc; i++)
+	if (!pruned[i])
+	    dirused[dil[i]]++;
+    int propagated;
+    do {
+	propagated = 0;
+	// for each unused dirname
+	for (i = 0; i < dnc; i++) {
+	    if (dirused[i])
+		continue;
+	    // find its corresponding parent_dir+name entry
+	    for (j = 0; j < bnc; j++) {
+		if (pruned[j])
+		    continue;
+		const char *D = dnl[i];
+		const char *d = dnl[dil[j]];
+		int dlen = strlen(d);
+		if (strncmp(D, d, dlen))
+		    continue;
+		const char *b = bnl[j];
+		int blen = strlen(b);
+		if (strncmp(D + dlen, b, blen))
+		    continue;
+		if (strncmp(D + dlen + blen, "/", 2))
+		    continue;
+		// makr parent_dir+name for removal
+		fprintf(stderr, "also prunning dir %s%s\n", d, b);
+		pruned[j] = 1;
+		// decrement parent_dir usage
+		if (--dirused[dil[j]] == 0)
+		    propagated++;
+	    }
+	}
+    }
+    while (propagated);
 }
 
 // prune src dups from pkg1 and add dependency on pkg2
@@ -166,6 +219,8 @@ void pruneSrc1(Package pkg1, Package pkg2)
     void cb(char *f, int i1, int i2)
     {
 	(void) i2;
+	if (S_ISDIR(fi1->fmodes[i1]))
+	    return;
 	const char src[] = "/usr/src/debug/";
 	if (strncmp(f, src, sizeof(src) - 1))
 	    return;
