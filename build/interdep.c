@@ -160,7 +160,7 @@ void fiPrune(TFI_t fi, char pruned[])
     assert(ok);
     assert(fi->fc == bnc);
     assert(bnc == dic);
-    int i, j;
+    int i, j, k;
     // dil must be copied, cf. relocateFileList
     int dil[dic];
     for (i = 0; i < dic; i++)
@@ -203,6 +203,102 @@ void fiPrune(TFI_t fi, char pruned[])
 	}
     }
     while (propagated);
+    // new count for bnc-like values
+    int oldc = bnc;
+    int newc = 0;
+    for (i = 0; i < oldc; i++)
+	if (!pruned[i])
+	    newc++;
+    // establish new dirnames and dirindexes
+    for (i = 0, j = 0; i < dnc; i++) {
+	if (!dirused[i])
+	    continue;
+	if (i == j)
+	    goto skip;
+	dnl[j] = dnl[i];
+	for (k = 0; k < dic; k++)
+	    if (dil[k] == i)
+		dil[k] = j;
+    skip:
+	j++;
+    }
+    dnc = j;
+    // handle bnl, dnl and dil
+#define PruneV(v) \
+    for (i = 0, j = 0; i < oldc; i++) \
+	if (!pruned[i]) \
+	    v[j++] = v[i]
+    PruneV(bnl);
+    PruneV(dil);
+    PruneV(fi->bnl);
+    PruneV(fi->dil);
+    fi->hme(fi->h, RPMTAG_BASENAMES, RPM_STRING_ARRAY_TYPE, bnl, newc);
+    fi->hme(fi->h, RPMTAG_DIRNAMES, RPM_STRING_ARRAY_TYPE, dnl, dnc);
+    fi->hme(fi->h, RPMTAG_DIRINDEXES, RPM_INT32_TYPE, dil, newc);
+    bnl = fi->hfd(bnl, RPM_STRING_ARRAY_TYPE);
+    dnl = fi->hfd(dnl, RPM_STRING_ARRAY_TYPE);
+    // prune header tags
+    rpmTagType tagt;
+    int tagc;
+    const char **strv;
+#define PruneStrTag(tag) \
+    if (fi->hge(fi->h, tag, &tagt, (void **) &strv, &tagc)) { \
+	assert(tagt == RPM_STRING_ARRAY_TYPE); \
+	assert(tagc == oldc); \
+	PruneV(strv); \
+	fi->hme(fi->h, tag, RPM_STRING_ARRAY_TYPE, strv, newc); \
+	fi->hfd(strv, RPM_STRING_ARRAY_TYPE); \
+    }
+    short *INT16p, INT16v[oldc];
+    int *INT32p, INT32v[oldc];
+#define PruneIntTag(INT, tag) \
+    if (fi->hge(fi->h, tag, &tagt, (void **) &INT ## p, &tagc)) { \
+	assert(tagt == RPM_ ## INT ## _TYPE); \
+	assert(tagc == oldc); \
+	for (i = 0; i < oldc; i++) \
+	    INT ## v[i] = INT ## p[i]; \
+	PruneV(INT ## v); \
+	fi->hme(fi->h, tag, RPM_ ## INT ##_TYPE, INT ## v, newc); \
+    }
+#define PruneI16Tag(tag) PruneIntTag(INT16, tag)
+#define PruneI32Tag(tag) PruneIntTag(INT32, tag)
+    PruneI32Tag(RPMTAG_FILESIZES);
+    PruneStrTag(RPMTAG_FILEUSERNAME);
+    PruneStrTag(RPMTAG_FILEGROUPNAME);
+    PruneI32Tag(RPMTAG_FILEMTIMES);
+    PruneI16Tag(RPMTAG_FILEMODES);
+    PruneI16Tag(RPMTAG_FILERDEVS);
+    PruneI32Tag(RPMTAG_FILEDEVICES);
+    PruneI32Tag(RPMTAG_FILEINODES);
+    PruneStrTag(RPMTAG_FILELANGS);
+    PruneStrTag(RPMTAG_FILEMD5S);
+    PruneStrTag(RPMTAG_FILELINKTOS);
+    PruneI32Tag(RPMTAG_FILEVERIFYFLAGS);
+    PruneI32Tag(RPMTAG_FILEFLAGS);
+    // update fi, cf. genCpioListAndHeader
+    PruneV(fi->apath);
+    PruneV(fi->actions);
+    PruneV(fi->fmapflags);
+    PruneV(fi->fuids);
+    PruneV(fi->fgids);
+    struct transactionFileInfo_s save_fi;
+#define MV(a) save_fi.a = fi->a; fi->a = NULL
+    MV(bnl); MV(dnl); MV(dil);
+    MV(apath); MV(actions); MV(fmapflags); MV(fuids); MV(fgids);
+    save_fi.h = fi->h;
+    save_fi.astriplen = fi->astriplen;
+    freeFi(fi);
+    bzero(fi, sizeof *fi);
+    fi->type = TR_ADDED;
+    loadFi(save_fi.h, fi);
+    assert(fi->fc == newc);
+    fi->dnl = _free(fi->dnl);
+    fi->bnl = _free(fi->bnl);
+#undef MV
+#define MV(a) fi->a = save_fi.a
+    MV(bnl); MV(dnl); MV(dil);
+    MV(apath); MV(actions); MV(fmapflags); MV(fuids); MV(fgids);
+    fi->astriplen = save_fi.astriplen;
 }
 
 // prune src dups from pkg1 and add dependency on pkg2
