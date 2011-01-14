@@ -1463,20 +1463,14 @@ static int pathIsCanonical(const char *path)
 /**
  * Add a file to the package manifest.
  * @param fl		package file tree walk data
- * @param diskURL	path to file
+ * @param diskPath	path to file
  * @param statp		file stat (possibly NULL)
- * @return		0 on success
+ * @return		RPMRC_OK on success
  */
-static int addFile(FileList fl, const char * diskURL,
-		/*@null@*/ struct stat * statp)
-	/*@globals rpmGlobalMacroContext,
-		fileSystem@*/
-	/*@modifies *statp, *fl, fl->processingFailed,
-		fl->fileList, fl->fileListRecsAlloced, fl->fileListRecsUsed,
-		fl->totalFileSize, fl->fileCount, fl->inFtw, fl->isDir,
-		rpmGlobalMacroContext, fileSystem @*/
+static rpmRC addFile(FileList fl, const char * diskPath,
+		struct stat * statp)
 {
-    const char *fileURL = diskURL;
+    const char *cpioPath = diskPath;
     struct stat statbuf;
     mode_t fileMode;
     uid_t fileUid;
@@ -1495,41 +1489,34 @@ static int addFile(FileList fl, const char * diskURL,
      *  myftw			path			stat
      *
      */
-    {	const char *fileName;
-	(void) urlPath(fileURL, &fileName);
-	if (fl->buildRootURL && strcmp(fl->buildRootURL, "/")) {
-	    size_t br_len = strlen(fl->buildRootURL);
-	    if (strncmp(fl->buildRootURL, fileURL, br_len) == 0
-	    && (fileURL[br_len] == '/' || fileURL[br_len] == '\0'))
-		fileURL += strlen(fl->buildRootURL);
-	    else {
-		rpmError(RPMERR_BADSPEC, _("File doesn't match buildroot (%s): %s\n"),
-			fl->buildRootURL, fileURL);
-		fl->processingFailed = 1;
-		return RPMERR_BADSPEC;
-	    }
+    if (fl->buildRootURL && strcmp(fl->buildRootURL, "/")) {
+	size_t br_len = strlen(fl->buildRootURL);
+	if (strncmp(fl->buildRootURL, cpioPath, br_len) == 0
+	&& (cpioPath[br_len] == '/' || cpioPath[br_len] == '\0'))
+	    cpioPath += br_len;
+	else {
+	    rpmlog(RPMLOG_ERR, _("File doesn't match buildroot (%s): %s\n"),
+		    fl->buildRootURL, cpioPath);
+	    fl->processingFailed = 1;
+	    return RPMRC_FAIL;
 	}
     }
 
     /* XXX make sure '/' can be packaged also */
-    /*@-branchstate@*/
-    if (*fileURL == '\0')
-	fileURL = "/";
-    /*@=branchstate@*/
+    if (*cpioPath == '\0')
+	cpioPath = "/";
 
     /* cannot happen?! */
-    if (*fileURL != '/') {
-	rpmError(RPMERR_BADSPEC,
-	    _("File must begin with \"/\": %s\n"), fileURL);
+    if (*cpioPath != '/') {
+	rpmlog(RPMLOG_ERR, _("File must begin with \"/\": %s\n"), cpioPath);
 	fl->processingFailed = 1;
-	return RPMERR_BADSPEC;
+	return RPMRC_FAIL;
     }
 
-    if (!pathIsCanonical(fileURL)) {
-	rpmError(RPMERR_BADSPEC,
-	    _("File path must be canonical: %s\n"), fileURL);
+    if (!pathIsCanonical(cpioPath)) {
+	rpmlog(RPMLOG_ERR, _("File path must be canonical: %s\n"), cpioPath);
 	fl->processingFailed = 1;
-	return RPMERR_BADSPEC;
+	return RPMRC_FAIL;
     }
 
     if (statp == NULL) {
@@ -1548,33 +1535,33 @@ static int addFile(FileList fl, const char * diskURL,
 	    statp->st_atime = now;
 	    statp->st_mtime = now;
 	    statp->st_ctime = now;
-	} else if (Lstat(diskURL, statp)) {
-	    rpmError(RPMERR_BADSPEC, _("File not found: %s\n"), diskURL);
+	} else if (lstat(diskPath, statp)) {
+	    rpmlog(RPMLOG_ERR, _("File not found: %s\n"), diskPath);
 	    fl->processingFailed = 1;
-	    return RPMERR_BADSPEC;
+	    return RPMRC_FAIL;
 	}
     }
 
     /* intermediate path component must be directories, not symlinks */
     {
 	struct stat st;
-	size_t du_len = strlen(diskURL);
-	char *du = alloca(du_len + 1);
-	char *p = du + du_len - strlen(fileURL);
-	strcpy(du, diskURL);
+	size_t dp_len = strlen(diskPath);
+	char *dp = alloca(dp_len + 1);
+	char *p = dp + dp_len - strlen(cpioPath);
+	strcpy(dp, diskPath);
 	while ((p = strchr(p + 1, '/'))) {
 	    *p = '\0';
-	    if (Lstat(du, &st)) {
-		rpmError(RPMERR_BADSPEC, _("File not found: %s\n"), diskURL);
+	    if (lstat(dp, &st)) {
+		rpmlog(RPMLOG_ERR, _("File not found: %s\n"), diskPath);
 		fl->processingFailed = 1;
-		return RPMERR_BADSPEC;
+		return RPMRC_FAIL;
 	    }
 	    if (!S_ISDIR(st.st_mode)) {
-		rpmError(RPMERR_BADSPEC,
+		rpmlog(RPMLOG_ERR,
 			_("File path component must be directory (%s): %s\n"),
-			du, diskURL);
+			dp, diskPath);
 		fl->processingFailed = 1;
-		return RPMERR_BADSPEC;
+		return RPMRC_FAIL;
 	    }
 	    *p = '/';
 	}
@@ -1587,7 +1574,7 @@ static int addFile(FileList fl, const char * diskURL,
 	
 	fl->inFtw = 1;  /* Flag to indicate file has buildRootURL prefixed */
 	fl->isDir = 1;  /* Keep it from following myftw() again         */
-	(void) myftw(diskURL, 16, (myftwFunc) addFile, fl);
+	(void) myftw(diskPath, 16, (myftwFunc) addFile, fl);
 	fl->isDir = 0;
 	fl->inFtw = 0;
 	return 0;
@@ -1615,30 +1602,17 @@ static int addFile(FileList fl, const char * diskURL,
 	fileGname = getGname(fileGid);
     }
 	
-#if 0	/* XXX this looks dumb to me */
-    if (! (fileUname && fileGname)) {
-	rpmError(RPMERR_BADSPEC, _("Bad owner/group: %s\n"), diskName);
-	fl->processingFailed = 1;
-	return RPMERR_BADSPEC;
-    }
-#else
     /* Default user/group to builder's user/group */
     if (fileUname == NULL)
 	fileUname = getUname(getuid());
     if (fileGname == NULL)
 	fileGname = getGname(getgid());
-#endif
     
-#ifdef	DYING	/* XXX duplicates with %exclude, use psm.c output instead. */
-    rpmMessage(RPMMESS_DEBUG, _("File%5d: %07o %s.%s\t %s\n"), fl->fileCount,
-	(unsigned)fileMode, fileUname, fileGname, fileURL);
-#endif
-
     /* This check must be consistent with check-files script. */
     if (S_ISREG(fileMode) || S_ISLNK(fileMode)) {
-      appendStringBuf(check_fileList, diskURL);
+      appendStringBuf(check_fileList, diskPath);
       appendStringBuf(check_fileList, "\n");
-      check_fileListLen += strlen(diskURL) + 1;
+      check_fileListLen += strlen(diskPath) + 1;
     }
 
     /* Add to the file list */
@@ -1656,8 +1630,8 @@ static int addFile(FileList fl, const char * diskURL,
 	flp->fl_uid = fileUid;
 	flp->fl_gid = fileGid;
 
-	flp->fileURL = xstrdup(fileURL);
-	flp->diskURL = xstrdup(diskURL);
+	flp->fileURL = xstrdup(cpioPath);
+	flp->diskURL = xstrdup(diskPath);
 	flp->uname = fileUname;
 	flp->gname = fileGname;
 
@@ -1689,7 +1663,7 @@ static int addFile(FileList fl, const char * diskURL,
     fl->fileListRecsUsed++;
     fl->fileCount++;
 
-    return 0;
+    return RPMRC_OK;
 }
 
 /**
