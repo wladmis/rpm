@@ -5,6 +5,7 @@ ValidateBuildRoot
 
 cd "$RPM_BUILD_ROOT"
 
+# Strip binaries and create .debug files under /usr/lib/debug.
 prune_paths='-path ./usr/share -o -path ./lib/firmware -o -path ./usr/lib/debug'
 find . '(' -path './.*' -o $prune_paths ')' -prune -o -type f -print |
 file -NF$'\t' -f - |sed -n 's/\t.* ELF .* \(executable\|shared object\), .*, not stripped.*//p' |
@@ -24,4 +25,18 @@ while read -r nlink ino f; do
 	@RPMCONFIGDIR@/debugedit -b "$RPM_BUILD_DIR" -d /usr/src/debug "$f"
 	eu-strip --remove-comment -f "$debugf" "$f"
 	chmod 644 "$debugf"
+done
+
+# Make symbolic links that mimic the original tree.
+find . '(' -path './.*' -o $prune_paths ')' -prune -o -type l -print |
+while read -r l; do
+	f=$(readlink -vm "$l")
+	f=${f#$RPM_BUILD_ROOT}
+	debugf=./usr/lib/debug$f.debug
+	[ -f "$debugf" ] || continue
+	debugl=./usr/lib/debug${l#.}.debug
+	mkdir -p "${debugl%/*}"
+	ln -snf "$(relative "${debugf#.}" "${debugl#.}")" "$debugl"
+	mkdir -p .debuginfo/links/"${debugf%/*}"
+	printf '%s\n' "${debugl#.}" >>.debuginfo/links/"$debugf"
 done
