@@ -16,7 +16,6 @@
 
 #include "buildio.h"
 
-#include "myftw.h"
 #include "debug.h"
 
 /*@access Header @*/
@@ -103,7 +102,6 @@ typedef struct FileList_s {
     int devminor;
     
     int isDir;
-    int inFtw;
     int currentFlags;
     specdFlags currentSpecdFlags;
     int currentVerifyFlags;
@@ -1460,6 +1458,9 @@ static int pathIsCanonical(const char *path)
     return 0;
 }
 
+/* forward ref */
+static rpmRC recurseDir(FileList fl, const char * diskPath);
+
 /**
  * Add a file to the package manifest.
  * @param fl		package file tree walk data
@@ -1568,16 +1569,8 @@ static rpmRC addFile(FileList fl, const char * diskPath,
     }
 
     if ((! fl->isDir) && S_ISDIR(statp->st_mode)) {
-	/* We use our own ftw() call, because ftw() uses stat()    */
-	/* instead of lstat(), which causes it to follow symlinks! */
-	/* It also has better callback support.                    */
-	
-	fl->inFtw = 1;  /* Flag to indicate file has buildRootURL prefixed */
-	fl->isDir = 1;  /* Keep it from following myftw() again         */
-	(void) myftw(diskPath, 16, (myftwFunc) addFile, fl);
-	fl->isDir = 0;
-	fl->inFtw = 0;
-	return 0;
+/* FIX: fl->buildRoot may be NULL */
+	return recurseDir(fl, diskPath);
     }
 
     fileMode = statp->st_mode;
@@ -1666,6 +1659,61 @@ static rpmRC addFile(FileList fl, const char * diskPath,
     return RPMRC_OK;
 }
 
+#include <fts.h>
+
+/**
+ * Add directory (and all of its files) to the package manifest.
+ * @param fl		package file tree walk data
+ * @param diskPath	path to file
+ * @return		RPMRC_OK on success
+ */
+static rpmRC recurseDir(FileList fl, const char * diskPath)
+{
+    char * ftsSet[2];
+    FTS * ftsp;
+    FTSENT * fts;
+    int myFtsOpts = (FTS_COMFOLLOW | FTS_NOCHDIR | FTS_PHYSICAL);
+    rpmRC rc = RPMRC_FAIL;
+
+    fl->isDir = 1;  /* Keep it from following myftw() again         */
+
+    ftsSet[0] = (char *) diskPath;
+    ftsSet[1] = NULL;
+    ftsp = fts_open(ftsSet, myFtsOpts, NULL);
+    while ((fts = fts_read(ftsp)) != NULL) {
+	switch (fts->fts_info) {
+	case FTS_D:		/* preorder directory */
+	case FTS_F:		/* regular file */
+	case FTS_SL:		/* symbolic link */
+	case FTS_SLNONE:	/* symbolic link without target */
+	case FTS_DEFAULT:	/* none of the above */
+	    rc = addFile(fl, fts->fts_accpath, fts->fts_statp);
+	    break;
+	case FTS_DOT:		/* dot or dot-dot */
+	case FTS_DP:		/* postorder directory */
+	    rc = RPMRC_OK;
+	    break;
+	case FTS_NS:		/* stat(2) failed */
+	case FTS_DNR:		/* unreadable directory */
+	case FTS_ERR:		/* error; errno is set */
+	case FTS_DC:		/* directory that causes cycles */
+	case FTS_NSOK:		/* no stat(2) requested */
+	case FTS_INIT:		/* initialized only */
+	case FTS_W:		/* whiteout object */
+	default:
+	    rc = RPMRC_FAIL;
+	    break;
+	}
+	if (rc)
+	    break;
+    }
+    (void) fts_close(ftsp);
+
+    fl->isDir = 0;
+
+    return rc;
+}
+
 /**
  * Add a file to a binary package.
  * @param pkg
@@ -1679,7 +1727,7 @@ static int processBinaryFile(/*@unused@*/ Package pkg, FileList fl,
 		fileSystem@*/
 	/*@modifies *fl, fl->processingFailed,
 		fl->fileList, fl->fileListRecsAlloced, fl->fileListRecsUsed,
-		fl->totalFileSize, fl->fileCount, fl->inFtw, fl->isDir,
+		fl->totalFileSize, fl->fileCount, fl->isDir,
 		rpmGlobalMacroContext, fileSystem @*/
 {
     int doGlob;
@@ -1819,7 +1867,6 @@ static int processPackageFiles(Spec spec, Package pkg,
     fl.isSpecialDoc = 0;
 
     fl.isDir = 0;
-    fl.inFtw = 0;
     fl.currentFlags = 0;
     fl.currentVerifyFlags = 0;
     
@@ -1873,7 +1920,6 @@ static int processPackageFiles(Spec spec, Package pkg,
 	
 	/* Reset for a new line in %files */
 	fl.isDir = 0;
-	fl.inFtw = 0;
 	fl.currentFlags = 0;
 	/* turn explicit flags into %def'd ones (gosh this is hacky...) */
 	fl.currentSpecdFlags = ((unsigned)fl.defSpecdFlags) >> 8;
@@ -1940,7 +1986,6 @@ static int processPackageFiles(Spec spec, Package pkg,
 
 	/* Reset for %doc */
 	fl.isDir = 0;
-	fl.inFtw = 0;
 	fl.currentFlags = 0;
 	fl.currentVerifyFlags = 0;
 
