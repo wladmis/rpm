@@ -89,7 +89,6 @@ static int check_fileListLen = 0;
  */
 typedef struct FileList_s {
 /*@only@*/ const char * buildRootURL;
-/*@only@*/ const char * prefix;
 
     int fileCount;
     int totalFileSize;
@@ -1057,8 +1056,6 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
     /* Generate the header. */
     if (! isSrc) {
 	skipLen = 1;
-	if (fl->prefix)
-	    skipLen += strlen(fl->prefix);
     }
 
     for (i = 0, flp = fl->fileList; i < fl->fileListRecsUsed; i++, flp++) {
@@ -1535,24 +1532,6 @@ static int addFile(FileList fl, const char * diskURL,
 	return RPMERR_BADSPEC;
     }
 
-    /* If we are using a prefix, validate the file */
-    if (!fl->inFtw && fl->prefix) {
-	const char *prefixTest;
-	const char *prefixPtr = fl->prefix;
-
-	(void) urlPath(fileURL, &prefixTest);
-	while (*prefixPtr && *prefixTest && (*prefixTest == *prefixPtr)) {
-	    prefixPtr++;
-	    prefixTest++;
-	}
-	if (*prefixPtr || (*prefixTest && *prefixTest != '/')) {
-	    rpmError(RPMERR_BADSPEC, _("File doesn't match prefix (%s): %s\n"),
-		     fl->prefix, fileURL);
-	    fl->processingFailed = 1;
-	    return RPMERR_BADSPEC;
-	}
-    }
-
     if (statp == NULL) {
 	statp = &statbuf;
 	memset(statp, 0, sizeof(*statp));
@@ -1858,11 +1837,6 @@ static int processPackageFiles(Spec spec, Package pkg,
     /* XXX spec->buildRootURL == NULL, then xstrdup("") is returned */
     fl.buildRootURL = rpmGenPath(spec->rootURL, spec->buildRootURL, NULL);
 
-    if (hge(pkg->header, RPMTAG_DEFAULTPREFIX, NULL, (void **)&fl.prefix, NULL))
-	fl.prefix = xstrdup(fl.prefix);
-    else
-	fl.prefix = NULL;
-
     fl.fileCount = 0;
     fl.totalFileSize = 0;
     fl.processingFailed = 0;
@@ -2039,7 +2013,6 @@ static int processPackageFiles(Spec spec, Package pkg,
     
 exit:
     fl.buildRootURL = _free(fl.buildRootURL);
-    fl.prefix = _free(fl.prefix);
 
     freeAttrRec(&fl.cur_ar);
     freeAttrRec(&fl.def_ar);
@@ -2186,7 +2159,6 @@ int processSourceFiles(Spec spec)
     fl.processingFailed = 0;
     fl.fileListRecsUsed = 0;
     fl.totalFileSize = 0;
-    fl.prefix = NULL;
     fl.buildRootURL = NULL;
 
     s = getStringBuf(sourceFiles);
