@@ -788,50 +788,6 @@ static int parseForLang(char * buf, FileList fl)
 
 /**
  */
-static int parseForRegexLang(const char * fileName, /*@out@*/ char ** lang)
-	/*@globals rpmGlobalMacroContext @*/
-	/*@modifies *lang, rpmGlobalMacroContext @*/
-{
-    static int initialized = 0;
-    static int hasRegex = 0;
-    static regex_t compiledPatt;
-    static char buf[BUFSIZ];
-    int x;
-    regmatch_t matches[2];
-    const char *s;
-
-    if (! initialized) {
-	const char *patt = rpmExpand("%{?_langpatt}", NULL);
-	int rc = 0;
-	if (!(patt && *patt))
-	    rc = 1;
-	else if (regcomp(&compiledPatt, patt, REG_EXTENDED))
-	    rc = -1;
-	patt = _free(patt);
-	if (rc)
-	    return rc;
-	hasRegex = 1;
-	initialized = 1;
-    }
-    
-    memset(matches, 0, sizeof(matches));
-    if (! hasRegex || regexec(&compiledPatt, fileName, 2, matches, REG_NOTEOL))
-	return 1;
-
-    /* Got match */
-    s = fileName + matches[1].rm_eo - 1;
-    x = matches[1].rm_eo - matches[1].rm_so;
-    buf[x] = '\0';
-    while (x) {
-	buf[--x] = *s--;
-    }
-    if (lang)
-	*lang = buf;
-    return 0;
-}
-
-/**
- */
 /*@-exportlocal -exportheadervar@*/
 /*@unchecked@*/
 VFA_t virtualFileAttributes[] = {
@@ -1530,7 +1486,6 @@ static int addFile(FileList fl, const char * diskURL,
     gid_t fileGid;
     const char *fileUname;
     const char *fileGname;
-    char *lang;
     
     /* Path may have prepended buildRootURL, so locate the original filename. */
     /*
@@ -1742,8 +1697,6 @@ static int addFile(FileList fl, const char * diskURL,
 			*ncl++ = *ocl;
 		*ncl = '\0';
 	    }
-	} else if (! parseForRegexLang(fileURL, &lang)) {
-	    flp->langs = xstrdup(lang);
 	} else {
 	    flp->langs = xstrdup("");
 	}

@@ -231,11 +231,6 @@
 #	
 %_install_langs	all
 
-#
-#	Deprecated.
-#
-#%_langpatt
-
 #	A colon separated list of paths where files should *not* be installed.
 #	Usually, these are network file system mount points.
 #
