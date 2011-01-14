@@ -1459,37 +1459,20 @@ static int pathIsCanonical(const char *path)
 }
 
 /* forward ref */
+static rpmRC addFile1(FileList fl, const char * diskPath, struct stat * statp);
 static rpmRC recurseDir(FileList fl, const char * diskPath);
 
 /**
  * Add a file to the package manifest.
  * @param fl		package file tree walk data
  * @param diskPath	path to file
- * @param statp		file stat (possibly NULL)
  * @return		RPMRC_OK on success
  */
-static rpmRC addFile(FileList fl, const char * diskPath,
-		struct stat * statp)
+static rpmRC addFile(FileList fl, const char * diskPath)
 {
     const char *cpioPath = diskPath;
-    struct stat statbuf;
-    mode_t fileMode;
-    uid_t fileUid;
-    gid_t fileGid;
-    const char *fileUname;
-    const char *fileGname;
     
     /* Path may have prepended buildRootURL, so locate the original filename. */
-    /*
-     * XXX There are 3 types of entry into addFile:
-     *
-     *	From			diskUrl			statp
-     *	=====================================================
-     *  processBinaryFile	path			NULL
-     *  processBinaryFile	glob result path	NULL
-     *  myftw			path			stat
-     *
-     */
     if (fl->buildRootURL && strcmp(fl->buildRootURL, "/")) {
 	size_t br_len = strlen(fl->buildRootURL);
 	if (strncmp(fl->buildRootURL, cpioPath, br_len) == 0
@@ -1520,8 +1503,8 @@ static rpmRC addFile(FileList fl, const char * diskPath,
 	return RPMRC_FAIL;
     }
 
-    if (statp == NULL) {
-	statp = &statbuf;
+    struct stat statbuf, *statp = &statbuf;
+    {
 	memset(statp, 0, sizeof(*statp));
 	if (fl->devtype) {
 	    time_t now = time(NULL);
@@ -1568,14 +1551,27 @@ static rpmRC addFile(FileList fl, const char * diskPath,
 	}
     }
 
-    if ((! fl->isDir) && S_ISDIR(statp->st_mode)) {
-/* FIX: fl->buildRoot may be NULL */
+    if ((! fl->isDir) && S_ISDIR(statp->st_mode))
 	return recurseDir(fl, diskPath);
-    }
+    else
+	return addFile1(fl, diskPath, statp);
+}
 
-    fileMode = statp->st_mode;
-    fileUid = statp->st_uid;
-    fileGid = statp->st_gid;
+/* implementation - no expensive tests */
+static rpmRC addFile1(FileList fl, const char * diskPath, struct stat * statp)
+{
+    const char *cpioPath = diskPath;
+    if (fl->buildRootURL && strcmp(fl->buildRootURL, "/"))
+	cpioPath += strlen(fl->buildRootURL);
+    if (*cpioPath == '\0')
+	cpioPath = "/";
+    assert(*cpioPath == '/');
+
+    mode_t fileMode = statp->st_mode;
+    uid_t fileUid = statp->st_uid;
+    gid_t fileGid = statp->st_gid;
+    const char *fileUname;
+    const char *fileGname;
 
     if (S_ISDIR(fileMode) && fl->cur_ar.ar_dmodestr) {
 	fileMode &= S_IFMT;
@@ -1675,8 +1671,6 @@ static rpmRC recurseDir(FileList fl, const char * diskPath)
     int myFtsOpts = (FTS_COMFOLLOW | FTS_NOCHDIR | FTS_PHYSICAL);
     rpmRC rc = RPMRC_FAIL;
 
-    fl->isDir = 1;  /* Keep it from following myftw() again         */
-
     ftsSet[0] = (char *) diskPath;
     ftsSet[1] = NULL;
     ftsp = fts_open(ftsSet, myFtsOpts, NULL);
@@ -1687,7 +1681,7 @@ static rpmRC recurseDir(FileList fl, const char * diskPath)
 	case FTS_SL:		/* symbolic link */
 	case FTS_SLNONE:	/* symbolic link without target */
 	case FTS_DEFAULT:	/* none of the above */
-	    rc = addFile(fl, fts->fts_accpath, fts->fts_statp);
+	    rc = addFile1(fl, fts->fts_accpath, fts->fts_statp);
 	    break;
 	case FTS_DOT:		/* dot or dot-dot */
 	case FTS_DP:		/* postorder directory */
@@ -1708,8 +1702,6 @@ static rpmRC recurseDir(FileList fl, const char * diskPath)
 	    break;
     }
     (void) fts_close(ftsp);
-
-    fl->isDir = 0;
 
     return rc;
 }
@@ -1773,7 +1765,7 @@ static int processBinaryFile(/*@unused@*/ Package pkg, FileList fl,
 	rc = rpmGlob(diskURL, &argc, &argv);
 	if (rc == 0 && argc >= 1 && !myGlobPatternP(argv[0])) {
 	    for (i = 0; i < argc; i++) {
-		rc = addFile(fl, argv[i], NULL);
+		rc = addFile(fl, argv[i]);
 		argv[i] = _free(argv[i]);
 	    }
 	    argv = _free(argv);
@@ -1784,7 +1776,7 @@ static int processBinaryFile(/*@unused@*/ Package pkg, FileList fl,
 	}
 	/*@=branchstate@*/
     } else {
-	rc = addFile(fl, diskURL, NULL);
+	rc = addFile(fl, diskURL);
     }
 
 exit:
