@@ -5,7 +5,10 @@ ValidateBuildRoot
 
 cd "$RPM_BUILD_ROOT"
 
-# Strip binaries and create .debug files under /usr/lib/debug.
+rm -rf .tmp
+mkdir .tmp
+
+# Strip binaries, create .debug files under /usr/lib/debug and install sources into /usr/src/debug.
 prune_paths='-path ./usr/share -o -path ./lib/firmware -o -path ./usr/lib/debug'
 find . '(' -path './.*' -o $prune_paths ')' -prune -o -type f -print |
 file -NF$'\t' -f - |sed -n 's/\t.* ELF .* \(executable\|shared object\), .*, not stripped.*//p' |
@@ -17,14 +20,25 @@ while read -r nlink ino f; do
 		eval f0="\${f0_$ino-}"
 		if [ -n "$f0" ]; then
 			ln -nf "$f0" "$debugf"
+			mkdir -p .debuginfo/src/"${debugf%/*}"
+			ln -nf .debuginfo/src/"$f0" .debuginfo/src/"$debugf"
 			continue
 		else
 			eval f0_$ino="\$f"
 		fi
 	fi
-	@RPMCONFIGDIR@/debugedit -b "$RPM_BUILD_DIR" -d /usr/src/debug "$f"
+	@RPMCONFIGDIR@/debugedit -b "$RPM_BUILD_DIR" -d /usr/src/debug -l .tmp/src "$f"
 	eu-strip --remove-comment -f "$debugf" "$f"
 	chmod 644 "$debugf"
+	mkdir -p .debuginfo/src/"${debugf%/*}"
+	awk 'BEGIN{RS="\0";ORS="\n"}{print}' .tmp/src |LC_ALL=C sort -u |
+	while read -r src; do
+		[ -f "$RPM_BUILD_DIR"/"$src" ] || continue
+		[ -f ./usr/src/debug/"$src" ] ||
+		install -pD -m644 "$RPM_BUILD_DIR"/"$src" ./usr/src/debug/"$src"
+		printf '%s\n' /usr/src/debug/"$src"
+	done >.debuginfo/src/"$debugf"
+	rm .tmp/src
 done
 
 # Make symbolic links that mimic the original tree.
