@@ -7,8 +7,20 @@
  */
 
 #include "system.h"
+#include "psm.h" // TFI_t
 #include "rpmbuild.h"
 #include "interdep.h"
+
+static
+const char *pkgName(Package pkg)
+{
+    TFI_t fi = pkg->cpioList;
+    if (fi)
+	return fi->name;
+    const char *name;
+    headerNVR(pkg->header, &name, NULL, NULL);
+    return name;
+}
 
 static
 const char *skipPrefixDash(const char *str, const char *prefix)
@@ -133,9 +145,50 @@ struct Req *freeRequires(struct Req *r)
     return _free(r);
 }
 
+static
+void pruneSrc1(Package pkg1, Package pkg2)
+{
+    fprintf(stderr, "remove sources from %s because it requires %s\n",
+	    pkgName(pkg1), pkgName(pkg2));
+}
+
+static
+void pruneDebuginfoSrc(struct Req *r, Spec spec)
+{
+    int i1, i2;
+    struct Pair r1, r2;
+    const char *Nd, *Np;
+    const char *suf;
+    // r1 = { pkg1-debuginfo, pkg1 }
+    for (i1 = 0; i1 < r->c; i1++) {
+	r1 = r->v[i1];
+	Nd = pkgName(r1.pkg1);
+	Np = pkgName(r1.pkg2);
+	suf = skipPrefixDash(Nd, Np);
+	if (suf == NULL || strcmp(suf, "debuginfo"))
+	    continue;
+	// r2 = { pkg2-debuginfo, pkg2 }
+	for (i2 = i1; i2 < r->c; i2++) {
+	    r2 = r->v[i2];
+	    Nd = pkgName(r2.pkg1);
+	    Np = pkgName(r2.pkg2);
+	    suf = skipPrefixDash(Nd, Np);
+	    if (suf == NULL || strcmp(suf, "debuginfo"))
+		continue;
+	    // (pkg1 <-> pkg2) => (pkg1-debuginfo <-> pkg2-debuginfo)
+	    if (Requires(r, r1.pkg2, r2.pkg2))
+		pruneSrc1(r1.pkg1, r2.pkg1);
+	    // "else" guards against mutual deletions
+	    else if (Requires(r, r2.pkg2, r1.pkg2))
+		pruneSrc1(r2.pkg1, r1.pkg1);
+	}
+    }
+}
+
 int processInterdep(Spec spec)
 {
     struct Req *r = makeRequires(spec);
+    pruneDebuginfoSrc(r, spec);
     r = freeRequires(r);
     return 0;
 }
