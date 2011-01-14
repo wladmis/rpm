@@ -145,11 +145,50 @@ struct Req *freeRequires(struct Req *r)
     return _free(r);
 }
 
+#include "checkFiles.h" // fiIntersect
+
+static
+void fiPrune(TFI_t fi, char pruned[])
+{
+}
+
+// prune src dups from pkg1 and add dependency on pkg2
 static
 void pruneSrc1(Package pkg1, Package pkg2)
 {
-    fprintf(stderr, "remove sources from %s because it requires %s\n",
-	    pkgName(pkg1), pkgName(pkg2));
+    TFI_t fi1 = pkg1->cpioList;
+    TFI_t fi2 = pkg2->cpioList;
+    if (fi1 == NULL) return;
+    if (fi2 == NULL) return;
+    int npruned = 0;
+    char pruned[fi1->fc];
+    bzero(pruned, fi1->fc);
+    void cb(char *f, int i1, int i2)
+    {
+	(void) i2;
+	const char src[] = "/usr/src/debug/";
+	if (strncmp(f, src, sizeof(src) - 1))
+	    return;
+	pruned[i1] = 1;
+	npruned++;
+    }
+    fiIntersect(fi1, fi2, cb);
+    if (npruned == 0)
+	return;
+    fprintf(stderr, "removing %d sources from %s and adding dependency on %s\n",
+	    npruned, pkgName(pkg1), pkgName(pkg2));
+    fiPrune(fi1, pruned);
+    const char *name = pkgName(pkg2);
+    const char *evr = headerSprintf(pkg2->header,
+	    "%|epoch?{%{epoch}:}|%{version}-%{release}",
+	    rpmTagTable, rpmHeaderFormats, NULL);
+    assert(evr);
+    int flags = RPMSENSE_EQUAL | RPMSENSE_FIND_REQUIRES;
+    assert(pkg1->header == fi1->h);
+    headerAddOrAppendEntry(fi1->h, RPMTAG_REQUIRENAME, RPM_STRING_ARRAY_TYPE, &name, 1);
+    headerAddOrAppendEntry(fi1->h, RPMTAG_REQUIREVERSION, RPM_STRING_ARRAY_TYPE, &evr, 1);
+    headerAddOrAppendEntry(fi1->h, RPMTAG_REQUIREFLAGS, RPM_INT32_TYPE, &flags, 1);
+    evr = _free(evr);
 }
 
 static
