@@ -5,6 +5,63 @@
 
 #include "checkFiles.h"
 
+void fiIntersect(TFI_t fi1, TFI_t fi2, void (*cb)(char *f, int i1, int i2))
+{
+    if (fi1 == NULL) return;
+    if (fi2 == NULL) return;
+    int i1 = 0, i2 = 0;
+    while (i1 < fi1->fc && i2 < fi2->fc) {
+	char f1[PATH_MAX], f2[PATH_MAX];
+	strcpy(f1, fi1->dnl[fi1->dil[i1]] + fi1->astriplen);
+	strcpy(f2, fi2->dnl[fi2->dil[i2]] + fi2->astriplen);
+	strcat(f1, fi1->bnl[i1]);
+	strcat(f2, fi2->bnl[i2]);
+	int cmp = strcmp(f1, f2);
+	if (cmp < 0) {
+	    i1++;
+	    continue;
+	}
+	if (cmp > 0) {
+	    i2++;
+	    continue;
+	}
+	cb(f1, i1, i2);
+	i1++;
+	i2++;
+    }
+}
+
+static
+void checkPkgIntersect(Package pkg1, Package pkg2)
+{
+    TFI_t fi1 = pkg1->cpioList;
+    TFI_t fi2 = pkg2->cpioList;
+    if (fi1 == NULL) return;
+    if (fi2 == NULL) return;
+    int once = 0;
+    void cb(char *f, int i1, int i2)
+    {
+	if (S_ISDIR(fi1->fmodes[i1]) && S_ISDIR(fi2->fmodes[i2]))
+	    return;
+	if (once++ == 0)
+	    rpmlog(RPMLOG_WARNING,
+		    "File(s) packaged into both %s-%s-%s and %s-%s-%s:\n",
+		    fi1->name, fi1->version, fi1->release,
+		    fi2->name, fi2->version, fi2->release);
+	rpmlog(RPMLOG_INFO, "    %s\n", f);
+    }
+    fiIntersect(fi1, fi2, cb);
+}
+
+static
+void checkIntersect(Spec spec)
+{
+    Package pkg1, pkg2;
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next)
+	    checkPkgIntersect(pkg1, pkg2);
+}
+
 static
 int fiSearch(TFI_t fi, const char *path)
 {
@@ -96,6 +153,7 @@ int checkUnpackaged(Spec spec)
 
 int checkFiles(Spec spec)
 {
+    checkIntersect(spec);
     int rc = checkUnpackaged(spec);
     if (rc && rpmExpandNumeric("%{?_unpackaged_files_terminate_build}")) {
 	rpmlog(RPMLOG_ERR, "File list check failed, terminating build\n");
