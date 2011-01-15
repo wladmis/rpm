@@ -9,7 +9,7 @@ EXTRA_DIST = \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip \
 	brp-verify_elf brp-verify-info \
-	compress_files check-files \
+	compress_files \
 	find-lang \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	files.req files.req.files 0common-files.req.list \
@@ -38,7 +38,7 @@ config_SCRIPTS = \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-fix-perms brp-fixup brp-strip \
 	brp-verify_elf brp-verify-info \
-	compress_files check-files \
+	compress_files \
 	find-lang \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	files.req files.req.files \

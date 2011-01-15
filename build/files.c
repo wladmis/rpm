@@ -79,10 +79,6 @@ typedef struct AttrRec_s {
     mode_t	ar_dmode;
 } * AttrRec;
 
-/* List of files */
-static StringBuf check_fileList = NULL;
-static int check_fileListLen = 0;
-
 /**
  * Package file tree walk data.
  */
@@ -1597,13 +1593,6 @@ static rpmRC addFile1(FileList fl, const char * diskPath, struct stat * statp)
     if (fileGname == NULL)
 	fileGname = getGname(getgid());
     
-    /* This check must be consistent with check-files script. */
-    if (S_ISREG(fileMode) || S_ISLNK(fileMode)) {
-      appendStringBuf(check_fileList, diskPath);
-      appendStringBuf(check_fileList, "\n");
-      check_fileListLen += strlen(diskPath) + 1;
-    }
-
     /* Add to the file list */
     if (fl->fileListRecsUsed == fl->fileListRecsAlloced) {
 	fl->fileListRecsAlloced += 128;
@@ -2909,132 +2898,6 @@ static void printDeps(Header h)
     versions = hfd(versions, dvt);
 }
 
-/**
- * Check packaged file list against what's in the build root.
- * @param fileList	packaged file list
- * @param fileListLen	no. of packaged files
- * @return		-1 if skipped, 0 on OK, 1 on error
- */
-static int checkFiles(Spec spec, StringBuf fileList, int fileListLen)
-{
-    StringBuf readBuf = NULL;
-    const char	*rootURL = spec->rootURL;
-    const char	*runDirURL = NULL;
-    const char	*runTemplate = NULL;
-    const char	*runPost = NULL;
-    const char	*scriptName = NULL;
-    const char	*runCmd = NULL;
-    const char	*rootDir;
-    const char	*runScript;
-    const char	*mTemplate = "%{?__spec_autodep_template}";
-    const char	*mPost = "%{?__spec_autodep_post}";
-    urlinfo	u = NULL;
-    FD_t	fd, xfd;
-    FILE *fp = 0;
-    const char ** av = 0;
-    int ac = 0;
-    int rc = 0;
-
-    if (fileListLen == 0)
-        return 0;
-
-    runDirURL = rpmGenPath(rootURL, "%{_builddir}", "");
-
-    (void) urlPath(rootURL, &rootDir);
-    if ( !*rootDir )
-	rootDir = "/";
-
-    if (runDirURL && runDirURL[0] != '/' && urlSplit(runDirURL, &u) ) {
-	rc = RPMERR_SCRIPT;
-	goto exit;
-    }
-
-    runCmd = rpmExpand("%{?__check_files}", NULL);
-    if (!(runCmd && *runCmd)) {
-	rc = -1;
-	goto exit;
-    }    
-
-    rpmMessage(RPMMESS_NORMAL, _("Finding %s (using %s)\n"), _("unpackaged files"), runCmd);
-
-    if (makeTempFile(rootURL, &scriptName, &fd) || fd == NULL || Ferror(fd)) {
-	rc = RPMERR_SCRIPT;
-	rpmError(RPMERR_SCRIPT, _("Unable to open temp file."));
-	goto exit;
-    }
-
-    if ( !fdGetFp(fd) )
-	xfd = Fdopen(fd, "w.fpio");
-    else
-	xfd = fd;
-    if ( !(fp = fdGetFp(xfd)) ) {
-	rc = RPMERR_SCRIPT;
-	goto exit;
-    }
-
-    urlPath(scriptName, &runScript);
-
-    runTemplate = rpmExpand(mTemplate, NULL);
-    fputs(runTemplate, fp);
-    runTemplate = _free(runTemplate);
-    fputc('\n', fp);
-
-    fputs(runCmd, fp);
-    runCmd = _free(runCmd);
-    fputc('\n', fp);
-
-    runPost = rpmExpand(mPost, NULL);
-    fputs(runPost, fp);
-    runPost = _free(runPost);
-    fputc('\n', fp);
-
-    Fclose(xfd);
-
-    runCmd = rpmExpand("%{?___build_cmd}", " ", runScript, NULL);
-
-    if (!((rc = poptParseArgvString(runCmd, &ac, (const char ***)&av)) == 0
-          && ac > 0 && av != NULL))
-    {
-	rc = RPMERR_SCRIPT;
-	goto exit;
-    }
-
-    rpmMessage(RPMMESS_NORMAL, _("Executing(%s): %s\n"), _("check-files"), runCmd);
-
-    readBuf = getOutputFrom(NULL, av, 0, getStringBuf(fileList), fileListLen, 1);
-    if (!readBuf) {
-	rc = RPMERR_EXEC;
-	rpmError(rc, _("Failed to check for unpackaged files\n"));
-	goto exit;
-    } else {
-	static int _unpackaged_files_terminate_build = 0;
-	static int oneshot = 0;
-	char *buf;
-
-	if (!oneshot) {
-	    _unpackaged_files_terminate_build =
-		rpmExpandNumeric("%{?_unpackaged_files_terminate_build}");
-	    oneshot = 1;
-	}
-
-	buf = getStringBuf(readBuf);
-	if (*buf && (*buf != '\n')) {
-	    rc = (_unpackaged_files_terminate_build) ? 1 : 0;
-	    rpmMessage((rc ? RPMMESS_ERROR : RPMMESS_WARNING),
-		_("Installed (but unpackaged) file(s) found:\n%s"), buf);
-	}
-    }
-
-exit:
-    if (scriptName) Unlink(scriptName);
-    freeStringBuf(readBuf);
-    av = _free(av);
-    runCmd = _free(runCmd);
-    scriptName = _free(scriptName);
-    runDirURL = _free(runDirURL);
-    return rc;
-}
-
 /* Written by Alexey Tourbin! */
 typedef struct MyFileList {
     const char **bn, **dn;
@@ -3144,13 +3007,12 @@ void checkSpecIntersect(Spec spec)
 	    checkHdrIntersect(pkg1->header, pkg2->header);
 }
 
+#include "checkFiles.h"
+
 int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 {
     Package pkg;
     int rc = 0;
-
-    check_fileList = newStringBuf();
-    check_fileListLen = 0;
 
     for (pkg = spec->packages; pkg != NULL; pkg = pkg->next) {
 	const char *n, *v, *r;
@@ -3178,13 +3040,9 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
      */
     
     if (rc == 0) {
-	if (checkFiles(spec, check_fileList, check_fileListLen) > 0)
-	    rc = 1;
+	rc = checkFiles(spec);
 	checkSpecIntersect(spec);
     }
-
-    check_fileListLen = 0;
-    freeStringBuf(check_fileList);
 
     return rc;
 }
