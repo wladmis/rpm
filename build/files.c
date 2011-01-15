@@ -1695,6 +1695,7 @@ static rpmRC recurseDir(FileList fl, const char * diskPath)
 	case FTS_INIT:		/* initialized only */
 	case FTS_W:		/* whiteout object */
 	default:
+	    rpmlog(RPMLOG_WARNING, "%s: fts error\n", fts->fts_path);
 	    rc = RPMRC_FAIL;
 	    break;
 	}
