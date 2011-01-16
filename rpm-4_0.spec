@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.10
+Release: alt100.11
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -494,8 +494,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Jan 16 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.11
+- build/files.c (addFile): Replaced myftw() with fts(3).
+- build/checkFiles.c: Reimplemented check for unpackaged files using fts(3).
+- python: Backported forceArray changes from rpm5.org (Alexander Myltsev).
+
 * Tue Jan 11 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.10
-- platform.in: fixed %%configure options for noarch packages.
+- platform.in: Fixed %%configure options for noarch packages.
 
 * Fri Jan 07 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.9
 - set.c: Tweak LRU first-time insertion policy.

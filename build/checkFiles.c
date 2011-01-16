@@ -1,3 +1,8 @@
+/*
+ * checkFiles.c - check packaged file list.
+ * Written by Alexey Tourbin <at@altlinux.org>.
+ * License: GPLv2+.
+ */
 #include "system.h"
 #include "rpmio_internal.h"
 #include "rpmbuild.h"
