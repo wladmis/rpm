@@ -467,18 +467,18 @@ static int regionSwab(/*@null@*/ indexEntry entry, int il, int dl,
 	}
 
 	/* Perform endian conversions */
-	switch (ntohl(pe->type)) {
+	switch (type) {
 	case RPM_INT32_TYPE:
-	{   int_32 * it = (int_32 *)t;
-	    for (; ie.info.count > 0; ie.info.count--, it += 1)
-		*it = htonl(*it);
-	    t = (char *) it;
+	{   int_32 *it = (int_32 *) t;
+	    t = (char *)(it + ie.info.count);
+	    while (it < (int_32 *) t)
+		*it++ = htonl(*it);
 	}   /*@switchbreak@*/ break;
 	case RPM_INT16_TYPE:
-	{   int_16 * it = (int_16 *) t;
-	    for (; ie.info.count > 0; ie.info.count--, it += 1)
-		*it = htons(*it);
-	    t = (char *) it;
+	{   int_16 *it = (int_16 *) t;
+	    t = (char *)(it + ie.info.count);
+	    while (it < (int_16 *) t)
+		*it++ = htons(*it);
 	}   /*@switchbreak@*/ break;
 	default:
 	    t += ie.length;
