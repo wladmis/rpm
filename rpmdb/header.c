@@ -346,29 +346,20 @@ static int dataLength(int_32 type, hPTR_t p, int_32 count, int onDisk)
 
     case RPM_STRING_ARRAY_TYPE:
     case RPM_I18NSTRING_TYPE:
-    {	int i;
-
 	/* This is like RPM_STRING_TYPE, except it's *always* an array */
 	/* Compute sum of length of all strings, including null terminators */
-	i = count;
-
 	if (onDisk) {
-	    const char * chptr = p;
-	    int thisLen;
-
-	    while (i--) {
-		thisLen = strlen(chptr) + 1;
-		length += thisLen;
-		chptr += thisLen;
-	    }
+	    const char *end = p;
+	    while (count--)
+		end += strlen(end) + 1;
+	    length = end - (const char *) p;
 	} else {
-	    const char ** src = (const char **)p;
-	    while (i--) {
-		/* add one for null termination */
+	    const char **src = (const char **) p;
+	    const char **end = src + count;
+	    while (src < end)
 		length += strlen(*src++) + 1;
-	    }
 	}
-    }	break;
+	break;
 
     default:
 	if (typeSizes[type] != -1) {
