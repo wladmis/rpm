@@ -1514,13 +1514,22 @@ convert (char *ed, const char *td)
 /*@dependent@*/ /*@exposed@*/ static char *
 headerFindI18NString (Header h, indexEntry entry)
 {
-	const char *lang, *l, *le;
+	const char *l, *le;
 	indexEntry table;
 	int     strip_lang;
 
+	static int guessed;
+	static const char *lang;
+	if (!guessed) {
+		lang = guess_category_value (LC_MESSAGES);
+		if (lang)
+			lang = xstrdup (lang);
+		guessed = 1;
+	}
+
 	if (!entry->data
 	    || !*(const char *) entry->data
-	    || !(lang = guess_category_value (LC_MESSAGES)))
+	    || !lang)
 		return entry->data;
 
 	/*@-mods@ */
