@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.11
+Release: alt100.12
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -494,6 +494,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri Jan 21 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.12
+- build/checkFiles.c: Fixed %%exclude vs unpackaged regression.
+- header.c: Optimized header loading and access routines.
+
 * Sun Jan 16 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.11
 - build/files.c (addFile): Replaced myftw() with fts(3).
 - build/checkFiles.c: Reimplemented check for unpackaged files using fts(3).
