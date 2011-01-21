@@ -1017,8 +1017,20 @@ Header headerLoad(/*@kept@*/ void * uh)
 	}
     }
 
-    h->flags &= ~HEADERFLAG_SORTED;
-    headerSort(h);
+    /* See if the header needs sorting. */
+    entry = h->index;
+    indexEntry end = entry + h->indexUsed;
+    int prevtag = -1;
+    while (entry < end) {
+	int tag = entry->info.tag;
+	if (prevtag > tag) {
+	    h->flags &= ~HEADERFLAG_SORTED;
+	    headerSort(h);
+	    break;
+	}
+	prevtag = tag;
+	entry++;
+    }
 
     /*@-globstate -observertrans @*/
     return h;
