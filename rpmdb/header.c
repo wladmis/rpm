@@ -772,17 +772,27 @@ static /*@null@*/
 indexEntry findEntry(/*@null@*/ Header h, int_32 tag, int_32 type)
 	/*@modifies h @*/
 {
-    indexEntry entry, entry2, last;
-    struct indexEntry key;
-
     if (h == NULL) return NULL;
     if (!(h->flags & HEADERFLAG_SORTED)) headerSort(h);
 
-    key.info.tag = tag;
+    int found = 0;
+    indexEntry entry = NULL;
+    int l = 0;
+    int u = h->indexUsed;
+    while (l < u) {
+       int i = (l + u) / 2;
+       entry = h->index + i;
+       if (tag < entry->info.tag)
+	   u = i;
+       else if (tag > entry->info.tag)
+	   l = i + 1;
+       else {
+	   found = 1;
+	   break;
+	}
+    }
 
-    entry2 = entry = 
-	bsearch(&key, h->index, h->indexUsed, sizeof(*h->index), indexCmp);
-    if (entry == NULL)
+    if (!found)
 	return NULL;
 
     if (type == RPM_NULL_TYPE)
@@ -791,15 +801,6 @@ indexEntry findEntry(/*@null@*/ Header h, int_32 tag, int_32 type)
     /* look backwards */
     while (entry->info.tag == tag && entry->info.type != type &&
 	   entry > h->index) entry--;
-
-    if (entry->info.tag == tag && entry->info.type == type)
-	return entry;
-
-    last = h->index + h->indexUsed;
-    /*@-usereleased@*/ /* FIX: entry2 = entry. Code looks bogus as well. */
-    while (entry2->info.tag == tag && entry2->info.type != type &&
-	   entry2 < last) entry2++;
-    /*@=usereleased@*/
 
     if (entry->info.tag == tag && entry->info.type == type)
 	return entry;
