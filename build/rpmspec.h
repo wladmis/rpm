@@ -143,6 +143,8 @@ struct SpecStruct {
 /*@only@*/ StringBuf clean;		/*!< %clean scriptlet. */
 
 /*@owned@*/ struct PackageStruct * packages;	/*!< Package list. */
+    const char **exclude;		/*!< Files marked with %exclude. */
+    int excludeCount;
 };
 
 /** \ingroup rpmbuild

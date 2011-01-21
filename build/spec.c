@@ -483,7 +483,10 @@ Spec newSpec(void)
     spec->anyarch = 0;
 
 /*@i@*/	spec->macros = rpmGlobalMacroContext;
-    
+
+    spec->exclude = NULL;
+    spec->excludeCount = 0;
+
     return spec;
 }
 

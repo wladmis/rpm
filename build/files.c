@@ -1028,7 +1028,7 @@ static int checkHardLinks(FileList fl)
  * @param h
  * @param isSrc
  */
-static void genCpioListAndHeader(/*@partial@*/ FileList fl,
+static void genCpioListAndHeader(Spec spec, /*@partial@*/ FileList fl,
 		TFI_t * cpioList, Header h, int isSrc)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem @*/
@@ -1107,7 +1107,11 @@ static void genCpioListAndHeader(/*@partial@*/ FileList fl,
 	}
 
 	/* Skip files that were marked with %exclude. */
-	if (flp->flags & RPMFILE_EXCLUDE) continue;
+	if (flp->flags & RPMFILE_EXCLUDE) {
+	    AUTO_REALLOC(spec->exclude, spec->excludeCount, 8);
+	    spec->exclude[spec->excludeCount++] = xstrdup(flp->fileURL);
+	    continue;
+	}
 
 	/* Omit '/' and/or URL prefix, leave room for "./" prefix */
 	apathlen += (strlen(flp->fileURL) - skipLen + (_addDotSlash ? 3 : 1));
@@ -2007,7 +2011,7 @@ static int processPackageFiles(Spec spec, Package pkg,
 	(void) rpmlibNeedsFeature(pkg->header,
 			"PartialHardlinkSets", "4.0.4-1");
 
-    genCpioListAndHeader(&fl, (TFI_t *)&pkg->cpioList, pkg->header, 0);
+    genCpioListAndHeader(spec, &fl, (TFI_t *)&pkg->cpioList, pkg->header, 0);
 
     if (spec->timeCheck)
 	timeCheck(spec->timeCheck, pkg->header);
@@ -2220,7 +2224,7 @@ int processSourceFiles(Spec spec)
 
     if (! fl.processingFailed) {
 	if (spec->sourceHeader != NULL)
-	    genCpioListAndHeader(&fl, (TFI_t *)&spec->sourceCpioList,
+	    genCpioListAndHeader(spec, &fl, (TFI_t *)&spec->sourceCpioList,
 			spec->sourceHeader, 1);
     }
 

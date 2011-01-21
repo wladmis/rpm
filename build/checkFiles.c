@@ -101,12 +101,26 @@ int checkUnpackaged(Spec spec)
     int rc = 0;
     int uc = 0;
     char **uv = NULL;
+    int avcmp(const void *sptr1, const void *sptr2)
+    {
+	const char *s1 = *(const char **) sptr1;
+	const char *s2 = *(const char **) sptr2;
+	return strcmp(s1, s2);
+    }
+    if (spec->exclude)
+	qsort(spec->exclude, spec->excludeCount, sizeof(char *), avcmp);
     void check(const char *path)
     {
 	Package pkg;
 	for (pkg = spec->packages; pkg; pkg = pkg->next)
 	    if (fiSearch(pkg->cpioList, path) >= 0)
 		return;
+	if (spec->exclude) {
+	    const char *key = path + strlen(spec->buildRootURL);
+	    if (bsearch(&key, spec->exclude, spec->excludeCount,
+			sizeof(char *), avcmp))
+		return;
+	}
 	AUTO_REALLOC(uv, uc, 8);
 	uv[uc++] = xstrdup(path + strlen(spec->buildRootURL));
 	rc |= 1;
@@ -139,15 +153,9 @@ int checkUnpackaged(Spec spec)
 	    break;
 	}
     }
-    int cmp(const void *sptr1, const void *sptr2)
-    {
-	const char *s1 = *(const char **) sptr1;
-	const char *s2 = *(const char **) sptr2;
-	return strcmp(s1, s2);
-    }
     if (uv) {
 	rpmlog(RPMLOG_WARNING, "Installed (but unpackaged) file(s) found:\n");
-	qsort(uv, uc, sizeof(*uv), cmp);
+	qsort(uv, uc, sizeof(*uv), avcmp);
 	int i;
 	for (i = 0; i < uc; i++)
 	    rpmlog(RPMLOG_INFO, "    %s\n", uv[i]);
