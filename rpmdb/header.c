@@ -1522,8 +1522,12 @@ headerFindI18NString (Header h, indexEntry entry)
 	static const char *lang;
 	if (!guessed) {
 		lang = guess_category_value (LC_MESSAGES);
-		if (lang)
-			lang = xstrdup (lang);
+		if (lang) {
+			if (strcmp(lang, "C") == 0)
+				lang = NULL;
+			else
+				lang = xstrdup (lang);
+		}
 		guessed = 1;
 	}
 
