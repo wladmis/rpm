@@ -130,6 +130,17 @@ int checkUnpackaged(Spec spec)
     FTS *ftsp = fts_open(paths, options, NULL);
     FTSENT *fts;
     while ((fts = fts_read(ftsp)) != NULL) {
+	// buildroot may not exist
+	if (fts->fts_level == 0 && fts->fts_info == FTS_NS) {
+	    Package pkg;
+	    for (pkg = spec->packages; pkg; pkg = pkg->next) {
+		TFI_t fi = pkg->cpioList;
+		if (fi && fi->fc > 0)
+		    break;
+	    }
+	    if (pkg == NULL)
+		continue;
+	}
 	// skip dotfiles in buildroot
 	if (fts->fts_level == 1 && *fts->fts_name == '.') {
 	    if (fts->fts_info == FTS_D)
