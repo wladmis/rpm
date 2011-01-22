@@ -7,98 +7,6 @@
 #include "depends.h"
 #include "al.h"
 
-struct badDeps_s {
-/*@observer@*/ /*@null@*/ const char * pname;
-/*@observer@*/ /*@null@*/ const char * qname;
-};
-
-#ifdef	DYING
-static struct badDeps_s {
-/*@observer@*/ /*@null@*/ const char * pname;
-/*@observer@*/ /*@null@*/ const char * qname;
-} badDeps[] = {
-    { "libtermcap", "bash" },
-    { "modutils", "vixie-cron" },
-    { "ypbind", "yp-tools" },
-    { "ghostscript-fonts", "ghostscript" },
-    /* 7.2 only */
-    { "libgnomeprint15", "gnome-print" },
-    { "nautilus", "nautilus-mozilla" },
-    /* 7.1 only */
-    { "arts", "kdelibs-sound" },
-    /* 7.0 only */
-    { "pango-gtkbeta-devel", "pango-gtkbeta" },
-    { "XFree86", "Mesa" },
-    { "compat-glibc", "db2" },
-    { "compat-glibc", "db1" },
-    { "pam", "initscripts" },
-    { "initscripts", "sysklogd" },
-    /* 6.2 */
-    { "egcs-c++", "libstdc++" },
-    /* 6.1 */
-    { "pilot-link-devel", "pilot-link" },
-    /* 5.2 */
-    { "pam", "pamconfig" },
-    { NULL, NULL }
-};
-#else
-static struct badDeps_s * badDeps = NULL;
-#endif
-
-/**
- * Check for dependency relations to be ignored.
- *
- * @param p	successor package (i.e. with Requires: )
- * @param q	predecessor package (i.e. with Provides: )
- * @return	1 if dependency is to be ignored.
- */
-static int ignoreDep(const struct availablePackage * p,
-		const struct availablePackage * q)
-	/*@*/
-{
-    struct badDeps_s * bdp;
-    static int _initialized = 0;
-    const char ** av = NULL;
-    int ac = 0;
-
-    if (!_initialized) {
-	char * s = rpmExpand("%{?_dependency_whiteout}", NULL);
-	int i;
-
-	if (s != NULL && *s != '\0'
-	&& !(i = poptParseArgvString(s, &ac, (const char ***)&av))
-	&& ac > 0 && av != NULL)
-	{
-	    bdp = badDeps = xcalloc(ac+1, sizeof(*badDeps));
-	    for (i = 0; i < ac; i++, bdp++) {
-		char * p, * q;
-
-		if (av[i] == NULL)
-		    break;
-		p = xstrdup(av[i]);
-		if ((q = strchr(p, '>')) != NULL)
-		    *q++ = '\0';
-		bdp->pname = p;
-		bdp->qname = q;
-		rpmMessage(RPMMESS_DEBUG,
-			_("ignore package name relation(s) [%d]\t%s -> %s\n"),
-			i, bdp->pname, bdp->qname);
-	    }
-	    bdp->pname = bdp->qname = NULL;
-	}
-	av = _free(av);
-	s = _free(s);
-	_initialized++;
-    }
-
-    if (badDeps != NULL)
-    for (bdp = badDeps; bdp->pname != NULL && bdp->qname != NULL; bdp++) {
-	if (!strcmp(p->name, bdp->pname) && !strcmp(q->name, bdp->qname))
-	    return 1;
-    }
-    return 0;
-}
-
 /**
  * Recursively mark all nodes with their predecessors.
  * @param tsi		successor chain
@@ -234,10 +142,6 @@ static inline int addRelation( const rpmTransactionSet ts,
 
     /* Avoid rpmlib feature dependencies. */
     if (!strncmp(p->requires[j], "rpmlib(", sizeof("rpmlib(")-1))
-	return 0;
-
-    /* Avoid certain dependency relations. */
-    if (ignoreDep(p, q))
 	return 0;
 
     /* Avoid redundant relations. */

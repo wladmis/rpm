@@ -526,48 +526,6 @@
 %_repackage_dir		/var/spool/repackage
 %_repackage_root	%{nil}
 
-#	Relations between package names that cause dependency loops
-#	with legacy packages that cannot be fixed. Relations are
-#	specified as
-#		p>q
-#	where package p has a Requires: on something that package q Provides:
-#
-# XXX	Note: that there cannot be any whitespace within the string "p>q",
-#	and that both p and q are package names (i.e. no version/release).
-#
-#%_dependency_whiteout_5_2		\
-#	pam>pamconfig
-#%_dependency_whiteout_6_1		\
-#	pilot-link-devel>pilot-link
-#%_dependency_whiteout_6_2		\
-#	egcs-c++>libstdc++
-#%_dependency_whiteout_7_0		\
-#	pango-gtkbeta-devel>pango-gtkbeta\
-#	XFree86>Mesa			\
-#	compat-glibc>db2		\
-#	compat-glibc>db1		\
-#	pam>initscripts			\
-#	initscripts>sysklogd
-#%_dependency_whiteout_7_1		\
-#	arts>kdelibs-sound
-#%_dependency_whiteout_7_2		\
-#	libgnomeprint15>gnome-print	\
-#	nautilus>nautilus-mozilla	\
-#	tcl>postgresql-tcl
-#
-#%_dependency_whiteout			\
-#	libtermcap>bash			\
-#	modutils>vixie-cron		\
-#	ypbind>yp-tools			\
-#	ghostscript-fonts>ghostscript	\
-#	%{?_dependency_whiteout_7_2}	\
-#	%{?_dependency_whiteout_7_1}	\
-#	%{?_dependency_whiteout_7_0}	\
-#	%{?_dependency_whiteout_6_2}	\
-#	%{?_dependency_whiteout_6_1}	\
-#	%{?_dependency_whiteout_5_2}	\
-#	%{nil}
-
 #==============================================================================
 # ---- per-platform macros.
 #	Macros that are specific to an individual platform. The values here
