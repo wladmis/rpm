@@ -25,7 +25,6 @@ int specedit = 0;
 #define POPT_SPECFILE		-1006
 #define POPT_QUERYBYPKGID	-1007
 #define POPT_QUERYBYHDRID	-1008
-#define POPT_QUERYBYFILEID	-1009
 #define POPT_QUERYBYTID		-1010
 
 /* ========== Query/Verify source popt args */
@@ -60,8 +59,6 @@ static void rpmQVSourceArgCallback( /*@unused@*/ poptContext con,
 			      qva->qva_sourceCount++; break;
     case POPT_QUERYBYHDRID: qva->qva_source |= RPMQV_HDRID;
 			      qva->qva_sourceCount++; break;
-    case POPT_QUERYBYFILEID: qva->qva_source |= RPMQV_FILEID;
-			      qva->qva_sourceCount++; break;
     case POPT_QUERYBYTID: qva->qva_source |= RPMQV_TID;
 			      qva->qva_sourceCount++; break;
 
@@ -88,8 +85,6 @@ struct poptOption rpmQVSourcePoptTable[] = {
 	N_("query/verify all packages"), NULL },
  { "file", 'f', 0, 0, 'f',
 	N_("query/verify package(s) owning file"), "FILE" },
- { "fileid", '\0', POPT_ARGFLAG_DOC_HIDDEN, 0, POPT_QUERYBYFILEID, 
-	N_("query/verify package(s) with file identifier"), "MD5" },
  { "group", 'g', 0, 0, 'g',
 	N_("query/verify package(s) in group"), "GROUP" },
  { "hdrid", '\0', POPT_ARGFLAG_DOC_HIDDEN, 0, POPT_QUERYBYHDRID, 

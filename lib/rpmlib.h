@@ -1675,7 +1675,7 @@ typedef enum rpmQVSources_e {
     RPMQV_SPECFILE,	/*!< ... from spec file parse (query only). */
     RPMQV_PKGID,	/*!< ... from package id (header+payload MD5). */
     RPMQV_HDRID,	/*!< ... from header id (immutable header SHA1). */
-    RPMQV_FILEID,	/*!< ... from file id (file MD5). */
+    R__QV_FILEID,	/*!< ... from file id (file MD5). */
     RPMQV_TID		/*!< ... from install transaction id (time stamp). */
 } rpmQVSources;
 
