@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.12
+Release: alt100.13
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -494,6 +494,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Jan 23 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.13
+- Removed --fileid query selector and Filemd5s rpmdb index (rpm.org).
+- Removed ancient dependency loop whiteout mechanism (rpm.org).
+- rpmdb.c: Do not exclude Requires(pre) dependencies from rpmdb index.
+- Implemented %%__find_{requires,provides}_filter macros (lower-level) and
+  %%filter_from_{requires,provides} (higher-level, compatible with Fedora).
+
 * Fri Jan 21 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.12
 - build/checkFiles.c: Fixed %%exclude vs unpackaged regression.
 - header.c: Optimized header loading and access routines.
