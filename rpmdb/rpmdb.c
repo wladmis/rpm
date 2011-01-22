@@ -2625,11 +2625,9 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 	    rpmTagType rpmtype = 0;
 	    int rpmcnt = 0;
 	    int rpmtag;
-	    int_32 * requireFlags;
 	    int i, j;
 
 	    dbi = NULL;
-	    requireFlags = NULL;
 	    rpmtag = dbiTags[dbix];
 
 	    switch (rpmtag) {
@@ -2660,10 +2658,6 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 		rpmtype = bnt;
 		rpmvals = baseNames;
 		rpmcnt = count;
-		/*@switchbreak@*/ break;
-	    case RPMTAG_REQUIRENAME:
-		xx = hge(h, rpmtag, &rpmtype, (void **)&rpmvals, &rpmcnt);
-		xx = hge(h, RPMTAG_REQUIREFLAGS, NULL, (void **)&requireFlags, NULL);
 		/*@switchbreak@*/ break;
 	    default:
 		xx = hge(h, rpmtag, &rpmtype, (void **)&rpmvals, &rpmcnt);
@@ -2714,8 +2708,8 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 		    /*@switchbreak@*/ break;
 #endif
 		case RPMTAG_REQUIRENAME:
-		    /* Filter out install prerequisites. */
-		    if (requireFlags && isInstallPreReq(requireFlags[i]))
+		    /* Filter out rpmlib dependencies */
+		    if (strncmp(rpmvals[i], "rpmlib(", 7) == 0)
 			/*@innercontinue@*/ continue;
 		    /*@switchbreak@*/ break;
 		case RPMTAG_TRIGGERNAME:
