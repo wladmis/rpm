@@ -227,6 +227,12 @@
 @alt@	%{?_scripts_debug:export RPM_SCRIPTS_DEBUG=\"%_scripts_debug\"}\
 @alt@	%{?_keep_libtool_files:export RPM_KEEP_LIBTOOL_FILES=\"%_keep_libtool_files\"}\
 @alt@	\
+@alt@	%{?__find_requires_filter:export RPM_FIND_REQUIRES_FILTER=$(cat <<'!FIND!REQUIRES!FILTER!'\
+@alt@%__find_requires_filter\
+@alt@!FIND!REQUIRES!FILTER!)}\
+@alt@	%{?__find_provides_filter:export RPM_FIND_PROVIDES_FILTER=$(cat <<'!FIND!PROVIDES!FILTER!'\
+@alt@%__find_provides_filter\
+@alt@!FIND!PROVIDES!FILTER!)}\
 @alt@	unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
 @alt@	%{?_build_lang:export LANG=\"%_build_lang\"\
 @alt@	export LANGUAGE=\"%_build_lang\"\
@@ -492,6 +498,8 @@
 @alt@%add_findreq_skiplist()	%global _findreq_skiplist %_findreq_skiplist %*
 @alt@%add_findprov_skiplist()	%global _findprov_skiplist %_findprov_skiplist %*
 @alt@
+@alt@%filter_from_requires()   %global __find_requires_filter %{?!__find_requires_filter:%__sed}%{?__find_requires_filter} -e '%*'
+@alt@%filter_from_provides()   %global __find_provides_filter %{?!__find_provides_filter:%__sed}%{?__find_provides_filter} -e '%*'
 @alt@
 @alt@%add_findpackage_path()	%global _findpackage_path %_findpackage_path %*
 @alt@%add_findprov_lib_path()	%global _findprov_lib_path %_findprov_lib_path %*

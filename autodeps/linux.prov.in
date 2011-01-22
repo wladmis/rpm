@@ -116,4 +116,15 @@ RunMethod()
 
 Info "running scripts ($methods)"
 RunMethods prov "$methods" RunMethod
-[ -z "$found" ] || (set +f; LC_COLLATE=C sort -u -m "$workdir"/*.deps) || exit 1
+
+if [ -n "$found" ]; then
+	(set +f && LC_ALL=C sort -u -m "$workdir"/*.deps) >"$workdir"/find-provides-deps || false
+	if [ -n "${RPM_FIND_PROVIDES_FILTER-}" ]; then
+		(eval "set -x; $RPM_FIND_PROVIDES_FILTER") <"$workdir"/find-provides-deps >"$workdir"/filter-provides-deps
+		[ $? = 0 ] || Fatal "filter failed"
+		(cd "$workdir" && diff -U1 find-provides-deps filter-provides-deps) >&2 ||:
+		cat "$workdir"/filter-provides-deps
+	else
+		cat "$workdir"/find-provides-deps
+	fi
+fi

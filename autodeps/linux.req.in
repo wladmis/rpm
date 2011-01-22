@@ -109,7 +109,18 @@ export RPM_FINDPACKAGE_COMMANDS_LOG="$RPM_BUILD_ROOT"/.findpackage-commands
 
 Info "running scripts ($methods)"
 RunMethods req "$methods" RunMethod
-[ -z "$found" ] || (set +f; LC_COLLATE=C sort -u -m "$workdir"/*.deps) || exit 1
+
+if [ -n "$found" ]; then
+	(set +f && LC_ALL=C sort -u -m "$workdir"/*.deps) >"$workdir"/find-requires-deps || false
+	if [ -n "${RPM_FIND_REQUIRES_FILTER-}" ]; then
+		(eval "set -x; $RPM_FIND_REQUIRES_FILTER") <"$workdir"/find-requires-deps >"$workdir"/filter-requires-deps
+		[ $? = 0 ] || Fatal "filter failed"
+		(cd "$workdir" && diff -U1 find-requires-deps filter-requires-deps) >&2 ||:
+		cat "$workdir"/filter-requires-deps
+	else
+		cat "$workdir"/find-requires-deps
+	fi
+fi
 
 if [ -s "$RPM_FINDPACKAGE_COMMANDS_LOG" ]; then
 	LC_ALL=C sort -u -o "$RPM_FINDPACKAGE_COMMANDS_LOG"{,}
