@@ -147,6 +147,16 @@ int checkUnpackaged(Spec spec)
 		fts_set(ftsp, fts, FTS_SKIP);
 	    continue;
 	}
+	// skip debuginfo
+	if (fts->fts_level == 3 && fts->fts_info == FTS_D) {
+	    const char *dir = fts->fts_path + strlen(spec->buildRootURL);
+	    if (strcmp(dir, "/usr/lib/debug") == 0 ||
+		strcmp(dir, "/usr/src/debug") == 0)
+	    {
+		fts_set(ftsp, fts, FTS_SKIP);
+		continue;
+	    }
+	}
 	switch (fts->fts_info) {
 	// do not check for unpackaged directories
 	case FTS_D:
