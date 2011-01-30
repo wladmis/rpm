@@ -27,8 +27,10 @@ while read -r nlink ino f; do
 			eval f0_$ino="\$f"
 		fi
 	fi
+	touch -r "$f" .tmp/stamp
 	@RPMCONFIGDIR@/debugedit -b "$RPM_BUILD_DIR" -d /usr/src/debug -l .tmp/src "$f"
 	eu-strip --remove-comment -f "$debugf" "$f"
+	touch -r .tmp/stamp  "$debugf" "$f"
 	chmod 644 "$debugf"
 	mkdir -p .debuginfo/src/"${debugf%/*}"
 	awk 'BEGIN{RS="\0";ORS="\n"}{print}' .tmp/src |LC_ALL=C sort -u |
