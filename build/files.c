@@ -2235,9 +2235,8 @@ int processSourceFiles(Spec spec)
 
 /**
  */
-static StringBuf getOutputFrom(char * dir, const char * argv[], char *envp[],
-			const char * writePtr, int writeBytesLeft,
-			int failNonZero)
+static StringBuf getOutputFrom(const char **argv,
+			const char * writePtr, int writeBytesLeft)
 	/*@globals fileSystem, internalState@*/
 	/*@modifies fileSystem, internalState@*/
 {
@@ -2259,9 +2258,6 @@ static StringBuf getOutputFrom(char * dir, const char * argv[], char *envp[],
     (void) pipe(fromProg);
     
     if (!(progPID = fork())) {
-	while (envp && *envp)
-	    putenv (*(envp++));
-
 	(void) close(toProg[1]);
 	(void) close(fromProg[0]);
 	
@@ -2276,10 +2272,6 @@ static StringBuf getOutputFrom(char * dir, const char * argv[], char *envp[],
 		_exit( -1 );
 	}
 
-	if (dir) {
-	    (void) chdir(dir);
-	}
-	
 	(void) execvp(argv[0], (char *const *)argv);
 	/* XXX this error message is probably not seen. */
 	rpmError(RPMERR_EXEC, _("Couldn't exec %s: %s\n"),
@@ -2370,7 +2362,7 @@ top:
 
     /* Collect status from prog */
     (void)waitpid(progPID, &status, 0);
-    if (failNonZero && (!WIFEXITED(status) || WEXITSTATUS(status))) {
+    if (!WIFEXITED(status) || WEXITSTATUS(status)) {
 	rpmError(RPMERR_EXEC, _("%s failed\n"), argv[0]);
 	return NULL;
     }
@@ -2379,6 +2371,57 @@ top:
 	return NULL;
     }
     return readBuff;
+}
+
+static
+StringBuf runPkgScript(Package pkg, const char *body,
+	const char *fileList, int fileListLen)
+{
+    const char *tmpdir = getenv("TMPDIR");
+    if (!(tmpdir && *tmpdir))
+	tmpdir = "/tmp";
+    char script[strlen(tmpdir) + sizeof("/rpm-tmp.XXXXXX")];
+    sprintf(script, "%s/rpm-tmp.XXXXXX", tmpdir);
+    int fd = mkstemp(script);
+    assert(fd >= 0);
+    FILE *fp = fdopen(fd, "w");
+    assert(fp);
+    // script header
+    char *s;
+    int isVerbose = rpmIsVerbose();
+    if (isVerbose)
+	rpmDecreaseVerbosity();
+    s = rpmExpand("%{?__spec_autodep_template}\n", NULL);
+    if (isVerbose)
+	rpmIncreaseVerbosity();
+    fputs(s, fp);
+    free(s);
+    // pkg info
+    const char *N, *V, *R, *A;
+    headerNEVRA(pkg->header, &N, NULL, &V, &R, &A);
+    fprintf(fp, "export RPM_SUBPACKAGE_NAME='%s'\n", N);
+    fprintf(fp, "export RPM_SUBPACKAGE_VERSION='%s'\n", V);
+    fprintf(fp, "export RPM_SUBPACKAGE_RELEASE='%s'\n", R);
+    fprintf(fp, "export RPM_SUBPACKAGE_ARCH='%s'\n", A);
+    // script body
+    fputs(body, fp);
+    fputc('\n', fp);
+    // script footer
+    s = rpmExpand("%{?__spec_autodep_post}\n", NULL);
+    fputs(s, fp);
+    free(s);
+    fclose(fp);
+    // run script
+    char *cmd = rpmExpand("%{?___build_cmd}", " ", script, NULL);
+    rpmMessage(RPMMESS_NORMAL, _("Executing: %s\n"), cmd);
+    const char **argv = NULL;
+    poptParseArgvString(cmd, NULL, &argv);
+    assert(argv);
+    StringBuf out = getOutputFrom(argv, fileList, fileListLen);
+    if (out)
+	unlink(script);
+    free(argv);
+    return out;
 }
 
 /**
@@ -2545,54 +2588,14 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
     TFI_t fi = cpioList;
     StringBuf readBuf;
     DepMsg_t *dm;
-    int failnonzero = 1;
     int rc = 0;
     int i;
-
-    const char	*rootURL = spec->rootURL;
-    const char	*rootDir = NULL;
-    const char	*runDirURL = NULL;
-    const char	*scriptName = NULL;
-    const char	*runScript;
-    const char	*runCmd = NULL;
-    const char	*runTemplate = NULL;
-    const char	*runPost = NULL;
-    const char	*mTemplate = "%{?__spec_autodep_template}";
-    const char	*mPost = "%{?__spec_autodep_post}";
-    urlinfo	u = NULL;
 
     if ( *pkg->autoProv )
 	addMacro(spec->macros, "_findprov_method", NULL, pkg->autoProv, RMIL_SPEC);
 
     if ( *pkg->autoReq )
 	addMacro(spec->macros, "_findreq_method", NULL, pkg->autoReq, RMIL_SPEC);
-
-	runDirURL = rpmGenPath(rootURL, "%{_builddir}", "");
-
-	(void) urlPath(rootURL, &rootDir);
-	if ( !*rootDir )
-		rootDir = "/";
-
-	if (runDirURL && runDirURL[0] != '/' && urlSplit(runDirURL, &u) ) {
-		runDirURL = _free(runDirURL);
-		return RPMERR_SCRIPT;
-	}
-	if (u) {
-		switch (u->urltype) {
-			case URL_IS_FTP:
-				addMacro(spec->macros, "_remsh", NULL, "%{__remsh}", RMIL_SPEC);
-				addMacro(spec->macros, "_remhost", NULL, u->host, RMIL_SPEC);
-				if (strcmp(rootDir, "/"))
-					addMacro(spec->macros, "_remroot", NULL, rootDir, RMIL_SPEC);
-				break;
-			case URL_IS_HTTP:
-			default:
-				break;
-		}
-	}
-
-	runTemplate = rpmExpand(mTemplate, NULL);
-	runPost = rpmExpand(mPost, NULL);
 
     StringBuf fileListBuf = NULL;
     int fileListBytes = 0;
@@ -2608,11 +2611,6 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
 
     for (dm = depMsgs; dm->msg != NULL; dm++) {
 	int tag = (dm->ftag > 0) ? dm->ftag : dm->ntag, tagflags = 0;
-	FD_t	fd, xfd;
-	int argc = 0;
-	const char **argv = 0;
-	char *envp[4];
-	FILE *fp = 0;
 	char *runBody = 0;
 
 	/* This will indicate whether we're doing a scriptlet or a filelist */
@@ -2682,80 +2680,13 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
 	    p = _free( p );
 	}
 
-	if (makeTempFile(rootURL, &scriptName, &fd) || fd == NULL || Ferror(fd)) {
-		rc = RPMERR_SCRIPT;
-		rpmError(RPMERR_SCRIPT, _("Unable to open temp file."));
-		break;
-	}
-
-#ifdef HAVE_FCHMOD
-	switch (rootut) {
-		case URL_IS_PATH:
-		case URL_IS_UNKNOWN:
-			(void)fchmod(Fileno(fd), 0600);
-			break;
-		default:
-			break;
-	}
-#endif
-
-	if ( !fdGetFp(fd) )
-		xfd = Fdopen(fd, "w.fpio");
-	else
-		xfd = fd;
-	if ( !(fp = fdGetFp(xfd)) ) {
-		rc = RPMERR_SCRIPT;
-		scriptName = _free(scriptName);
-		break;
-	}
-
-	urlPath(scriptName, &runScript);
-
-	fputs(runTemplate, fp);
-	fputc('\n', fp);
-
-	fputs(runBody, fp);
-	runBody = _free(runBody);
-	fputc('\n', fp);
-
-	fputs(runPost, fp);
-	fputc('\n', fp);
-
-	Fclose(xfd);
-
-	runCmd = rpmExpand("%{?___build_cmd}", " ", runScript, NULL);
-
-	poptParseArgvString(runCmd, &argc, &argv);
-
-	{
-		const char *n, *v, *r;
-
-		headerNVR(pkg->header, &n, &v, &r);
-		asprintf (&envp[0], "RPM_SUBPACKAGE_NAME=%s", n);
-		asprintf (&envp[1], "RPM_SUBPACKAGE_VERSION=%s", v);
-		asprintf (&envp[2], "RPM_SUBPACKAGE_RELEASE=%s", r);
-		envp[3] = 0;
-	}
-
-	rpmMessage(RPMMESS_NORMAL, _("Executing(%s): %s\n"), dm->msg, runCmd);
-
-	readBuf = getOutputFrom(NULL, argv, envp,
+	readBuf = runPkgScript(pkg, runBody,
 			instScript ? NULL : getStringBuf(fileListBuf),
-			instScript ? 0 : fileListBytes,
-			failnonzero);
-
-
-	/* Free expanded args */
-	envp[0] = _free(envp[0]);
-	envp[1] = _free(envp[1]);
-	envp[2] = _free(envp[2]);
-	argv = _free(argv);
-	runCmd = _free(runCmd);
+			instScript ? 0 : fileListBytes);
 
 	if (readBuf == NULL) {
 	    rc = RPMERR_EXEC;
 	    rpmError(rc, _("Failed to find %s\n"), dm->msg);
-	    scriptName = _free(scriptName);
 	    break;
 	}
 
@@ -2765,12 +2696,8 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
 
 	if (rc) {
 	    rpmError(rc, _("Failed to find %s\n"), dm->msg);
-	    scriptName = _free(scriptName);
 	    break;
 	}
-
-	Unlink(scriptName);
-	scriptName = _free(scriptName);
 
 	if (instScript) {
 	    /* unlink(instScript); */
@@ -2778,22 +2705,6 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
 	}
     }
 
-	if (u) {
-		switch (u->urltype) {
-			case URL_IS_FTP:
-			case URL_IS_HTTP:
-				delMacro(spec->macros, "_remsh");
-				delMacro(spec->macros, "_remhost");
-				if (strcmp(rootDir, "/"))
-					delMacro(spec->macros, "_remroot");
-				break;
-			default:
-				break;
-		}
-	}
-    runPost = _free(runPost);
-    runTemplate = _free(runTemplate);
-    runDirURL = _free(runDirURL);
     fileListBuf = freeStringBuf(fileListBuf);
     return rc;
 }
@@ -2929,11 +2840,6 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	/*@=noeffect@*/
     }
 
-    /* Now we have in fileList list of files from all packages.
-     * We pass it to a script which do the work of finding missing
-     * and duplicated files.
-     */
-    
     if (rc == 0)
 	rc = checkFiles(spec);
 

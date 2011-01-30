@@ -258,7 +258,7 @@
 @alt@	\
 @alt@	%{expand:%(cat @RPMCONFIGDIR@/macros.d/*.env @SYSCONFIGDIR@/macros.d/*.env 2>/dev/null)}\
 @alt@	\
-@alt@	%{verbose:set -x}%{!verbose:exec > /dev/null}\
+@alt@	%{verbose:set -x}\
 @alt@	umask 022\
 @alt@	%__mkdir_p %{u2p:%_builddir}\
 @alt@	cd %{u2p:%_builddir}\
