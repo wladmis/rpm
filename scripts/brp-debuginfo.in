@@ -1,4 +1,11 @@
 #!/bin/sh -efu
+#
+# brp-debuginfo - generate /usr/lib/debug and /usr/src/debug contents
+# for debuginfo packages
+#
+# Written by Alexey Tourbin <at@altlinux.org>.  Based on find-debuginfo.sh
+# by Jeff Johnson <jbj@rpm5.org> and Roland McGrath <roland@redhat.com>.
+# License: GPLv2+.
 
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot

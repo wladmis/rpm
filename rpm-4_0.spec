@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.13
+Release: alt100.14
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -498,6 +498,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Jan 30 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.14
+- debugedit.c: Imported from rpm.org.
+- brp-debuginfo: Initial revision, replaces brp-strip.
+- verify-elf: Do not descend into /usr/lib/debug.
+- build/checkFiles.c: Skip /usr/lib/debug and /usr/src/debug for now.
+- platform.in: Always use -g in %%optflags.
+
 * Sun Jan 23 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.13
 - Removed --fileid query selector and Filemd5s rpmdb index (rpm.org).
 - Removed ancient dependency loop whiteout mechanism (rpm.org).
