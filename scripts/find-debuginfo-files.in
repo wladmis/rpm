@@ -1,4 +1,9 @@
 #!/bin/sh -efu
+#
+# find-debuginfo-files - make %files list for debuginfo package
+#
+# Written by Alexey Tourbin <at@altlinux.org>.
+# License: GPLv2+.
 
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot

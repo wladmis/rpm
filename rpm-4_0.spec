@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.14
+Release: alt100.15
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -499,6 +499,14 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Jan 31 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.15
+- build/files.c (runPkgScript): New helper function for autodep-like scripts.
+- build/files.c (makeDebugInfo): Implemented automatic *-debuginfo packages.
+- find-debuginfo-files: Initial revision, makes *-debuginfo %%files list.
+- GROUPS: added Development/Debug.
+- build/interdep.c: Initial revision, inter-package analysis and optimizations.
+- build/interdep.c: Prune /usr/src/debug dups among dependent subpackages.
+
 * Sun Jan 30 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.14
 - debugedit.c: Imported from rpm.org.
 - brp-debuginfo: Initial revision, replaces brp-strip.
