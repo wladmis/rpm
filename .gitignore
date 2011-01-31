@@ -66,7 +66,6 @@ Makefile.in
 /scripts/brp-strip
 /scripts/brp-verify-info
 /scripts/brp-verify_elf
-/scripts/check-files
 /scripts/compress_files
 /scripts/files.req.files
 /scripts/find-lang

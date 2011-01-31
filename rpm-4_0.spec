@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt99.M51.3
+Release: alt99.M51.4
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -446,7 +446,6 @@ fi
 %rpmattr %_rpmlibdir/relative
 %rpmattr %_rpmlibdir/brp-*
 %rpmattr %_rpmlibdir/*_files
-%rpmattr %_rpmlibdir/check-files
 %rpmattr %_rpmlibdir/ldd
 %rpmattr %_rpmlibdir/rpm2cpio.sh
 %rpmattr %_rpmlibdir/find-lang
@@ -495,6 +494,25 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Jan 31 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt99.M51.4
+- Rebuilt for branch 5.1.
+
+* Sun Jan 23 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.13
+- Removed --fileid query selector and Filemd5s rpmdb index (rpm.org).
+- Removed ancient dependency loop whiteout mechanism (rpm.org).
+- rpmdb.c: Do not exclude Requires(pre) dependencies from rpmdb index.
+- Implemented %%__find_{requires,provides}_filter macros (lower-level) and
+  %%filter_from_{requires,provides} (higher-level, compatible with Fedora).
+
+* Fri Jan 21 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.12
+- build/checkFiles.c: Fixed %%exclude vs unpackaged regression.
+- header.c: Optimized header loading and access routines.
+
+* Sun Jan 16 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.11
+- build/files.c (addFile): Replaced myftw() with fts(3).
+- build/checkFiles.c: Reimplemented check for unpackaged files using fts(3).
+- python: Backported forceArray changes from rpm5.org (Alexander Myltsev).
+
 * Tue Jan 11 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt99.M51.3
 - Rebuilt for branch 5.1.
 - Reverted "pkg-config --print-requires-private" change introduced in alt100.2.

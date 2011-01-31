@@ -63,7 +63,6 @@ const int dbiTags[] = {
     RPMTAG_INSTALLTID,
     RPMTAG_SIGMD5,
     RPMTAG_SHA1HEADER,
-    RPMTAG_FILEMD5S,
 };
 
 const int dbiTagsMax = sizeof(dbiTags) / sizeof(*dbiTags);
@@ -2383,16 +2382,6 @@ int rpmdbRemove(rpmdb db, /*@unused@*/ int rid, unsigned int hdrNum)
 		int stringvalued;
 		unsigned char bin[32];
 
-		switch (dbi->dbi_rpmtag) {
-		case RPMTAG_FILEMD5S:
-		    /* Filter out empty MD5 strings. */
-		    if (!(rpmvals[i] && *rpmvals[i] != '\0'))
-			/*@innercontinue@*/ continue;
-		    /*@switchbreak@*/ break;
-		default:
-		    /*@switchbreak@*/ break;
-		}
-
 		/* Identify value pointer and length. */
 		stringvalued = 0;
 		switch (rpmtype) {
@@ -2419,19 +2408,6 @@ int rpmdbRemove(rpmdb db, /*@unused@*/ int rid, unsigned int hdrNum)
 		    rpmcnt = 1;		/* XXX break out of loop. */
 		    /*@fallthrough@*/
 		case RPM_STRING_ARRAY_TYPE:
-		    /* Convert from hex to binary. */
-		    if (dbi->dbi_rpmtag == RPMTAG_FILEMD5S) {
-			const char * s;
-			unsigned char * t;
-
-			s = rpmvals[i];
-			t = bin;
-			for (j = 0; j < 16; j++, t++, s += 2)
-			    *t = (nibble(s[0]) << 4) | nibble(s[1]);
-			valp = bin;
-			vallen = 16;
-			/*@switchbreak@*/ break;
-		    }
 #ifdef	NOTYET
 		    /* Extract the pubkey id from the base64 blob. */
 		    if (dbi->dbi_rpmtag == RPMTAG_PUBKEYS) {
@@ -2649,11 +2625,9 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 	    rpmTagType rpmtype = 0;
 	    int rpmcnt = 0;
 	    int rpmtag;
-	    int_32 * requireFlags;
 	    int i, j;
 
 	    dbi = NULL;
-	    requireFlags = NULL;
 	    rpmtag = dbiTags[dbix];
 
 	    switch (rpmtag) {
@@ -2684,10 +2658,6 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 		rpmtype = bnt;
 		rpmvals = baseNames;
 		rpmcnt = count;
-		/*@switchbreak@*/ break;
-	    case RPMTAG_REQUIRENAME:
-		xx = hge(h, rpmtag, &rpmtype, (void **)&rpmvals, &rpmcnt);
-		xx = hge(h, RPMTAG_REQUIREFLAGS, NULL, (void **)&requireFlags, NULL);
 		/*@switchbreak@*/ break;
 	    default:
 		xx = hge(h, rpmtag, &rpmtype, (void **)&rpmvals, &rpmcnt);
@@ -2737,14 +2707,9 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 		case RPMTAG_PUBKEYS:
 		    /*@switchbreak@*/ break;
 #endif
-		case RPMTAG_FILEMD5S:
-		    /* Filter out empty MD5 strings. */
-		    if (!(rpmvals[i] && *rpmvals[i] != '\0'))
-			/*@innercontinue@*/ continue;
-		    /*@switchbreak@*/ break;
 		case RPMTAG_REQUIRENAME:
-		    /* Filter out install prerequisites. */
-		    if (requireFlags && isInstallPreReq(requireFlags[i]))
+		    /* Filter out rpmlib dependencies */
+		    if (strncmp(rpmvals[i], "rpmlib(", 7) == 0)
 			/*@innercontinue@*/ continue;
 		    /*@switchbreak@*/ break;
 		case RPMTAG_TRIGGERNAME:
@@ -2787,19 +2752,6 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 		    rpmcnt = 1;		/* XXX break out of loop. */
 		    /*@fallthrough@*/
 		case RPM_STRING_ARRAY_TYPE:
-		    /* Convert from hex to binary. */
-		    if (dbi->dbi_rpmtag == RPMTAG_FILEMD5S) {
-			const char * s;
-			unsigned char * t;
-
-			s = rpmvals[i];
-			t = bin;
-			for (j = 0; j < 16; j++, t++, s += 2)
-			    *t = (nibble(s[0]) << 4) | nibble(s[1]);
-			valp = bin;
-			vallen = 16;
-			/*@switchbreak@*/ break;
-		    }
 #ifdef	NOTYET
 		    /* Extract the pubkey id from the base64 blob. */
 		    if (dbi->dbi_rpmtag == RPMTAG_PUBKEYS) {

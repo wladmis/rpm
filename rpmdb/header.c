@@ -346,29 +346,20 @@ static int dataLength(int_32 type, hPTR_t p, int_32 count, int onDisk)
 
     case RPM_STRING_ARRAY_TYPE:
     case RPM_I18NSTRING_TYPE:
-    {	int i;
-
 	/* This is like RPM_STRING_TYPE, except it's *always* an array */
 	/* Compute sum of length of all strings, including null terminators */
-	i = count;
-
 	if (onDisk) {
-	    const char * chptr = p;
-	    int thisLen;
-
-	    while (i--) {
-		thisLen = strlen(chptr) + 1;
-		length += thisLen;
-		chptr += thisLen;
-	    }
+	    const char *end = p;
+	    while (count--)
+		end += strlen(end) + 1;
+	    length = end - (const char *) p;
 	} else {
-	    const char ** src = (const char **)p;
-	    while (i--) {
-		/* add one for null termination */
+	    const char **src = (const char **) p;
+	    const char **end = src + count;
+	    while (src < end)
 		length += strlen(*src++) + 1;
-	    }
 	}
-    }	break;
+	break;
 
     default:
 	if (typeSizes[type] != -1) {
@@ -467,18 +458,18 @@ static int regionSwab(/*@null@*/ indexEntry entry, int il, int dl,
 	}
 
 	/* Perform endian conversions */
-	switch (ntohl(pe->type)) {
+	switch (type) {
 	case RPM_INT32_TYPE:
-	{   int_32 * it = (int_32 *)t;
-	    for (; ie.info.count > 0; ie.info.count--, it += 1)
-		*it = htonl(*it);
-	    t = (char *) it;
+	{   int_32 *it = (int_32 *) t;
+	    t = (char *)(it + ie.info.count);
+	    while (it < (int_32 *) t)
+		*it++ = htonl(*it);
 	}   /*@switchbreak@*/ break;
 	case RPM_INT16_TYPE:
-	{   int_16 * it = (int_16 *) t;
-	    for (; ie.info.count > 0; ie.info.count--, it += 1)
-		*it = htons(*it);
-	    t = (char *) it;
+	{   int_16 *it = (int_16 *) t;
+	    t = (char *)(it + ie.info.count);
+	    while (it < (int_16 *) t)
+		*it++ = htons(*it);
 	}   /*@switchbreak@*/ break;
 	default:
 	    t += ie.length;
@@ -781,17 +772,27 @@ static /*@null@*/
 indexEntry findEntry(/*@null@*/ Header h, int_32 tag, int_32 type)
 	/*@modifies h @*/
 {
-    indexEntry entry, entry2, last;
-    struct indexEntry key;
-
     if (h == NULL) return NULL;
     if (!(h->flags & HEADERFLAG_SORTED)) headerSort(h);
 
-    key.info.tag = tag;
+    int found = 0;
+    indexEntry entry = NULL;
+    int l = 0;
+    int u = h->indexUsed;
+    while (l < u) {
+       int i = (l + u) / 2;
+       entry = h->index + i;
+       if (tag < entry->info.tag)
+	   u = i;
+       else if (tag > entry->info.tag)
+	   l = i + 1;
+       else {
+	   found = 1;
+	   break;
+	}
+    }
 
-    entry2 = entry = 
-	bsearch(&key, h->index, h->indexUsed, sizeof(*h->index), indexCmp);
-    if (entry == NULL)
+    if (!found)
 	return NULL;
 
     if (type == RPM_NULL_TYPE)
@@ -800,15 +801,6 @@ indexEntry findEntry(/*@null@*/ Header h, int_32 tag, int_32 type)
     /* look backwards */
     while (entry->info.tag == tag && entry->info.type != type &&
 	   entry > h->index) entry--;
-
-    if (entry->info.tag == tag && entry->info.type == type)
-	return entry;
-
-    last = h->index + h->indexUsed;
-    /*@-usereleased@*/ /* FIX: entry2 = entry. Code looks bogus as well. */
-    while (entry2->info.tag == tag && entry2->info.type != type &&
-	   entry2 < last) entry2++;
-    /*@=usereleased@*/
 
     if (entry->info.tag == tag && entry->info.type == type)
 	return entry;
@@ -1026,8 +1018,20 @@ Header headerLoad(/*@kept@*/ void * uh)
 	}
     }
 
-    h->flags &= ~HEADERFLAG_SORTED;
-    headerSort(h);
+    /* See if the header needs sorting. */
+    entry = h->index;
+    indexEntry end = entry + h->indexUsed;
+    int prevtag = -1;
+    while (entry < end) {
+	int tag = entry->info.tag;
+	if (prevtag > tag) {
+	    h->flags &= ~HEADERFLAG_SORTED;
+	    headerSort(h);
+	    break;
+	}
+	prevtag = tag;
+	entry++;
+    }
 
     /*@-globstate -observertrans @*/
     return h;
@@ -1510,13 +1514,26 @@ convert (char *ed, const char *td)
 /*@dependent@*/ /*@exposed@*/ static char *
 headerFindI18NString (Header h, indexEntry entry)
 {
-	const char *lang, *l, *le;
+	const char *l, *le;
 	indexEntry table;
 	int     strip_lang;
 
+	static int guessed;
+	static const char *lang;
+	if (!guessed) {
+		lang = guess_category_value (LC_MESSAGES);
+		if (lang) {
+			if (strcmp(lang, "C") == 0)
+				lang = NULL;
+			else
+				lang = xstrdup (lang);
+		}
+		guessed = 1;
+	}
+
 	if (!entry->data
 	    || !*(const char *) entry->data
-	    || !(lang = guess_category_value (LC_MESSAGES)))
+	    || !lang)
 		return entry->data;
 
 	/*@-mods@ */
