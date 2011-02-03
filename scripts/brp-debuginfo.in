@@ -34,19 +34,36 @@ while read -r nlink ino f; do
 			eval f0_$ino="\$f"
 		fi
 	fi
+	strip='--strip-all'
+	for pat in ${RPM_BRP_STRIP_DEBUG-}; do
+		if [ -z "${f##.$pat}" ]; then
+			strip='--strip-debug'
+			break
+		fi
+	done
+	for pat in ${RPM_BRP_STRIP_NONE-}; do
+		if [ -z "${f##.$pat}" ]; then
+			strip=
+			break
+		fi
+	done
 	touch -r "$f" .tmp/stamp
 	@RPMCONFIGDIR@/debugedit -b "$RPM_BUILD_DIR" -d /usr/src/debug -l .tmp/src "$f"
-	eu-strip --remove-comment -f "$debugf" "$f"
-	touch -r .tmp/stamp  "$debugf" "$f"
-	chmod 644 "$debugf"
-	mkdir -p .debuginfo/src/"${debugf%/*}"
+	if [ -n "$strip" ]; then
+		eu-strip $strip --remove-comment -f "$debugf" "$f"
+		touch -r .tmp/stamp "$debugf" "$f"
+		chmod 644 "$debugf"
+	else
+		touch -r .tmp/stamp "$f"
+	fi
+	mkdir -p .debuginfo/src/"${f%/*}"
 	awk 'BEGIN{RS="\0";ORS="\n"}{print}' .tmp/src |LC_ALL=C sort -u |
 	while read -r src; do
 		[ -f "$RPM_BUILD_DIR"/"$src" ] || continue
 		[ -f ./usr/src/debug/"$src" ] ||
 		install -pD -m644 "$RPM_BUILD_DIR"/"$src" ./usr/src/debug/"$src"
 		printf '%s\n' /usr/src/debug/"$src"
-	done >.debuginfo/src/"$debugf"
+	done >.debuginfo/src/"$f"
 	rm .tmp/src
 done
 
