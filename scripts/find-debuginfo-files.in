@@ -20,17 +20,26 @@ mkdir .tmp
 while read -r f; do
 	f=${f#$RPM_BUILD_ROOT}
 	debugf=./usr/lib/debug$f.debug
-	if [ -L "$debugf" ]; then
-		continue
-	fi
-	if [ -f "$debugf" ]; then
-		printf '%s\n' "${debugf#.}" >>.tmp/files
-	fi
+	[ -f "$debugf" ] && [ ! -L "$debugf" ] || continue
+	printf '%s\n' "${debugf#.}" >>.tmp/files
 	if [ -f .debuginfo/links/"$debugf" ]; then
 		cat .debuginfo/links/"$debugf" >>.tmp/links
 	fi
 	if [ -s .debuginfo/src/"$debugf" ]; then
 		LC_ALL=C sort -m -u -o .tmp/src .tmp/src .debuginfo/src/"$debugf"
+	fi
+	id=$(@RPMCONFIGDIR@/debugedit -i "$debugf")
+	[ -n "$id" ] || continue
+	link=./usr/lib/debug/.build-id/${id:0:2}/${id:2}
+	if [ ! -L "$link" ]; then
+		mkdir -p "${link%/*}"
+		ln -snf "$(relative "$f" "${link#.}")" "$link"
+		ln -snf "$(relative "${debugf#.}" "${link#.}".debug)" "$link".debug
+	fi
+	to=$(readlink -vm "$link")
+	if [ "$to" = "$RPM_BUILD_ROOT$f" ]; then
+		printf '%s\n' "${link#.}" >>.tmp/links
+		printf '%s\n' "${link#.}".debug >>.tmp/links
 	fi
 done
 
