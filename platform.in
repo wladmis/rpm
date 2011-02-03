@@ -226,6 +226,8 @@
 @alt@	%{?_pkg_contents_index_bin:export RPM_PKG_CONTENTS_INDEX_BIN=\"%_pkg_contents_index_bin\"}\
 @alt@	%{?_scripts_debug:export RPM_SCRIPTS_DEBUG=\"%_scripts_debug\"}\
 @alt@	%{?_keep_libtool_files:export RPM_KEEP_LIBTOOL_FILES=\"%_keep_libtool_files\"}\
+@alt@	%{?_brp_strip_debug:export RPM_BRP_STRIP_DEBUG=\"%_brp_strip_debug\"}\
+@alt@	%{?_brp_strip_none:export RPM_BRP_STRIP_NONE=\"%_brp_strip_none\"}\
 @alt@	\
 @alt@	%{?__find_requires_filter:export RPM_FIND_REQUIRES_FILTER=$(cat <<'!FIND!REQUIRES!FILTER!'\
 @alt@%__find_requires_filter\
@@ -500,6 +502,9 @@
 @alt@
 @alt@%filter_from_requires()   %global __find_requires_filter %{?!__find_requires_filter:%__sed}%{?__find_requires_filter} -e '%*'
 @alt@%filter_from_provides()   %global __find_provides_filter %{?!__find_provides_filter:%__sed}%{?__find_provides_filter} -e '%*'
+@alt@
+@alt@%brp_strip_debug()		%global _brp_strip_debug %{?_brp_strip_debug} %*
+@alt@%brp_strip_none()		%global _brp_strip_none %{?_brp_strip_none} %*
 @alt@
 @alt@%add_findpackage_path()	%global _findpackage_path %_findpackage_path %*
 @alt@%add_findprov_lib_path()	%global _findprov_lib_path %_findprov_lib_path %*
