@@ -445,6 +445,7 @@ fi
 %_rpmlibdir/rpmt
 %rpmattr %_rpmlibdir/rpmb
 %rpmattr %_rpmlibdir/debugedit
+%rpmattr %_rpmlibdir/debuginfo.*
 %rpmattr %_rpmlibdir/dump_ld_config
 %rpmattr %_rpmlibdir/filesize
 %rpmattr %_rpmlibdir/relative

@@ -4,6 +4,7 @@ AUTOMAKE_OPTIONS = 1.4 foreign
 
 EXTRA_DIST = \
 	posttrans-filetriggers 0ldconfig.filetrigger \
+	debuginfo.req debuginfo.req.files debuginfo.prov debuginfo.prov.files \
 	functions find-package .provides.sh \
 	find-debuginfo-files \
 	find-scriptlet-requires \
@@ -35,6 +36,7 @@ configdir = ${prefix}/lib/rpm
 config_DATA = .provides.sh 0common-files.req.list
 config_SCRIPTS = \
 	posttrans-filetriggers 0ldconfig.filetrigger \
+	debuginfo.req debuginfo.req.files debuginfo.prov debuginfo.prov.files \
 	functions find-package \
 	find-debuginfo-files \
 	find-scriptlet-requires \

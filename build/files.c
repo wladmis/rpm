@@ -2761,7 +2761,7 @@ static int makeDebugInfo(Spec spec, Package pkg)
 	"Summary: %{summary} (debug files)\n"
 	"Group: Development/Debug\n"
 	"Requires: %{name} = %|epoch?{%{epoch}:}|%{version}-%{release}\n"
-	"AutoReqProv: no\n"
+	"AutoReqProv: no, debuginfo\n"
 	"%%description -n %{name}-debuginfo\n"
 	"This package provides debug information for package %{name}.\n"
 	"%%files -n %{name}-debuginfo\n";
