@@ -348,8 +348,9 @@ void pruneSrc1(Package pkg1, Package pkg2)
     evr = _free(evr);
 }
 
-static
-void pruneDebuginfoSrc(struct Req *r, Spec spec)
+static void
+processDependentDebuginfo(struct Req *r, Spec spec,
+    void (*cb)(Package pkg1, Package pkg2), int mutual)
 {
     int i1, i2;
     struct Pair r1, r2;
@@ -372,13 +373,21 @@ void pruneDebuginfoSrc(struct Req *r, Spec spec)
 	    if (suf == NULL || strcmp(suf, "debuginfo"))
 		continue;
 	    // (pkg1 <-> pkg2) => (pkg1-debuginfo <-> pkg2-debuginfo)
-	    if (Requires(r, r1.pkg2, r2.pkg2))
-		pruneSrc1(r1.pkg1, r2.pkg1);
-	    // "else" guards against mutual deletions
-	    else if (Requires(r, r2.pkg2, r1.pkg2))
-		pruneSrc1(r2.pkg1, r1.pkg1);
+	    if (Requires(r, r1.pkg2, r2.pkg2)) {
+		cb(r1.pkg1, r2.pkg1);
+		if (!mutual)
+		    continue;
+	    }
+	    if (Requires(r, r2.pkg2, r1.pkg2))
+		cb(r2.pkg1, r1.pkg1);
 	}
     }
+}
+
+static
+void pruneDebuginfoSrc(struct Req *r, Spec spec)
+{
+    processDependentDebuginfo(r, spec, pruneSrc1, 0);
 }
 
 int processInterdep(Spec spec)
