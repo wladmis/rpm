@@ -387,7 +387,6 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
     FD_t ifd = NULL;
     int count, sigtype;
     const char * sigtarget;
-    const char * rpmio_flags = NULL;
     const char * sha1 = NULL;
     const char *s;
     char buf[BUFSIZ];
@@ -410,6 +409,9 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
     if (type == RPMLEAD_BINARY)
 	providePackageNVR(h);
 
+    const char *rpmio_flags = NULL;
+    const char *N, *dash;
+
     /* Save payload information */
     /*@-branchstate@*/
     switch(type) {
@@ -417,7 +419,12 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
 	rpmio_flags = rpmExpand("%{?_source_payload}", NULL);
 	break;
     case RPMLEAD_BINARY:
-	rpmio_flags = rpmExpand("%{?_binary_payload}", NULL);
+	headerNVR(h, &N, NULL, NULL);
+	dash = strrchr(N, '-');
+	if (dash && strcmp(dash, "-debuginfo") == 0)
+	    rpmio_flags = rpmExpand("%{?_debuginfo_payload}", NULL);
+	if (!(rpmio_flags && *rpmio_flags))
+	    rpmio_flags = rpmExpand("%{?_binary_payload}", NULL);
 	break;
     }
     /*@=branchstate@*/
