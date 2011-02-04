@@ -390,10 +390,61 @@ void pruneDebuginfoSrc(struct Req *r, Spec spec)
     processDependentDebuginfo(r, spec, pruneSrc1, 0);
 }
 
+#include "al.h"
+
+// if pkg1 implicitly requires pkg2, add strict dependency
+static
+void liftDeps1(Package pkg1, Package pkg2)
+{
+    int reqc = 0;
+    const char **reqNv = NULL;
+    const char **reqVv = NULL;
+    const int *reqFv = NULL;
+    const HGE_t hge = (HGE_t) headerGetEntryMinMemory;
+    int ok =
+       hge(pkg1->header, RPMTAG_REQUIRENAME, NULL, (void **) &reqNv, &reqc) &&
+       hge(pkg1->header, RPMTAG_REQUIREVERSION, NULL, (void **) &reqVv, NULL) &&
+       hge(pkg1->header, RPMTAG_REQUIREFLAGS, NULL, (void **) &reqFv, NULL);
+    if (!ok)
+	return;
+    availableList proval = alloca(sizeof proval);
+    alCreate(proval);
+    alAddPackage(proval, pkg2->header, NULL, NULL, NULL);
+    int i;
+    struct availablePackage *ap = NULL;
+    for (i = 0; i < reqc; i++) {
+	ap = alSatisfiesDepend(proval, reqNv[i], reqVv[i], reqFv[i]);
+	if (ap)
+	    break;
+    }
+    const HFD_t hfd = (HFD_t) headerFreeData;
+    reqNv = hfd(reqNv, RPM_STRING_ARRAY_TYPE);
+    reqVv = hfd(reqVv, RPM_STRING_ARRAY_TYPE);
+    if (ap == NULL)
+	return;
+    const char *name = pkgName(pkg2);
+    const char *evr = headerSprintf(pkg2->header,
+	    "%|epoch?{%{epoch}:}|%{version}-%{release}",
+	    rpmTagTable, rpmHeaderFormats, NULL);
+    assert(evr);
+    int flags = RPMSENSE_EQUAL | RPMSENSE_FIND_REQUIRES;
+    if (addReqProv(NULL, pkg1->header, flags, name, evr, 0) == 0)
+	fprintf(stderr, "%s: adding strict dependency on %s\n",
+		pkgName(pkg1), pkgName(pkg2));
+    evr = _free(evr);
+}
+
+static
+void liftDebuginfoDeps(struct Req *r, Spec spec)
+{
+    processDependentDebuginfo(r, spec, liftDeps1, 1);
+}
+
 int processInterdep(Spec spec)
 {
     struct Req *r = makeRequires(spec);
     pruneDebuginfoSrc(r, spec);
+    liftDebuginfoDeps(r, spec);
     r = freeRequires(r);
     return 0;
 }
