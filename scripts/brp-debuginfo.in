@@ -16,7 +16,7 @@ rm -rf .tmp
 mkdir .tmp
 
 # Strip binaries, create .debug files under /usr/lib/debug and install sources into /usr/src/debug.
-prune_paths='-path ./usr/share -o -path ./lib/firmware -o -path ./usr/lib/debug'
+prune_paths='-path ./usr/share -o -path ./lib/firmware -o -path ./usr/lib/debug -o -path ./usr/src'
 find . '(' -path './.*' -o $prune_paths ')' -prune -o -type f -print |
 file -NF$'\t' -f - |sed -n 's/\t.* ELF .* \(executable\|shared object\), .*, not stripped.*//p' |
 xargs -r --delimiter='\n' stat -c '%h %i %n' |
