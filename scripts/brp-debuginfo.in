@@ -17,18 +17,21 @@ mkdir .tmp
 
 # Strip binaries, create .debug files under /usr/lib/debug and install sources into /usr/src/debug.
 prune_paths='-path ./usr/share -o -path ./lib/firmware -o -path ./usr/lib/debug -o -path ./usr/src'
-find . '(' -path './.*' -o $prune_paths ')' -prune -o -type f -print |
+find . '(' -path './.*' -o $prune_paths ')' -prune -o -type f -print |sort |
 file -NF$'\t' -f - |sed -n 's/\t.* ELF .* \(executable\|shared object\), .*, not stripped.*//p' |
-xargs -r --delimiter='\n' stat -c '%h %i %n' |
+xargs -r --delimiter='\n' stat -c '%h %i %n' >.tmp/flist
 while read -r nlink ino f; do
 	debugf=./usr/lib/debug${f#.}.debug
-	mkdir -p "${debugf%/*}"
 	if [ "$nlink" -gt 1 ]; then
 		eval f0="\${f0_$ino-}"
 		if [ -n "$f0" ]; then
-			ln -nf "$f0" "$debugf"
-			mkdir -p .debuginfo/src/"${debugf%/*}"
-			ln -nf .debuginfo/src/"$f0" .debuginfo/src/"$debugf"
+			debugf0=./usr/lib/debug${f0#.}.debug
+			if [ -f "$debugf0" ]; then
+				mkdir -p "${debugf%/*}"
+				ln -nf "$debugf0" "$debugf"
+			fi
+			mkdir -p .debuginfo/src/"${f%/*}"
+			ln -nf .debuginfo/src/"$f0" .debuginfo/src/"$f"
 			continue
 		else
 			eval f0_$ino="\$f"
@@ -50,6 +53,7 @@ while read -r nlink ino f; do
 	touch -r "$f" .tmp/stamp
 	@RPMCONFIGDIR@/debugedit -b "$RPM_BUILD_DIR" -d /usr/src/debug -l .tmp/src "$f"
 	if [ -n "$strip" ]; then
+		mkdir -p "${debugf%/*}"
 		eu-strip $strip --remove-comment -f "$debugf" "$f"
 		touch -r .tmp/stamp "$debugf" "$f"
 		chmod 644 "$debugf"
@@ -65,10 +69,10 @@ while read -r nlink ino f; do
 		printf '%s\n' /usr/src/debug/"$src"
 	done >.debuginfo/src/"$f"
 	rm .tmp/src
-done
+done <.tmp/flist
 
 # Make symbolic links that mimic the original tree.
-find . '(' -path './.*' -o $prune_paths ')' -prune -o -type l -print |
+find . '(' -path './.*' -o $prune_paths ')' -prune -o -type l -print |sort >.tmp/flist
 while read -r l; do
 	f=$(readlink -vm "$l")
 	f=${f#$RPM_BUILD_ROOT}
@@ -79,4 +83,4 @@ while read -r l; do
 	ln -snf "$(relative "${debugf#.}" "${debugl#.}")" "$debugl"
 	mkdir -p .debuginfo/links/"${debugf%/*}"
 	printf '%s\n' "${debugl#.}" >>.debuginfo/links/"$debugf"
-done
+done <.tmp/flist
