@@ -20,12 +20,16 @@ RPM_FINDREQ_RPATH="/$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
 RPM_FINDREQ_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT") $RPM_FINDREQ_RPATH"
 Debug "RPM_FINDREQ_RPATH=$RPM_FINDREQ_RPATH"
 
+not_yet_list=
 HasDebugInfo()
 {
 	if readelf --sections "$1" |LC_ALL=C fgrep -qs '.gnu_debuglink'; then
 		return 0
 	fi
-	Warning "$1 is not yet debuginfo-enabled"
+	if [ -z "$not_yet_list" ] || [ -n "${not_yet_list##* $1 *}" ]; then
+		Warning "$1 is not yet debuginfo-enabled"
+		not_yet_list="$not_yet_list $1 "
+	fi
 	return 1
 }
 
