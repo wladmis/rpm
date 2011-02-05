@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.16
+Release: alt100.17
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -500,6 +500,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Feb 06 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.17
+- build/files.c: Missing error check resulted in "Bad CSA data" error.
+- build/checkFiles.c: Disabled intersection check for /usr/src/debug.
+
 * Sat Feb 05 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.16
 - find-debuginfo-files: Create /usr/lib/debug/.build-id links.
 - build/pack.c: Added support for %%_debuginfo_payload macro.
