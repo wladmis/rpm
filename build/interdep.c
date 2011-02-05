@@ -287,10 +287,11 @@ void fiPrune(TFI_t fi, char pruned[])
     PruneV(fi->fmapflags);
     PruneV(fi->fuids);
     PruneV(fi->fgids);
+    PruneV(fi->fsts);
     struct transactionFileInfo_s save_fi;
 #define MV(a) save_fi.a = fi->a; fi->a = NULL
     MV(bnl); MV(dnl); MV(dil);
-    MV(apath); MV(actions); MV(fmapflags); MV(fuids); MV(fgids);
+    MV(apath); MV(actions); MV(fmapflags); MV(fuids); MV(fgids); MV(fsts);
     save_fi.h = fi->h;
     save_fi.astriplen = fi->astriplen;
     freeFi(fi);
@@ -303,7 +304,7 @@ void fiPrune(TFI_t fi, char pruned[])
 #undef MV
 #define MV(a) fi->a = save_fi.a
     MV(bnl); MV(dnl); MV(dil);
-    MV(apath); MV(actions); MV(fmapflags); MV(fuids); MV(fgids);
+    MV(apath); MV(actions); MV(fmapflags); MV(fuids); MV(fgids); MV(fsts);
     fi->astriplen = save_fi.astriplen;
 }
 

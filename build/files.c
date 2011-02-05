@@ -86,7 +86,6 @@ typedef struct FileList_s {
 /*@only@*/ const char * buildRootURL;
 
     int fileCount;
-    int totalFileSize;
     int processingFailed;
 
     int passedSpecialDoc;
@@ -976,50 +975,6 @@ static int isDoc(FileList fl, const char * fileName)	/*@*/
 }
 
 /**
- * Verify that file attributes scope over hardlinks correctly.
- * If partial hardlink sets are possible, then add tracking dependency.
- * @todo Only %lang coloring is checked, %doc et al also need doing.
- * @param fl		package file tree walk data
- * @return		1 if partial hardlink sets can exist, 0 otherwise.
- */
-static int checkHardLinks(FileList fl)
-	/*@*/
-{
-    FileListRec ilp, jlp;
-    int i, j;
-
-    for (i = 0;  i < fl->fileListRecsUsed; i++) {
-
-	ilp = fl->fileList + i;
-
-	/* Is this a hard link? */
-	if (!(S_ISREG(ilp->fl_mode) && ilp->fl_nlink > 1))
-	    continue;
-
-	/* Find all members of hardlink set. */
-	for (j = i + 1; j < fl->fileListRecsUsed; j++) {
-	    jlp = fl->fileList + j;
-
-	    /* Member of same hardlink set? */
-	    if (!S_ISREG(jlp->fl_mode))
-		/*@innercontinue@*/ continue;
-	    if (ilp->fl_nlink != jlp->fl_nlink)
-		/*@innercontinue@*/ continue;
-	    if (ilp->fl_ino != jlp->fl_ino)
-		/*@innercontinue@*/ continue;
-	    if (ilp->fl_dev != jlp->fl_dev)
-		/*@innercontinue@*/ continue;
-
-	    /* Identical locale coloring? */
-	    if (!strcmp(ilp->langs, jlp->langs))
-		continue;
-	    return 1;
-	}
-    }
-    return 0;
-}
-
-/**
  * Add file entries to header.
  * @todo Should directories have %doc/%config attributes? (#14531)
  * @todo Remove RPMTAG_OLDFILENAMES, add dirname/basename instead.
@@ -1270,6 +1225,7 @@ static void genCpioListAndHeader(Spec spec, /*@partial@*/ FileList fl,
     fi->fuids = xcalloc(sizeof(*fi->fuids), fi->fc);
     fi->fgroup = NULL;
     fi->fgids = xcalloc(sizeof(*fi->fgids), fi->fc);
+    fi->fsts = xcalloc(sizeof(*fi->fsts), fi->fc);
 
     /* Make the cpio list */
     for (i = 0, flp = fl->fileList; i < fi->fc; i++, flp++) {
@@ -1338,42 +1294,8 @@ static void genCpioListAndHeader(Spec spec, /*@partial@*/ FileList fl,
 		CPIO_MAP_TYPE | CPIO_MAP_MODE | CPIO_MAP_UID | CPIO_MAP_GID;
 	if (isSrc)
 	    fi->fmapflags[i] |= CPIO_FOLLOW_SYMLINKS;
-
-	if (S_ISREG(flp->fl_mode) && flp->fl_nlink == 1)
-	    fl->totalFileSize += flp->fl_size;
-	else if (S_ISREG(flp->fl_mode) && flp->fl_nlink > 1) {
-	    /* Hard links need be counted only once. */
-	    int j = i + 1;
-	    FileListRec jlp = flp + 1;
-	    int found = 0;
-	    for (; j < fi->fc; j++, jlp++) {
-		while (((jlp - fl->fileList) < (fl->fileListRecsUsed - 1)) &&
-			!strcmp(jlp->fileURL, jlp[1].fileURL))
-		    jlp++;
-		if (jlp->flags & RPMFILE_EXCLUDE) {
-		    j--;
-		    continue;
-		}
-		if (jlp->flags & RPMFILE_GHOST)
-		    continue;
-		if (!S_ISREG(jlp->fl_mode))
-		    continue;
-		if (flp->fl_nlink != jlp->fl_nlink)
-		    continue;
-		if (flp->fl_ino != jlp->fl_ino)
-		    continue;
-		if (flp->fl_dev != jlp->fl_dev)
-		    continue;
-		found = 1;
-		break;
-	    }
-	    if (!found) /* last entry in hardlink set */
-		fl->totalFileSize += flp->fl_size;
-	}
+	fi->fsts[i] = flp->fl_st;
     }
-    (void) headerAddEntry(h, RPMTAG_SIZE, RPM_INT32_TYPE,
-		   &(fl->totalFileSize), 1);
-
     /*@-branchstate@*/
     if (cpioList)
 	*cpioList = fi;
@@ -1713,7 +1635,7 @@ static int processBinaryFile(/*@unused@*/ Package pkg, FileList fl,
 		fileSystem@*/
 	/*@modifies *fl, fl->processingFailed,
 		fl->fileList, fl->fileListRecsAlloced, fl->fileListRecsUsed,
-		fl->totalFileSize, fl->fileCount, fl->isDir,
+		fl->fileCount, fl->isDir,
 		rpmGlobalMacroContext, fileSystem @*/
 {
     int doGlob;
@@ -1846,7 +1768,6 @@ static int processPackageFiles(Spec spec, Package pkg,
     fl.buildRootURL = rpmGenPath(spec->rootURL, spec->buildRootURL, NULL);
 
     fl.fileCount = 0;
-    fl.totalFileSize = 0;
     fl.processingFailed = 0;
 
     fl.passedSpecialDoc = 0;
@@ -2006,11 +1927,6 @@ static int processPackageFiles(Spec spec, Package pkg,
     if (fl.processingFailed)
 	goto exit;
 
-    /* Verify that file attributes scope over hardlinks correctly. */
-    if (checkHardLinks(&fl))
-	(void) rpmlibNeedsFeature(pkg->header,
-			"PartialHardlinkSets", "4.0.4-1");
-
     genCpioListAndHeader(spec, &fl, (TFI_t *)&pkg->cpioList, pkg->header, 0);
 
     if (spec->timeCheck)
@@ -2163,7 +2079,6 @@ int processSourceFiles(Spec spec)
     fl.fileList = xcalloc((spec->numSources + 1), sizeof(*fl.fileList));
     fl.processingFailed = 0;
     fl.fileListRecsUsed = 0;
-    fl.totalFileSize = 0;
     fl.buildRootURL = NULL;
 
     s = getStringBuf(sourceFiles);
@@ -2805,6 +2720,59 @@ exit:
     return rc;
 }
 
+static int finalizePkg(Package pkg)
+{
+    TFI_t fi = pkg->cpioList;
+    if (fi == NULL)
+	return 0;
+    int totalFileSize = 0;
+    int partialHardlinkSets = 0;
+    int i, j;
+    for (i = 0; i < fi->fc; i++) {
+	if (fi->actions[i] == FA_SKIP) // GHOST
+	    continue;
+	if (!S_ISREG(fi->fsts[i].st_mode))
+	    continue;
+	if (fi->fsts[i].st_nlink == 1) {
+	    totalFileSize += fi->fsts[i].st_size;
+	    continue;
+	}
+	assert(fi->fsts[i].st_nlink > 1);
+	int found = 0;
+	for (j = 0; j < i; j++) {
+	    if (fi->actions[j] == FA_SKIP)
+		continue;
+	    if (fi->fsts[i].st_dev != fi->fsts[j].st_dev)
+		continue;
+	    if (fi->fsts[i].st_ino != fi->fsts[j].st_ino)
+		continue;
+	    found = 1;
+	    break;
+	}
+	if (found)
+	    continue;
+	// first hardlink occurrence
+	totalFileSize += fi->fsts[i].st_size;
+	int nlink = 1;
+	for (j = i + 1; j < fi->fc; j++) {
+	    if (fi->actions[j] == FA_SKIP)
+		continue;
+	    if (fi->fsts[i].st_dev != fi->fsts[j].st_dev)
+		continue;
+	    if (fi->fsts[i].st_ino != fi->fsts[j].st_ino)
+		continue;
+	    // XXX check for identical locale coloring?
+	    nlink++;
+	}
+	assert(nlink <= fi->fsts[i].st_nlink);
+	if (nlink < fi->fsts[i].st_nlink)
+	    partialHardlinkSets = 1;
+    }
+    headerAddEntry(fi->h, RPMTAG_SIZE, RPM_INT32_TYPE, &totalFileSize, 1);
+    // XXX handle PartialHardlinkSets?
+    return 0;
+}
+
 /**
  */
 static void printDepMsg(DepMsg_t * dm, int count, const char ** names,
@@ -2945,6 +2913,13 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 
     if (rc == 0)
 	rc = checkFiles(spec);
+
+    for (pkg = spec->packages; pkg != NULL; pkg = pkg->next) {
+	if (pkg->fileList == NULL)
+	    continue;
+	rc = finalizePkg(pkg);
+	if (rc) break;
+    }
 
     return rc;
 }

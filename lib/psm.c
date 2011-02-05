@@ -260,6 +260,7 @@ TFI_t freeFi(TFI_t fi)
     fi->fuids = _free(fi->fuids);
     fi->fgids = _free(fi->fgids);
     fi->fmapflags = _free(fi->fmapflags);
+    fi->fsts = _free(fi->fsts);
 
     fi->fsm = freeFSM(fi->fsm);
 

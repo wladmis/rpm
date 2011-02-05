@@ -107,6 +107,8 @@ struct transactionFileInfo_s {
     unsigned int record;
 
     const char *digest;
+/*@owned@*/
+    struct stat *fsts;		/*!< File stat(s) (from buildroot) */
 };
 
 /**
