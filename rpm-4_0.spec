@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.15
+Release: alt100.16
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -500,6 +500,14 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sat Feb 05 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.16
+- find-debuginfo-files: Create /usr/lib/debug/.build-id links.
+- build/pack.c: Added support for %%_debuginfo_payload macro.
+- brp-debuginfo, platfrom.in: Impelemnted %%brp_strip_{debug,none} macros.
+- debuginfo.{req,prov}: Implemented soname-based debug dependencies.
+- build/interdep.c: Prune extra deps between dependent subpackages.
+- build/files.c: Calculate RPMTAG_SIZE after build/interdep.c optimizations.
+
 * Mon Jan 31 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.15
 - build/files.c (runPkgScript): New helper function for autodep-like scripts.
 - build/files.c (makeDebugInfo): Implemented automatic *-debuginfo packages.
