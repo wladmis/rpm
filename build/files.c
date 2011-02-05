@@ -2914,6 +2914,9 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
     if (rc == 0)
 	rc = checkFiles(spec);
 
+    if (rc)
+	return rc;
+
     for (pkg = spec->packages; pkg != NULL; pkg = pkg->next) {
 	if (pkg->fileList == NULL)
 	    continue;
