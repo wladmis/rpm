@@ -54,7 +54,7 @@ while read -r nlink ino f; do
 	@RPMCONFIGDIR@/debugedit -b "$RPM_BUILD_DIR" -d /usr/src/debug -l .tmp/src "$f"
 	if [ -n "$strip" ]; then
 		mkdir -p "${debugf%/*}"
-		eu-strip $strip --remove-comment -f "$debugf" "$f"
+		LD_ORIGIN_PATH=/usr/bin eu-strip $strip --remove-comment -f "$debugf" "$f"
 		touch -r .tmp/stamp "$debugf" "$f"
 		chmod 644 "$debugf"
 	else
