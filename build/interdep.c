@@ -468,6 +468,8 @@ void pruneDeps1(Package pkg1, Package pkg2)
     alAddPackage(proval, pkg2->header, NULL, NULL, NULL);
     int flags = 0, *flagsp = NULL;
     struct availablePackage *ap = NULL;
+    int rpmlibSetVersions = -1;
+    int hasSetVersions = 0;
     int npruned = 0;
     char pruned[reqc];
     bzero(pruned, reqc);
@@ -479,9 +481,20 @@ void pruneDeps1(Package pkg1, Package pkg2)
 		flagsp = &reqFv[i];
 	    continue;
 	}
-	ap = alSatisfiesDepend(proval, reqNv[i], reqVv[i], reqFv[i]);
-	if (ap == NULL)
+	if ((reqFv[i] & RPMSENSE_RPMLIB) &&
+	    strcmp(reqNv[i], "rpmlib(SetVersions)") == 0)
+	{
+	    if (rpmlibSetVersions == -1)
+		rpmlibSetVersions = i;
 	    continue;
+	}
+	ap = alSatisfiesDepend(proval, reqNv[i], reqVv[i], reqFv[i]);
+	if (ap == NULL) {
+	    if ((reqFv[i] & RPMSENSE_SENSEMASK))
+		if (strncmp(reqVv[i], "set:", 4) == 0)
+		    hasSetVersions++;
+	    continue;
+	}
 	pruned[i] = 1;
 	npruned++;
 	flags |= reqFv[i];
@@ -490,6 +503,10 @@ void pruneDeps1(Package pkg1, Package pkg2)
 	reqNv = fi->hfd(reqNv, RPM_STRING_ARRAY_TYPE);
 	reqVv = fi->hfd(reqVv, RPM_STRING_ARRAY_TYPE);
 	return;
+    }
+    if (hasSetVersions == 0 && rpmlibSetVersions >= 0) {
+	pruned[rpmlibSetVersions] = 1;
+	npruned++;
     }
     fprintf(stderr, "removing %d extra deps from %s due to dependency on %s\n",
 	    npruned, pkgName(pkg1), pkgName(pkg2));
