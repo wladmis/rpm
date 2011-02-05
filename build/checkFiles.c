@@ -48,6 +48,9 @@ void checkPkgIntersect(Package pkg1, Package pkg2)
     {
 	if (S_ISDIR(fi1->fmodes[i1]) && S_ISDIR(fi2->fmodes[i2]))
 	    return;
+	const char src[] = "/usr/src/debug/";
+	if (strncmp(f, src, sizeof(src) - 1) == 0)
+	    return;
 	if (once++ == 0)
 	    rpmlog(RPMLOG_WARNING,
 		    "File(s) packaged into both %s-%s-%s and %s-%s-%s:\n",
