@@ -116,8 +116,7 @@ LibProv()
 ProvidedSymbols()
 {
 	readelf --wide --dyn-syms "$1" |
-	LC_ALL=C egrep '^ *[0-9]+: ' |
-	awk 'NF>=8 &&
+	awk '+$1 && NF>=8 &&
 		# dl-lookup.c: /st_value
 		($2!="00000000" && $2!="0000000000000000" || $4=="TLS") &&
 		# dl-lookup.c: /st_shndx
