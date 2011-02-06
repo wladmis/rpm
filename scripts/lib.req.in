@@ -81,9 +81,15 @@ LibReq()
 		echo 'rtld(GNU_HASH)'
 	fi
 
-	# GNU_UNIQUE.
-	if readelf -Ws "$f" |grep -qs '^[[:space:]]*[0-9]\+:[[:space:]]\+[0-9a-f]\+[[:space:]]\+[0-9a-f]\+[[:space:]]\+[^[:space:]]\+[[:space:]]\+UNIQUE[[:space:]]'; then
-		echo 'rtld(GNU_UNIQUE)'
+	# GNU_IFUNC and GNU_UNIQUE.
+	readelf --wide --dyn-syms "$f" |awk '+$1&&($4=="IFUNC"||$5=="UNIQUE")' >"$tmpdir"/gnu-syms
+	if [ -s "$tmpdir"/gnu-syms ]; then
+		if LC_ALL=C fgrep -qs ' IFUNC ' "$tmpdir"/gnu-syms; then
+			echo 'rtld(GNU_IFUNC)'
+		fi
+		if LC_ALL=C fgrep -qs ' UNIQUE ' "$tmpdir"/gnu-syms; then
+			echo 'rtld(GNU_UNIQUE)'
+		fi
 	fi
 
 	# That could be "statically linked (uses shared libs)".
