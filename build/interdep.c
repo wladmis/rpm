@@ -441,7 +441,7 @@ void liftDebuginfoDeps(struct Req *r, Spec spec)
     processDependentDebuginfo(r, spec, liftDeps1, 1);
 }
 
-// assuming pkg1 has strict dependency on pkg2, prune extra deps
+// assuming pkg1 has strict dependency on pkg2, prune deps provided by pkg2
 static
 void pruneDeps1(Package pkg1, Package pkg2)
 {
@@ -539,6 +539,98 @@ void pruneExtraDeps(struct Req *r, Spec spec)
 	pruneDeps1(r->v[i].pkg1, r->v[i].pkg2);
 }
 
+// assuming pkg1 has strict dependency on pkg2, prune deps required by pkg2
+static
+void pruneRDeps1(Package pkg1, Package pkg2)
+{
+    TFI_t fi = pkg1->cpioList;
+    if (fi == NULL)
+	return;
+    int reqc = 0;
+    const char **reqNv = NULL;
+    const char **reqVv = NULL;
+    const int *reqFv_ = NULL;
+    int ok =
+       fi->hge(fi->h, RPMTAG_REQUIRENAME, NULL, (void **) &reqNv, &reqc) &&
+       fi->hge(fi->h, RPMTAG_REQUIREVERSION, NULL, (void **) &reqVv, NULL) &&
+       fi->hge(fi->h, RPMTAG_REQUIREFLAGS, NULL, (void **) &reqFv_, NULL);
+    if (!ok)
+	return;
+    int i, j;
+    int reqFv[reqc];
+    for (i = 0; i < reqc; i++)
+	reqFv[i] = reqFv_[i];
+    int provc = 0;
+    const char **provNv = NULL;
+    const char **provVv = NULL;
+    const int *provFv = NULL;
+    const HGE_t hge = (HGE_t) headerGetEntryMinMemory;
+    const HFD_t hfd = (HFD_t) headerFreeData;
+    ok =
+       hge(pkg2->header, RPMTAG_REQUIRENAME, NULL, (void **) &provNv, &provc) &&
+       hge(pkg2->header, RPMTAG_REQUIREVERSION, NULL, (void **) &provVv, NULL) &&
+       hge(pkg2->header, RPMTAG_REQUIREFLAGS, NULL, (void **) &provFv, NULL);
+    if (!ok) {
+	reqNv = fi->hfd(reqNv, RPM_STRING_ARRAY_TYPE);
+	reqVv = fi->hfd(reqVv, RPM_STRING_ARRAY_TYPE);
+	return;
+    }
+    int npruned = 0;
+    char pruned[reqc];
+    bzero(pruned, reqc);
+    void prune(int i, int j)
+    {
+	if (strcmp(reqNv[i], provNv[j]))
+	    return;
+	dep_compare_t cmp = compare_deps(RPMTAG_REQUIRENAME,
+		provVv[j], provFv[j], reqVv[i], reqFv[i]);
+	if (!(cmp == DEP_ST || cmp == DEP_EQ))
+	    return;
+	pruned[i] = 1;
+	npruned++;
+    }
+    for (i = 0; i < reqc; i++)
+	for (j = 0; j < provc; j++)
+	    prune(i, j);
+    if (npruned == 0)
+	goto free;
+    fprintf(stderr, "removing %d extra deps from %s due to repentancy on %s\n",
+	    npruned, pkgName(pkg1), pkgName(pkg2));
+    for (i = 0, j = 0; i < reqc; i++) {
+	if (pruned[i])
+	    continue;
+	if (i == j)
+	    goto skip;
+	reqNv[j] = reqNv[i];
+	reqVv[j] = reqVv[i];
+	reqFv[j] = reqFv[i];
+    skip:
+	j++;
+    }
+    reqc = j;
+    fi->hme(fi->h, RPMTAG_REQUIRENAME, RPM_STRING_ARRAY_TYPE, reqNv, reqc);
+    fi->hme(fi->h, RPMTAG_REQUIREVERSION, RPM_STRING_ARRAY_TYPE, reqVv, reqc);
+    fi->hme(fi->h, RPMTAG_REQUIREFLAGS, RPM_INT32_TYPE, reqFv, reqc);
+  free:
+    reqNv = fi->hfd(reqNv, RPM_STRING_ARRAY_TYPE);
+    reqVv = fi->hfd(reqVv, RPM_STRING_ARRAY_TYPE);
+    provNv = hfd(provNv, RPM_STRING_ARRAY_TYPE);
+    provVv = hfd(provVv, RPM_STRING_ARRAY_TYPE);
+}
+
+static
+void pruneExtraRDeps(struct Req *r, Spec spec)
+{
+    Package pkg1, pkg2;
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next)
+	    if (Requires(r, pkg1, pkg2))
+		pruneRDeps1(pkg1, pkg2);
+	    // "else" guards against mutual deletions
+	    else if (Requires(r, pkg2, pkg1))
+		pruneRDeps1(pkg2, pkg1);
+}
+
 int processInterdep(Spec spec)
 {
     struct Req *r = makeRequires(spec);
@@ -547,6 +639,7 @@ int processInterdep(Spec spec)
     r = freeRequires(r);
     r = makeRequires(spec);
     pruneExtraDeps(r, spec);
+    pruneExtraRDeps(r, spec);
     r = freeRequires(r);
     return 0;
 }
