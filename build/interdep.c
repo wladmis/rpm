@@ -637,6 +637,9 @@ int processInterdep(Spec spec)
     pruneDebuginfoSrc(r, spec);
     liftDebuginfoDeps(r, spec);
     r = freeRequires(r);
+    int optlevel = rpmExpandNumeric("%{?_deps_optimization}%{?!_deps_optimization:2}");
+    if (optlevel < 2)
+	return 0;
     r = makeRequires(spec);
     pruneExtraDeps(r, spec);
     pruneExtraRDeps(r, spec);
