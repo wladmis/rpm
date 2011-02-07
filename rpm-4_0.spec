@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.17
+Release: alt100.18
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -500,6 +500,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Feb 07 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.18
+- lib.req: Indirect functions need dependency on rtld(GNU_IFUNC).
+- build/interdep.c: Prune already required deps between dependent subpackages.
+
 * Sun Feb 06 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.17
 - build/files.c: Missing error check resulted in "Bad CSA data" error.
 - build/checkFiles.c: Disabled intersection check for /usr/src/debug.
