@@ -408,6 +408,17 @@ int addReqProv(/*@unused@*/Spec spec, Header h,
 		const char * depEVR, int index)
 	/*@modifies h @*/;
 
+typedef enum {
+	DEP_UN = 0,	/* uncomparable */
+	DEP_ST = 1,	/* stronger */
+	DEP_WK = -1,	/* weaker */
+	DEP_EQ = 2	/* same */
+} dep_compare_t;
+
+dep_compare_t compare_deps (rpmTag tag,
+	const char *Aevr, rpmsenseFlags Aflags,
+	const char *Bevr, rpmsenseFlags Bflags);
+
 /** \ingroup rpmbuild
  * Add rpmlib feature dependency.
  * @param h		header
