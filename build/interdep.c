@@ -109,6 +109,40 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn)
     reqVv = hfd(reqVv, RPM_STRING_ARRAY_TYPE);
 }
 
+#include "al.h"
+
+// check if pkg1 has (possibly non-strict) dependency on pkg2
+static
+int depRequires(Package pkg1, Package pkg2)
+{
+    int reqc = 0;
+    const char **reqNv = NULL;
+    const char **reqVv = NULL;
+    const int *reqFv = NULL;
+    const HGE_t hge = (HGE_t) headerGetEntryMinMemory;
+    int ok =
+       hge(pkg1->header, RPMTAG_REQUIRENAME, NULL, (void **) &reqNv, &reqc) &&
+       hge(pkg1->header, RPMTAG_REQUIREVERSION, NULL, (void **) &reqVv, NULL) &&
+       hge(pkg1->header, RPMTAG_REQUIREFLAGS, NULL, (void **) &reqFv, NULL);
+    if (!ok)
+	return 0;
+    availableList proval = alloca(sizeof proval);
+    alCreate(proval);
+    alAddPackage(proval, pkg2->header, NULL, NULL, NULL);
+    int i;
+    struct availablePackage *ap = NULL;
+    for (i = 0; i < reqc; i++) {
+	ap = alSatisfiesDepend(proval, reqNv[i], reqVv[i], reqFv[i]);
+	if (ap)
+	    break;
+    }
+    const HFD_t hfd = (HFD_t) headerFreeData;
+    reqNv = hfd(reqNv, RPM_STRING_ARRAY_TYPE);
+    reqVv = hfd(reqVv, RPM_STRING_ARRAY_TYPE);
+    alFree(proval);
+    return ap ? 1 : 0;
+}
+
 static
 struct Req *makeRequires(Spec spec, int warn)
 {
@@ -118,8 +152,8 @@ struct Req *makeRequires(Spec spec, int warn)
     Package pkg1, pkg2;
     for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
-	    makeReq1(r, pkg1, pkg2, warn);
-	    makeReq1(r, pkg2, pkg1, warn);
+	    makeReq1(r, pkg1, pkg2, warn & 1);
+	    makeReq1(r, pkg2, pkg1, warn & 1);
 	}
     int propagated;
     do {
@@ -144,6 +178,17 @@ struct Req *makeRequires(Spec spec, int warn)
 	    }
     }
     while (propagated);
+    if ((warn & 2) == 0)
+	return r;
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
+	    if (!Requires(r, pkg1, pkg2) && depRequires(pkg1, pkg2))
+		fprintf(stderr, "warning: %s: non-strict dependency on %s\n",
+			pkgName(pkg1), pkgName(pkg2));
+	    if (!Requires(r, pkg2, pkg1) && depRequires(pkg2, pkg1))
+		fprintf(stderr, "warning: %s: non-strict dependency on %s\n",
+			pkgName(pkg2), pkgName(pkg1));
+	}
     return r;
 }
 
@@ -394,37 +439,11 @@ void pruneDebuginfoSrc(struct Req *r, Spec spec)
     processDependentDebuginfo(r, spec, pruneSrc1, 0);
 }
 
-#include "al.h"
-
 // if pkg1 implicitly requires pkg2, add strict dependency
 static
 void liftDeps1(Package pkg1, Package pkg2)
 {
-    int reqc = 0;
-    const char **reqNv = NULL;
-    const char **reqVv = NULL;
-    const int *reqFv = NULL;
-    const HGE_t hge = (HGE_t) headerGetEntryMinMemory;
-    int ok =
-       hge(pkg1->header, RPMTAG_REQUIRENAME, NULL, (void **) &reqNv, &reqc) &&
-       hge(pkg1->header, RPMTAG_REQUIREVERSION, NULL, (void **) &reqVv, NULL) &&
-       hge(pkg1->header, RPMTAG_REQUIREFLAGS, NULL, (void **) &reqFv, NULL);
-    if (!ok)
-	return;
-    availableList proval = alloca(sizeof proval);
-    alCreate(proval);
-    alAddPackage(proval, pkg2->header, NULL, NULL, NULL);
-    int i;
-    struct availablePackage *ap = NULL;
-    for (i = 0; i < reqc; i++) {
-	ap = alSatisfiesDepend(proval, reqNv[i], reqVv[i], reqFv[i]);
-	if (ap)
-	    break;
-    }
-    const HFD_t hfd = (HFD_t) headerFreeData;
-    reqNv = hfd(reqNv, RPM_STRING_ARRAY_TYPE);
-    reqVv = hfd(reqVv, RPM_STRING_ARRAY_TYPE);
-    if (ap == NULL)
+    if (!depRequires(pkg1, pkg2))
 	return;
     const char *name = pkgName(pkg2);
     const char *evr = headerSprintf(pkg2->header,
@@ -656,7 +675,7 @@ int processInterdep(Spec spec)
     int optlevel = rpmExpandNumeric("%{?_deps_optimization}%{?!_deps_optimization:2}");
     if (optlevel < 2)
 	return 0;
-    r = makeRequires(spec, 0);
+    r = makeRequires(spec, 2);
     pruneExtraDeps(r, spec);
     pruneExtraRDeps(r, spec);
     r = freeRequires(r);
