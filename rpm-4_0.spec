@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.18
+Release: alt100.19
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -500,6 +500,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Feb 08 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.19
+- build/interdep.c: Diagnose mssing Epoch in subpackage dependencies.
+- build/interdep.c: Diagnose non-strict dependencies between subpackages.
+
 * Mon Feb 07 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.18
 - lib.req: Indirect functions need dependency on rtld(GNU_IFUNC).
 - build/interdep.c: Prune already required deps between dependent subpackages.
