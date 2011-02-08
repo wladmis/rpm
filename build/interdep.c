@@ -521,6 +521,7 @@ void pruneDeps1(Package pkg1, Package pkg2)
 	npruned++;
 	flags |= reqFv[i];
     }
+    alFree(proval);
     if (npruned == 0) {
 	reqNv = fi->hfd(reqNv, RPM_STRING_ARRAY_TYPE);
 	reqVv = fi->hfd(reqVv, RPM_STRING_ARRAY_TYPE);
