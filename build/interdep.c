@@ -63,7 +63,7 @@ void addRequires(struct Req *r, Package pkg1, Package pkg2)
 }
 
 static
-void makeReq1(struct Req *r, Package pkg1, Package pkg2)
+void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn)
 {
     int c = 0;
     const char **reqNv = NULL;
@@ -87,10 +87,10 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2)
 	const char *reqVR = reqVv[i];
 	if (*reqVR == '\0')
 	    continue;
+	const char *colon = NULL;
 	const char *reqR = skipPrefixDash(reqVR, provV);
-	if (reqR == NULL) {
-	    // XXX handle epoch properly?
-	    const char *colon = strchr(reqVR, ':');
+	if (reqR == NULL && xisdigit(*reqVR)) {
+	    colon = strchr(reqVR, ':');
 	    if (colon)
 		reqR = skipPrefixDash(colon + 1, provV);
 	}
@@ -99,6 +99,9 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2)
 	if (strcmp(reqR, provR))
 	    continue;
 	addRequires(r, pkg1, pkg2);
+	if (warn && colon == NULL && headerIsEntry(pkg2->header, RPMTAG_EPOCH))
+	    fprintf(stderr, "warning: %s: dependency on %s needs Epoch\n",
+		    pkgName(pkg1), pkgName(pkg2));
 	break;
     }
     const HFD_t hfd = (HFD_t) headerFreeData;
@@ -107,7 +110,7 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2)
 }
 
 static
-struct Req *makeRequires(Spec spec)
+struct Req *makeRequires(Spec spec, int warn)
 {
     struct Req *r = xmalloc(sizeof *r);
     r->c = 0;
@@ -115,8 +118,8 @@ struct Req *makeRequires(Spec spec)
     Package pkg1, pkg2;
     for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
-	    makeReq1(r, pkg1, pkg2);
-	    makeReq1(r, pkg2, pkg1);
+	    makeReq1(r, pkg1, pkg2, warn);
+	    makeReq1(r, pkg2, pkg1, warn);
 	}
     int propagated;
     do {
@@ -646,14 +649,14 @@ void pruneExtraRDeps(struct Req *r, Spec spec)
 
 int processInterdep(Spec spec)
 {
-    struct Req *r = makeRequires(spec);
+    struct Req *r = makeRequires(spec, 1);
     pruneDebuginfoSrc(r, spec);
     liftDebuginfoDeps(r, spec);
     r = freeRequires(r);
     int optlevel = rpmExpandNumeric("%{?_deps_optimization}%{?!_deps_optimization:2}");
     if (optlevel < 2)
 	return 0;
-    r = makeRequires(spec);
+    r = makeRequires(spec, 0);
     pruneExtraDeps(r, spec);
     pruneExtraRDeps(r, spec);
     r = freeRequires(r);
