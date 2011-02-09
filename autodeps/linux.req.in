@@ -60,8 +60,20 @@ while IFS= read -r f; do
 			fi
 		done
 	fi
+	# absolute symbolic links should not be passed down to file(1)
+	if [ -L "$f" ]; then
+		to="$(readlink "$f")"
+		if [ -n "$to" -a -z "${to##/*}" ]; then
+			if [ -e "$f" ]; then
+				printf '%s\t symbolic link to `%s'\''\n' "$f" "$to"
+			else
+				printf '%s\t broken symbolic link to `%s'\''\n' "$f" "$to"
+			fi
+			continue
+		fi >&4
+	fi
 	printf '%s\n' "$f"
-done >"$workdir"/files 3>"$RPM_BUILD_ROOT/.files:$RPM_SUBPACKAGE_NAME"
+done >"$workdir"/files 3>"$RPM_BUILD_ROOT/.files:$RPM_SUBPACKAGE_NAME" 4>"$workdir"/files+types
 
 if ! [ -s "$workdir"/files ]; then
 	Info "empty file list, nothing to do"
@@ -69,7 +81,7 @@ if ! [ -s "$workdir"/files ]; then
 fi
 
 # filter file list through file(1) to append types
-if ! file -NF$'\t' -f "$workdir"/files >"$workdir"/files+types; then
+if ! file -NF$'\t' -f "$workdir"/files >>"$workdir"/files+types; then
 	sed -n '/\t *ERROR:/p' "$workdir"/files+types >&2
 	exit 1
 fi
