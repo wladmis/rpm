@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.19
+Release: alt100.20
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -500,6 +500,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Wed Feb 09 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.20
+- find-requires, shell.req: improved support for 'buildreq -bi'.
+
 * Tue Feb 08 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.19
 - build/interdep.c: Diagnose mssing Epoch in subpackage dependencies.
 - build/interdep.c: Diagnose non-strict dependencies between subpackages.
