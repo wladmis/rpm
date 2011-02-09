@@ -82,6 +82,9 @@ ShellReq()
 				2) ;;
 				*) Info "$f: invalid $sh --rpm-requires output: $line"; continue ;;
 			esac
+			case "$2" in
+				/*) printf '%s\t%s\n' "$1" "$2"; continue ;;
+			esac
 			case "$(PATH= type -t -- "$2")" in
 				alias|keyword|builtin) continue ;;
 				*) printf '%s\t%s\n' "$1" "$2" ;;
