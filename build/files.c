@@ -2017,6 +2017,70 @@ void initSourceHeader(Spec spec)
     }
 }
 
+static int finalizeSize(TFI_t fi)
+{
+    if (fi == NULL)
+	return 0;
+    int totalFileSize = 0;
+    int partialHardlinkSets = 0;
+    int i, j;
+    for (i = 0; i < fi->fc; i++) {
+	if (fi->actions[i] == FA_SKIP) // GHOST
+	    continue;
+	if (!S_ISREG(fi->fsts[i].st_mode))
+	    continue;
+	if (fi->fsts[i].st_nlink == 1) {
+	    totalFileSize += fi->fsts[i].st_size;
+	    continue;
+	}
+	assert(fi->fsts[i].st_nlink > 1);
+	int found = 0;
+	for (j = 0; j < i; j++) {
+	    if (fi->actions[j] == FA_SKIP)
+		continue;
+	    if (fi->fsts[i].st_dev != fi->fsts[j].st_dev)
+		continue;
+	    if (fi->fsts[i].st_ino != fi->fsts[j].st_ino)
+		continue;
+	    found = 1;
+	    break;
+	}
+	if (found)
+	    continue;
+	// first hardlink occurrence
+	totalFileSize += fi->fsts[i].st_size;
+	int nlink = 1;
+	for (j = i + 1; j < fi->fc; j++) {
+	    if (fi->actions[j] == FA_SKIP)
+		continue;
+	    if (fi->fsts[i].st_dev != fi->fsts[j].st_dev)
+		continue;
+	    if (fi->fsts[i].st_ino != fi->fsts[j].st_ino)
+		continue;
+	    // XXX check for identical locale coloring?
+	    nlink++;
+	}
+	assert(nlink <= fi->fsts[i].st_nlink);
+	if (nlink < fi->fsts[i].st_nlink)
+	    partialHardlinkSets = 1;
+    }
+    headerAddEntry(fi->h, RPMTAG_SIZE, RPM_INT32_TYPE, &totalFileSize, 1);
+    // XXX handle PartialHardlinkSets?
+    return 0;
+}
+
+static
+int finalizePkg(Package pkg)
+{
+    return finalizeSize(pkg->cpioList);
+}
+
+static
+int finalizeSrc(Spec spec)
+{
+    return finalizeSize(spec->sourceCpioList);
+}
+
 int processSourceFiles(Spec spec)
 {
     struct Source *srcPtr;
@@ -2141,6 +2205,7 @@ int processSourceFiles(Spec spec)
 	if (spec->sourceHeader != NULL)
 	    genCpioListAndHeader(spec, &fl, (TFI_t *)&spec->sourceCpioList,
 			spec->sourceHeader, 1);
+	finalizeSrc(spec);
     }
 
     sourceFiles = freeStringBuf(sourceFiles);
@@ -2718,59 +2783,6 @@ exit:
     freeStringBuf(out);
     free(cmd);
     return rc;
-}
-
-static int finalizePkg(Package pkg)
-{
-    TFI_t fi = pkg->cpioList;
-    if (fi == NULL)
-	return 0;
-    int totalFileSize = 0;
-    int partialHardlinkSets = 0;
-    int i, j;
-    for (i = 0; i < fi->fc; i++) {
-	if (fi->actions[i] == FA_SKIP) // GHOST
-	    continue;
-	if (!S_ISREG(fi->fsts[i].st_mode))
-	    continue;
-	if (fi->fsts[i].st_nlink == 1) {
-	    totalFileSize += fi->fsts[i].st_size;
-	    continue;
-	}
-	assert(fi->fsts[i].st_nlink > 1);
-	int found = 0;
-	for (j = 0; j < i; j++) {
-	    if (fi->actions[j] == FA_SKIP)
-		continue;
-	    if (fi->fsts[i].st_dev != fi->fsts[j].st_dev)
-		continue;
-	    if (fi->fsts[i].st_ino != fi->fsts[j].st_ino)
-		continue;
-	    found = 1;
-	    break;
-	}
-	if (found)
-	    continue;
-	// first hardlink occurrence
-	totalFileSize += fi->fsts[i].st_size;
-	int nlink = 1;
-	for (j = i + 1; j < fi->fc; j++) {
-	    if (fi->actions[j] == FA_SKIP)
-		continue;
-	    if (fi->fsts[i].st_dev != fi->fsts[j].st_dev)
-		continue;
-	    if (fi->fsts[i].st_ino != fi->fsts[j].st_ino)
-		continue;
-	    // XXX check for identical locale coloring?
-	    nlink++;
-	}
-	assert(nlink <= fi->fsts[i].st_nlink);
-	if (nlink < fi->fsts[i].st_nlink)
-	    partialHardlinkSets = 1;
-    }
-    headerAddEntry(fi->h, RPMTAG_SIZE, RPM_INT32_TYPE, &totalFileSize, 1);
-    // XXX handle PartialHardlinkSets?
-    return 0;
 }
 
 /**
