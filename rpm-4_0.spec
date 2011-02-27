@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.21
+Release: alt100.22
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -501,6 +501,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Feb 27 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.22
+- cpp.req: New dependency generator for C and C++ header files.
+- Reverted "pkg-config --print-requires-private" change introduced in alt100.2.
+
 * Wed Feb 09 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.21
 - build/files.c: Fixed RPMTAG_SIZE for src.rpm packages (broken in alt100.16).
 
