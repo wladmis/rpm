@@ -60,7 +60,8 @@ Cflags()
 }
 
 cpp=
-IncludedFiles()
+cxx=
+CppReq()
 {
 	local f="$1"; shift
 
@@ -74,9 +75,18 @@ IncludedFiles()
 	cflags=$(Cflags "$f")
 	Debug "$f: cflags:" $cflags
 
-	if ! out=$("$cpp" -w -x c++ $cflags "$f"); then
-		Warning "$f: cpp failed"
-		return 0
+	if ! out=$("$cpp" -w $cxx $cflags "$f"); then
+		if [ -n "$cxx" ]; then
+			Warning "$f: cpp failed"
+			return 0
+		fi
+		Info "$f: cpp failed, trying c++ mode"
+		cxx='-x c++'
+		if ! out=$("$cpp" -w $cxx $cflags "$f"); then
+			cxx=
+			Warning "$f: cpp failed"
+			return 0
+		fi
 	fi
 	echo "$out" |grep '^#' |awk -v prog="$PROG" -v hdr="$f" '
 		# info cpp "Preprocessor Output"
@@ -109,20 +119,10 @@ IncludedFiles()
 			if (SP > 0)
 				printf "%s: %s: non-empty stack, top %s\n",
 					prog, hdr, Stack[SP] >"/dev/stderr"
-		}'
-
-}
-
-CppReq()
-{
-	local f="$1"; shift
-	local files
-	files=$(IncludedFiles "$f")
-	[ -n "$files" ] || return 0
-	local RPM_FINDPACKAGE_HOST_PKG_NAMES=1
-	local inc
-	echo "$files" |while read -r inc; do
-		FindPackage "$f" "${inc#${RPM_BUILD_ROOT-}}"
+		}' |
+	while read -r h; do
+		RPM_FINDPACKAGE_HOST_PKG_NAMES=1
+		FindPackage "$f" "${h#${RPM_BUILD_ROOT-}}"
 	done
 }
 
