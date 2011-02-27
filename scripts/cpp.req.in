@@ -59,11 +59,22 @@ Cflags()
 	done
 }
 
+gcc=
 cpp=
 cxx=
 CppReq()
 {
 	local f="$1"; shift
+
+	local srpm="${RPM_PACKAGE_NAME-}"
+	[ -n "$srpm" ] || srpm=$(rpmquery --qf='%{SOURCERPM}' -f "$f" 2>/dev/null) || srpm=foo
+	case "$srpm" in
+		gcc | gcc-[345]* | gcc[345]* )
+			[ -n "$gcc" ] ||
+			Verbose "$f: $PROG disabled for gcc"
+			gcc=$srpm
+			return 0 ;;
+	esac
 
 	if [ -z "$cpp" ]; then
 		cpp=/usr/bin/${RPM_ARCH:-noarch}-alt-linux-cpp
