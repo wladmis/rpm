@@ -349,7 +349,6 @@ static char *
 canonicalize_path (const char *s, char *d)
 {
   char *rv = d;
-  const char *sroot;
   char *droot;
 
   if (IS_DIR_SEPARATOR (*s))
@@ -365,7 +364,6 @@ canonicalize_path (const char *s, char *d)
 	s++;
     }
   droot = d;
-  sroot = s;
 
   while (*s)
     {
