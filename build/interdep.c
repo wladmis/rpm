@@ -564,7 +564,7 @@ void pruneExtraDeps(struct Req *r, Spec spec)
 
 // assuming pkg1 has strict dependency on pkg2, prune deps required by pkg2
 static
-void pruneRDeps1(struct Req *r, Package pkg1, Package pkg2)
+void pruneRDeps1(struct Req *r, Spec spec, Package pkg1, Package pkg2)
 {
     TFI_t fi = pkg1->cpioList;
     if (fi == NULL)
@@ -601,11 +601,11 @@ void pruneRDeps1(struct Req *r, Package pkg1, Package pkg2)
     int npruned = 0;
     char pruned[reqc];
     bzero(pruned, reqc);
-    // check if pkg2 is non-last part of a cycle
+    // check if pkg2 is part of a cycle
     int cycle = 0;
     Package pkg3;
-    for (pkg3 = pkg2->next; pkg3; pkg3 = pkg3->next) {
-	if (pkg3 == pkg1)
+    for (pkg3 = spec->packages; pkg3; pkg3 = pkg3->next) {
+	if (pkg3 == pkg1 || pkg3 == pkg2)
 	    continue;
 	if (Requires(r, pkg2, pkg3) && Requires(r, pkg3, pkg2)) {
 	    cycle = 1;
@@ -661,10 +661,10 @@ void pruneExtraRDeps(struct Req *r, Spec spec)
     for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next)
 	    if (Requires(r, pkg1, pkg2))
-		pruneRDeps1(r, pkg1, pkg2);
+		pruneRDeps1(r, spec, pkg1, pkg2);
 	    // "else" guards against mutual deletions
 	    else if (Requires(r, pkg2, pkg1))
-		pruneRDeps1(r, pkg2, pkg1);
+		pruneRDeps1(r, spec, pkg2, pkg1);
 }
 
 int processInterdep(Spec spec)
