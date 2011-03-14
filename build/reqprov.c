@@ -487,6 +487,8 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 							     "", depEVR, depFlags))
 						skip = 1;
 				}
+				else
+					skip = 1;
 				if (skip)
 				rpmMessage (RPMMESS_DEBUG,
 					    "new dep \"%s\" is the package name, optimized out\n",
