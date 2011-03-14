@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.22
+Release: alt100.23
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -501,6 +501,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Mar 14 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.23
+- build/reqprov.c: fixed optimization of subpackage self-requirements.
+- build/interdep.c: fixed check for cycles introduced along with
+  pruning of requirements in 4.0.4-alt100.18.
+
 * Sun Feb 27 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.22
 - cpp.req: New dependency generator for C and C++ header files.
 - Reverted "pkg-config --print-requires-private" change introduced in alt100.2.
