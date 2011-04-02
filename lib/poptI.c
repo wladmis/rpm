@@ -20,7 +20,6 @@ struct rpmInstallArguments_s rpmIArgs;
 
 #define	POPT_RELOCATE		-1016
 #define	POPT_EXCLUDEPATH	-1019
-#define	POPT_ROLLBACK		-1024
 
 /*@exits@*/ static void argerror(const char * desc)
 	/*@globals fileSystem @*/
@@ -78,16 +77,6 @@ fprintf(stderr, "*** opt %s %c info 0x%x arg %p val 0x%x arg %p %s\n", opt->long
 	/*@=kepttrans@*/
 	ia->numRelocations++;
       }	break;
-    case POPT_ROLLBACK:
-      {	time_t tid;
-	if (arg == NULL) 
-	    argerror(_("rollback takes a time/date stamp argument"));
-	tid = get_date(arg, NULL);
-
-	if (tid == (time_t)-1 || tid == (time_t)0)
-	    argerror(_("malformed rollback time/date stamp argument"));
-	ia->rbtid = tid;
-      }	break;
     default:
 	break;
     }
@@ -116,9 +105,6 @@ struct poptOption rpmInstallPoptTable[] = {
  { "badreloc", '\0', POPT_BIT_SET,
 	&rpmIArgs.probFilter, RPMPROB_FILTER_FORCERELOCATE,
 	N_("relocate files in non-relocatable package"), NULL},
- { "dirstash", '\0', POPT_BIT_SET|POPT_ARGFLAG_DOC_HIDDEN,
-	&rpmIArgs.transFlags, RPMTRANS_FLAG_DIRSTASH,
-	N_("save erased package files by renaming into sub-directory"), NULL},
  { "erase", 'e', POPT_BIT_SET,
 	&rpmIArgs.installInterfaceFlags, INSTALL_ERASE,
 	N_("erase (uninstall) package"), N_("<package>+") },
@@ -211,18 +197,12 @@ struct poptOption rpmInstallPoptTable[] = {
  { "relocate", '\0', POPT_ARG_STRING, 0, POPT_RELOCATE,
 	N_("relocate files from path <old> to <new>"),
 	N_("<old>=<new>") },
- { "repackage", '\0', POPT_BIT_SET,
-	&rpmIArgs.transFlags, RPMTRANS_FLAG_REPACKAGE,
-	N_("save erased package files by repackaging"), NULL},
  { "replacefiles", '\0', POPT_BIT_SET, &rpmIArgs.probFilter,
 	(RPMPROB_FILTER_REPLACEOLDFILES | RPMPROB_FILTER_REPLACENEWFILES),
 	N_("install even if the package replaces installed files"), NULL},
  { "replacepkgs", '\0', POPT_BIT_SET,
 	&rpmIArgs.probFilter, RPMPROB_FILTER_REPLACEPKG,
 	N_("reinstall if the package is already present"), NULL},
- { "rollback", '\0', POPT_ARG_STRING|POPT_ARGFLAG_DOC_HIDDEN, 0, POPT_ROLLBACK,
-	N_("deinstall new, reinstall old, package(s), back to <date>"),
-	N_("<date>") },
  { "test", '\0', POPT_BIT_SET, &rpmIArgs.transFlags, RPMTRANS_FLAG_TEST,
 	N_("don't install, but tell if it would work or not"), NULL},
  { "upgrade", 'U', POPT_BIT_SET,

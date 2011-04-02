@@ -1810,14 +1810,6 @@ msgstr "переміщення мають містити ="
 msgid "relocations must have a / following the ="
 msgstr "переміщення потрібні мати / після ="
 
-#: lib/poptI.c:84
-msgid "rollback takes a time/date stamp argument"
-msgstr "для відкочування транзакції потрібно вказати момент часу"
-
-#: lib/poptI.c:88
-msgid "malformed rollback time/date stamp argument"
-msgstr "невірний формат моменту часу відкочування транзакції"
-
 #: lib/poptI.c:104
 msgid "install all files, even configurations which might otherwise be skipped"
 msgstr ""
@@ -1986,10 +1978,6 @@ msgstr "перемістити файли із шляху <old> у <new>"
 #: lib/poptI.c:213
 msgid "<old>=<new>"
 msgstr "<old>=<new>"
-
-#: lib/poptI.c:216
-msgid "save erased package files by repackaging"
-msgstr "зберегти файли які підлягають видаленню у новому пакеті"
 
 #: lib/poptI.c:219
 msgid "install even if the package replaces installed files"
@@ -2662,11 +2650,6 @@ msgstr "неможливо відкрити %s: %s\n"
 #, c-format
 msgid "Installing %s\n"
 msgstr "Встановлюється %s\n"
-
-#: lib/rpminstall.c:1117
-#, c-format
-msgid "rollback (+%d,-%d) packages to %s"
-msgstr "відкочування транзакції (+%d,-%d) пакетів на %s"
 
 #: lib/rpmlead.c:50
 #, c-format

@@ -1944,25 +1944,6 @@ int rpmRunTransactions(	rpmTransactionSet ts,
     }
 
     /* ===============================================
-     * Save removed files before erasing.
-     */
-    if (ts->transFlags & (RPMTRANS_FLAG_DIRSTASH | RPMTRANS_FLAG_REPACKAGE)) {
-	tsi = tsInitIterator(ts);
-	while ((fi = tsNextIterator(tsi)) != NULL) {
-	    psm->fi = fi;
-	    switch (fi->type) {
-	    case TR_ADDED:
-		break;
-	    case TR_REMOVED:
-		if (ts->transFlags & RPMTRANS_FLAG_REPACKAGE)
-		    (void) psmStage(psm, PSM_PKGSAVE);
-		break;
-	    }
-	}
-	tsi = tsFreeIterator(tsi);
-    }
-
-    /* ===============================================
      * Install and remove packages.
      */
 

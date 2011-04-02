@@ -1402,8 +1402,8 @@ typedef enum rpmtransFlags_e {
     RPMTRANS_FLAG_KEEPOBSOLETE	= (1 <<  7),	/*!< @todo Document. */
 /*@=enummemuse@*/
     RPMTRANS_FLAG_NOCONTEXTS	= (1 <<  8),	/*!< from --nocontexts */
-    RPMTRANS_FLAG_DIRSTASH	= (1 <<  9),	/*!< from --dirstash */
-    RPMTRANS_FLAG_REPACKAGE	= (1 << 10),	/*!< from --repackage */
+    R__TRANS_FLAG_DIRSTASH	= (1 <<  9),	/*!< from --dirstash */
+    R__TRANS_FLAG_REPACKAGE	= (1 << 10),	/*!< from --repackage */
 
     RPMTRANS_FLAG_PKGCOMMIT	= (1 << 11),
 /*@-enummemuse@*/

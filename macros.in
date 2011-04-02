@@ -516,17 +516,6 @@
 # XXX	Note: escaped %% for use in headerSprintf()
 %_build_name_fmt	%%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
 
-#	The output binary package file name template used when repackaging
-#	erased packages.
-#
-# XXX	Note: escaped %% for use in headerSprintf()
-%_repackage_name_fmt	%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
-
-#	The directory in which erased packages will be saved when using
-#	the --repackage option.
-%_repackage_dir		/var/spool/repackage
-%_repackage_root	%{nil}
-
 #==============================================================================
 # ---- per-platform macros.
 #	Macros that are specific to an individual platform. The values here

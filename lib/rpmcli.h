@@ -335,87 +335,7 @@ struct rpmInstallArguments_s {
     const char * prefix;
 /*@observer@*/ /*@null@*/
     const char * rootdir;
-    uint_32 rbtid;		/*!< from --rollback */
 };
-
-/**
- * A rollback transaction id element.
- */
-typedef /*@abstract@*/ struct IDT_s {
-    unsigned int instance;	/*!< installed package transaction id. */
-/*@owned@*/ /*@null@*/
-    const char * key;		/*! removed package file name. */
-    Header h;			/*!< removed package header. */
-    const char * n;		/*!< package name. */
-    const char * v;		/*!< package version. */
-    const char * r;		/*!< package release. */
-    union {
-	uint_32 u32;		/*!< install/remove transaction id */
-    } val;
-} * IDT;
-
-/**
- * A rollback transaction id index.
- */
-typedef /*@abstract@*/ struct IDTindex_s {
-    int delta;			/*!< no. elements to realloc as a chunk. */
-    int size;			/*!< size of id index element. */
-    int alloced;		/*!< current number of elements allocated. */
-    int nidt;			/*!< current number of elements initialized. */
-/*@only@*/ /*@null@*/
-    IDT idt;			/*!< id index elements. */
-} * IDTX;
-
-/**
- * Destroy id index.
- * @param idtx		id index
- * @return		NULL always
- */
-/*@null@*/ IDTX IDTXfree(/*@only@*/ /*@null@*/ IDTX idtx)
-	/*@modifies idtx @*/;
-
-/**
- * Create id index.
- * @return		new id index
- */
-/*@only@*/ IDTX IDTXnew(void)
-	/*@*/;
-
-/**
- * Insure that index has room for "need" elements.
- * @param idtx		id index
- * @param need		additional no. of elements needed
- * @return 		id index (with room for "need" elements)
- */
-/*@only@*/ /*@null@*/ IDTX IDTXgrow(/*@only@*/ /*@null@*/ IDTX idtx, int need)
-	/*@modifies idtx @*/;
-
-/**
- * Sort tag (instance,value) pairs.
- * @param idtx		id index
- * @return 		id index
- */
-/*@only@*/ /*@null@*/ IDTX IDTXsort(/*@only@*/ /*@null@*/ IDTX idtx)
-	/*@modifies idtx @*/;
-
-/**
- * Load tag (instance,value) pairs from rpm databse, and return sorted id index.
- * @param db		rpm database
- * @param tag		rpm tag
- * @return 		id index
- */
-/*@only@*/ /*@null@*/ IDTX IDTXload(rpmdb db, rpmTag tag)
-	/*@modifies db @*/;
-
-/**
- * Load tag (instance,value) pairs from packages, and return sorted id index.
- * @param globstr	glob expression
- * @param tag		rpm tag
- * @return 		id index
- */
-/*@only@*/ /*@null@*/ IDTX IDTXglob(const char * globstr, rpmTag tag)
-	/*@globals fileSystem @*/
-	/*@modifies fileSystem @*/;
 
 
 /**
@@ -442,15 +362,6 @@ typedef /*@abstract@*/ struct IDTindex_s {
 
 /*@unchecked@*/
 extern int packagesTotal;
-
-/** \ingroup rpmcli
- * Rollback transactions, erasing new, reinstalling old, package(s).
- * @return		0 on success
- */
-int rpmRollback(struct rpmInstallArguments_s * ia,
-		/*@null@*/ const char ** argv)
-	/*@globals rpmGlobalMacroContext, fileSystem @*/
-	/*@modifies rpmGlobalMacroContext, fileSystem @*/;
 
 /** \ingroup rpmcli
  */

@@ -2497,14 +2497,6 @@ msgid ""
 "only packaging with major numbers <= 4 is supported by this version of RPM\n"
 msgstr ""
 
-#: lib/poptI.c:82
-msgid "rollback takes a time/date stamp argument"
-msgstr ""
-
-#: lib/poptI.c:86
-msgid "malformed rollback time/date stamp argument"
-msgstr ""
-
 #: lib/poptI.c:112 lib/poptI.c:166
 msgid "do not execute package scriptlet(s)"
 msgstr ""
@@ -2587,10 +2579,6 @@ msgstr ""
 
 #: lib/poptI.c:208
 msgid "<old>=<new>"
-msgstr ""
-
-#: lib/poptI.c:211
-msgid "save erased package files by repackaging"
 msgstr ""
 
 #: lib/poptI.c:219
@@ -3220,11 +3208,6 @@ msgstr ""
 #: lib/rpminstall.c:698
 #, c-format
 msgid "Installing %s\n"
-msgstr ""
-
-#: lib/rpminstall.c:1049
-#, c-format
-msgid "rollback (+%d,-%d) packages to %s"
 msgstr ""
 
 #: lib/rpmlead.c:50

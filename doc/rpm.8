@@ -24,7 +24,7 @@ rpm \- RPM Package Manager
 
 \fBrpm\fR {\fB-F|--freshen\fR} [\fBinstall-options\fR] \fB\fIPACKAGE_FILE\fB\fR\fI ...\fR
 
-\fBrpm\fR {\fB-e|--erase\fR} [\fB--allmatches\fR] [\fB--nodeps\fR] [\fB--noscripts\fR] [\fB--notriggers\fR] [\fB--repackage\fR] [\fB--test\fR] \fB\fIPACKAGE_NAME\fB\fR\fI ...\fR
+\fBrpm\fR {\fB-e|--erase\fR} [\fB--allmatches\fR] [\fB--nodeps\fR] [\fB--noscripts\fR] [\fB--notriggers\fR] [\fB--test\fR] \fB\fIPACKAGE_NAME\fB\fR\fI ...\fR
 .SS "BUILDING PACKAGES:"
 .PP
 
@@ -64,7 +64,7 @@ rpm \- RPM Package Manager
 [--ignoresize] [--ignorearch] [--ignoreos] [--includedocs] [--justdb]
 [--nodeps] [--noorder] [--noscripts] [--notriggers]
 [--oldpackage] [--percent] [--prefix \fINEWPATH\fB] [--relocate\ \fIOLDPATH\fB=\fINEWPATH\fB]
-[--repackage] [--replacefiles] [--replacepkgs] [--test]\fR
+[--replacefiles] [--replacepkgs] [--test]\fR
 .SS "BUILD-OPTIONS"
 .PP
 
@@ -296,14 +296,6 @@ package relocation hint(s) to \fINEWPATH\fR.
 This option can be used repeatedly if several
 \fIOLDPATH\fR's in the package are to
 be relocated.
-.TP
-\fB--repackage\fR
-Re-package the files before erasing. The previously installed
-package will be named according to the macro
-\fB%_repackage_name_fmt\fR
-and will be created in the directory named by
-the macro \fB%_repackage_dir\fR (default value
-is \fI/var/tmp\fR).
 .TP
 \fB--replacefiles\fR
 Install the packages even if they replace files from other,
@@ -555,7 +547,7 @@ for details.
 .PP
 The general form of an rpm erase command is 
 .PP
-\fBrpm\fR {\fB-e|--erase\fR} [\fB--allmatches\fR] [\fB--nodeps\fR] [\fB--noscripts\fR] [\fB--notriggers\fR] [\fB--repackage\fR] [\fB--test\fR] \fB\fIPACKAGE_NAME\fB\fR\fI ...\fR
+\fBrpm\fR {\fB-e|--erase\fR} [\fB--allmatches\fR] [\fB--nodeps\fR] [\fB--noscripts\fR] [\fB--notriggers\fR] [\fB--test\fR] \fB\fIPACKAGE_NAME\fB\fR\fI ...\fR
 .PP
 The following options may also be used:
 .TP
@@ -600,14 +592,6 @@ and turns off execution of the corresponding
 \fB%triggerun\fR, and
 \fB%triggerpostun\fR
 scriptlet(s).
-.TP
-\fB--repackage\fR
-Re-package the files before erasing. The previously installed
-package will be named according to the macro
-\fB%_repackage_name_fmt\fR
-and will be created in the directory named by
-the macro \fB%_repackage_dir\fR (default value
-is \fI/var/tmp\fR).
 .TP
 \fB--test\fR
 Don't really uninstall anything, just go through the motions.

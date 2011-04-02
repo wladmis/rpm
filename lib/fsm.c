@@ -698,7 +698,6 @@ static int expandRegular(/*@special@*/ FSM_t fsm)
     if (rc)
 	goto exit;
 
-    /* XXX md5sum's will break on repackaging that includes modified files. */
     fmd5sum = fsm->fmd5sum;
 
     /* XXX This doesn't support brokenEndian checks. */

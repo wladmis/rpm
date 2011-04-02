@@ -133,7 +133,6 @@ typedef enum pkgStage_e {
     PSM_PKGINSTALL	=  7,
     PSM_PKGERASE	=  8,
     PSM_PKGCOMMIT	= 10,
-    PSM_PKGSAVE		= 12,
 
     PSM_CREATE		= 17,
     PSM_NOTIFY		= 22,
@@ -165,8 +164,6 @@ struct psm_s {
 /*@kept@*/
     TFI_t fi;			/*!< transaction element file info */
     FD_t cfd;			/*!< Payload file handle. */
-    FD_t fd;			/*!< Repackage file handle. */
-    Header oh;			/*!< Repackage header. */
 /*@null@*/
     rpmdbMatchIterator mi;
 /*@observer@*/
@@ -175,10 +172,7 @@ struct psm_s {
     const char * rpmio_flags;
 /*@only@*/ /*@null@*/
     const char * failedFile;
-/*@only@*/ /*@null@*/
-    const char * pkgURL;	/*!< Repackage URL. */
 /*@dependent@*/
-    const char * pkgfn;		/*!< Repackage file name. */
     int scriptTag;		/*!< Scriptlet data tag. */
     int progTag;		/*!< Scriptlet interpreter tag. */
     int npkgs_installed;	/*!< No. of installed instances. */
