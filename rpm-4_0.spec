@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.23
+Release: alt100.24
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -501,6 +501,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Apr 05 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.24
+- platform.in: Added %%systemd_unitdir macro.
+
 * Mon Mar 14 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.23
 - build/reqprov.c: fixed optimization of subpackage self-requirements.
 - build/interdep.c: fixed check for cycles introduced along with
