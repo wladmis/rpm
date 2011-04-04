@@ -382,6 +382,7 @@
 @alt@
 @alt@# Initscripts.
 @alt@%_initdir	%{_sysconfdir}/rc.d/init.d
+@alt@%systemd_unitdir	/lib/systemd/system
 @alt@
 @alt@# logrotate configs.
 @alt@%_logrotatedir	%{_sysconfdir}/logrotate.d
