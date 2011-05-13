@@ -445,7 +445,7 @@
 @alt@%_compress_method	auto
 @alt@%_verify_elf_method	default
 @alt@%_verify_info_method	normal
-@alt@%_fixup_method	binconfig pkgconfig libtool
+@alt@%_fixup_method	binconfig pkgconfig libtool desktop
 @alt@%_strip_method	%{?_enable_debug:none}%{!?_enable_debug:executable shared}
 @alt@
 @alt@%_cleanup_topdir	%nil

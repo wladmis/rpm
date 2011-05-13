@@ -501,10 +501,11 @@ BuildRoot.
      * pkgconfig:     поиск     и    обработка    файлов    по    шаблону
        /usr/lib/pkgconfig/*.pc;
      * libtool: поиск и обработка .la-файлов;
+     * desktop: поиск и обработка .desktop-файлов;
 
    Какой  метод  будет использован в каждом конкретном случае, зависит от
    значения  макроса  %_fixup_method;  значение  по  умолчанию  для этого
-   макроса - binconfig pkgconfig libtool.
+   макроса - binconfig pkgconfig libtool desktop.
 
 Автоматическое исправление прав доступа к файлам и каталогам.
 

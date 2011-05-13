@@ -16,6 +16,7 @@ EXTRA_DIST = \
 	cpp.req cpp.req.files \
 	find-lang \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
+	fixup-desktop fixup-desktop.awk \
 	files.req files.req.files 0common-files.req.list \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files \
@@ -49,6 +50,7 @@ config_SCRIPTS = \
 	cpp.req cpp.req.files \
 	find-lang \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
+	fixup-desktop fixup-desktop.awk \
 	files.req files.req.files \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files \

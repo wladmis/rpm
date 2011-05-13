@@ -37,6 +37,7 @@ AddShowMethods()
 export FIXUP_BINCONFIG=
 export FIXUP_PKGCONFIG=
 export FIXUP_LIBTOOL=
+export FIXUP_DESKTOP=
 for t in `printf %s "$RPM_FIXUP_METHOD" |tr , ' '`; do
 	case "$t" in
 		no|none|off|false|skip)
@@ -54,13 +55,17 @@ for t in `printf %s "$RPM_FIXUP_METHOD" |tr , ' '`; do
 			FIXUP_LIBTOOL=libtool
 			AddShowMethods libtool
 			;;
+		desktop)
+			FIXUP_DESKTOP=desktop
+			AddShowMethods desktop
+			;;
 		*)
 			Fatal "Unrecognized fixup method: $t"
 			;;
 	esac
 done
 
-if [ -z "$FIXUP_BINCONFIG" -a -z "$FIXUP_PKGCONFIG" -a -z "$FIXUP_LIBTOOL" ]; then
+if [ -z "$FIXUP_BINCONFIG" -a -z "$FIXUP_PKGCONFIG" -a -z "$FIXUP_LIBTOOL" -a -z "$FIXUP_DESKTOP" ]; then
 	# Nothing to do
 	exit 0
 fi
@@ -86,4 +91,12 @@ fi
 if [ -n "$FIXUP_LIBTOOL" ]; then
 	find .$RPM_FIXUP_TOPDIR -type f -name \*.la -print0 |
 		xargs -r0 @RPMCONFIGDIR@/fixup-libtool
+fi
+
+if [ -n "$FIXUP_DESKTOP" ]; then
+	for d in ./usr/share/applications ./usr/share/kde/applications ./usr/share/kde4/applications; do
+		[ -d "$d" ] || continue
+		find "$d" -type f -name \*.desktop -print0 |
+			xargs -r0 @RPMCONFIGDIR@/fixup-desktop
+	done
 fi
