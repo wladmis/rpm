@@ -22,17 +22,15 @@
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
-TMPFILE="$(mktemp -t "$PROG.XXXXXXXXXX")"
-
 exit_handler()
 {
-	local rc=$?
-	trap - EXIT
 	rm -f -- "$TMPFILE"
-	exit $rc
+	exit $1
 }
 
-trap exit_handler SIGHUP SIGINT SIGTERM SIGQUIT SIGPIPE EXIT
+trap 'exit 143' HUP INT QUIT PIPE TERM
+TMPFILE="$(mktemp -t "$PROG.XXXXXXXXXX")"
+trap 'exit_handler $?' EXIT
 
 : ${RPM_FIXUP_SKIPLIST:=}
 

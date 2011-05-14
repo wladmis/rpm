@@ -1,6 +1,6 @@
 #!/bin/sh -efu
 #
-# Copyright (C) 2000-2006  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2000-2007,2011  Dmitry V. Levin <ldv@altlinux.org>
 # Copyright (C) 2007       Alexey Tourbin <at@altlinux.org>
 #
 # find-requires - generate list of linux-specific package requires.
@@ -24,25 +24,22 @@
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
-workdir=
-exit_handler()
-{
-	local rc=$?
-	trap - EXIT
-	[ -z "$workdir" ] || rm -rf "$workdir"
-	cat >/dev/null
-	exit $rc
-}
-
-trap exit_handler EXIT HUP INT QUIT PIPE TERM
-
 methods=$(SetupMethods req "$RPM_FINDREQ_METHOD")
 if [ -z "$methods" ]; then
 	Info "AutoReq disabled, nothing to do"
 	exit 0
 fi
 
+exit_handler()
+{
+	rm -rf -- "$workdir"
+	cat > /dev/null
+	exit $1
+}
+
+trap 'exit 143' HUP INT QUIT PIPE TERM
 workdir=$(mktemp -dt "$PROG".XXXXXXXX)
+trap 'exit_handler $?' EXIT
 
 # filter file list through TOPDIR and SKIPLIST patterns
 while IFS= read -r f; do

@@ -2,7 +2,7 @@
 #
 # fixup-binconfig - /usr/bin/*-config fixups.
 #
-# Copyright (C) 2002, 2004  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2002,2004,2006,2008,2011  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,20 +22,19 @@
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
+exit_handler()
+{
+	rm -rf -- "$WORKDIR"
+	exit $1
+}
+
+trap 'exit 143' HUP INT QUIT PIPE TERM
 WORKDIR="$(mktemp -dt "$PROG.XXXXXXXXXX")"
+trap 'exit_handler $?' EXIT
+
 TMPFILE="$WORKDIR/tmp"
 f_saved="$WORKDIR/sav"
 f_new="$WORKDIR/new"
-
-exit_handler()
-{
-	local rc=$?
-	trap - EXIT
-	rm -rf -- "$WORKDIR"
-	exit $rc
-}
-
-trap exit_handler SIGHUP SIGINT SIGTERM SIGQUIT SIGPIPE EXIT
 
 : ${RPM_FIXUP_SKIPLIST:=}
 
