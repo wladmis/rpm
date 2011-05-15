@@ -1432,18 +1432,6 @@ msgstr "строка %d: Неверное число: %s\n"
 msgid "line %d: Bad no%s number: %d\n"
 msgstr "строка %d: Неверное число no%s: %d\n"
 
-#: build/spec.c:269
-msgid "source"
-msgstr "исходника"
-
-#: build/spec.c:274
-msgid "patch"
-msgstr "патча"
-
-#: build/spec.c:279
-msgid "icon"
-msgstr "пиктограммы"
-
 #: build/spec.c:304
 #, c-format
 msgid "line %d: Bad %s number: %s\n"
