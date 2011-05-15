@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.24
+Release: alt100.25
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -501,6 +501,12 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon May 16 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.25
+- fixup-desktop: new file that does trivial fixes in desktop files
+  (by Igor Vlasenko; closes: #25605).
+- ru.po: removed ambiguous translations for "source", "patch" and "icon"
+  (closes: #24857).
+
 * Tue Apr 05 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.24
 - platform.in: Added %%systemd_unitdir macro.
 
