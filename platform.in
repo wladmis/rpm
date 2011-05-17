@@ -429,11 +429,6 @@
 @alt@%update_menus	%{warning %%update_menus is obsolete and will be removed soon}update_menus_bin='%_update_menus_bin' && [ -x "$update_menus_bin" ] && "$update_menus_bin" ||:
 @alt@%clean_menus	%{warning %%clean_menus is obsolete and will be removed soon}update_menus_bin='%_update_menus_bin' && [ "$1" = 0 -a -x "$update_menus_bin" ] && "$update_menus_bin" ||:
 @alt@
-@alt@# OBSOLETE window managers registration macros.
-@alt@%_update_wms_bin	%_sbindir/update_wms
-@alt@%update_wms	%{warning %%update_wms is obsolete and will be removed soon}update_wms_bin='%_update_wms_bin' && [ -x "$update_wms_bin" ] && "$update_wms_bin" ||:
-@alt@%clean_wms	%{warning %%clean_wms is obsolete and will be removed soon}update_wms_bin='%_update_wms_bin' && [ "$1" = 0 -a -x "$update_wms_bin" ] && "$update_wms_bin" ||:
-@alt@
 @alt@# OBSOLETE scrollkeeper database synchronization macros.
 @alt@%_update_scrollkeeper_bin	%_bindir/scrollkeeper-update
 @alt@%update_scrollkeeper	%{warning %%update_scrollkeeper is obsolete and will be removed soon}update_scrollkeeper_bin='%_update_scrollkeeper_bin' && [ -x "$update_scrollkeeper_bin" ] && "$update_scrollkeeper_bin" -q ||:
@@ -557,7 +552,7 @@
 @alt@
 @alt@%_initddir		%_initdir
 @alt@%_initrddir	%_initdir
-@alt@%make_session	%update_wms
+@alt@%make_session	%nil
 @alt@
 @alt@# GCC versioning.
 @alt@%__gcc_version %(gcc -dumpversion)
