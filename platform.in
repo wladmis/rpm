@@ -429,11 +429,6 @@
 @alt@%update_menus	%{warning %%update_menus is obsolete and will be removed soon}update_menus_bin='%_update_menus_bin' && [ -x "$update_menus_bin" ] && "$update_menus_bin" ||:
 @alt@%clean_menus	%{warning %%clean_menus is obsolete and will be removed soon}update_menus_bin='%_update_menus_bin' && [ "$1" = 0 -a -x "$update_menus_bin" ] && "$update_menus_bin" ||:
 @alt@
-@alt@# OBSOLETE scrollkeeper database synchronization macros.
-@alt@%_update_scrollkeeper_bin	%_bindir/scrollkeeper-update
-@alt@%update_scrollkeeper	%{warning %%update_scrollkeeper is obsolete and will be removed soon}update_scrollkeeper_bin='%_update_scrollkeeper_bin' && [ -x "$update_scrollkeeper_bin" ] && "$update_scrollkeeper_bin" -q ||:
-@alt@%clean_scrollkeeper	%{warning %%clean_scrollkeeper is obsolete and will be removed soon}update_scrollkeeper_bin='%_update_scrollkeeper_bin' && [ "$1" = 0 -a -x "$update_scrollkeeper_bin" ] && "$update_scrollkeeper_bin" -q ||:
-@alt@
 @alt@%_defattr	%%defattr(-,root,root,755)
 @alt@
 @alt@%_cleanup_method	auto
