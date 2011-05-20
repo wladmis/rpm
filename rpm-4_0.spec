@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.25
+Release: alt100.26
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -29,7 +29,6 @@ Summary(ru_RU.UTF-8): Менеджер пакетов RPM
 License: GPL
 Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
-Packager: Dmitry V. Levin <ldv@altlinux.org>
 
 # http://git.altlinux.org/gears/r/rpm.git
 Source: rpm-%version-%release.tar
@@ -501,6 +500,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri May 20 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.26
+- fixup-desktop: Fixed to edit files in place (closes: #25645).
+- platform.in: Removed obsolete %%update_wms/%%clean_wms and
+  %%update_scrollkeeper/%%clean_scrollkeeper macros (by Igor Vlasenko).
+
 * Mon May 16 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.25
 - fixup-desktop: new file that does trivial fixes in desktop files
   (by Igor Vlasenko; closes: #25605).
