@@ -36,11 +36,11 @@ trap 'exit_handler $?' EXIT
 
 fix()
 {
-	@RPMCONFIGDIR@/fixup-desktop.awk "$f" >"$TMPFILE" || return 1
+	@RPMCONFIGDIR@/fixup-desktop.awk "$f" > "$TMPFILE" || return 1
 	if ! cmp --quiet -- "$f" "$TMPFILE"; then
 		echo "$fname: performed minor cleanup:"
 		diff -- "$f" "$TMPFILE" ||:
-		mv -f -- "$TMPFILE" "$f" || return 1
+		cat < "$TMPFILE" > "$f" || return 1
 	fi
 }
 
