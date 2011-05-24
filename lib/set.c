@@ -110,38 +110,17 @@ int decode_base62_size(const char *base62)
 
 // This table maps alnum characters to their numeric values.
 static
-const int char_to_num[] = {
-    /* 0..15 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    /* 16..31 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    /* 32..47 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    /* 48..57 = '0'..'9' */
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-    /* 58..64 */
-    -1, -1, -1, -1, -1, -1, -1,
-    /* 65..90 = 'A'..'Z' */
-    36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-    46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
-    56, 57, 58, 59, 60, 61,
-    /* 91..96 */
-    -1, -1, -1, -1, -1, -1,
-    /* 97..122 = 'a'..'z' */
-    10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-    20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-    30, 31, 32, 33, 34, 35,
-    /* 123..127 */
-    -1, -1, -1, -1, -1,
-    /* 128..255 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+const int char_to_num[256] = {
+    [0 ... 255] = 0xee,
+    [0] = 0xff,
+#define C1(c, b) [c] = c - b
+#define C2(c, b) C1(c, b), C1(c + 1, b)
+#define C5(c, b) C1(c, b), C2(c + 1, b), C2(c + 3, b)
+#define C10(c, b) C5(c, b), C5(c + 5, b)
+    C10('0', '0'),
+#define C26(c, b) C1(c, b), C5(c + 1, b), C10(c + 6, b), C10(c + 16, b)
+    C26('a', 'a' + 10),
+    C26('A', 'A' + 36),
 };
 
 // Main base62 decoding routine: unpack base62 string into bitmap.
@@ -168,21 +147,24 @@ int decode_base62(const char *base62, char *bitv)
 	*bitv++ = (c >> 3) & 1;
     }
     // ----8<----
-    int c;
-    while ((c = (unsigned char) *base62++)) {
+    while (1) {
+	int c = (unsigned char) *base62++;
 	int num6b = char_to_num[c];
-	if (num6b < 0)
-	    return -1;
-	if (num6b < 61) {
+	while (num6b < 61) {
 	    put6bits(num6b);
-	    continue;
+	    c = (unsigned char) *base62++;
+	    num6b = char_to_num[c];
 	}
+	if (num6b == 0xff)
+	    break;
+	if (num6b == 0xee)
+	    return -1;
 	assert(num6b == 61);
 	c = (unsigned char) *base62++;
-	if (c == 0)
-	    return -2;
 	int num4b = char_to_num[c];
-	if (num4b < 0)
+	if (num4b == 0xff)
+	    return -2;
+	if (num4b == 0xee)
 	    return -3;
 	switch (num4b & (16 + 32)) {
 	case 0:
@@ -418,21 +400,24 @@ int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
 	putNbits(c, 4);
     }
     // ----8<----
-    int c;
-    while ((c = (unsigned char) *base62++)) {
+    while (1) {
+	int c = (unsigned char) *base62++;
 	int num6b = char_to_num[c];
-	if (num6b < 0)
-	    return -1;
-	if (num6b < 61) {
+	while (num6b < 61) {
 	    put6bits(num6b);
-	    continue;
+	    c = (unsigned char) *base62++;
+	    num6b = char_to_num[c];
 	}
+	if (num6b == 0xff)
+	    break;
+	if (num6b == 0xee)
+	    return -1;
 	assert(num6b == 61);
 	c = (unsigned char) *base62++;
-	if (c == 0)
-	    return -2;
 	int num4b = char_to_num[c];
-	if (num4b < 0)
+	if (num4b == 0xff)
+	    return -2;
+	if (num4b == 0xee)
 	    return -3;
 	switch (num4b & (16 + 32)) {
 	case 0:

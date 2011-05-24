@@ -226,7 +226,7 @@ export ac_cv_path___SSH=/usr/bin/ssh
 	%{subst_with selinux} \
 	--program-transform-name=
 
-set_c_cflags="$(sed -n 's/^CFLAGS = //p' lib/Makefile) -W -Wno-missing-prototypes %{!?_enable_debug:-O3}"
+set_c_cflags="$(sed -n 's/^CFLAGS = //p' lib/Makefile) -W -Wno-missing-prototypes -Wno-override-init %{!?_enable_debug:-O3}"
 %make_build -C lib set.lo CFLAGS="$set_c_cflags"
 %make_build YACC='bison -y'
 
