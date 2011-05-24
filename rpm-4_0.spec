@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.26
+Release: alt100.27
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -500,6 +500,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Wed May 25 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.27
+- find-{provides,requires}: fixed regression introduced along with
+  cleanup in 4.0.4-alt100.25.
+
 * Fri May 20 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.26
 - fixup-desktop: Fixed to edit files in place (closes: #25645).
 - platform.in: Removed obsolete %%update_wms/%%clean_wms and
