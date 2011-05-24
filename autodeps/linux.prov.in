@@ -24,12 +24,6 @@
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
-methods=$(SetupMethods prov "$RPM_FINDPROV_METHOD")
-if [ -z "$methods" ]; then
-	Info "AutoProv disabled, nothing to do"
-	exit 0
-fi
-
 exit_handler()
 {
 	rm -rf -- "$workdir"
@@ -40,6 +34,12 @@ exit_handler()
 trap 'exit 143' HUP INT QUIT PIPE TERM
 workdir=$(mktemp -dt "$PROG".XXXXXXXX)
 trap 'exit_handler $?' EXIT
+
+methods=$(SetupMethods prov "$RPM_FINDPROV_METHOD")
+if [ -z "$methods" ]; then
+	Info 'AutoProv disabled, nothing to do'
+	exit 0
+fi
 
 # filter file list through TOPDIR and SKIPLIST patterns
 while IFS= read -r f; do
