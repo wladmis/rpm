@@ -148,7 +148,7 @@ int decode_base62(const char *base62, char *bitv)
     }
     // ----8<----
     while (1) {
-	int c = (unsigned char) *base62++;
+	long c = (unsigned char) *base62++;
 	int num6b = char_to_num[c];
 	while (num6b < 61) {
 	    put6bits(num6b);
@@ -401,7 +401,7 @@ int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
     }
     // ----8<----
     while (1) {
-	int c = (unsigned char) *base62++;
+	long c = (unsigned char) *base62++;
 	int num6b = char_to_num[c];
 	while (num6b < 61) {
 	    put6bits(num6b);
