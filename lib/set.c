@@ -348,100 +348,6 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
     return v - v_start;
 }
 
-// Combined base62+golomb decoding routine, no need for bitv[].
-static
-int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
-{
-    unsigned *v_start = v;
-    unsigned q = 0;
-    unsigned r = 0;
-    int rfill = 0;
-    enum { ST_VLEN, ST_MBITS } state = ST_VLEN;
-    inline
-    void putNbits(unsigned c, int n)
-    {
-	if (state == ST_VLEN)
-	    goto vlen;
-	r |= (c << rfill);
-	rfill += n;
-	int left = rfill - Mshift;
-	if (left < 0)
-	    return;
-	r &= (1 << Mshift) - 1;
-	*v++ = (q << Mshift) | r;
-	q = 0;
-	state = ST_VLEN;
-	if (left == 0)
-	    return;
-	c >>= n - left;
-	n = left;
-    vlen:
-	do {
-	    n--;
-	    if (c & 1) {
-		r = (c >> 1);
-		rfill = n;
-		state = ST_MBITS;
-		return;
-	    }
-	    q++;
-	    c >>= 1;
-	}
-	while (n > 0);
-    }
-    inline
-    void put6bits(unsigned c)
-    {
-	putNbits(c, 6);
-    }
-    inline
-    void put4bits(unsigned c)
-    {
-	putNbits(c, 4);
-    }
-    // ----8<----
-    while (1) {
-	long c = (unsigned char) *base62++;
-	int num6b = char_to_num[c];
-	while (num6b < 61) {
-	    put6bits(num6b);
-	    c = (unsigned char) *base62++;
-	    num6b = char_to_num[c];
-	}
-	if (num6b == 0xff)
-	    break;
-	if (num6b == 0xee)
-	    return -1;
-	assert(num6b == 61);
-	c = (unsigned char) *base62++;
-	int num4b = char_to_num[c];
-	if (num4b == 0xff)
-	    return -2;
-	if (num4b == 0xee)
-	    return -3;
-	switch (num4b & (16 + 32)) {
-	case 0:
-	    break;
-	case 16:
-	    num6b = 62;
-	    num4b &= ~16;
-	    break;
-	case 32:
-	    num6b = 63;
-	    num4b &= ~32;
-	    break;
-	default:
-	    return -4;
-	}
-	put6bits(num6b);
-	put4bits(num4b);
-    }
-    // ---->8----
-    if (state != ST_VLEN)
-	return -10;
-    return v - v_start;
-}
-
 #ifdef SELF_TEST
 static
 void test_golomb()
@@ -484,11 +390,283 @@ void test_golomb()
     assert(golomb_bpp < bpp);
     fprintf(stderr, "%s: golomb test OK\n", __FILE__);
 }
+#endif
+
+/*
+ * Combined base62+gololb decoding routine - implemented for efficiency.
+ *
+ * As Dmitry V. Levin once noticed, when it comes to speed, very few objections
+ * can be made against complicating the code.  Which reminds me of Karl Marx,
+ * who said that there is not a crime at which a capitalist will scruple for
+ * the sake of 300 per cent profit, even at the chance of being hanged.  Anyway,
+ * here Alexey Tourbin demonstrates that by using sophisticated - or should he
+ * say "ridiculously complicated" - techniques it is indeed possible to gain
+ * some profit, albeit of another kind.
+ */
+
+// Word types (when two bytes from base62 string cast to unsigned short).
+enum {
+    W_AA = 0x0000,
+    W_AZ = 0x1000,
+    W_ZA = 0x2000,
+    W_A0 = 0x3000,
+    W_0X = 0x4000,
+    W_EE = 0xeeee,
+};
+
+// Combine two characters into array index (with respect to endianness).
+#include <sys/types.h>
+#if BYTE_ORDER && BYTE_ORDER == LITTLE_ENDIAN
+#define CCI(c1, c2) ((c1) | ((c2) << 8))
+#elif BYTE_ORDER && BYTE_ORDER == BIG_ENDIAN
+#define CCI(c1, c2) ((c2) | ((c1) << 8))
+#else
+#error "unknown byte order"
+#endif
+
+// Maps base62 word into numeric value (decoded bits) ORed with word type.
+static
+const unsigned short word_to_num[65536] = {
+    [0 ... 65535] = W_EE,
+#define AA1(c1, c2, b1, b2) [CCI(c1, c2)] = (c1 - b1) | ((c2 - b2) << 6)
+#define AA1x2(c1, c2, b1, b2) AA1(c1, c2, b1, b2), AA1(c1, c2 + 1, b1, b2)
+#define AA1x3(c1, c2, b1, b2) AA1(c1, c2, b1, b2), AA1x2(c1, c2 + 1, b1, b2)
+#define AA1x5(c1, c2, b1, b2) AA1x2(c1, c2, b1, b2), AA1x3(c1, c2 + 2, b1, b2)
+#define AA1x10(c1, c2, b1, b2) AA1x5(c1, c2, b1, b2), AA1x5(c1, c2 + 5, b1, b2)
+#define AA1x20(c1, c2, b1, b2) AA1x10(c1, c2, b1, b2), AA1x10(c1, c2 + 10, b1, b2)
+#define AA1x25(c1, c2, b1, b2) AA1x5(c1, c2, b1, b2), AA1x20(c1, c2 + 5, b1, b2)
+#define AA2x1(c1, c2, b1, b2) AA1(c1, c2, b1, b2), AA1(c1 + 1, c2, b1, b2)
+#define AA3x1(c1, c2, b1, b2) AA1(c1, c2, b1, b2), AA2x1(c1 + 1, c2, b1, b2)
+#define AA5x1(c1, c2, b1, b2) AA2x1(c1, c2, b1, b2), AA3x1(c1 + 2, c2, b1, b2)
+#define AA10x1(c1, c2, b1, b2) AA5x1(c1, c2, b1, b2), AA5x1(c1 + 5, c2, b1, b2)
+#define AA20x1(c1, c2, b1, b2) AA10x1(c1, c2, b1, b2), AA10x1(c1 + 10, c2, b1, b2)
+#define AA25x1(c1, c2, b1, b2) AA5x1(c1, c2, b1, b2), AA20x1(c1 + 5, c2, b1, b2)
+#define AA26x1(c1, c2, b1, b2) AA1(c1, c2, b1, b2), AA25x1(c1 + 1, c2, b1, b2)
+#define AA2x5(c1, c2, b1, b2) AA1x5(c1, c2, b1, b2), AA1x5(c1 + 1, c2, b1, b2)
+#define AA3x5(c1, c2, b1, b2) AA1x5(c1, c2, b1, b2), AA2x5(c1 + 1, c2, b1, b2)
+#define AA5x5(c1, c2, b1, b2) AA2x5(c1, c2, b1, b2), AA3x5(c1 + 2, c2, b1, b2)
+#define AA5x10(c1, c2, b1, b2) AA5x5(c1, c2, b1, b2), AA5x5(c1, c2 + 5, b1, b2)
+#define AA10x5(c1, c2, b1, b2) AA5x5(c1, c2, b1, b2), AA5x5(c1 + 5, c2, b1, b2)
+#define AA20x5(c1, c2, b1, b2) AA10x5(c1, c2, b1, b2), AA10x5(c1 + 10, c2, b1, b2)
+#define AA25x5(c1, c2, b1, b2) AA5x5(c1, c2, b1, b2), AA20x5(c1 + 5, c2, b1, b2)
+#define AA10x10(c1, c2, b1, b2) AA5x10(c1, c2, b1, b2), AA5x10(c1 + 5, c2, b1, b2)
+#define AA10x20(c1, c2, b1, b2) AA10x10(c1, c2, b1, b2), AA10x10(c1, c2 + 10, b1, b2)
+#define AA10x25(c1, c2, b1, b2) AA10x5(c1, c2, b1, b2), AA10x20(c1, c2 + 5, b1, b2)
+#define AA10x26(c1, c2, b1, b2) AA10x1(c1, c2, b1, b2), AA10x25(c1, c2 + 1, b1, b2)
+#define AA20x10(c1, c2, b1, b2) AA10x10(c1, c2, b1, b2), AA10x10(c1 + 10, c2, b1, b2)
+#define AA25x10(c1, c2, b1, b2) AA5x10(c1, c2, b1, b2), AA20x10(c1 + 5, c2, b1, b2)
+#define AA26x10(c1, c2, b1, b2) AA1x10(c1, c2, b1, b2), AA25x10(c1 + 1, c2, b1, b2)
+#define AA25x20(c1, c2, b1, b2) AA25x10(c1, c2, b1, b2), AA25x10(c1, c2 + 10, b1, b2)
+#define AA25x25(c1, c2, b1, b2) AA25x5(c1, c2, b1, b2), AA25x20(c1, c2 + 5, b1, b2)
+#define AA25x26(c1, c2, b1, b2) AA25x1(c1, c2, b1, b2), AA25x25(c1, c2 + 1, b1, b2)
+#define AA26x25(c1, c2, b1, b2) AA1x25(c1, c2, b1, b2), AA25x25(c1 + 1, c2, b1, b2)
+#define AA26x26(c1, c2, b1, b2) AA26x1(c1, c2, b1, b2), AA26x25(c1, c2 + 1, b1, b2)
+    AA10x10('0', '0', '0', '0'),
+    AA10x26('0', 'a', '0', 'a' + 10),
+    AA10x25('0', 'A', '0', 'A' + 36),
+    AA26x10('a', '0', 'a' + 10, '0'),
+    AA25x10('A', '0', 'A' + 36, '0'),
+    AA26x26('a', 'a', 'a' + 10, 'a' + 10),
+    AA26x25('a', 'A', 'a' + 10, 'A' + 36),
+    AA25x26('A', 'a', 'A' + 36, 'a' + 10),
+    AA25x25('A', 'A', 'A' + 36, 'A' + 36),
+#define AZ1(c, b) [CCI(c, 'Z')] = (c - b) | W_AZ
+#define AZ2(c, b) AZ1(c, b), AZ1(c + 1, b)
+#define AZ5(c, b) AZ1(c, b), AZ2(c + 1, b), AZ2(c + 3, b)
+#define AZ10(c, b) AZ5(c, b), AZ5(c + 5, b)
+#define AZ25(c, b) AZ5(c, b), AZ10(c + 5, b), AZ10(c + 15, b)
+#define AZ26(c, b) AZ1(c, b), AZ25(c + 1, b)
+    AZ10('0', '0'),
+    AZ26('a', 'a' + 10),
+    AZ25('A', 'A' + 36),
+#define ZA1(c, b)  [CCI('Z', c)] = (61 + ((c - b) >> 4)) | (((c - b) & 0xf) << 6) | W_ZA
+#define ZA2(c, b) ZA1(c, b), ZA1(c + 1, b)
+#define ZA5(c, b) ZA1(c, b), ZA2(c + 1, b), ZA2(c + 3, b)
+#define ZA10(c, b) ZA5(c, b), ZA5(c + 5, b)
+#define ZA25(c, b) ZA5(c, b), ZA10(c + 5, b), ZA10(c + 15, b)
+#define ZA26(c, b) ZA1(c, b), ZA25(c + 1, b)
+    ZA10('0', '0'),
+    ZA26('a', 'a' + 10),
+    ZA25('A', 'A' + 36),
+#define A01(c, b) [CCI(c, 0)] = (c - b) | W_A0
+#define A02(c, b) A01(c, b), A01(c + 1, b)
+#define A05(c, b) A01(c, b), A02(c + 1, b), A02(c + 3, b)
+#define A010(c, b) A05(c, b), A05(c + 5, b)
+#define A025(c, b) A05(c, b), A010(c + 5, b), A010(c + 15, b)
+#define A026(c, b) A01(c, b), A025(c + 1, b)
+    A010('0', '0'),
+    A026('a', 'a' + 10),
+    A025('A', 'A' + 36),
+#define OX(c) [CCI(0, c)] = W_0X
+#define OX4(c) OX(c), OX(c + 1), OX(c + 2), OX(c + 3)
+#define OX16(c) OX4(c), OX4(c + 4), OX4(c + 8), OX4(c + 12)
+#define OX64(c) OX16(c), OX16(c + 16), OX16(c + 32), OX16(c + 48)
+#define OX256(c) OX64(c), OX64(c + 64), OX64(c + 128), OX64(c + 192)
+    OX256('\0'),
+};
+
+// Combined base62+golomb decoding routine.
+static
+int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
+{
+    unsigned *v_start = v;
+    unsigned q = 0;
+    unsigned r = 0;
+    int rfill = 0;
+    enum { ST_VLEN, ST_MBITS } state = ST_VLEN;
+    inline
+    void putNbits(unsigned c, int n)
+    {
+	if (state == ST_VLEN)
+	    goto vlen;
+	r |= (c << rfill);
+	rfill += n;
+    rcheck: ;
+	int left = rfill - Mshift;
+	if (left < 0)
+	    return;
+	r &= (1 << Mshift) - 1;
+	*v++ = (q << Mshift) | r;
+	q = 0;
+	state = ST_VLEN;
+	if (left == 0)
+	    return;
+	c >>= n - left;
+	n = left;
+    vlen:
+	do {
+	    n--;
+	    if (c & 1) {
+		c >>= 1;
+		r = c;
+		rfill = n;
+		state = ST_MBITS;
+		goto rcheck;
+	    }
+	    c >>= 1;
+	    q++;
+	}
+	while (n > 0);
+    }
+    inline void put4bits(unsigned c) { putNbits(c, 4); }
+    inline void put6bits(unsigned c) { putNbits(c, 6); }
+    inline void put10bits(unsigned c) { putNbits(c, 10); }
+    inline void put12bits(unsigned c) { putNbits(c, 12); }
+    // need align
+    if (1 & (long) base62) {
+	long c = (unsigned char) *base62++;
+	int num6b = char_to_num[c];
+	if (num6b < 61) {
+	    put6bits(num6b);
+	    goto reg;
+	}
+	else {
+	    if (num6b == 0xff)
+		goto eol;
+	    if (num6b == 0xee)
+		return -1;
+	    assert(num6b == 61);
+	    goto esc;
+	}
+    }
+    // regular mode, process two-byte words
+  reg:
+    {
+	long w = *(unsigned short *) base62;
+	base62 += 2;
+	int num12b = word_to_num[w];
+	while (num12b < 0x1000) {
+	    put12bits(num12b);
+	    w = *(unsigned short *) base62;
+	    base62 += 2;
+	    num12b = word_to_num[w];
+	}
+	switch (num12b & 0xf000) {
+	case W_AZ:
+	    put6bits(num12b & 0x0fff);
+	    goto esc;
+	case W_ZA:
+	    put10bits(num12b & 0x0fff);
+	    goto reg;
+	case W_A0:
+	    put6bits(num12b & 0x0fff);
+	    goto eol;
+	case W_0X:
+	    goto eol;
+	default:
+	    return -1;
+	}
+    }
+    // escape mode, handle 2 bytes one by one
+  esc:
+    {
+	// 1
+	int num6b = 61;
+	long c = (unsigned char) *base62++;
+	int num4b = char_to_num[c];
+	if (num4b == 0xff)
+	    return -2;
+	if (num4b == 0xee)
+	    return -3;
+	switch (num4b & (16 + 32)) {
+	case 0:
+	    break;
+	case 16:
+	    num6b = 62;
+	    num4b &= ~16;
+	    break;
+	case 32:
+	    num6b = 63;
+	    num4b &= ~32;
+	    break;
+	default:
+	    return -4;
+	}
+	put6bits(num6b);
+	put4bits(num4b);
+	// 2
+	c = (unsigned char) *base62++;
+	num6b = char_to_num[c];
+	if (num6b < 61) {
+	    put6bits(num6b);
+	    goto reg;
+	}
+	else {
+	    if (num6b == 0xff)
+		goto eol;
+	    if (num6b == 0xee)
+		return -1;
+	    assert(num6b == 61);
+	    goto esc;
+	}
+    }
+  eol:
+    if (state != ST_VLEN)
+	return -10;
+    return v - v_start;
+}
+
+#ifdef SELF_TEST
+static
+void test_word_table()
+{
+    int i, j;
+    for (i = 0; i < 256; i++)
+    for (j = 0; j < 256; j++) {
+	unsigned char u[2] __attribute__((aligned(2))) = { i, j };
+	unsigned short ix = *(unsigned short *) u;
+	int w = word_to_num[ix];
+	if (w < 0x1000)
+	    assert(w == (char_to_num[i] | (char_to_num[j] << 6)));
+	else
+	    assert(char_to_num[i] >= 61 || char_to_num[j] >= 61);
+    }
+    fprintf(stderr, "%s: word table test OK\n", __FILE__);
+}
 
 static
 void test_base62_golomb()
 {
-    // test combinded base62+golomb decoder
     const char str[] = "set:hdf7q2P5VZwtLGr9TKxhrEM1";
     const char *base62 = str + 4 + 2;
     int Mshift = 10;
@@ -1127,6 +1305,7 @@ int main()
 {
     test_base62();
     test_golomb();
+    test_word_table();
     test_base62_golomb();
     test_delta();
     test_aux();
