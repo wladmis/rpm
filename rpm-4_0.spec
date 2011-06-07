@@ -250,6 +250,9 @@ rm -rf apidocs
 make apidocs
 %endif #with apidocs
 
+# check
+lib/test-set
+
 %install
 %make_install DESTDIR='%buildroot' install
 chmod a-w %buildroot%_usrsrc/RPM{,/RPMS/*}
