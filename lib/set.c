@@ -534,19 +534,18 @@ int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
 	c >>= n - left;
 	n = left;
     vlen:
-	do {
-	    n--;
-	    if (c & 1) {
-		c >>= 1;
-		r = c;
-		rfill = n;
-		state = ST_MBITS;
-		goto rcheck;
-	    }
-	    c >>= 1;
-	    q++;
+	if (c == 0) {
+	    q += n;
+	    return;
 	}
-	while (n > 0);
+	int vbits = __builtin_ffs(c);
+	n -= vbits;
+	c >>= vbits;
+	q += vbits - 1;
+	r = c;
+	rfill = n;
+	state = ST_MBITS;
+	goto rcheck;
     }
     inline void put4bits(unsigned c) { putNbits(c, 4); }
     inline void put6bits(unsigned c) { putNbits(c, 6); }
