@@ -1080,68 +1080,68 @@ void test_set()
 // main API routine
 int rpmsetcmp(const char *str1, const char *str2)
 {
-	if (strncmp(str1, "set:", 4) == 0)
-	    str1 += 4;
-	if (strncmp(str2, "set:", 4) == 0)
-	    str2 += 4;
-	// initialize decoding
-	int bpp1, Mshift1;
-	int bpp2, Mshift2;
-	if (decode_set_init(str1, &bpp1, &Mshift1) < 0)
-	    return -3;
-	if (decode_set_init(str2, &bpp2, &Mshift2) < 0)
-	    return -4;
-	// make room for hash values
-	unsigned v1buf[decode_set_size(str1, Mshift1)], *v1 = v1buf;
-	unsigned v2buf[decode_set_size(str2, Mshift2)], *v2 = v2buf;
-	// decode hash values
-	// str1 comes on behalf of provides, decode with caching
-	int c1 = cache_decode_set(str1, Mshift1, v1);
-	if (c1 < 0)
-	    return -3;
-	int c2 =       decode_set(str2, Mshift2, v2);
-	if (c2 < 0)
-	    return -4;
-	// adjust for comparison
-	if (bpp1 > bpp2) {
-	    bpp1 = bpp2;
-	    c1 = downsample_set(c1, v1, bpp1);
-	}
-	if (bpp2 > bpp1) {
-	    bpp2 = bpp1;
-	    c2 = downsample_set(c2, v2, bpp2);
-	}
-	// compare
-	int ge = 1;
-	int le = 1;
-	unsigned *v1end = v1 + c1;
-	unsigned *v2end = v2 + c2;
-	while (v1 < v1end && v2 < v2end) {
-	    if (*v1 < *v2) {
-		le = 0;
-		v1++;
-	    }
-	    else if (*v1 > *v2) {
-		ge = 0;
-		v2++;
-	    }
-	    else {
-		v1++;
-		v2++;
-	    }
-	}
-	// return
-	if (v1 < v1end)
+    if (strncmp(str1, "set:", 4) == 0)
+	str1 += 4;
+    if (strncmp(str2, "set:", 4) == 0)
+	str2 += 4;
+    // initialize decoding
+    int bpp1, Mshift1;
+    int bpp2, Mshift2;
+    if (decode_set_init(str1, &bpp1, &Mshift1) < 0)
+	return -3;
+    if (decode_set_init(str2, &bpp2, &Mshift2) < 0)
+	return -4;
+    // make room for hash values
+    unsigned v1buf[decode_set_size(str1, Mshift1)], *v1 = v1buf;
+    unsigned v2buf[decode_set_size(str2, Mshift2)], *v2 = v2buf;
+    // decode hash values
+    // str1 comes on behalf of provides, decode with caching
+    int c1 = cache_decode_set(str1, Mshift1, v1);
+    if (c1 < 0)
+	return -3;
+    int c2 =       decode_set(str2, Mshift2, v2);
+    if (c2 < 0)
+	return -4;
+    // adjust for comparison
+    if (bpp1 > bpp2) {
+	bpp1 = bpp2;
+	c1 = downsample_set(c1, v1, bpp1);
+    }
+    if (bpp2 > bpp1) {
+	bpp2 = bpp1;
+	c2 = downsample_set(c2, v2, bpp2);
+    }
+    // compare
+    int ge = 1;
+    int le = 1;
+    unsigned *v1end = v1 + c1;
+    unsigned *v2end = v2 + c2;
+    while (v1 < v1end && v2 < v2end) {
+	if (*v1 < *v2) {
 	    le = 0;
-	if (v2 < v2end)
+	    v1++;
+	}
+	else if (*v1 > *v2) {
 	    ge = 0;
-	if (le && ge)
-	    return 0;
-	if (ge)
-	    return 1;
-	if (le)
-	    return -1;
-	return -2;
+	    v2++;
+	}
+	else {
+	    v1++;
+	    v2++;
+	}
+    }
+    // return
+    if (v1 < v1end)
+	le = 0;
+    if (v2 < v2end)
+	ge = 0;
+    if (le && ge)
+	return 0;
+    if (ge)
+	return 1;
+    if (le)
+	return -1;
+    return -2;
 }
 
 /*
