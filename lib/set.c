@@ -1092,8 +1092,9 @@ int rpmsetcmp(const char *str1, const char *str2)
     if (decode_set_init(str2, &bpp2, &Mshift2) < 0)
 	return -4;
     // make room for hash values
-    unsigned v1buf[decode_set_size(str1, Mshift1)], *v1 = v1buf;
-    unsigned v2buf[decode_set_size(str2, Mshift2)], *v2 = v2buf;
+    // str1 comes on behalf of provides, allocate a barrier
+    unsigned v1buf[decode_set_size(str1, Mshift1) + 1], *v1 = v1buf;
+    unsigned v2buf[decode_set_size(str2, Mshift2) + 0], *v2 = v2buf;
     // decode hash values
     // str1 comes on behalf of provides, decode with caching
     int c1 = cache_decode_set(str1, Mshift1, v1);
@@ -1116,18 +1117,32 @@ int rpmsetcmp(const char *str1, const char *str2)
     int le = 1;
     unsigned *v1end = v1 + c1;
     unsigned *v2end = v2 + c2;
-    while (v1 < v1end && v2 < v2end) {
-	if (*v1 < *v2) {
+    *v1end = ~0u;
+    unsigned v2val = *v2;
+    while (1) {
+	if (*v1 < v2val) {
 	    le = 0;
 	    v1++;
+	    while (*v1 < v2val)
+		v1++;
+	    if (v1 == v1end)
+		break;
 	}
-	else if (*v1 > *v2) {
-	    ge = 0;
-	    v2++;
-	}
-	else {
+	if (*v1 == v2val) {
 	    v1++;
 	    v2++;
+	    if (v1 == v1end)
+		break;
+	    if (v2 == v2end)
+		break;
+	    v2val = *v2;
+	}
+	else {
+	    ge = 0;
+	    v2++;
+	    if (v2 == v2end)
+		break;
+	    v2val = *v2;
 	}
     }
     // return
