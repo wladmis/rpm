@@ -913,16 +913,14 @@ int decode_set(const char *str, int Mshift, unsigned *v)
 static
 int cache_decode_set(const char *str, int Mshift, unsigned *v)
 {
-    const int cache_size = 192;
-    const int pivot_size = 172;
-    unsigned *v_start = v, *v_end;
+    const int cache_size = 128;
+    const int pivot_size = 128 - 10;
     struct cache_ent {
 	struct cache_ent *next;
 	char *str;
 	unsigned hash;
 	int c;
-	unsigned *v;
-	unsigned short *dv;
+	unsigned v[];
     };
     static __thread
     struct cache_ent *cache;
@@ -939,18 +937,7 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
 		cur->next = cache;
 		cache = cur;
 	    }
-	    // stored as values
-	    if (cur->v) {
-		memcpy(v, cur->v, cur->c * sizeof(*cur->v));
-		return cur->c;
-	    }
-	    // stored as short deltas
-	    unsigned short *dv = cur->dv;
-	    unsigned short *dv_end = dv + cur->c;
-	    while (dv < dv_end)
-		*v++ = *dv++;
-	    v = v_start;
-	    decode_delta(cur->c, v);
+	    memcpy(v, cur->v, cur->c * sizeof(*v));
 	    return cur->c;
 	}
 	count++;
@@ -964,48 +951,21 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
 	}
     }
     // miss, decode
-    int c = decode_base62_golomb(str + 2, Mshift, v);
+    int c = decode_set(str, Mshift, v);
     if (c <= 0)
 	return c;
-    v_end = v_start + c;
     // truncate
     if (count >= cache_size) {
 	free(cur);
 	prev->next = NULL;
     }
-    // check delta
-    int delta = 1;
-    while (v < v_end) {
-	if (*v++ > 65535) {
-	    delta = 0;
-	    break;
-	}
-    }
-    v = v_start;
     // new entry
-    cur = malloc(sizeof(*cur) + strlen(str) + 1 +
-	    c * (delta ? sizeof *cur->dv : sizeof *cur->v));
-    if (cur == NULL) {
-	decode_delta(c, v);
+    cur = malloc(sizeof(*cur) + strlen(str) + 1 + c * sizeof(*v));
+    if (cur == NULL)
 	return c;
-    }
     cur->c = c;
-    if (delta) {
-	cur->v = NULL;
-	unsigned short *dv = cur->dv = (unsigned short *)(cur + 1);
-	while (v < v_end)
-	    *dv++ = *v++;
-	v = v_start;
-	decode_delta(c, v);
-	cur->str = (char *) dv;
-    }
-    else {
-	cur->dv = NULL;
-	cur->v = (unsigned *)(cur + 1);
-	decode_delta(c, v);
-	memcpy(cur->v, v, c * sizeof(*v));
-	cur->str = (char *)(cur->v + c);
-    }
+    memcpy(cur->v, v, c * sizeof(*v));
+    cur->str = (char *)(cur->v + c);
     strcpy(cur->str, str);
     cur->hash = hash;
     // pivotal insertion!
