@@ -9,6 +9,7 @@
  * -2: set1 !=  set2
  * -3: set1 decoder error
  * -4: set2 decoder error
+ * For performance reasons, set1 should come on behalf of Provides.
  */
 int rpmsetcmp(const char *set1, const char *set2);
 

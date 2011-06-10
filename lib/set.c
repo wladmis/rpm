@@ -25,7 +25,7 @@
  * (which indicates that the next character must be handled specially).
  * Note that setting high bits to "00", "01" or "10" cannot contribute
  * to another 'Z' (which would require high bits set to "11").  This is
- * how multiple escapes can be effectively avoided.
+ * how multiple escapes are avoided.
  */
 
 // Estimate base62 buffer size required to encode a given number of bits.
@@ -123,7 +123,7 @@ const int char_to_num[256] = {
     C26('A', 'A' + 36),
 };
 
-// Main base62 decoding routine: unpack base62 string into bitmap.
+// Main base62 decoding routine: unpack base62 string into bitv[].
 static
 int decode_base62(const char *base62, char *bitv)
 {
@@ -146,7 +146,6 @@ int decode_base62(const char *base62, char *bitv)
 	*bitv++ = (c >> 2) & 1;
 	*bitv++ = (c >> 3) & 1;
     }
-    // ----8<----
     while (1) {
 	long c = (unsigned char) *base62++;
 	int num6b = char_to_num[c];
@@ -183,7 +182,6 @@ int decode_base62(const char *base62, char *bitv)
 	put6bits(num6b);
 	put4bits(num4b);
     }
-    // ---->8----
     return bitv - bitv_start;
 }
 
@@ -795,7 +793,7 @@ void test_aux()
 #endif
 
 /*
- * Higher-level set-string routines - serialize integers into a set-string.
+ * Higher-level set-string routines - serialize integers into set-string.
  *
  * A set-string looks like this: "set:bMxyz..."
  *
