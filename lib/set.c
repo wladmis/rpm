@@ -101,9 +101,8 @@ int encode_base62(int bitc, const char *bitv, char *base62)
 
 // Estimate how many bits will result from decoding a base62 string.
 static inline
-int decode_base62_size(const char *base62)
+int decode_base62_size(int len)
 {
-    int len = strlen(base62);
     // Each character will fill at most 6 bits.
     return (len << 2) + (len << 1);
 }
@@ -209,7 +208,7 @@ void test_base62()
     // Neither too long: each second character must fill at least 4 bits.
     assert(len <= rnd_bitc / 2 / 4 + rnd_bitc / 2 / 6 + 1);
     // decode
-    char bitv[decode_base62_size(base62)];
+    char bitv[decode_base62_size(len)];
     int bitc = decode_base62(base62, bitv);
     fprintf(stderr, "rnd_bitc=%d bitc=%d\n", rnd_bitc, bitc);
     assert(bitc >= rnd_bitc);
@@ -872,21 +871,20 @@ int decode_set_init(const char *str, int *pbpp, int *pMshift)
 }
 
 static inline
-int decode_set_size(const char *str, int Mshift)
+int decode_set_size(int len, int Mshift)
 {
-    const char *base62 = str + 2;
-    int bitc = decode_base62_size(base62);
+    int bitc = decode_base62_size(len - 2);
     return decode_golomb_size(bitc, Mshift);
 }
 
 static
-int decode_set(const char *str, int Mshift, unsigned *v)
+int decode_set(const char *str, int len, int Mshift, unsigned *v)
 {
     const char *base62 = str + 2;
     // separate base62+golomb stages, for reference
     if (0) {
 	// base62
-	char bitv[decode_base62_size(base62)];
+	char bitv[decode_base62_size(len)];
 	int bitc = decode_base62(base62, bitv);
 	if (bitc < 0)
 	    return bitc;
@@ -909,13 +907,14 @@ int decode_set(const char *str, int Mshift, unsigned *v)
 
 // Special decode_set version with LRU caching.
 static
-int cache_decode_set(const char *str, int Mshift, unsigned *v)
+int cache_decode_set(const char *str, int len, int Mshift, unsigned *v)
 {
     const int cache_size = 128;
     const int pivot_size = 128 - 10;
     struct cache_ent {
 	struct cache_ent *next;
 	char *str;
+	int len;
 	unsigned hash;
 	int c;
 	unsigned v[];
@@ -928,7 +927,9 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
     unsigned hash = str[0] | (str[2] << 8) | (str[3] << 16);
     int count = 0;
     while (cur) {
-	if (hash == cur->hash && strcmp(str, cur->str) == 0) {
+	if (len == cur->len && hash == cur->hash &&
+	    memcmp(str, cur->str, len) == 0)
+	{
 	    // hit, move to front
 	    if (cur != cache) {
 		prev->next = cur->next;
@@ -949,7 +950,7 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
 	}
     }
     // miss, decode
-    int c = decode_set(str, Mshift, v);
+    int c = decode_set(str, len, Mshift, v);
     if (c <= 0)
 	return c;
     // truncate
@@ -958,13 +959,14 @@ int cache_decode_set(const char *str, int Mshift, unsigned *v)
 	prev->next = NULL;
     }
     // new entry
-    cur = malloc(sizeof(*cur) + strlen(str) + 1 + c * sizeof(*v));
+    cur = malloc(sizeof(*cur) + len + 1 + c * sizeof(*v));
     if (cur == NULL)
 	return c;
     cur->c = c;
     memcpy(cur->v, v, c * sizeof(*v));
     cur->str = (char *)(cur->v + c);
-    strcpy(cur->str, str);
+    memcpy(cur->str, str, len + 1);
+    cur->len = len;
     cur->hash = hash;
     // pivotal insertion!
     if (count >= cache_size) {
@@ -1011,17 +1013,17 @@ void test_set()
     assert(rc == 0);
     assert(bpp == 16);
     assert(Mshift < bpp);
-    int c = decode_set_size(base62, Mshift);
+    int c = decode_set_size(len, Mshift);
     assert(c >= rnd_c);
     unsigned v[c];
-    c = decode_set(base62, Mshift, v);
+    c = decode_set(base62, len, Mshift, v);
     // Decoded values must match.
     assert(c == rnd_c);
     int i;
     for (i = 0; i < c; i++)
 	assert(v[i] == rnd_v[i]);
     // Cached version.
-    c = cache_decode_set(base62, Mshift, v);
+    c = cache_decode_set(base62, len, Mshift, v);
     assert(c == rnd_c);
     for (i = 0; i < c; i++)
 	assert(v[i] == rnd_v[i]);
@@ -1049,16 +1051,18 @@ int rpmsetcmp(const char *str1, const char *str2)
 	return -3;
     if (decode_set_init(str2, &bpp2, &Mshift2) < 0)
 	return -4;
+    int len1 = strlen(str1);
+    int len2 = strlen(str2);
     // make room for hash values
     // str1 comes on behalf of provides, allocate a barrier
-    unsigned v1buf[decode_set_size(str1, Mshift1) + 1], *v1 = v1buf;
-    unsigned v2buf[decode_set_size(str2, Mshift2) + 0], *v2 = v2buf;
+    unsigned v1buf[decode_set_size(len1, Mshift1) + 1], *v1 = v1buf;
+    unsigned v2buf[decode_set_size(len2, Mshift2) + 0], *v2 = v2buf;
     // decode hash values
     // str1 comes on behalf of provides, decode with caching
-    int c1 = cache_decode_set(str1, Mshift1, v1);
+    int c1 = cache_decode_set(str1, len1, Mshift1, v1);
     if (c1 < 0)
 	return -3;
-    int c2 =       decode_set(str2, Mshift2, v2);
+    int c2 =       decode_set(str2, len2, Mshift2, v2);
     if (c2 < 0)
 	return -4;
     // adjust for comparison
