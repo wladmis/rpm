@@ -878,12 +878,13 @@ int decode_set_size(int len, int Mshift)
 }
 
 static
-int decode_set(const char *str, int len, int Mshift, unsigned *v)
+int decode_set(const char *str, int Mshift, unsigned *v)
 {
     const char *base62 = str + 2;
     // separate base62+golomb stages, for reference
     if (0) {
 	// base62
+	int len = strlen(base62);
 	char bitv[decode_base62_size(len)];
 	int bitc = decode_base62(base62, bitv);
 	if (bitc < 0)
@@ -907,7 +908,7 @@ int decode_set(const char *str, int len, int Mshift, unsigned *v)
 
 // Special decode_set version with LRU caching.
 static
-int cache_decode_set(const char *str, int len, int Mshift, unsigned *v)
+int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
 {
     const int cache_size = 128;
     const int pivot_size = 128 - 10;
@@ -927,16 +928,14 @@ int cache_decode_set(const char *str, int len, int Mshift, unsigned *v)
     unsigned hash = str[0] | (str[2] << 8) | (str[3] << 16);
     int count = 0;
     while (cur) {
-	if (len == cur->len && hash == cur->hash &&
-	    memcmp(str, cur->str, len) == 0)
-	{
+	if (hash == cur->hash && memcmp(str, cur->str, cur->len + 1) == 0) {
 	    // hit, move to front
 	    if (cur != cache) {
 		prev->next = cur->next;
 		cur->next = cache;
 		cache = cur;
 	    }
-	    memcpy(v, cur->v, cur->c * sizeof(*v));
+	    *pv = cur->v;
 	    return cur->c;
 	}
 	count++;
@@ -949,21 +948,22 @@ int cache_decode_set(const char *str, int len, int Mshift, unsigned *v)
 	    pivot_prev = prev;
 	}
     }
-    // miss, decode
-    int c = decode_set(str, len, Mshift, v);
-    if (c <= 0)
-	return c;
     // truncate
     if (count >= cache_size) {
 	free(cur);
 	prev->next = NULL;
     }
-    // new entry
-    cur = malloc(sizeof(*cur) + len + 1 + c * sizeof(*v));
-    if (cur == NULL)
+    // decode
+    int len = strlen(str);
+    int c = decode_set_size(len, Mshift);
+    cur = malloc(sizeof(*cur) + len + 1 + (c + 1) * sizeof(**pv));
+    assert(cur);
+    c = cur->c = decode_set(str, Mshift, cur->v);
+    if (c <= 0) {
+	free(cur);
 	return c;
-    cur->c = c;
-    memcpy(cur->v, v, c * sizeof(*v));
+    }
+    cur->v[c] = ~0u;
     cur->str = (char *)(cur->v + c);
     memcpy(cur->str, str, len + 1);
     cur->len = len;
@@ -978,6 +978,7 @@ int cache_decode_set(const char *str, int len, int Mshift, unsigned *v)
 	cur->next = cache;
 	cache = cur;
     }
+    *pv = cur->v;
     return c;
 }
 
@@ -1015,15 +1016,16 @@ void test_set()
     assert(Mshift < bpp);
     int c = decode_set_size(len, Mshift);
     assert(c >= rnd_c);
-    unsigned v[c];
-    c = decode_set(base62, len, Mshift, v);
+    unsigned vbuf[c];
+    const unsigned *v = vbuf;
+    c = decode_set(base62, Mshift, vbuf);
     // Decoded values must match.
     assert(c == rnd_c);
     int i;
     for (i = 0; i < c; i++)
 	assert(v[i] == rnd_v[i]);
     // Cached version.
-    c = cache_decode_set(base62, len, Mshift, v);
+    c = cache_decode_set(base62, Mshift, &v);
     assert(c == rnd_c);
     for (i = 0; i < c; i++)
 	assert(v[i] == rnd_v[i]);
@@ -1051,35 +1053,36 @@ int rpmsetcmp(const char *str1, const char *str2)
 	return -3;
     if (decode_set_init(str2, &bpp2, &Mshift2) < 0)
 	return -4;
-    int len1 = strlen(str1);
-    int len2 = strlen(str2);
-    // make room for hash values
-    // str1 comes on behalf of provides, allocate a barrier
-    unsigned v1buf[decode_set_size(len1, Mshift1) + 1], *v1 = v1buf;
-    unsigned v2buf[decode_set_size(len2, Mshift2) + 0], *v2 = v2buf;
-    // decode hash values
-    // str1 comes on behalf of provides, decode with caching
-    int c1 = cache_decode_set(str1, len1, Mshift1, v1);
+    // decode set1 (comes on behalf of provides)
+    const unsigned *v1 = NULL;
+    int c1 = cache_decode_set(str1, Mshift1, &v1);
     if (c1 < 0)
 	return -3;
-    int c2 =       decode_set(str2, len2, Mshift2, v2);
+    // decode set2 (on the stack)
+    int len2 = strlen(str2);
+    unsigned v2buf[decode_set_size(len2, Mshift2)];
+    const unsigned *v2 = v2buf;
+    int c2 = decode_set(str2, Mshift2, v2buf);
     if (c2 < 0)
 	return -4;
     // adjust for comparison
+    unsigned v1buf[c1 + 1];
     if (bpp1 > bpp2) {
 	bpp1 = bpp2;
-	c1 = downsample_set(c1, v1, bpp1);
+	memcpy(v1buf, v1, c1 * sizeof(*v1));
+	c1 = downsample_set(c1, v1buf, bpp1);
+	v1buf[c1] = ~0u;
+	v1 = v1buf;
     }
     if (bpp2 > bpp1) {
 	bpp2 = bpp1;
-	c2 = downsample_set(c2, v2, bpp2);
+	c2 = downsample_set(c2, v2buf, bpp2);
     }
     // compare
     int ge = 1;
     int le = 1;
-    unsigned *v1end = v1 + c1;
-    unsigned *v2end = v2 + c2;
-    *v1end = ~0u;
+    const unsigned *v1end = v1 + c1;
+    const unsigned *v2end = v2 + c2;
     unsigned v2val = *v2;
     while (1) {
 	if (*v1 < v2val) {
