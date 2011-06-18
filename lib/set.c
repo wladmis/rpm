@@ -910,8 +910,8 @@ int decode_set(const char *str, int Mshift, unsigned *v)
 static
 int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
 {
-    const int cache_size = 128;
-    const int pivot_size = 128 - 10;
+    const int cache_size = 160;
+    const int pivot_size = 160 - 11;
     struct cache_ent {
 	struct cache_ent *next;
 	char *str;
