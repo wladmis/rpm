@@ -3592,6 +3592,9 @@ msgstr "Обучение"
 msgid "Emulators"
 msgstr "Эмуляторы"
 
+msgid "Engineering"
+msgstr "Технические приложения"
+
 msgid "File tools"
 msgstr "Работа с файлами"
 
