@@ -364,20 +364,20 @@ static int doSetupMacro(Spec spec, char *line)
 	const char *buildDir;
 
 	(void) urlPath(buildDirURL, &buildDir);
-	snprintf(buf, sizeof(buf), "cd %s", buildDir);
+	snprintf(buf, sizeof(buf), "cd '%s'", buildDir);
 	appendLineStringBuf(spec->prep, buf);
 	buildDirURL = _free(buildDirURL);
     }
     
     /* delete any old sources */
     if (!leaveDirs) {
-	snprintf(buf, sizeof(buf), "rm -rf %s", spec->buildSubdir);
+	snprintf(buf, sizeof(buf), "rm -rf '%s'", spec->buildSubdir);
 	appendLineStringBuf(spec->prep, buf);
     }
 
     /* if necessary, create and cd into the proper dir */
     if (createDir) {
-	snprintf(buf, sizeof(buf), MKDIR_P " %s\ncd %s",
+	snprintf(buf, sizeof(buf), MKDIR_P " '%s'\ncd '%s'",
 		spec->buildSubdir, spec->buildSubdir);
 	appendLineStringBuf(spec->prep, buf);
     }
@@ -394,7 +394,7 @@ static int doSetupMacro(Spec spec, char *line)
     before = freeStringBuf(before);
 
     if (!createDir) {
-	snprintf(buf, sizeof(buf), "cd %s", spec->buildSubdir);
+	snprintf(buf, sizeof(buf), "cd '%s'", spec->buildSubdir);
 	appendLineStringBuf(spec->prep, buf);
     }
 

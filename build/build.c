@@ -171,11 +171,11 @@ int doScript(Spec spec, int what, const char *name, StringBuf sb, int test)
     (void) fputs(buildTemplate, fp);
 
     if (what != RPMBUILD_PREP && what != RPMBUILD_RMBUILD && spec->buildSubdir)
-	fprintf(fp, "cd %s\n", spec->buildSubdir);
+	fprintf(fp, "cd '%s'\n", spec->buildSubdir);
 
     if (what == RPMBUILD_RMBUILD) {
 	if (spec->buildSubdir)
-	    fprintf(fp, "rm -rf %s\n", spec->buildSubdir);
+	    fprintf(fp, "rm -rf '%s'\n", spec->buildSubdir);
     } else
 	fprintf(fp, "%s", getStringBuf(sb));
 
