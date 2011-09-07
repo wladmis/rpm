@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.31
+Release: alt100.32
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -503,6 +503,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Sep 08 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.32
+- Imported an Owl patch to remove unsafe file permissions (chmod'ing
+  files to 0) on package removal or upgrade to prevent continued access
+  to such files via hard-links possibly created by a user
+  (CVE-2005-4889, CVE-2010-2059).
+- verify-elf: added /lib/../lib64 to the list of prohibited RPATH entries.
+
 * Sun Sep 04 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.31
 - Imported ru and uk translations from Roman Savochenko.
 
