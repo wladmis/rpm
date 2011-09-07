@@ -99,7 +99,7 @@ VerifyELF()
 				Info "$prefix: $f: RPATH entry contains \":\": $rpath"
 			fi
 
-			for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR; do
+			for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR /lib/../lib64; do
 				if printf %s "$rpath" |fgrep -qs "$p"; then
 					Info "ERROR: $f: RPATH entry contains \"$p\": $rpath"
 					rc=1
