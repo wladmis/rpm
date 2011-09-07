@@ -1907,14 +1907,42 @@ if (!(fsm->mapFlags & CPIO_ALL_HARDLINKS)) break;
 	/*@notreached@*/ break;
 
     case FSM_UNLINK:
-	rc = Unlink(fsm->path);
+	{
+	    struct stat stb;
+	    int saved_errno;
+	    int saved_rc = lstat(fsm->path, &stb);
+	    if (!saved_rc && !S_ISLNK(stb.st_mode))
+		saved_rc = chmod(fsm->path, 0);
+	    saved_errno = errno;
+	    if (saved_rc && saved_errno == ENOENT)
+		saved_rc = 0;
+	    rc = Unlink(fsm->path);
+	    if (!rc && saved_rc) {
+		rc = saved_rc;
+		errno = saved_errno;
+	    }
+	}
 	if (_fsm_debug && (stage & FSM_SYSCALL))
 	    rpmMessage(RPMMESS_DEBUG, " %8s (%s) %s\n", cur,
 		fsm->path, (rc < 0 ? strerror(errno) : ""));
 	if (rc < 0)	rc = CPIOERR_UNLINK_FAILED;
 	break;
     case FSM_RENAME:
-	rc = Rename(fsm->opath, fsm->path);
+	{
+	    struct stat stb;
+	    int saved_errno;
+	    int saved_rc = lstat(fsm->path, &stb);
+	    if (!saved_rc && !S_ISLNK(stb.st_mode))
+		saved_rc = chmod(fsm->path, 0);
+	    saved_errno = errno;
+	    if (saved_rc && saved_errno == ENOENT)
+		saved_rc = 0;
+	    rc = Rename(fsm->opath, fsm->path);
+	    if (!rc && saved_rc) {
+		rc = saved_rc;
+		errno = saved_errno;
+	    }
+	}
 	if (_fsm_debug && (stage & FSM_SYSCALL))
 	    rpmMessage(RPMMESS_DEBUG, " %8s (%s, %s) %s\n", cur,
 		fsm->opath, fsm->path, (rc < 0 ? strerror(errno) : ""));
