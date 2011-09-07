@@ -126,7 +126,7 @@ NF==2 && ($1==name || basename($1)==name) && $1~"^/" && $2~"^[(]0x" {print $1}
 			if [ -z "$prefix" ]; then
 				printf '%s(%s)\n' "$debug" "$name"
 			else
-				printf '/usr/lib/debug%s/%s.debug\n' "$prefix" "$name"
+				printf '/usr/lib/debug%s/%s.debug\n' "$prefix" "${name##*/}"
 			fi
 		fi
 	done
