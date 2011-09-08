@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.32
+Release: alt100.33
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -503,6 +503,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Sep 08 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.33
+- debuginfo.req: fixed handling of exotic sonames written as pathnames
+  (closes: #26247).
+
 * Thu Sep 08 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.32
 - Imported an Owl patch to remove unsafe file permissions (chmod'ing
   files to 0) on package removal or upgrade to prevent continued access
