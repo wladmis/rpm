@@ -20,13 +20,14 @@ PkgconfigCflags()
 {
 	local f="$1"; shift
 	local pc_files
+	pc_files=$(PackagedFiles "$f" |egrep "^$RPM_LIBDIR/pkgconfig/[^/]+[.]pc\$" || [ $? = 1 ])
 	if [ -n "${RPM_BUILD_ROOT-}" ]; then
-		pc_files=$(set +f; ls "$RPM_BUILD_ROOT$RPM_LIBDIR/pkgconfig"/*.pc 2>/dev/null ||:)
-	else
-		pc_files=$(rpmquery -f "$f" --list 2>/dev/null |
-				egrep "^$RPM_LIBDIR/pkgconfig/[^/]+[.]pc\$" || [ $? = 1 ])
+		pc_files=$(
+			echo "$pc_files" |sed "s|^/|0 $RPM_BUILD_ROOT/|"
+			set +f; ls "$RPM_BUILD_ROOT$RPM_LIBDIR/pkgconfig"/*.pc 2>/dev/null |sed 's|^/|1 /|')
+		pc_files=$(echo "$pc_files" |sort -u -k2 |sort -n |cut -d' ' -f2-)
+		Debug "pc_files:" $pc_files
 	fi
-	[ -n "$pc_files" ] || return 0
 	local pc
 	for pc in $pc_files; do
 		pkg-config --enable-recursion --cflags "$pc" ||
