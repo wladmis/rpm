@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.33
+Release: alt100.34
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -503,6 +503,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Sep 18 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.34
+- cpp.req: process subpackage *.pc files before other *.pc files, to handle
+  subtle cases like separate -gtk2-devel and -gtk3-devel subpackages.
+
 * Thu Sep 08 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.33
 - debuginfo.req: fixed handling of exotic sonames written as pathnames
   (closes: #26247).
