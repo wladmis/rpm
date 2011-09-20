@@ -1,6 +1,6 @@
 #!/bin/sh -efu
 #
-# Copyright (C) 2008  Alexey Tourbin <at@altlinux.org>
+# Copyright (C) 2008, 2011  Alexey Tourbin <at@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -9,6 +9,7 @@
 
 . @RPMCONFIGDIR@/functions
 . @RPMCONFIGDIR@/find-package
+. @RPMCONFIGDIR@/tmpdir.sh
 
 [ -n "${RPM_LIBDIR-}" ] || RPM_LIBDIR=`rpm --eval %_libdir`
 PKG_CONFIG_PATH=$RPM_LIBDIR/pkgconfig:/usr/share/pkgconfig
@@ -101,21 +102,38 @@ CppReq()
 		fi
 	fi
 	out=$(echo "$out" |sed -n '/^#.* "\//{s/"//g;p}')
-	echo "$out" |awk -v prog="$PROG" -v hdr="$f" '
+
+	# Prepare the list of files in cpp output which are packaged in this supbackage.
+	echo "$out" |cut -d' ' -f3 |
+		xargs -r --delimiter='\n' stat -c '%d,%i %n' |
+		sort -u >$tmpdir/out.f2i
+	PackagedFiles "$f" |sed "s|^|${RPM_BUILD_ROOT-}|" |
+		xargs -r --delimiter='\n' stat -c '%d,%i %n' |
+		sort -u >$tmpdir/pkg.f2i
+	join -o 1.2 $tmpdir/{out,pkg}.f2i >$tmpdir/pf
+
+	echo "$out" |awk -v prog="$PROG" -v hdr="$f" -v pf="$tmpdir"/pf '
 		# info cpp "Preprocessor Output"
 		BEGIN {
 			SP = 0
+			SPmark = 0
 			Stack[SP] = hdr
+			while ((getline <pf) > 0)
+				Packaged[$1] = 1
 		}
 		function Push(f) {
-			Stack[++SP]=f
-			if (SP==1)
+			if (SPmark == SP && !Printed[f]++)
 				print f
+			if (SPmark == SP && Packaged[f])
+				SPmark++
+			Stack[++SP] = f
 		}
 		function Pop(f) {
 			if (f != Stack[--SP])
 				printf "%s: %s: expected pop %s, got pop %s\n",
 					prog, hdr, Stack[SP], f >"/dev/stderr"
+			if (SPmark > SP)
+				SPmark = SP
 		}
 		$4==1 { Push($3) }
 		$4==2 { Pop($3) }
