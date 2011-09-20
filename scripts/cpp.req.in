@@ -100,27 +100,19 @@ CppReq()
 			return 0
 		fi
 	fi
-	echo "$out" |grep '^#' |awk -v prog="$PROG" -v hdr="$f" '
+	out=$(echo "$out" |sed -n '/^#.* "\//{s/"//g;p}')
+	echo "$out" |awk -v prog="$PROG" -v hdr="$f" '
 		# info cpp "Preprocessor Output"
 		BEGIN {
 			SP = 0
 			Stack[SP] = hdr
 		}
-		function filename(f) {
-			if (!sub(/^"\//, "/", f) ||
-			    !sub(/"$/, "", f))
-				printf "%s: %s: bad path %s\n",
-					prog, hdr, f >"/dev/stderr"
-			return f
-		}
 		function Push(f) {
-			f=filename(f)
 			Stack[++SP]=f
 			if (SP==1)
 				print f
 		}
 		function Pop(f) {
-			f=filename(f)
 			if (f != Stack[--SP])
 				printf "%s: %s: expected pop %s, got pop %s\n",
 					prog, hdr, Stack[SP], f >"/dev/stderr"
