@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.34
+Release: alt100.35
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Sep 22 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.35
+- cpp.req: track included files down to the first external file.
+
 * Sun Sep 18 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.34
 - cpp.req: process subpackage *.pc files before other *.pc files, to handle
   subtle cases like separate -gtk2-devel and -gtk3-devel subpackages.
