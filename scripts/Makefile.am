@@ -28,6 +28,7 @@ EXTRA_DIST = \
 	strip_files \
 	static.req static.req.files \
 	symlinks.req symlinks.req.files \
+	tmpdir.sh \
 	verify-elf
 
 installprefix = $(DESTDIR)
@@ -62,6 +63,7 @@ config_SCRIPTS = \
 	strip_files \
 	static.req static.req.files \
 	symlinks.req symlinks.req.files \
+	tmpdir.sh \
 	verify-elf
 
 install-data-local:

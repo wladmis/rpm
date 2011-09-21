@@ -473,6 +473,7 @@ fi
 %rpmattr %_rpmlibdir/shebang.*
 %rpmattr %_rpmlibdir/static.*
 %rpmattr %_rpmlibdir/symlinks.*
+%rpmattr %_rpmlibdir/tmpdir.sh
 %rpmattr %_rpmlibdir/verify-elf
 %rpmattr %_rpmlibdir/*.awk
 # set-version helpers
