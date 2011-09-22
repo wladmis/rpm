@@ -10,7 +10,7 @@ EXTRA_DIST = \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-debuginfo \
-	brp-fix-perms brp-fixup brp-strip \
+	brp-fix-perms brp-fixup \
 	brp-verify_elf brp-verify-info \
 	compress_files \
 	cpp.req cpp.req.files \
@@ -25,7 +25,6 @@ EXTRA_DIST = \
 	rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
-	strip_files \
 	static.req static.req.files \
 	symlinks.req symlinks.req.files \
 	tmpdir.sh \
@@ -45,7 +44,7 @@ config_SCRIPTS = \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-debuginfo \
-	brp-fix-perms brp-fixup brp-strip \
+	brp-fix-perms brp-fixup \
 	brp-verify_elf brp-verify-info \
 	compress_files \
 	cpp.req cpp.req.files \
@@ -60,7 +59,6 @@ config_SCRIPTS = \
 	rpm2cpio.sh \
 	shebang.req shebang.req.files \
 	shell.req shell.req.files shell.prov shell.prov.files \
-	strip_files \
 	static.req static.req.files \
 	symlinks.req symlinks.req.files \
 	tmpdir.sh \

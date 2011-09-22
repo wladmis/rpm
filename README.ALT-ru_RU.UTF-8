@@ -244,9 +244,6 @@ BuildRoot.
    %_verify_info_method:
           метод, используемый при проверке info-файлов в секции %install;
 
-   %_strip_method:
-          метод, используемый при обработке ELF-файлов в секции %install;
-
    %_perl_req_method
           : метод, используемый при поиске зависимостей в perl-скриптах;
 
@@ -254,11 +251,11 @@ BuildRoot.
           :  список каталогов, в которых производится поиск ELF-файлов на
           наличие предоставляемых зависимостей;
 
-   %_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_topdir:
+   %_{cleanup,compress,fixup,verify_elf,findreq,findprov}_topdir:
           точка  начала  поиска  файлов,  обрабатываемых  соответствующим
           методом;
 
-   %_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_skiplist:
+   %_{cleanup,compress,fixup,verify_elf,findreq,findprov}_skiplist:
           список  шаблонов  файлов, которые будут пропущены при обработке
           соответствующим методом;
 
@@ -266,14 +263,14 @@ BuildRoot.
           параметр,   определяющий   влияние   неупакованных   файлов  на
           результат сборки;
 
-   %set_{cleanup,compress,fixup,strip,verify_{elf,info},perl_req}_method:
+   %set_{cleanup,compress,fixup,verify_{elf,info},perl_req}_method:
           изменить значение соответствующего макроса;
 
-   %set_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_{topdi
+   %set_{cleanup,compress,fixup,verify_elf,findreq,findprov}_{topdi
           r,skiplist}:
           изменить значение соответствующего макроса;
 
-   %add_{cleanup,compress,fixup,strip,verify_elf,findreq,findprov}_skipli
+   %add_{cleanup,compress,fixup,verify_elf,findreq,findprov}_skipli
           st:
           добавить значение в соответствующий список;
 
@@ -291,26 +288,11 @@ BuildRoot.
    %find_lang:
           вызов /usr/lib/rpm/find-lang
 
-   %strip_executable:
-          вызов /usr/lib/rpm/brp-strip для обработки ELF executables;
-
-   %strip_relocatable:
-          вызов /usr/lib/rpm/brp-strip для обработки ELF relocatables;
-
-   %strip_shared:
-          вызов /usr/lib/rpm/brp-strip для обработки ELF shared objects;
-
-   %strip_static:
-          вызов /usr/lib/rpm/brp-strip для обработки ELF ar archives;
-
    %cleanup_build:
           вызов /usr/lib/rpm/brp-cleanup;
 
    %compress_docs:
           вызов /usr/lib/rpm/brp-compress;
-
-   %strip_binaries:
-          вызов /usr/lib/rpm/brp-strip;
 
    %clean_buildroot:
           выполнение  rm  -rf %buildroot, если %buildroot не указывает на
@@ -560,25 +542,6 @@ BuildRoot.
 
    Значение  по умолчанию для макроса %_verify_elf_method в данный момент
    равно normal, что эквивалентно rpath=normal,textrel=normal.
-
-Автоматическое удаление отладочной информации из ELF-файлов с поддержкой
-различных стратегий выбора файлов, подлежащих обработке.
-
-   Зачастую  возможно  уменьшить  размер  получаемых  в результате сборки
-   пакета  ELF-файлов  без  потери  качества  за  счёт  удаления  из  них
-   отладочной информации. Поэтому по окончании работы секции %install все
-   ELF-файлы выбранных типов обрабатываются программой strip. Выбор типов
-   файлов  определяется  значением  макроса  %_strip_method, которое есть
-   набор из следующих возможных значений:
-     * executable: ELF executable;
-     * relocatable: ELF relocatable;
-     * shared: ELF shared object;
-     * static: ar archive.
-
-   Кроме  того,  есть  возможность  вызывать strip вручную, для этой цели
-   предназначены     макросы    %strip_executable,    %strip_relocatable,
-   %strip_shared, %strip_static. Синтаксис этих макросов подробно изложен
-   в ``/usr/lib/rpm/brp-strip -help''.
 
 Автоматическая перекомпиляция python-модулей.
 
