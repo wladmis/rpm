@@ -63,6 +63,11 @@ static size_t headerMaxbytes = (32*1024*1024);
  */ 
 #define hdrchkData(_nbytes)	((_nbytes) & 0xff000000)
 
+/**
+ * Sanity check on range of data offset.
+ */
+#define hdrchkRange(_dl, _off)	((_off) < 0 || (_off) > (_dl))
+
 /** \ingroup header
  * Alignment needs (and sizeof scalars types) for internal rpm data types.
  */
@@ -959,7 +964,7 @@ Header headerLoad(/*@kept@*/ void * uh)
 
 	{   int off = ntohl(pe->offset);
 
-	    if (hdrchkData(off))
+	    if (hdrchkData(off) || hdrchkRange(dl, off))
 		goto errxit;
 	    if (off) {
 		int_32 * stei = memcpy(alloca(nb), dataStart + off, nb);
