@@ -410,6 +410,9 @@ static int regionSwab(/*@null@*/ indexEntry entry, int il, int dl,
     int tdel, tl = dl;
     struct indexEntry ieprev;
 
+    if ((entry != NULL && regionid >= 0) || (entry == NULL && regionid != 0))
+	return -1;
+
     memset(&ieprev, 0, sizeof(ieprev));
     for (; il > 0; il--, pe++) {
 	struct indexEntry ie;
