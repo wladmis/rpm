@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.36
+Release: alt100.37
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Oct 03 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.37
+- set.c: fixed assertion failure with malformed "empty set" set-string.
+- build/files.c: fixed SIGPIPE to avoid "broken pipe" messages in scripts.
+
 * Fri Sep 23 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.36
 - removed support for repackaging and rollbacks (rpm.org).
 - removed brp-strip & related macros (superseded by brp-debuginfo).
