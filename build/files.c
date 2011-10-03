@@ -2224,13 +2224,8 @@ static StringBuf getOutputFrom(const char **argv,
     int toProg[2];
     int fromProg[2];
     int status;
-    void *oldhandler;
     StringBuf readBuff;
     int done;
-
-    /*@-type@*/ /* FIX: cast? */
-    oldhandler = signal(SIGPIPE, SIG_IGN);
-    /*@=type@*/
 
     toProg[0] = toProg[1] = 0;
     (void) pipe(toProg);
@@ -2266,6 +2261,8 @@ static StringBuf getOutputFrom(const char **argv,
 
     (void) close(toProg[0]);
     (void) close(fromProg[1]);
+
+    sighandler_t oldhandler = signal(SIGPIPE, SIG_IGN);
 
     /* Do not block reading or writing from/to prog. */
     (void) fcntl(fromProg[0], F_SETFL, O_NONBLOCK);
@@ -2336,9 +2333,7 @@ top:
     	(void) close(toProg[1]);
     if (fromProg[0] >= 0)
 	(void) close(fromProg[0]);
-    /*@-type@*/ /* FIX: cast? */
-    (void) signal(SIGPIPE, oldhandler);
-    /*@=type@*/
+    signal(SIGPIPE, oldhandler);
 
     /* Collect status from prog */
     (void)waitpid(progPID, &status, 0);
