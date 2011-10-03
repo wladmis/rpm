@@ -326,8 +326,12 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 		break;
 	}
 	// trailing zero bits in the input are okay
-	if (bitc == 0 && bit == 0)
+	if (bitc == 0 && bit == 0) {
+	    // up to 5 bits can be used to complete last character
+	    if (q > 5)
+		return -10;
 	    break;
+	}
 	// otherwise, incomplete value is not okay
 	if (bitc < Mshift)
 	    return -10;
@@ -637,7 +641,7 @@ int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
 	}
     }
   eol:
-    if (state != ST_VLEN)
+    if (state != ST_VLEN || q > 5)
 	return -10;
     return v - v_start;
 }
