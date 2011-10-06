@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.37
+Release: alt100.38
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri Oct 07 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.38
+- find-lang: added support for new GNOME help files location (closes: #26417).
+
 * Mon Oct 03 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.37
 - set.c: fixed assertion failure with malformed "empty set" set-string.
 - build/files.c: fixed SIGPIPE to avoid "broken pipe" messages in scripts.
