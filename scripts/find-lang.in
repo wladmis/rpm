@@ -22,6 +22,7 @@
 
 : ${RPMCONFIGDIR:=@RPMCONFIGDIR@}
 . "$RPMCONFIGDIR/functions"
+[ -n "${RPM_DATADIR-}" ] || RPM_DATADIR="$(rpm --eval %_datadir)"
 
 Usage()
 {
@@ -192,8 +193,10 @@ s:%lang(\(en\|man.*\)) ::
 	fi
 
 	if [ -n "$FIND_GNOME" ]; then
+# GNOME starting with version 3.2 stores its help files in $RPM_DATADIR/help/%lang/$NAME
 		find $TOPDIR -type d |sed -e '
 s:'"$TOPDIR"'::
+s:^\('"$RPM_DATADIR"'/help/\)\(C\|[a-z][^/_@]\+\)\(/'"$NAME"'\)$:%lang(\2) %dir \1\2\3:
 s:\(.*/gnome/help/'"$NAME"'\)$:%dir \1:
 s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_@]\+\):%dir %lang(\2) \1\2:
 s:\(.*/share/omf/'"$NAME"'\)$:%dir \1:
@@ -202,6 +205,7 @@ s:%lang(\(en\|C\)) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
+s:^\('"$RPM_DATADIR"'/help/\)\(C\|[a-z][^/_@]\+\)\(/'"$NAME"'/\):%lang(\2) \1\2\3:
 s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_@]\+\):%lang(\2) \1\2:
 s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) \1\2\3\4:
 s:^\([^%].*\)::
@@ -209,6 +213,7 @@ s:%lang(\(en\|C\)) ::
 		' |grep -v '^$' >> "$OUTFILE" ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
+s:^\('"$RPM_DATADIR"'/help/\)\(C\|[a-z][^/_@]\+\)\(/'"$NAME"'/\):%lang(\2) %attr(-,root,root) \1\2\3:
 s:\(.*/gnome/help/'"$NAME"'/\)\(C\|[a-z][^/_@]\+\):%lang(\2) %attr(-,root,root) \1\2:
 s:\(.*/share/omf/'"$NAME"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) %attr(-,root,root) \1\2\3\4:
 s:^\([^%].*\)::
