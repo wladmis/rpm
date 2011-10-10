@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.38
+Release: alt100.39
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Oct 11 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.39
+- Backported CVE-2011-3378 fixes from rpm.org.
+- find-lang: handle %_datadir/help/%lang/%name subdirs (closes: #26417).
+
 * Fri Oct 07 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.38
 - find-lang: added support for new GNOME help files location (closes: #26417).
 
