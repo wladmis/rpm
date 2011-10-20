@@ -84,21 +84,7 @@ s,\([[:space:]]\)required[[:space:]]\+pam_stack.so[[:space:]]\+service=,\1substa
 ' --
 fi
 
-# All the rest is perl cleanup stuff.
-
-set -- ./usr/*/perl5/
-[ -d "$1" ] || exit 0
-
-find "$@" -type f -name .packlist -print0 |
-	xargs -r0 rm -vf --
-
-find "$@" -type f -name \*.bs -size 0 -print0 |
-	xargs -r0 rm -vf --
-
-f="$(find "$@" -type f -name \*.bs)"
-if [ -n "$f" ]; then
-	echo "$PROG: non empty *.bs file(s) found:"
-	printf %s\\n "$f"
-	echo "$PROG: please contact packager"
-	exit 1
-fi
+# Run ancillary cleanup methods.
+for f in @RPMCONFIGDIR@/*.clean; do
+	"$f"
+done
