@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.39
+Release: alt100.40
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri Oct 21 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.40
+- brp-cleanup: perl cleanup routines moved to rpm-build-perl
+
 * Tue Oct 11 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.39
 - Backported CVE-2011-3378 fixes from rpm.org.
 - find-lang: handle %_datadir/help/%lang/%name subdirs (closes: #26417).
