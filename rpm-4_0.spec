@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.40
+Release: alt100.40.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sat Oct 22 2011 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.40.1
+- Rebuild with Python-2.7
+
 * Fri Oct 21 2011 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.40
 - brp-cleanup: perl cleanup routines moved to rpm-build-perl
 
