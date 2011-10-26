@@ -968,7 +968,7 @@ int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
 	return c;
     }
     cur->v[c] = ~0u;
-    cur->str = (char *)(cur->v + c);
+    cur->str = (char *)(cur->v + c + 1);
     memcpy(cur->str, str, len + 1);
     cur->len = len;
     cur->hash = hash;
@@ -1087,6 +1087,7 @@ int rpmsetcmp(const char *str1, const char *str2)
     int le = 1;
     const unsigned *v1end = v1 + c1;
     const unsigned *v2end = v2 + c2;
+    assert(*v1end == ~0u);
     unsigned v2val = *v2;
     while (1) {
 	if (*v1 < v2val) {
