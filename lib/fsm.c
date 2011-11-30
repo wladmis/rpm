@@ -1241,6 +1241,10 @@ static int fsmStat(FSM_t fsm)
 	((_x)[sizeof("/dev/log")-1] == '\0' || \
 	 (_x)[sizeof("/dev/log")-1] == ';'))
 
+#define IS_STAT_SETXID(m) ((m) & (S_ISUID | S_ISGID))
+#define IS_STAT_EXEC(m) ((m) & (S_IXUSR | S_IXGRP | S_IXOTH))
+#define IS_STAT_SETXID_EXEC(m) (IS_STAT_SETXID(m) && IS_STAT_EXEC(m))
+
 /*@-compmempass@*/
 int fsmStage(FSM_t fsm, fileStage stage)
 {
@@ -1911,7 +1915,9 @@ if (!(fsm->mapFlags & CPIO_ALL_HARDLINKS)) break;
 	    struct stat stb;
 	    int saved_errno;
 	    int saved_rc = lstat(fsm->path, &stb);
-	    if (!saved_rc && !S_ISLNK(stb.st_mode))
+	    if (!saved_rc && !S_ISLNK(stb.st_mode) &&
+		(!S_ISREG(stb.st_mode) || IS_STAT_SETXID_EXEC(stb.st_mode))
+	       )
 		saved_rc = chmod(fsm->path, 0);
 	    saved_errno = errno;
 	    if (saved_rc && saved_errno == ENOENT)
@@ -1932,7 +1938,9 @@ if (!(fsm->mapFlags & CPIO_ALL_HARDLINKS)) break;
 	    struct stat stb;
 	    int saved_errno;
 	    int saved_rc = lstat(fsm->path, &stb);
-	    if (!saved_rc && !S_ISLNK(stb.st_mode))
+	    if (!saved_rc && !S_ISLNK(stb.st_mode) &&
+		(!S_ISREG(stb.st_mode) || IS_STAT_SETXID_EXEC(stb.st_mode))
+	       )
 		saved_rc = chmod(fsm->path, 0);
 	    saved_errno = errno;
 	    if (saved_rc && saved_errno == ENOENT)
