@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.40.1
+Release: alt100.41
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Dec 01 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.41
+- Partially reverted the change to file permissions handling on package
+  removal or upgrade that was introduced in 4.0.4-alt100.32.
+  Permissions to access regular files are now erased only if
+  these files are set[ug]id executables.
+- find-lang: handle more exotic GNOME help locale directories (closes: #26417).
+
 * Sat Oct 22 2011 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.40.1
 - Rebuild with Python-2.7
 
@@ -512,7 +519,7 @@ fi
 
 * Tue Oct 11 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.39
 - Backported CVE-2011-3378 fixes from rpm.org.
-- find-lang: handle %_datadir/help/%lang/%name subdirs (closes: #26417).
+- find-lang: handle %_datadir/help/%%lang/%name subdirs (closes: #26417).
 
 * Fri Oct 07 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.38
 - find-lang: added support for new GNOME help files location (closes: #26417).
