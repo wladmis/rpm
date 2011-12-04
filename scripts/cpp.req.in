@@ -64,6 +64,7 @@ Cflags()
 gcc=
 cpp=
 cxx=
+cxx_test=
 CppReq()
 {
 	local f="$1"; shift
@@ -89,13 +90,18 @@ CppReq()
 	Debug "$f: cflags:" $cflags
 
 	if ! out=$("$cpp" -w $cxx $cflags "$f"); then
-		if [ -n "$cxx" ]; then
+		if [ -n "$cxx" -o "$cxx_test" = failed ]; then
 			Warning "$f: cpp failed"
 			return 0
 		fi
 		Info "$f: cpp failed, trying c++ mode"
 		cxx='-x c++'
 		if ! out=$("$cpp" -w $cxx $cflags "$f"); then
+			if [ -z "$cxx_test" ]; then
+				"$cpp" -w $cxx < /dev/null > /dev/null 2>&1 &&
+					cxx_test=ok ||
+					cxx_test=failed
+			fi
 			cxx=
 			Warning "$f: cpp failed"
 			return 0
