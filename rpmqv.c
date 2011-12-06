@@ -1024,6 +1024,9 @@ int main(int argc, const char ** argv)
 	case 's':
 	    ba->buildAmount |= RPMBUILD_PACKAGESOURCE;
 	    break;
+	case 't':
+	    ba->buildAmount |= RPMBUILD_CHECK;
+	    break;
 	}
 
 	if (!poptPeekArg(optCon)) {

@@ -148,6 +148,7 @@ rpm	exec --bl		rpmb -bl
 rpm	exec --ba		rpmb -ba
 rpm	exec --bb		rpmb -bb
 rpm	exec --bs		rpmb -bs
+rpm	exec --bt		rpmb -bt
 rpm	exec --bE		rpmb -bE
 rpm	exec --bM		rpmb -bM
 rpm	exec --tp		rpmb -tp

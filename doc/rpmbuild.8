@@ -10,7 +10,7 @@ rpmbuild \- Build RPM Package(s)
 .SS "BUILDING PACKAGES:"
 .PP
 
-\fBrpmbuild\fR {\fB-ba|-bb|-bp|-bc|-bi|-bl|-bs\fR} [\fBrpmbuild-options\fR] \fB\fISPECFILE\fB\fR\fI ...\fR
+\fBrpmbuild\fR {\fB-ba|-bb|-bp|-bc|-bi|-bl|-bs|-bt\fR} [\fBrpmbuild-options\fR] \fB\fISPECFILE\fB\fR\fI ...\fR
 
 \fBrpmbuild\fR {\fB-ta|-tb|-tp|-tc|-ti|-tl|-ts\fR} [\fBrpmbuild-options\fR] \fB\fITARBALL\fB\fR\fI ...\fR
 
@@ -123,9 +123,12 @@ Do the "%build" stage from the spec file (after doing the %prep stage).
 This generally involves the equivalent of a "make".
 .TP
 \fB-bi\fR
-Do the "%install" stage from the spec file (after doing the %prep and
-%build stages).  This generally involves the equivalent of a
+Do "%install" and "%check" stages from the spec file (after doing the
+%prep and %build stages).  This generally involves the equivalent of a
 "make install".
+.TP
+\fB-bt\fR
+Do just the "%check" stage from the spec file.
 .TP
 \fB-bl\fR
 Do a "list check".  The "%files" section from the spec file is
