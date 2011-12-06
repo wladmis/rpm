@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.41
+Release: alt100.42
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Dec 06 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.42
+- cpp.req: do not insist on trying c++ mode when c++ support is not installed.
+- find-debuginfo-files: fixed packaging of symlinks.
+- rpmbuild: added "-bt" %%check-only option.
+
 * Thu Dec 01 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.41
 - Partially reverted the change to file permissions handling on package
   removal or upgrade that was introduced in 4.0.4-alt100.32.
