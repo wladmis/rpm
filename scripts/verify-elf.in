@@ -2,7 +2,7 @@
 #
 # verify-elf - verify ELF objects.
 #
-# Copyright (C) 2002, 2003, 2004, 2006  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2002-2011  Dmitry V. Levin <ldv@altlinux.org>
 # Copyright (C) 2009  Alexey Tourbin <at@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -146,13 +146,41 @@ VerifyELF()
 			error_relaxed RPATH "$f" "RPATH contains \"::\": $rpath"
 			found=1
 		elif [ -z "${rpath##*:*}" ]; then
-			error_strict RPATH "$f" "RPATH entry contains \":\": $rpath"
+			error_strict RPATH "$f" "RPATH contains several entries: $rpath"
 			found=1
+		fi
+
+		if [ $(printf "%s" "$rpath" | LC_ALL=C tr -d '[ -~]' | wc -c) != 0 ]; then
+			error_relaxed RPATH "$f" "RPATH contains a non-ascii entry: $rpath"
+			found=1
+		else
+			for p in $(printf "%s" "$rpath" | tr : ' '); do
+				if [ -z "${p#\$ORIGIN}" -o -z "${p##\$ORIGIN/*}" -o \
+				     -z "${p#/lib}" -o -z "${p##/lib/*}" -o \
+				     -z "${p#/lib64}" -o -z "${p##/lib64/*}" -o \
+				     -z "${p#/usr/lib}" -o -z "${p##/usr/lib/*}" -o \
+				     -z "${p#/usr/lib64}" -o -z "${p##/usr/lib64/*}" ]; then
+					continue
+				fi
+				if [ -z "${p##/*}" ]; then
+					error_normal RPATH "$f" "RPATH contains illegal absolute entry \"$p\": $rpath"
+				else
+					error_relaxed RPATH "$f" "RPATH contains illegal relative entry \"$p\": $rpath"
+				fi
+				found=1
+			done
 		fi
 
 		for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR /lib/../lib64; do
 			if printf %s "$rpath" | grep -Fqs "$p"; then
-				error_relaxed RPATH "$f" "RPATH entry contains \"$p\": $rpath"
+				error_relaxed RPATH "$f" "RPATH contains illegal entry \"$p\": $rpath"
+				found=1
+			fi
+		done
+
+		for p in /lib /lib64 /usr/lib /usr/lib64; do
+			if printf %s " $rpath " | tr : ' ' | grep -Fqs " $p "; then
+				error_normal RPATH "$f" "RPATH contains standard library path \"$p\": $rpath"
 				found=1
 			fi
 		done
