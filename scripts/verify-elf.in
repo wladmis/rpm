@@ -95,9 +95,168 @@ error_relaxed()
 	Info "$prefix: $filename: $*"
 }
 
+verify_rpath()
+{
+	local f rpath
+	f="$1"; shift
+	rpath="$1"; shift
+
+	[ -n "$rpath" ] || return 0
+
+	local found=
+	if [ -z "${rpath##:*}" ]; then
+		error_relaxed RPATH "$f" "RPATH starts with \":\": $rpath"
+		found=1
+	elif [ -z "${rpath%%*:}" ]; then
+		error_relaxed RPATH "$f" "RPATH ends with \":\": $rpath"
+		found=1
+	elif [ -z "${rpath##*::*}" ]; then
+		error_relaxed RPATH "$f" "RPATH contains \"::\": $rpath"
+		found=1
+	elif [ -z "${rpath##*:*}" ]; then
+		error_strict RPATH "$f" "RPATH contains several entries: $rpath"
+		found=1
+	fi
+
+	if [ $(printf "%s" "$rpath" | LC_ALL=C tr -d '[ -~]' | wc -c) != 0 ]; then
+		error_relaxed RPATH "$f" "RPATH contains a non-ascii entry: $rpath"
+		found=1
+	else
+		for p in $(printf "%s" "$rpath" | tr : ' '); do
+			if [ -z "${p#\$ORIGIN}" -o -z "${p##\$ORIGIN/*}" -o \
+			     -z "${p#/lib}" -o -z "${p##/lib/*}" -o \
+			     -z "${p#/lib64}" -o -z "${p##/lib64/*}" -o \
+			     -z "${p#/usr/lib}" -o -z "${p##/usr/lib/*}" -o \
+			     -z "${p#/usr/lib64}" -o -z "${p##/usr/lib64/*}" ]; then
+				continue
+			fi
+			if [ -z "${p##/*}" ]; then
+				error_normal RPATH "$f" "RPATH contains illegal absolute entry \"$p\": $rpath"
+			else
+				error_relaxed RPATH "$f" "RPATH contains illegal relative entry \"$p\": $rpath"
+			fi
+			found=1
+		done
+	fi
+
+	for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR /lib/../lib64; do
+		if printf %s "$rpath" | grep -Fqs "$p"; then
+			error_relaxed RPATH "$f" "RPATH contains illegal entry \"$p\": $rpath"
+			found=1
+		fi
+	done
+
+	for p in /lib /lib64 /usr/lib /usr/lib64; do
+		if printf %s " $rpath " | tr : ' ' | grep -Fqs " $p "; then
+			error_normal RPATH "$f" "RPATH contains standard library path \"$p\": $rpath"
+			found=1
+		fi
+	done
+
+	[ -n "$found" ] ||
+		error_strict RPATH "$f" "RPATH entry found: $rpath"
+}
+
+verify_unresolved()
+{
+	local f fname rpath ldd_info ldd_rc
+	f="$1"; shift
+	fname="$1"; shift
+	rpath="$1"; shift
+
+	if [ -n "$rpath" ]; then
+		rpath="$rpath $RPM_VERIFY_ELF_LDD_RPATH"
+	else
+		rpath="$RPM_VERIFY_ELF_LDD_RPATH"
+	fi
+	rpath="$(printf %s "$rpath" |
+		tr -s '[:space:]' '\n' |
+		grep -v '^$' |
+		LANG=C uniq |
+		sed -e "s|^|$RPM_BUILD_ROOT&|" |
+		tr -s '[:space:]' : |
+		sed -e 's/^:\+//; s/:\+$//')"
+
+	if ! ldd_info="$("$elf_ldd" --undefined -- "$f" "$rpath" 2>&1)"; then
+		printf >&2 '%s\n' "$ldd_info"
+		error_relaxed UNRESOLVED "$f" 'ldd failed'
+		return
+	fi
+
+	case "$VERIFY_ELF_UNRESOLVED" in
+		no|relaxed)
+			ldd_rc=0
+			;;
+		strict)
+			ldd_rc=1
+			;;
+		*)
+			if [ -z "${t##*ELF* executable*dynamically linked*}" ] ||
+			   lookup_path "${fname%/*}" "$RPM_VERIFY_ELF_LDD_RPATH"; then
+				ldd_rc=1
+			else
+				ldd_rc=0
+			fi
+			;;
+	esac
+	printf '%s\n' "$ldd_info" |
+		awk -vrc="$ldd_rc" -vprog="$PROG" -vfname="$f" -- '
+BEGIN {
+        if (rc == "0")
+                prefix="WARNING"
+        else
+                prefix="ERROR"
+        errors=0
+}
+$2 == "=>" && $3 == "not" && $4 == "found" {
+        lib=$1
+        printf ("%s: %s: %s: not found: %s\n", prog, prefix, fname, lib)
+        errors=1
+}
+$1 == "undefined" && $2 == "symbol:" {
+        sym=$3
+        lib=$4
+        sub("^[(]", "", lib)
+        sub("[)]$", "", lib)
+        if (lib == fname) {
+                printf ("%s: %s: %s: undefined symbol: %s\n", prog, prefix, fname, sym)
+                errors=1
+        }
+}
+END {
+        if (rc != "0" && errors != 0)
+                exit 1
+}
+		' >&2 && ldd_rc=0 || ldd_rc=1
+	[ "$ldd_rc" = 0 ] || rc=1
+}
+
+verify_stack()
+{
+	local f objdump_info stack
+	f="$1"; shift
+	objdump_info="$1"; shift
+
+	stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
+	if [ -z "$stack" ]; then
+		error_strict STACK "$f" 'STACK entry not found'
+	elif [ "$stack" = on ]; then
+		stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+.*\)/\1/p')"
+		error_strict STACK "$f" "found executable STACK entry: $stack"
+	fi
+}
+
+run_eu()
+{
+	local prog="$1"; shift
+	# Internally, eu-* use $ORIGIN to dlopen their backends.
+	# Pass LD_ORIGIN_PATH to make them work without /proc.
+	LD_ORIGIN_PATH=/usr/bin eu-$prog "$@"
+}
+
 VerifyELF()
 {
-	local f ldd_rc
+	local f t objdump_info fname lint_info textrel
 	f="$1"; shift
 
 	if [ ! -f "$f" ]; then
@@ -126,153 +285,27 @@ VerifyELF()
 		error_normal FHS "$f" 'ELF object out of allowed directory tree'
 	fi
 
-	# Internally, eu-elflint uses $ORIGIN to dlopen its backends.
-	# Pass LD_ORIGIN_PATH to make it work without /proc.
-	if ! lint_info=$(LD_ORIGIN_PATH=/usr/bin eu-elflint --gnu-ld "$f" 2>&1); then
+	if ! lint_info=$(run_eu elflint --gnu-ld "$f" 2>&1); then
 		printf '%s\n' "$lint_info" >&2
 		error_normal LINT "$f" 'eu-elflint failed'
 	fi
 
-	rpath="$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}')"
-	if [ -n "$rpath" ]; then
-		local found=
-		if [ -z "${rpath##:*}" ]; then
-			error_relaxed RPATH "$f" "RPATH starts with \":\": $rpath"
-			found=1
-		elif [ -z "${rpath%%*:}" ]; then
-			error_relaxed RPATH "$f" "RPATH ends with \":\": $rpath"
-			found=1
-		elif [ -z "${rpath##*::*}" ]; then
-			error_relaxed RPATH "$f" "RPATH contains \"::\": $rpath"
-			found=1
-		elif [ -z "${rpath##*:*}" ]; then
-			error_strict RPATH "$f" "RPATH contains several entries: $rpath"
-			found=1
-		fi
+	verify_rpath "$f" "$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}')"
 
-		if [ $(printf "%s" "$rpath" | LC_ALL=C tr -d '[ -~]' | wc -c) != 0 ]; then
-			error_relaxed RPATH "$f" "RPATH contains a non-ascii entry: $rpath"
-			found=1
-		else
-			for p in $(printf "%s" "$rpath" | tr : ' '); do
-				if [ -z "${p#\$ORIGIN}" -o -z "${p##\$ORIGIN/*}" -o \
-				     -z "${p#/lib}" -o -z "${p##/lib/*}" -o \
-				     -z "${p#/lib64}" -o -z "${p##/lib64/*}" -o \
-				     -z "${p#/usr/lib}" -o -z "${p##/usr/lib/*}" -o \
-				     -z "${p#/usr/lib64}" -o -z "${p##/usr/lib64/*}" ]; then
-					continue
-				fi
-				if [ -z "${p##/*}" ]; then
-					error_normal RPATH "$f" "RPATH contains illegal absolute entry \"$p\": $rpath"
-				else
-					error_relaxed RPATH "$f" "RPATH contains illegal relative entry \"$p\": $rpath"
-				fi
-				found=1
-			done
-		fi
-
-		for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR /lib/../lib64; do
-			if printf %s "$rpath" | grep -Fqs "$p"; then
-				error_relaxed RPATH "$f" "RPATH contains illegal entry \"$p\": $rpath"
-				found=1
-			fi
-		done
-
-		for p in /lib /lib64 /usr/lib /usr/lib64; do
-			if printf %s " $rpath " | tr : ' ' | grep -Fqs " $p "; then
-				error_normal RPATH "$f" "RPATH contains standard library path \"$p\": $rpath"
-				found=1
-			fi
-		done
-
-		[ -n "$found" ] ||
-			error_strict RPATH "$f" "RPATH entry found: $rpath"
-	fi
-	
 	if [ -z "${t##*ELF* executable*}" -o -z "${t##*ELF* shared object*}" ]; then
-		stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
-		if [ -z "$stack" ]; then
-			error_strict STACK "$f" 'STACK entry not found'
-		elif [ "$stack" = on ]; then
-			stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+.*\)/\1/p')"
-			error_strict STACK "$f" "found executable STACK entry: $stack"
-		fi
+		verify_stack "$f" "$objdump_info"
 	fi
 
 	textrel="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*TEXTREL[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
 	if [ -n "$textrel" ]; then
-		LD_ORIGIN_PATH=/usr/bin eu-findtextrel "$f" 2>&1 |uniq >&2
+		run_eu findtextrel "$f" 2>&1 |uniq >&2
 		error_normal TEXTREL "$f" "TEXTREL entry found: $textrel"
 	fi
 
-	while [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; do
-		rpath="$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
-		if [ -n "$rpath" ]; then
-			rpath="$rpath $RPM_VERIFY_ELF_LDD_RPATH"
-		else
-			rpath="$RPM_VERIFY_ELF_LDD_RPATH"
-		fi
-		rpath="$(printf %s "$rpath" |
-			tr -s '[:space:]' '\n' |
-			grep -v '^$' |
-			LANG=C uniq |
-			sed -e "s|^|$RPM_BUILD_ROOT&|" |
-			tr -s '[:space:]' : |
-			sed -e 's/^:\+//; s/:\+$//')"
-
-		if ! ldd_info="$("$elf_ldd" --undefined -- "$f" "$rpath" 2>&1)"; then
-			printf >&2 '%s\n' "$ldd_info"
-			error_relaxed UNRESOLVED "$f" 'ldd failed'
-			break
-		fi
-		case "$VERIFY_ELF_UNRESOLVED" in
-			no|relaxed)
-				ldd_rc=0
-				;;
-			strict)
-				ldd_rc=1
-				;;
-			*)
-				if [ -z "${t##*ELF* executable*dynamically linked*}" ] ||
-				   lookup_path "${fname%/*}" "$RPM_VERIFY_ELF_LDD_RPATH"; then
-					ldd_rc=1
-				else
-					ldd_rc=0
-				fi
-				;;
-		esac
-		printf '%s\n' "$ldd_info" |
-			awk -vrc="$ldd_rc" -vprog="$PROG" -vfname="$f" -- '
-BEGIN {
-        if (rc == "0")
-                prefix="WARNING"
-        else
-                prefix="ERROR"
-        errors=0
-}
-$2 == "=>" && $3 == "not" && $4 == "found" {
-        lib=$1
-        printf ("%s: %s: %s: not found: %s\n", prog, prefix, fname, lib)
-        errors=1
-}
-$1 == "undefined" && $2 == "symbol:" {
-        sym=$3
-        lib=$4
-        sub("^[(]", "", lib)
-        sub("[)]$", "", lib)
-        if (lib == fname) {
-                printf ("%s: %s: %s: undefined symbol: %s\n", prog, prefix, fname, sym)
-                errors=1
-        }
-}
-END {
-        if (rc != "0" && errors != 0)
-                exit 1
-}
-			' >&2 && ldd_rc=0 || ldd_rc=1
-		[ "$ldd_rc" = 0 ] || rc=1
-		break
-	done
+	if [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; then
+		verify_unresolved "$f" "$fname" \
+			"$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
+	fi
 }
 
 if [ $# -gt 0 ]; then
