@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.42
+Release: alt100.43
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Dec 13 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.43
+- 0common-files.req.list: removed /etc/sysctl.d directory.
+- verify-elf: check RPATH for non-ascii symbols, illegal absolute and
+  relative paths, and paths to standard libraries.
+
 * Tue Dec 06 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.42
 - cpp.req: do not insist on trying c++ mode when c++ support is not installed.
 - find-debuginfo-files: fixed packaging of symlinks.
