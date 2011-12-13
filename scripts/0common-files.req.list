@@ -20,7 +20,6 @@
 /etc/security/console.apps	pam0_console
 /etc/sudo.d	sudo
 /etc/sysconfig/limits.d	service
-/etc/sysctl.d	startup
 /etc/syslog.d	syslog-common
 /etc/udev/rules.d	udev-rules
 /etc/xinetd.d	xinetd
