@@ -3698,6 +3698,9 @@ msgstr "Сети/WWW"
 msgid "Office"
 msgstr "Офис"
 
+msgid "Other"
+msgstr "Другие"
+
 msgid "Publishing"
 msgstr "Издательство"
 
