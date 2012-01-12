@@ -246,8 +246,8 @@ packaging similar to the autoconf variables that are used in building packages:
     %_libexecdir	%{_exec_prefix}/libexec
     %_datadir		%{_prefix}/share
     %_sysconfdir	%{_prefix}/etc
-    %_sharedstatedir	%{_prefix}/com
-    %_localstatedir	%{_prefix}/var
+    %_sharedstatedir	/var/lib
+    %_localstatedir	/var/lib
     %_libdir		%{_exec_prefix}/lib
     %_includedir	%{_prefix}/include
     %_oldincludedir	/usr/include
