@@ -21,7 +21,7 @@
 %_libexecdir		@libexecdir@
 %_datadir		@datadir@
 %_sysconfdir		@sysconfdir@
-%_sharedstatedir	@sharedstatedir@
+%_sharedstatedir	%{_var}/lib
 %_localstatedir		@localstatedir@
 %_lib			@LIB@
 %_libdir		@prefix@/@LIB@

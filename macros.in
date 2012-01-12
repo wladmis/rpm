@@ -759,7 +759,7 @@
 %_libexecdir		%{_exec_prefix}/lib
 %_datadir		%{_prefix}/share
 %_sysconfdir		/etc
-%_sharedstatedir	%{_prefix}/com
+%_sharedstatedir	%{_var}/lib
 %_localstatedir		%{_var}/lib
 %_lib			lib
 %_libdir		%{_exec_prefix}/%{_lib}
