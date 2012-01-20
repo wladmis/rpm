@@ -3577,6 +3577,9 @@ msgstr "Разработка/Perl"
 msgid "Development/Python"
 msgstr "Разработка/Python"
 
+msgid "Development/Python3"
+msgstr "Разработка/Python3"
+
 msgid "Development/Ruby"
 msgstr "Разработка/Ruby"
 
