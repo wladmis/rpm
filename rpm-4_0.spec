@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.43
+Release: alt100.44
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri Jan 20 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.44
+- GROUPS: add Development/Python3 (by Vitaly Kuznetsov) and Other (by Igor
+  Vlasenko).
+- %%_sharedstatedir: change to /var/lib (suggested by Alexey Gladkov).
+
 * Tue Dec 13 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.43
 - 0common-files.req.list: removed /etc/sysctl.d directory.
 - verify-elf: check RPATH for non-ascii symbols, illegal absolute and
