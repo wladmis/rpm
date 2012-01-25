@@ -10,7 +10,7 @@ EXTRA_DIST = \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
 	brp-cleanup brp-compress brp-debuginfo \
-	brp-fix-perms brp-fixup brp-strip \
+	brp-fix-perms brp-fixup brp-strip brp-hardlink_pyo_pyc \
 	brp-verify_elf brp-verify-info \
 	compress_files \
 	cpp.req cpp.req.files \
@@ -71,6 +71,7 @@ install-data-local:
 	$(INSTALL) -m755 brp-debuginfo $(DESTDIR)$(configdir)/brp.d/056-debuginfo.brp
 	$(INSTALL) -m755 brp-verify_elf $(DESTDIR)$(configdir)/brp.d/064-verify_elf.brp
 	$(INSTALL) -m755 brp-bytecompile_python $(DESTDIR)$(configdir)/brp.d/072-bytecompile_python.brp
+	$(INSTALL) -m755 brp-hardlink_pyo_pyc $(DESTDIR)$(configdir)/brp.d/128-hardlink_pyo_pyc.brp
 	@LN_S@ pkgconfig.req $(DESTDIR)$(configdir)/pkgconfig.prov
 	@LN_S@ pkgconfig.req.files $(DESTDIR)$(configdir)/pkgconfig.prov.files
 	@LN_S@ pkgconfig.req.files $(DESTDIR)$(configdir)/pkgconfiglib.req.files
