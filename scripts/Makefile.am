@@ -42,10 +42,7 @@ config_SCRIPTS = \
 	functions find-package \
 	find-debuginfo-files \
 	find-scriptlet-requires \
-	brp-adjust_libraries brp-alt brp-bytecompile_python \
-	brp-cleanup brp-compress brp-debuginfo \
-	brp-fix-perms brp-fixup \
-	brp-verify_elf brp-verify-info \
+	brp-alt \
 	compress_files \
 	cpp.req cpp.req.files \
 	find-lang \
@@ -65,6 +62,16 @@ config_SCRIPTS = \
 	verify-elf
 
 install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(configdir)/brp.d
+	$(INSTALL) -m755 brp-cleanup $(DESTDIR)$(configdir)/brp.d/008-cleanup.brp
+	$(INSTALL) -m755 brp-fix-perms $(DESTDIR)$(configdir)/brp.d/016-fix-perms.brp
+	$(INSTALL) -m755 brp-fixup $(DESTDIR)$(configdir)/brp.d/024-fixup.brp
+	$(INSTALL) -m755 brp-compress $(DESTDIR)$(configdir)/brp.d/032-compress.brp
+	$(INSTALL) -m755 brp-verify-info $(DESTDIR)$(configdir)/brp.d/040-verify-info.brp
+	$(INSTALL) -m755 brp-adjust_libraries $(DESTDIR)$(configdir)/brp.d/048-adjust_libraries.brp
+	$(INSTALL) -m755 brp-debuginfo $(DESTDIR)$(configdir)/brp.d/056-debuginfo.brp
+	$(INSTALL) -m755 brp-verify_elf $(DESTDIR)$(configdir)/brp.d/064-verify_elf.brp
+	$(INSTALL) -m755 brp-bytecompile_python $(DESTDIR)$(configdir)/brp.d/072-bytecompile_python.brp
 	@LN_S@ pkgconfig.req $(DESTDIR)$(configdir)/pkgconfig.prov
 	@LN_S@ pkgconfig.req.files $(DESTDIR)$(configdir)/pkgconfig.prov.files
 	@LN_S@ pkgconfig.req.files $(DESTDIR)$(configdir)/pkgconfiglib.req.files
