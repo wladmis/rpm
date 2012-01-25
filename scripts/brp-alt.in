@@ -25,29 +25,9 @@ ValidateBuildRoot
 
 cd "$RPM_BUILD_ROOT"
 
-# Cleanup files.
-@RPMCONFIGDIR@/brp-cleanup
+for f in @RPMCONFIGDIR@/brp.d/[0-9][0-9][0-9]-*.brp; do
+    # Run existing files with executable bit
+    [ -f "$f" -a -x "$f" ] || continue
 
-# Fix file permissions.
-@RPMCONFIGDIR@/brp-fix-perms
-
-# Misc fixups.
-@RPMCONFIGDIR@/brp-fixup
-
-# Compress info and man pages.
-@RPMCONFIGDIR@/brp-compress
-
-# Verify texinfo files.
-@RPMCONFIGDIR@/brp-verify-info
-
-# Adjust library links.
-@RPMCONFIGDIR@/brp-adjust_libraries
- 
-# Strip ELF binaries and make .debug files.
-@RPMCONFIGDIR@/brp-debuginfo
-
-# Verify ELF objects.
-@RPMCONFIGDIR@/brp-verify_elf
-
-# Re-bytecompile python modules.
-@RPMCONFIGDIR@/brp-bytecompile_python
+    "$f"
+done
