@@ -30,13 +30,4 @@ if [ -n "$RPM_PYTHON" -a -x "$RPM_PYTHON" ] && [ `find -type f -name \*.py |wc -
 	$RPM_PYTHON    @RPMCONFIGDIR@/python.compileall.py "--select=$RPM_PYTHON_COMPILE_METHOD" "--exclude=$RPM_PYTHON_COMPILE_EXCLUDE" "--include=$RPM_PYTHON_COMPILE_INCLUDE" "--deep=$RPM_PYTHON_COMPILE_DEEP" ${RPM_PYTHON_COMPILE_SKIP_X:+--skip_x} ${RPM_PYTHON_COMPILE_CLEAN:+--clean} "--prefix=$RPM_BUILD_ROOT"
 	echo "Bytecompiling python modules with optimization in $PWD using $RPM_PYTHON -O"
 	$RPM_PYTHON -O @RPMCONFIGDIR@/python.compileall.py "--select=$RPM_PYTHON_COMPILE_METHOD" "--exclude=$RPM_PYTHON_COMPILE_EXCLUDE" "--include=$RPM_PYTHON_COMPILE_INCLUDE" "--deep=$RPM_PYTHON_COMPILE_DEEP" ${RPM_PYTHON_COMPILE_SKIP_X:+--skip_x} ${RPM_PYTHON_COMPILE_CLEAN:+--clean} "--prefix=$RPM_BUILD_ROOT"
-
-	echo "Hardlinking identical .pyc and .pyo files"
-	find -type f -name '*.pyc' |
-	while read -r pyc; do
-		pyo=${pyc%c}o
-		if cmp -s "$pyc" "$pyo"; then
-			ln -f -v "$pyc" "$pyo"
-		fi
-	done
 fi
