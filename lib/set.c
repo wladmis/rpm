@@ -914,75 +914,81 @@ int decode_set(const char *str, int Mshift, unsigned *v)
 static
 int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
 {
-    const int cache_size = 160;
-    const int pivot_size = 160 - 11;
     struct cache_ent {
-	struct cache_ent *next;
 	char *str;
 	int len;
-	unsigned hash;
 	int c;
 	unsigned v[];
     };
+    struct cache_hdr {
+	struct cache_hdr *next;
+	struct cache_ent *ent;
+	unsigned hash;
+    };
+#define CACHE_SIZE 160
+#define PIVOT_SIZE 149
     static __thread
-    struct cache_ent *cache;
+    struct cache_hdr cache_buf[CACHE_SIZE], *cache;
     // lookup in the cache
-    struct cache_ent *cur = cache, *prev = NULL;
-    struct cache_ent *pivot_cur = NULL, *pivot_prev = NULL;
+    struct cache_ent *ent;
+    struct cache_hdr *cur = cache, *prev = NULL;
+    struct cache_hdr *pivot_cur = NULL, *pivot_prev = NULL;
     unsigned hash = str[0] | (str[2] << 8) | (str[3] << 16);
     int count = 0;
     while (cur) {
-	if (hash == cur->hash && memcmp(str, cur->str, cur->len + 1) == 0) {
-	    // hit, move to front
-	    if (cur != cache) {
-		prev->next = cur->next;
-		cur->next = cache;
-		cache = cur;
+	if (hash == cur->hash) {
+	    ent = cur->ent;
+	    if (memcmp(str, ent->str, ent->len + 1) == 0) {
+		// hit, move to front
+		if (cur != cache) {
+		    prev->next = cur->next;
+		    cur->next = cache;
+		    cache = cur;
+		}
+		*pv = ent->v;
+		return ent->c;
 	    }
-	    *pv = cur->v;
-	    return cur->c;
 	}
 	count++;
 	if (cur->next == NULL)
 	    break;
 	prev = cur;
 	cur = cur->next;
-	if (count == pivot_size) {
+	if (count == PIVOT_SIZE) {
 	    pivot_cur = cur;
 	    pivot_prev = prev;
 	}
     }
-    // truncate
-    if (count >= cache_size) {
-	free(cur);
-	prev->next = NULL;
-    }
     // decode
     int len = strlen(str);
     int c = decode_set_size(len, Mshift);
-    cur = malloc(sizeof(*cur) + len + 1 + (c + 1) * sizeof(**pv));
-    assert(cur);
-    c = cur->c = decode_set(str, Mshift, cur->v);
+    ent = malloc(sizeof(*ent) + len + 1 + (c + 1) * sizeof(unsigned));
+    assert(ent);
+    c = ent->c = decode_set(str, Mshift, ent->v);
     if (c <= 0) {
-	free(cur);
+	free(ent);
 	return c;
     }
-    cur->v[c] = ~0u;
-    cur->str = (char *)(cur->v + c + 1);
-    memcpy(cur->str, str, len + 1);
-    cur->len = len;
-    cur->hash = hash;
+    ent->v[c] = ~0u;
+    ent->str = (char *)(ent->v + c + 1);
+    memcpy(ent->str, str, len + 1);
+    ent->len = len;
     // pivotal insertion!
-    if (count >= cache_size) {
+    if (count >= CACHE_SIZE) {
+	free(cur->ent);
+	prev->next = NULL;
 	cur->next = pivot_cur;
 	pivot_prev->next = cur;
     }
     // early bird, push to front
     else {
+	cur = &cache_buf[count];
 	cur->next = cache;
 	cache = cur;
     }
-    *pv = cur->v;
+    cur->ent = ent;
+    cur->hash = hash;
+    *pv = ent->v;
     return c;
 }
 
