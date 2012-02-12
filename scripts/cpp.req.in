@@ -118,16 +118,16 @@ CppReq()
 	cflags=$(Cflags "$f")
 	Debug "$f: cflags:" $cflags
 
-	if ! "$cpp" -w $cxx $cflags "$f" >$tmpdir/out; then
+	if ! "$cpp" -w -dI $cxx $cflags "$f" >$tmpdir/out; then
 		if [ -n "$cxx" -o "$cxx_test" = failed ]; then
 			Warning "$f: cpp failed"
 			return 0
 		fi
 		Info "$f: cpp failed, trying c++ mode"
 		cxx='-x c++'
-		if ! "$cpp" -w $cxx $cflags "$f" >$tmpdir/out; then
+		if ! "$cpp" -w -dI $cxx $cflags "$f" >$tmpdir/out; then
 			if [ -z "$cxx_test" ]; then
-				"$cpp" -w $cxx < /dev/null > /dev/null 2>&1 &&
+				"$cpp" -w -dI $cxx < /dev/null > /dev/null 2>&1 &&
 					cxx_test=ok ||
 					cxx_test=failed
 			fi
@@ -137,11 +137,11 @@ CppReq()
 		fi
 	fi
 
-	# Keep only linemarks, unquote filenames.
-	sed -ni '/^#.* "\//{s/"//g;p}' $tmpdir/out
+	# Keep only linemarks and includes, strip filename quotes.
+	sed -ni '/^# .* "\//{s/"//g;p};/^#i.* ["<]/{s/[<">]//g;p}' $tmpdir/out
 
 	# Prepare the list of files in cpp output which are packaged in this subpackage.
-	cut -d' ' -f3 <$tmpdir/out |
+	awk '$1=="#" && $4==1 { print $3 }' <$tmpdir/out |
 		xargs -r --delimiter='\n' \
 		stat -c '%d,%i %n' |
 		sort -u >$tmpdir/iout
@@ -158,12 +158,29 @@ CppReq()
 			SP = 0
 			SPmark = 0
 			Stack[SP] = hdr
+			if (ENVIRON["RPM_SCRIPTS_DEBUG"] > 1)
+				DEBUG = 1
 			while ((getline <pf) > 0)
 				Packaged[$1] = 1
 		}
 		function Push(f) {
+			if (DEBUG)
+				printf "%c%*sPush %s\n",
+					Packaged[f] ? "+" : (SPmark == SP) ? "!" : " ",
+					SP * 2 + 1, "", f >"/dev/stderr"
+			# Print dependency.
 			if (SPmark == SP && !Packaged[f] && !Printed[f]++)
 				print f
+			# Update header->file mapping.
+			h = ExpectPush
+			if (!(h in h2f))
+				h2f[h] = f
+			# Further sync with the Include.
+			if (SPmark == SP) {
+				delete NeedPush[h]
+				h2f[h] = f
+			}
+			# Update the stack.
 			if (SPmark == SP && Packaged[f])
 				SPmark++
 			Stack[++SP] = f
@@ -174,13 +191,42 @@ CppReq()
 					prog, hdr, Stack[SP], f >"/dev/stderr"
 			if (SPmark > SP)
 				SPmark = SP
+			if (DEBUG)
+				printf "%*sPop\n",
+					SP * 2 + 2, "" >"/dev/stderr"
 		}
-		$4==1 { Push($3) }
-		$4==2 { Pop($3) }
+		function Include(h) {
+			if (DEBUG)
+				printf "%*sInclude %s\n",
+					SP * 2 + 2, "", h >"/dev/stderr"
+			if (SPmark == SP)
+				NeedPush[h] = 1
+			ExpectPush = h
+		}
+		$1=="#" && $4==1 { Push($3) }
+		$1=="#" && $4==2 { Pop($3) }
+		$1~/^#i/ { Include($2) }
 		END {
 			if (SP > 0)
 				printf "%s: %s: non-empty stack, top %s\n",
 					prog, hdr, Stack[SP] >"/dev/stderr"
+			# Recover missing pushes due to once-only optimization.
+			for (h in NeedPush) {
+				f = h2f[h]
+				if (f) {
+					if (!Packaged[f] && !Printed[f]++) {
+						if (DEBUG)
+							printf "recovered %s -> %s\n",
+								h, f >"/dev/stderr"
+						print f
+					}
+				}
+				else {
+					if (DEBUG)
+						printf "cannot recover %s\n",
+							h >"/dev/stderr"
+				}
+			}
 		}'
 	# The list of required files is now ready.
 	sort -u -o $tmpdir/req{,}
