@@ -921,42 +921,32 @@ int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
 	unsigned v[];
     };
     struct cache_hdr {
-	struct cache_hdr *next;
 	struct cache_ent *ent;
 	unsigned hash;
     };
 #define CACHE_SIZE 160
-#define PIVOT_SIZE 149
+#define PIVOT_SIZE 150
     static __thread
-    struct cache_hdr cache_buf[CACHE_SIZE], *cache;
-    // lookup in the cache
+    struct cache_hdr cache[CACHE_SIZE + 1];
+    assert(cache[CACHE_SIZE].ent == NULL);
+    // look up in the cache
     struct cache_ent *ent;
-    struct cache_hdr *cur = cache, *prev = NULL;
-    struct cache_hdr *pivot_cur = NULL, *pivot_prev = NULL;
+    struct cache_hdr *cur;
     unsigned hash = str[0] | (str[2] << 8) | (str[3] << 16);
-    int count = 0;
-    while (cur) {
+    for (cur = cache; cur->ent; cur++) {
 	if (hash == cur->hash) {
 	    ent = cur->ent;
 	    if (memcmp(str, ent->str, ent->len + 1) == 0) {
 		// hit, move to front
 		if (cur != cache) {
-		    prev->next = cur->next;
-		    cur->next = cache;
-		    cache = cur;
+		    struct cache_hdr save = *cur;
+		    int nb = (cur - cache) * sizeof(*cur);
+		    memmove(cache + 1, cache, nb);
+		    cache[0] = save;
 		}
 		*pv = ent->v;
 		return ent->c;
 	    }
-	}
-	count++;
-	if (cur->next == NULL)
-	    break;
-	prev = cur;
-	cur = cur->next;
-	if (count == PIVOT_SIZE) {
-	    pivot_cur = cur;
-	    pivot_prev = prev;
 	}
     }
     // decode
@@ -973,18 +963,15 @@ int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
     ent->str = (char *)(ent->v + c + 1);
     memcpy(ent->str, str, len + 1);
     ent->len = len;
-    // pivotal insertion!
-    if (count >= CACHE_SIZE) {
+    // insert
+    if (cur == cache + CACHE_SIZE) {
+	// free last entry
+	cur--;
 	free(cur->ent);
-	prev->next = NULL;
-	cur->next = pivot_cur;
-	pivot_prev->next = cur;
-    }
-    // early bird, push to front
-    else {
-	cur = &cache_buf[count];
-	cur->next = cache;
-	cache = cur;
+	// position at midpoint
+	cur = cache + PIVOT_SIZE;
+	int nb = (CACHE_SIZE - PIVOT_SIZE - 1) * sizeof(*cur);
+	memmove(cur + 1, cur, nb);
     }
     cur->ent = ent;
     cur->hash = hash;
