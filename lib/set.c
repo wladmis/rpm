@@ -548,10 +548,10 @@ int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
 	state = ST_MBITS;
 	goto rcheck;
     }
-    inline void put4bits(unsigned c) { putNbits(c, 4); }
     inline void put6bits(unsigned c) { putNbits(c, 6); }
     inline void put10bits(unsigned c) { putNbits(c, 10); }
     inline void put12bits(unsigned c) { putNbits(c, 12); }
+    inline void put24bits(unsigned c) { putNbits(c, 24); }
     // need align
     if (1 & (long) base62) {
 	long c = (unsigned char) *base62++;
@@ -572,14 +572,22 @@ int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
     // regular mode, process two-byte words
   reg:
     {
-	long w = *(unsigned short *) base62;
-	base62 += 2;
-	int num12b = word_to_num[w];
-	while (num12b < 0x1000) {
-	    put12bits(num12b);
-	    w = *(unsigned short *) base62;
+	int num12b;
+	while (1) {
+	    long w = *(unsigned short *) base62;
 	    base62 += 2;
 	    num12b = word_to_num[w];
+	    if (num12b >= 0x1000)
+		break;
+	    w = *(unsigned short *) base62;
+	    base62 += 2;
+	    int num12x = word_to_num[w];
+	    if (num12x >= 0x1000) {
+		put12bits(num12b);
+		num12b = num12x;
+		break;
+	    }
+	    put24bits(num12b | (num12x << 12));
 	}
 	switch (num12b & 0xf000) {
 	case W_AZ:
@@ -622,8 +630,7 @@ int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
 	default:
 	    return -4;
 	}
-	put6bits(num6b);
-	put4bits(num4b);
+	put10bits(num6b | (num4b << 6));
 	// 2
 	c = (unsigned char) *base62++;
 	num6b = char_to_num[c];
