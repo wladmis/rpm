@@ -1,7 +1,7 @@
 /*
  * set.c - base62, golomb and set-string routines
  *
- * Copyright (C) 2010  Alexey Tourbin <at@altlinux.org>
+ * Copyright (C) 2010, 2011, 2012  Alexey Tourbin <at@altlinux.org>
  *
  * License: GPLv2+ or LGPL, see RPM COPYING
  */
@@ -745,64 +745,6 @@ void test_delta()
 #endif
 
 /*
- * Auxiliary routines.
- */
-
-static
-void maskv(int c, unsigned *v, unsigned mask)
-{
-    unsigned *v_end = v + c;
-    while (v < v_end)
-	*v++ &= mask;
-}
-
-static
-void sortv(int c, unsigned *v)
-{
-    int cmp(const void *arg1, const void *arg2)
-    {
-	unsigned v1 = *(unsigned *) arg1;
-	unsigned v2 = *(unsigned *) arg2;
-	if (v1 > v2)
-	    return 1;
-	if (v1 < v2)
-	    return -1;
-	return 0;
-    }
-    qsort(v, c, sizeof *v, cmp);
-}
-
-static
-int uniqv(int c, unsigned *v)
-{
-    int i, j;
-    for (i = 0, j = 0; i < c; i++) {
-	while (i + 1 < c && v[i] == v[i+1])
-	    i++;
-	v[j++] = v[i];
-    }
-    assert(j <= c);
-    return j;
-}
-
-#ifdef SELF_TEST
-static
-void test_aux()
-{
-    unsigned v[] = { 2, 3, 1, 2, 7, 6, 5 };
-    int c = sizeof v / sizeof *v;
-    maskv(c, v, 4 - 1);
-    sortv(c, v);
-    c = uniqv(c, v);
-    assert(c == 3);
-    assert(v[0] == 1);
-    assert(v[1] == 2);
-    assert(v[2] == 3);
-    fprintf(stderr, "%s: aux test OK\n", __FILE__);
-}
-#endif
-
-/*
  * Higher-level set-string routines - serialize integers into set-string.
  *
  * A set-string looks like this: "set:bMxyz..."
@@ -986,13 +928,63 @@ int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
     return c;
 }
 
+// Reduce a set of (bpp + 1) values to a set of bpp values.
 static
-int downsample_set(int c, unsigned *v, int bpp)
+int downsample_set(int c, const unsigned *v, unsigned *w, int bpp)
 {
     unsigned mask = (1 << bpp) - 1;
-    maskv(c, v, mask);
-    sortv(c, v);
-    return uniqv(c, v);
+    // find the first element with high bit set
+    int l = 0;
+    int u = c;
+    while (l < u) {
+	int i = (l + u) / 2;
+	if (v[i] <= mask)
+	    l = i + 1;
+	else
+	    u = i;
+    }
+    // initialize parts
+    const unsigned *w_start = w;
+    const unsigned *v1 = v + 0, *v1end = v + u;
+    const unsigned *v2 = v + u, *v2end = v + c;
+    // merge v1 and v2 into w
+    if (v1 < v1end && v2 < v2end) {
+	unsigned v1val = *v1;
+	unsigned v2val = *v2 & mask;
+	while (1) {
+	    if (v1val < v2val) {
+		*w++ = v1val;
+		v1++;
+		if (v1 == v1end)
+		    break;
+		v1val = *v1;
+	    }
+	    else if (v2val < v1val) {
+		*w++ = v2val;
+		v2++;
+		if (v2 == v2end)
+		    break;
+		v2val = *v2 & mask;
+	    }
+	    else {
+		*w++ = v1val;
+		v1++;
+		v2++;
+		if (v1 == v1end)
+		    break;
+		if (v2 == v2end)
+		    break;
+		v1val = *v1;
+		v2val = *v2 & mask;
+	    }
+	}
+    }
+    // append what's left
+    while (v1 < v1end)
+	*w++ = *v1++;
+    while (v2 < v2end)
+	*w++ = *v2++ & mask;
+    return w - w_start;
 }
 
 #ifdef SELF_TEST
@@ -1062,25 +1054,34 @@ int rpmsetcmp(const char *str1, const char *str2)
     int c1 = cache_decode_set(str1, Mshift1, &v1);
     if (c1 < 0)
 	return -3;
+    unsigned v1bufA[c1 + 1];
+    unsigned v1bufB[c1 + 1];
     // decode set2 (on the stack)
     int len2 = strlen(str2);
-    unsigned v2buf[decode_set_size(len2, Mshift2)];
-    const unsigned *v2 = v2buf;
-    int c2 = decode_set(str2, Mshift2, v2buf);
+    int c2 = decode_set_size(len2, Mshift2);
+    unsigned v2bufA[c2];
+    unsigned v2bufB[c2];
+    const unsigned *v2 = v2bufA;
+    c2 = decode_set(str2, Mshift2, v2bufA);
     if (c2 < 0)
 	return -4;
     // adjust for comparison
-    unsigned v1buf[c1 + 1];
-    if (bpp1 > bpp2) {
-	bpp1 = bpp2;
-	memcpy(v1buf, v1, c1 * sizeof(*v1));
-	c1 = downsample_set(c1, v1buf, bpp1);
+    while (bpp1 > bpp2) {
+	unsigned *v1buf = v1bufA;
+	if (v1 == v1buf)
+	    v1buf = v1bufB;
+	bpp1--;
+	c1 = downsample_set(c1, v1, v1buf, bpp1);
 	v1buf[c1] = ~0u;
 	v1 = v1buf;
     }
-    if (bpp2 > bpp1) {
-	bpp2 = bpp1;
-	c2 = downsample_set(c2, v2buf, bpp2);
+    while (bpp2 > bpp1) {
+	unsigned *v2buf = v2bufA;
+	if (v2 == v2buf)
+	    v2buf = v2bufB;
+	bpp2--;
+	c2 = downsample_set(c2, v2, v2buf, bpp2);
+	v2 = v2buf;
     }
     // compare
     int ge = 1;
@@ -1228,6 +1229,16 @@ const char *set_fini(struct set *set, int bpp)
     unsigned v[set->c];
     for (i = 0; i < set->c; i++)
 	v[i] = set->sv[i].v;
+    int uniqv(int c, unsigned *v)
+    {
+	int i, j;
+	for (i = 0, j = 0; i < c; i++) {
+	    while (i + 1 < c && v[i] == v[i+1])
+		i++;
+	    v[j++] = v[i];
+	}
+	return j;
+    }
     int c = uniqv(set->c, v);
     char base62[encode_set_size(c, bpp)];
     int len = encode_set(c, v, bpp, base62);
@@ -1292,7 +1303,6 @@ int main()
     test_word_table();
     test_base62_golomb();
     test_delta();
-    test_aux();
     test_set();
     test_api();
     return 0;
