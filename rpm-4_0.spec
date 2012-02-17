@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.24
+Release: alt100.24.M60P.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -449,7 +449,10 @@ fi
 %rpmattr %_rpmlibdir/dump_ld_config
 %rpmattr %_rpmlibdir/filesize
 %rpmattr %_rpmlibdir/relative
-%rpmattr %_rpmlibdir/brp-*
+%rpmattr %_rpmlibdir/brp-alt
+%rpmattr %_rpmlibdir/brp-strip
+%rpmattr %dir %_rpmlibdir/brp.d
+%rpmattr %_rpmlibdir/brp.d/*
 %rpmattr %_rpmlibdir/*_files
 %rpmattr %_rpmlibdir/cpp.*
 %rpmattr %_rpmlibdir/ldd
@@ -501,6 +504,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Feb 16 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.24.M60P.1
+- Introduced %%_rpmlibdir/brp.d/ directory to allow existance of various
+  brp-* scripts not only in rpm-build package.
+- brp-hardlink_pyo_pyc: splitted from brp-bytecompile_python
+- GROUPS: add Development/Python3 (by Vitaly Kuznetsov) and Other (by Igor
+  Vlasenko).
+
 * Tue Apr 05 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.24
 - platform.in: Added %%systemd_unitdir macro.
 
