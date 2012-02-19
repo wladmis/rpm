@@ -60,8 +60,10 @@ GlobalPkgInit()
 
 Cflags()
 {
-	local f="$1"; shift
-	set -- $pkgconfig_cflags -I/usr/include -I${f%/*} -I${f%/*/*} -I${f%/*/*/*}
+	local d="${1:?}"
+	d=${d#${RPM_BUILD_ROOT-}}
+	d=${d%/*}
+	set -- $pkgconfig_cflags -I/usr/include -I$d -I${d%/*} -I${d%/*/*}
 	local cf
 	for cf; do
 		case $cf in
