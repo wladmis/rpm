@@ -32,9 +32,10 @@
 static inline
 int encode_base62_size(int bitc)
 {
-    // Four bits can make a character; the remaining bits can make
-    // a character, too.  And the string should be null-terminated.
-    return (bitc >> 2) + 2;
+    // In the worst case, which is ZxZxZx..., five bits can make a character;
+    // the remaining bits can make a character, too.  And the string must be
+    // null-terminated.
+    return bitc / 5 + 2;
 }
 
 // Main base62 encoding routine: pack bitv into base62 string.
@@ -104,7 +105,7 @@ static inline
 int decode_base62_size(int len)
 {
     // Each character will fill at most 6 bits.
-    return (len << 2) + (len << 1);
+    return len * 6;
 }
 
 // This table maps alnum characters to their numeric values.
@@ -272,7 +273,7 @@ int encode_golomb_size(int c, int Mshift)
 {
     // XXX No precise estimation.  However, we do not expect unary-encoded bits
     // to take more than binary-encoded Mshift bits.
-    return (Mshift << 1) * c + 16;
+    return Mshift * 2 * c + 16;
 }
 
 // Main golomb encoding routine: package integers into bits.
