@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.45
+Release: alt100.46
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -506,6 +506,15 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Feb 19 2012 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.46
+- set.c: Fixed bad sentinel due to off-by-one error in alt100.28.
+- set.c: Improved linear cache search by using contiguous memory block.
+- set.c: Improved decoding by combining and processing 24 bits at a time.
+- set.c: Reimplemented downsampling using merges instead of full qsort(3).
+- cpp.req: Implemented global/hierarchical mode in which subordinate files
+  are processed implicitly, resulting in fewer failures and major speed-up.
+- cpp.req: Recover missing refs due to cpp "once-only header" optimization.
+
 * Wed Jan 25 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.45
 - Introduced %%_rpmlibdir/brp.d/ directory to allow existance of various brp-*
   scripts not only in rpm-build package.
