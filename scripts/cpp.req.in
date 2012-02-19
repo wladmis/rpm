@@ -40,10 +40,10 @@ PkgconfigCflags()
 		sort -u -k2 $tmpdir/{PF,BR}-pc |sort -n |cut -d' ' -f2- >$tmpdir/pc
 		Debug "pc_files:" `cat $tmpdir/pc`
 	fi
-	while read -r pc; do
-		pkg-config --enable-recursion --cflags "$pc" </dev/null ||
-			Fatal "$pc: pkg-config failed"
-	done <$tmpdir/pc
+	if [ -s $tmpdir/pc ]; then
+		pkg-config --enable-recursion --cflags `cat $tmpdir/pc` ||
+			Fatal "pkg-config failed"
+	fi
 }
 
 initialized=
