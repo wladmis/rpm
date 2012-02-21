@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.24.M60P.1
+Release: alt100.24.M60P.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,20 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Feb 21 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.24.M60P.2
+- Backport some useful commits from 'maint' branch:
+  find-debuginfo-files: fix packaging of symlinks
+  fsmStage: be careful with file permissions on package removal or upgrade
+  Remove unsafe file permissions on package removal or upgrade
+  Sanity check region offset range on headerLoad()
+  Sanity check region offset in regionSwab()
+  debuginfo.req: fix handling of exotic sonames written as pathnames (ALT#26247)
+  ru.po: recode from KOI8-R to UTF-8
+  po: import translations from Roman Savochenko
+  GROUPS: add Engineering (ALT#25868)
+  ru.po: remove translations for "source", "patch" and "icon" (ALT#24857)
+- Add uk translation for Development/Python3
+
 * Thu Feb 16 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.24.M60P.1
 - Introduced %%_rpmlibdir/brp.d/ directory to allow existance of various
   brp-* scripts not only in rpm-build package.
