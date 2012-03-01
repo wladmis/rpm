@@ -335,7 +335,7 @@ int decode_golomb(int bitc, const char *bitv, int Mshift, unsigned *v)
 	}
 	// otherwise, incomplete value is not okay
 	if (bitc < Mshift)
-	    return -10;
+	    return -11;
 	// second part
 	unsigned r = 0;
 	int i;
@@ -515,143 +515,193 @@ int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
     unsigned q = 0;
     unsigned r = 0;
     int rfill = 0;
-    enum { ST_VLEN, ST_MBITS } state = ST_VLEN;
-    inline
-    void putNbits(unsigned c, int n)
-    {
-	if (state == ST_VLEN)
-	    goto vlen;
-	r |= (c << rfill);
-	rfill += n;
-    rcheck: ;
-	int left = rfill - Mshift;
-	if (left < 0)
-	    return;
-	r &= (1 << Mshift) - 1;
-	*v++ = (q << Mshift) | r;
-	q = 0;
-	state = ST_VLEN;
-	if (left == 0)
-	    return;
-	c >>= n - left;
-	n = left;
-    vlen:
-	if (c == 0) {
-	    q += n;
-	    return;
-	}
-	int vbits = __builtin_ffs(c);
-	n -= vbits;
-	c >>= vbits;
-	q += vbits - 1;
-	r = c;
-	rfill = n;
-	state = ST_MBITS;
-	goto rcheck;
-    }
-    inline void put6bits(unsigned c) { putNbits(c, 6); }
-    inline void put10bits(unsigned c) { putNbits(c, 10); }
-    inline void put12bits(unsigned c) { putNbits(c, 12); }
-    inline void put24bits(unsigned c) { putNbits(c, 24); }
+    long c, w;
+    int n, vbits, left;
+    unsigned bits, morebits;
     // need align
     if (1 & (long) base62) {
-	long c = (unsigned char) *base62++;
-	int num6b = char_to_num[c];
-	if (num6b < 61) {
-	    put6bits(num6b);
-	    goto reg;
-	}
+	c = (unsigned char) *base62++;
+	bits = char_to_num[c];
+	if (bits < 61)
+	    goto put6q_align;
 	else {
-	    if (num6b == 0xff)
-		goto eol;
-	    if (num6b == 0xee)
+	    if (bits == 0xff)
+		goto eolq;
+	    if (bits == 0xee)
 		return -1;
-	    assert(num6b == 61);
-	    goto esc;
+	    assert(bits == 61);
+	    goto esc1q;
 	}
     }
     // regular mode, process two-byte words
-  reg:
-    {
-	int num12b;
-	while (1) {
-	    long w = *(unsigned short *) base62;
-	    base62 += 2;
-	    num12b = word_to_num[w];
-	    if (num12b >= 0x1000)
-		break;
-	    w = *(unsigned short *) base62;
-	    base62 += 2;
-	    int num12x = word_to_num[w];
-	    if (num12x >= 0x1000) {
-		put12bits(num12b);
-		num12b = num12x;
-		break;
-	    }
-	    put24bits(num12b | (num12x << 12));
-	}
-	switch (num12b & 0xf000) {
-	case W_AZ:
-	    put6bits(num12b & 0x0fff);
-	    goto esc;
-	case W_ZA:
-	    put10bits(num12b & 0x0fff);
-	    goto reg;
-	case W_A0:
-	    put6bits(num12b & 0x0fff);
-	    goto eol;
-	case W_0X:
-	    goto eol;
-	default:
-	    return -1;
-	}
+#define Get24(X) \
+    w = *(unsigned short *) base62; \
+    base62 += 2; \
+    bits = word_to_num[w]; \
+    if (bits >= 0x1000) \
+	goto gotNN ## X; \
+    w = *(unsigned short *) base62; \
+    base62 += 2; \
+    morebits = word_to_num[w]; \
+    if (morebits >= 0x1000) \
+	goto put12 ## X; \
+    bits |= (morebits << 12); \
+    goto put24 ## X
+#define Get12(X) \
+    bits = morebits
+#define GotNN(X) \
+    switch (bits & 0xf000) { \
+    case W_AZ: \
+	bits &= 0x0fff; \
+	goto put6 ## X ## _AZ; \
+    case W_ZA: \
+	bits &= 0x0fff; \
+	goto put10 ## X ## _ZA; \
+    case W_A0: \
+	bits &= 0x0fff; \
+	goto put6 ## X ## _A0; \
+    case W_0X: \
+	goto eol ## X; \
+    default: \
+	return -2; \
     }
+    // make coroutines
+    get24q: Get24(q);
+    get24r: Get24(r);
+    get12q: Get12(q);
+    gotNNq: GotNN(q);
+    get12r: Get12(r);
+    gotNNr: GotNN(r);
     // escape mode, handle 2 bytes one by one
-  esc:
-    {
-	// 1
-	int num6b = 61;
-	long c = (unsigned char) *base62++;
-	int num4b = char_to_num[c];
-	if (num4b == 0xff)
-	    return -2;
-	if (num4b == 0xee)
-	    return -3;
-	switch (num4b & (16 + 32)) {
-	case 0:
-	    break;
-	case 16:
-	    num6b = 62;
-	    num4b &= ~16;
-	    break;
-	case 32:
-	    num6b = 63;
-	    num4b &= ~32;
-	    break;
-	default:
-	    return -4;
-	}
-	put10bits(num6b | (num4b << 6));
-	// 2
-	c = (unsigned char) *base62++;
-	num6b = char_to_num[c];
-	if (num6b < 61) {
-	    put6bits(num6b);
-	    goto reg;
-	}
-	else {
-	    if (num6b == 0xff)
-		goto eol;
-	    if (num6b == 0xee)
-		return -1;
-	    assert(num6b == 61);
-	    goto esc;
-	}
+#define Esc1(X) \
+    bits = 61; \
+    c = (unsigned char) *base62++; \
+    morebits = char_to_num[c]; \
+    if (morebits == 0xff) \
+	return -3; \
+    if (morebits == 0xee) \
+	return -4; \
+    switch (morebits & (16 + 32)) { \
+    case 0: \
+	break; \
+    case 16: \
+	bits = 62; \
+	morebits &= ~16; \
+	break; \
+    case 32: \
+	bits = 63; \
+	morebits &= ~32; \
+	break; \
+    default: \
+	return -5; \
+    } \
+    bits |= (morebits << 6); \
+    goto put10 ## X ## _esc1
+#define Esc2(X) \
+    c = (unsigned char) *base62++; \
+    bits = char_to_num[c]; \
+    if (bits < 61) \
+	goto put6 ## X ## _esc2; \
+    else { \
+	if (bits == 0xff) \
+	    goto eol ## X; \
+	if (bits == 0xee) \
+	    return -6; \
+	goto esc1 ## X; \
     }
-  eol:
-    if (state != ST_VLEN || q > 5)
+    // make coroutines
+    esc1q: Esc1(q);
+    esc2q: Esc2(q);
+    esc1r: Esc1(r);
+    esc2r: Esc2(r);
+    // golomb pieces
+#define QInit(N) \
+    n = N
+#define RInit(N) \
+    n = N; \
+    r |= (bits << rfill); \
+    rfill += n
+#define RMake(Get) \
+    left = rfill - Mshift; \
+    if (left < 0) \
+	goto Get ## r; \
+    r &= (1 << Mshift) - 1; \
+    *v++ = (q << Mshift) | r; \
+    q = 0; \
+    bits >>= n - left; \
+    n = left
+#define QMake(Get) \
+    if (bits == 0) { \
+	q += n; \
+	goto Get ## q; \
+    } \
+    vbits = __builtin_ffs(bits); \
+    n -= vbits; \
+    bits >>= vbits; \
+    q += vbits - 1; \
+    r = bits; \
+    rfill = n
+    // this assumes that minumum Mshift value is 7
+#define Put24Q(Get) \
+    QInit(24); \
+    QMake(Get); RMake(Get); \
+    QMake(Get); RMake(Get); \
+    QMake(Get); RMake(Get); \
+    goto Get ## q
+#define Put24R(Get) \
+    RInit(24); \
+    RMake(Get); \
+    QMake(Get); RMake(Get); \
+    QMake(Get); RMake(Get); \
+    QMake(Get); goto Get ## r
+#define Put12Q(Get) \
+    QInit(12); \
+    QMake(Get); RMake(Get); \
+    QMake(Get); goto Get ## r
+#define Put12R(Get) \
+    RInit(12); \
+    RMake(Get); \
+    QMake(Get); RMake(Get); \
+    QMake(Get); goto Get ## r
+#define Put10Q(Get) \
+    QInit(10); \
+    QMake(Get); RMake(Get); \
+    QMake(Get); goto Get ## r
+#define Put10R(Get) \
+    RInit(10); \
+    RMake(Get); \
+    QMake(Get); RMake(Get); \
+    QMake(Get); goto Get ## r
+#define Put6Q(Get) \
+    QInit(6); \
+    QMake(Get); goto Get ## r
+#define Put6R(Get) \
+    RInit(6); \
+    RMake(Get); \
+    QMake(Get); goto Get ## r
+    // make coroutines
+    put24q: Put24Q(get24);
+    put24r: Put24R(get24);
+    put12q: Put12Q(get12);
+    put12r: Put12R(get12);
+    put6q_align:
+    put6q_esc2: Put6Q(get24);
+    put6r_esc2: Put6R(get24);
+    put6q_AZ: Put6Q(esc1);
+    put6r_AZ: Put6R(esc1);
+    put10q_esc1: Put10Q(esc2);
+    put10r_esc1: Put10R(esc2);
+    put10q_ZA: Put10Q(get24);
+    put10r_ZA: Put10R(get24);
+    put6q_A0: Put6Q(eol);
+    put6r_A0: Put6R(eol);
+    // handle end of line and return
+  eolq:
+    if (q > 5)
 	return -10;
     return v - v_start;
+  eolr:
+    return -11;
 }
 
 #ifdef SELF_TEST
