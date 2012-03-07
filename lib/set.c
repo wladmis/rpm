@@ -920,29 +920,27 @@ int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
 	int c;
 	unsigned v[];
     };
-    struct cache_hdr {
-	struct cache_ent *ent;
-	unsigned hash;
-    };
 #define CACHE_SIZE 160
 #define PIVOT_SIZE 150
-    static __thread
-    struct cache_hdr cache[CACHE_SIZE + 1];
-    assert(cache[CACHE_SIZE].ent == NULL);
+    static int hc;
+    static unsigned hv[CACHE_SIZE];
+    static struct cache_ent *ev[CACHE_SIZE];
     // look up in the cache
+    int i;
+    unsigned *hp;
     struct cache_ent *ent;
-    struct cache_hdr *cur;
     unsigned hash = str[0] | (str[2] << 8) | (str[3] << 16);
-    for (cur = cache; cur->ent; cur++) {
-	if (hash == cur->hash) {
-	    ent = cur->ent;
+    for (hp = hv; hp < hv + hc; hp++) {
+	if (hash == *hp) {
+	    i = hp - hv;
+	    ent = ev[i];
 	    if (memcmp(str, ent->str, ent->len + 1) == 0) {
 		// hit, move to front
-		if (cur != cache) {
-		    struct cache_hdr save = *cur;
-		    int nb = (cur - cache) * sizeof(*cur);
-		    memmove(cache + 1, cache, nb);
-		    cache[0] = save;
+		if (i) {
+		    memmove(hv + 1, hv, i * sizeof(hv[0]));
+		    memmove(ev + 1, ev, i * sizeof(ev[0]));
+		    hv[0] = hash;
+		    ev[0] = ent;
 		}
 		*pv = ent->v;
 		return ent->c;
@@ -964,17 +962,18 @@ int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
     memcpy(ent->str, str, len + 1);
     ent->len = len;
     // insert
-    if (cur == cache + CACHE_SIZE) {
+    if (hc < CACHE_SIZE)
+	i = hc++;
+    else {
 	// free last entry
-	cur--;
-	free(cur->ent);
+	free(ev[CACHE_SIZE - 1]);
 	// position at midpoint
-	cur = cache + PIVOT_SIZE;
-	int nb = (CACHE_SIZE - PIVOT_SIZE - 1) * sizeof(*cur);
-	memmove(cur + 1, cur, nb);
+	i = PIVOT_SIZE;
+	memmove(hv + i + 1, hv + i, (CACHE_SIZE - i - 1) * sizeof(hv[0]));
+	memmove(ev + i + 1, ev + i, (CACHE_SIZE - i - 1) * sizeof(ev[0]));
     }
-    cur->ent = ent;
-    cur->hash = hash;
+    hv[i] = hash;
+    ev[i] = ent;
     *pv = ent->v;
     return c;
 }
