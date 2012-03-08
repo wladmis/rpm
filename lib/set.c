@@ -921,8 +921,8 @@ int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
 	int c;
 	unsigned v[];
     };
-#define CACHE_SIZE 160
-#define PIVOT_SIZE 150
+#define CACHE_SIZE 256
+#define PIVOT_SIZE 243
     static int hc;
     static unsigned hv[CACHE_SIZE];
     static struct cache_ent *ev[CACHE_SIZE];
