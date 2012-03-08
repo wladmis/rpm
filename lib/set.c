@@ -512,6 +512,7 @@ static
 int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
 {
     unsigned *v_start = v;
+    unsigned mask = (1 << Mshift) - 1;
     unsigned q = 0;
     unsigned r = 0;
     int rfill = 0;
@@ -625,7 +626,7 @@ int decode_base62_golomb(const char *base62, int Mshift, unsigned *v)
     left = rfill - Mshift; \
     if (left < 0) \
 	goto Get ## r; \
-    r &= (1 << Mshift) - 1; \
+    r &= mask; \
     *v++ = (q << Mshift) | r; \
     q = 0; \
     bits >>= n - left; \
