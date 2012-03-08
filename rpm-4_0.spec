@@ -236,7 +236,7 @@ rm lib/set.lo lib/librpm.la tools/setcmp.static
 %make_build -C tools setcmp.static CFLAGS="$(sed -n 's/^CFLAGS = //p' tools/Makefile) -fprofile-generate"
 rpmquery -a --provides |fgrep '= set:' |sort >P
 rpmquery -a --requires |fgrep '= set:' |sort >R
-join -o 1.3,2.3 P R |sort -R >setcmp-data
+join -o 1.3,2.3 P R |shuf >setcmp-data
 ./tools/setcmp <setcmp-data >/dev/null
 ./tools/setcmp.static <setcmp-data >/dev/null
 ls -l lib/.libs/set.gcda lib/set.gcda
