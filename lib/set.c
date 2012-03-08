@@ -951,15 +951,17 @@ int cache_decode_set(const char *str, int Mshift, const unsigned **pv)
     // decode
     int len = strlen(str);
     int c = decode_set_size(len, Mshift);
-    ent = malloc(sizeof(*ent) + len + 1 + (c + 1) * sizeof(unsigned));
+#define SENTINELS 8
+    ent = malloc(sizeof(*ent) + len + 1 + (c + SENTINELS) * sizeof(unsigned));
     assert(ent);
     c = ent->c = decode_set(str, Mshift, ent->v);
     if (c <= 0) {
 	free(ent);
 	return c;
     }
-    ent->v[c] = ~0u;
-    ent->str = (char *)(ent->v + c + 1);
+    for (i = 0; i < SENTINELS; i++)
+	ent->v[c + i] = ~0u;
+    ent->str = (char *)(ent->v + c + SENTINELS);
     memcpy(ent->str, str, len + 1);
     ent->len = len;
     // insert
@@ -1117,13 +1119,15 @@ int rpmsetcmp(const char *str1, const char *str2)
     if (c2 < 0)
 	return -4;
     // adjust for comparison
+    int i;
     while (bpp1 > bpp2) {
 	unsigned *v1buf = v1bufA;
 	if (v1 == v1buf)
 	    v1buf = v1bufB;
 	bpp1--;
 	c1 = downsample_set(c1, v1, v1buf, bpp1);
-	v1buf[c1] = ~0u;
+	for (i = 0; i < SENTINELS; i++)
+	    v1buf[c1 + i] = ~0u;
 	v1 = v1buf;
     }
     while (bpp2 > bpp1) {
@@ -1139,32 +1143,74 @@ int rpmsetcmp(const char *str1, const char *str2)
     int le = 1;
     const unsigned *v1end = v1 + c1;
     const unsigned *v2end = v2 + c2;
-    assert(*v1end == ~0u);
+    for (i = 0; i < SENTINELS; i++)
+	assert(v1end[i] == ~0u);
     unsigned v2val = *v2;
-    while (1) {
-	if (*v1 < v2val) {
-	    le = 0;
-	    v1++;
-	    while (*v1 < v2val)
-		v1++;
-	    if (v1 == v1end)
-		break;
+    // loop pieces
+#define IFLT4 \
+    if (*v1 < v2val) { \
+	le = 0; \
+	v1 += 4; \
+	while (*v1 < v2val) \
+	    v1 += 4; \
+	v1 -= 2; \
+	if (*v1 < v2val) \
+	    v1++; \
+	else \
+	    v1--; \
+	if (*v1 < v2val) \
+	    v1++; \
+	if (v1 == v1end) \
+	    break; \
+    }
+#define IFLT8 \
+    if (*v1 < v2val) { \
+	le = 0; \
+	v1 += 8; \
+	while (*v1 < v2val) \
+	    v1 += 8; \
+	v1 -= 4; \
+	if (*v1 < v2val) \
+	    v1 += 2; \
+	else \
+	    v1 -= 2; \
+	if (*v1 < v2val) \
+	    v1++; \
+	else \
+	    v1--; \
+	if (*v1 < v2val) \
+	    v1++; \
+	if (v1 == v1end) \
+	    break; \
+    }
+#define IFGE \
+    if (*v1 == v2val) { \
+	v1++; \
+	v2++; \
+	if (v1 == v1end) \
+	    break; \
+	if (v2 == v2end) \
+	    break; \
+	v2val = *v2; \
+    } \
+    else { \
+	ge = 0; \
+	v2++; \
+	if (v2 == v2end) \
+	    break; \
+	v2val = *v2; \
+    }
+    // choose the right stepper
+    if (c1 >= 16 * c2) {
+	while (1) {
+	    IFLT8;
+	    IFGE;
 	}
-	if (*v1 == v2val) {
-	    v1++;
-	    v2++;
-	    if (v1 == v1end)
-		break;
-	    if (v2 == v2end)
-		break;
-	    v2val = *v2;
-	}
-	else {
-	    ge = 0;
-	    v2++;
-	    if (v2 == v2end)
-		break;
-	    v2val = *v2;
+    }
+    else {
+	while (1) {
+	    IFLT4;
+	    IFGE;
 	}
     }
     // return
