@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.46
+Release: alt100.47
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -506,6 +506,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Mar 15 2012 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.47
+- set.c: Reimplemented base62+golomb decoder using Knuth's coroutines.
+- set.c: Increased cache size from 160 to 256 slots, 75% hit ratio.
+- set.c: Implemented 4-byte and 8-byte steppers for rpmsetcmp main loop.
+
 * Sun Feb 19 2012 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt100.46
 - set.c: Fixed bad sentinel due to off-by-one error in alt100.28.
 - set.c: Improved linear cache search by using contiguous memory block.
