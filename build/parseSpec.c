@@ -143,15 +143,20 @@ static int copyNextLine(Spec spec, OFI_t *ofi, int strip)
     /* Expand next line from file into line buffer */
     if (!(spec->nextline && *spec->nextline)) {
 	int pc = 0, bc = 0, nc = 0;
-	char *from, *to, *p;
+	char *from, *to, *p, *end;
 	to = spec->lbufPtr ? spec->lbufPtr : spec->lbuf;
+	end = spec->lbuf + sizeof(spec->lbuf) - 1;
 	from = ofi->readPtr;
 	ch = ' ';
-	while (*from && ch != '\n')
+	while (*from && ch != '\n' && to < end)
 	    ch = *to++ = *from++;
 	spec->lbufPtr = to;
 	*to++ = '\0';
 	ofi->readPtr = from;
+	if (*from && ch != '\n') {
+	    rpmError(RPMERR_BADSPEC, _("Target buffer overflow\n"));
+	    return RPMERR_BADSPEC;
+	}
 
 	/* Check if we need another line before expanding the buffer. */
 	for (p = spec->lbuf; *p; p++) {
