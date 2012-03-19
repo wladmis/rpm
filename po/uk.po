@@ -3332,8 +3332,8 @@ msgid "Macro %%%.*s not found, skipping\n"
 msgstr "Макрос %%%.*s не знайдено, пропускаю\n"
 
 #: rpmio/macro.c:1481
-msgid "Target buffer overflow\n"
-msgstr "Переповнення цільового буфера\n"
+msgid "Target buffer overflow"
+msgstr "Переповнення цільового буфера"
 
 #. XXX Fstrerror
 #: rpmio/macro.c:1680 rpmio/macro.c:1686

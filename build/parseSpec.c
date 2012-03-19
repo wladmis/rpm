@@ -154,7 +154,8 @@ static int copyNextLine(Spec spec, OFI_t *ofi, int strip)
 	*to++ = '\0';
 	ofi->readPtr = from;
 	if (*from && ch != '\n') {
-	    rpmError(RPMERR_BADSPEC, _("Target buffer overflow\n"));
+	    rpmError(RPMERR_BADSPEC, _("line %d: %s\n"),
+		spec->lineNum, _("Target buffer overflow"));
 	    return RPMERR_BADSPEC;
 	}
 

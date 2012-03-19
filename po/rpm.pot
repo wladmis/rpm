@@ -3851,7 +3851,7 @@ msgid "Macro %%%.*s not found, skipping\n"
 msgstr ""
 
 #: rpmio/macro.c:1481
-msgid "Target buffer overflow\n"
+msgid "Target buffer overflow"
 msgstr ""
 
 #. XXX Fstrerror

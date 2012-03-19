@@ -1491,7 +1491,7 @@ expandMacros(void * spec, MacroContext mc, char * sbuf, size_t slen)
     rc = expandMacro(mb);
 
     if (mb->nb == 0)
-	rpmError(RPMERR_BADSPEC, _("Target buffer overflow\n"));
+	rpmError(RPMERR_BADSPEC, "%s\n", _("Target buffer overflow"));
 
     tbuf[slen] = '\0';	/* XXX just in case */
     strncpy(sbuf, tbuf, (slen - mb->nb + 1));
