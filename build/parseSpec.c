@@ -271,7 +271,7 @@ retry:
 	/*@-type@*/ /* FIX: cast? */
 	FILE * f = fdGetFp(ofi->fd);
 	/*@=type@*/
-	if (f == NULL || !fgets(ofi->readBuf, BUFSIZ, f)) {
+	if (f == NULL || getline(&ofi->readBuf, &ofi->readBufSize, f) <= 0) {
 	    /* EOF */
 	    if (spec->readStack->next) {
 		rpmError(RPMERR_UNMATCHEDIF, _("Unclosed %%if\n"));
@@ -280,9 +280,7 @@ retry:
 
 	    /* remove this file from the stack */
 	    spec->fileStack = ofi->next;
-	    (void) Fclose(ofi->fd);
-	    ofi->fileName = _free(ofi->fileName);
-	    ofi = _free(ofi);
+	    ofi = freeOpenFileInfo(ofi);
 
 	    /* only on last file do we signal EOF to caller */
 	    ofi = spec->fileStack;
@@ -432,14 +430,10 @@ retry:
 
 void closeSpec(Spec spec)
 {
-    OFI_t *ofi;
-
     while (spec->fileStack) {
-	ofi = spec->fileStack;
-	spec->fileStack = spec->fileStack->next;
-	if (ofi->fd) (void) Fclose(ofi->fd);
-	ofi->fileName = _free(ofi->fileName);
-	ofi = _free(ofi);
+	OFI_t *ofi = spec->fileStack;
+	spec->fileStack = ofi->next;
+	ofi = freeOpenFileInfo(ofi);
     }
 }
 

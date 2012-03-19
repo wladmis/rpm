@@ -514,19 +514,7 @@ Spec freeSpec(Spec spec)
     spec->specFile = _free(spec->specFile);
     spec->sourceRpmName = _free(spec->sourceRpmName);
 
-#ifdef	DEAD
-  { struct OpenFileInfo *ofi;
-    while (spec->fileStack) {
-	ofi = spec->fileStack;
-	spec->fileStack = ofi->next;
-	ofi->next = NULL;
-	ofi->fileName = _free(ofi->fileName);
-	ofi = _free(ofi);
-    }
-  }
-#else
     closeSpec(spec);
-#endif
 
     while (spec->readStack) {
 	rl = spec->readStack;
@@ -581,9 +569,20 @@ Spec freeSpec(Spec spec)
     ofi->fd = NULL;
     ofi->fileName = NULL;
     ofi->lineNum = 0;
-    ofi->readBuf[0] = '\0';
+    ofi->readBufSize = 0;
+    ofi->readBuf = NULL;
     ofi->readPtr = NULL;
     ofi->next = NULL;
 
+    return ofi;
+}
+
+OFI_t * freeOpenFileInfo(OFI_t *ofi)
+{
+    if (ofi->fd)
+	(void) Fclose(ofi->fd);
+    ofi->readBuf = _free(ofi->readBuf);
+    ofi->fileName = _free(ofi->fileName);
+    ofi = _free(ofi);
     return ofi;
 }
