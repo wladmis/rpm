@@ -145,7 +145,7 @@ static int copyNextLine(Spec spec, OFI_t *ofi, int strip)
 	int pc = 0, bc = 0, nc = 0;
 	char *from, *to, *p, *end;
 	to = spec->lbufPtr ? spec->lbufPtr : spec->lbuf;
-	end = spec->lbuf + sizeof(spec->lbuf) - 1;
+	end = spec->lbuf + spec->lbuf_len - 1;
 	from = ofi->readPtr;
 	ch = ' ';
 	while (*from && ch != '\n' && to < end)
@@ -202,7 +202,7 @@ static int copyNextLine(Spec spec, OFI_t *ofi, int strip)
 	    if (!failed_ok)
 	        failed_ok = (strip & STRIP_COMMENTS) && isCommentLine(spec->lbuf);
 	    rpmSetBuiltinMacroLookupFailedOK(failed_ok);
-	    rc = expandMacros(spec, spec->macros, spec->lbuf, sizeof(spec->lbuf));
+	    rc = expandMacros(spec, spec->macros, spec->lbuf, spec->lbuf_len);
 	    rpmSetBuiltinMacroLookupFailedOK(saved_lookup_failed);
 	    if (rc) {
 		rpmError(RPMERR_BADSPEC, _("line %d: %s\n"),
