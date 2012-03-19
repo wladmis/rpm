@@ -53,9 +53,10 @@ typedef struct OpenFileInfo {
 /*@only@*/ const char * fileName;
     FD_t fd;
     int lineNum;
-    char readBuf[BUFSIZ];
+    char * readBuf;
 /*@dependent@*/
     char * readPtr;
+    size_t readBufSize;
 /*@owned@*/
     struct OpenFileInfo * next;
 } OFI_t;
@@ -217,6 +218,8 @@ extern /*@null@*/ Spec (*freeSpecVec) (Spec spec)	/* XXX FIXME */
 /** \ingroup rpmbuild
  */
 struct OpenFileInfo * newOpenFileInfo(void)	/*@*/;
+
+OFI_t * freeOpenFileInfo(OFI_t *ofi);
 
 /** \ingroup rpmbuild
  * @param spec		spec file control structure
