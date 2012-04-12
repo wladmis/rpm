@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.24.M60P.2
+Release: alt100.24.M60P.3
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -504,6 +504,12 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Apr 12 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.24.M60P.3
+- Backport from 'maint':
+  parseSpec:
+    + fixed long lines processing;
+    + made size of line buffer configurable via %_spec_line_buffer_size.
+
 * Tue Feb 21 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.24.M60P.2
 - Backport some useful commits from 'maint' branch:
   find-debuginfo-files: fix packaging of symlinks
