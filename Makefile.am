@@ -28,10 +28,12 @@ rpmbin_PROGRAMS =
 bin_PROGRAMS =		rpm rpm.static rpm2cpio rpm2cpio.static
 bin_SCRIPTS =		gendiff
 
+pkgdatadir =		@RPMCONFIGDIR@
 pkglibdir =		@RPMCONFIGDIR@
-pkglib_PROGRAMS =	rpmb rpmd rpmi rpmk rpmq
-pkglib_DATA =		rpmrc rpmpopt-$(VERSION) macros
-pkglib_SCRIPTS =	find-provides find-requires
+pkglibexecdir =		@RPMCONFIGDIR@
+pkgdata_DATA =		rpmrc rpmpopt-$(VERSION) macros
+pkglibexec_PROGRAMS =	rpmb rpmd rpmi rpmk rpmq
+pkglibexec_SCRIPTS =	find-provides find-requires
 
 rpmpopt-$(VERSION): rpmpopt
 	cp rpmpopt $@
@@ -177,14 +179,14 @@ setperms:
 	@for f in $(bin_PROGRAMS) ; do\
 	    $(__CHOWN) ${RPMUSER}.${RPMGROUP} $(DESTDIR)$(bindir)/$$f ;\
 	done
-	@for f in $(pkglib_PROGRAMS) ; do\
-	    $(__CHOWN) ${RPMUSER}.${RPMGROUP} $(DESTDIR)$(pkglibdir)/$$f ;\
-	    $(__CHMOD) g+s $(DESTDIR)$(pkglibdir)/$$f ;\
+	@for f in $(pkglibexec_PROGRAMS) ; do\
+	    $(__CHOWN) ${RPMUSER}.${RPMGROUP} $(DESTDIR)$(pkglibexecdir)/$$f ;\
+	    $(__CHMOD) g+s $(DESTDIR)$(pkglibexecdir)/$$f ;\
 	done
-	@for f in $(pkglib_SCRIPTS) ; do\
-	    $(__CHOWN) ${RPMUSER}.${RPMGROUP} $(DESTDIR)$(pkglibdir)/$$f ;\
+	@for f in $(pkglibexec_SCRIPTS) ; do\
+	    $(__CHOWN) ${RPMUSER}.${RPMGROUP} $(DESTDIR)$(pkglibexecdir)/$$f ;\
 	done
-	@$(__CHOWN) ${RPMUSER}.${RPMGROUP} $(DESTDIR)$(pkglibdir)
+	@$(__CHOWN) ${RPMUSER}.${RPMGROUP} $(DESTDIR)$(pkglibexecdir)
 	@$(__CHOWN) -R ${RPMUSER}.${RPMGROUP} $(DESTDIR)$(varprefix)/lib/rpm
 	-@$(__CHMOD) 0664 $(DESTDIR)$(varprefix)/lib/rpm/[A-Z]*
 	-@$(__CHMOD) 0775 $(DESTDIR)$(varprefix)/lib/rpm
@@ -195,8 +197,8 @@ unsetgid:
 	@for f in $(rpmbin_PROGRAMS) ; do\
 	    $(__CHMOD) g-s $(DESTDIR)$(rpmbindir)/$$f ;\
 	done
-	@for f in $(pkglib_PROGRAMS) ; do\
-	    $(__CHMOD) g-s $(DESTDIR)$(pkglibdir)/$$f ;\
+	@for f in $(pkglibexec_PROGRAMS) ; do\
+	    $(__CHMOD) g-s $(DESTDIR)$(pkglibexecdir)/$$f ;\
 	done
 
 .PHONY: tar
