@@ -382,7 +382,7 @@
 @alt@
 @alt@# Initscripts.
 @alt@%_initdir	%{_sysconfdir}/rc.d/init.d
-@alt@%systemd_unitdir	/lib/systemd/system
+@alt@%_unitdir	/lib/systemd/system
 @alt@
 @alt@# logrotate configs.
 @alt@%_logrotatedir	%{_sysconfdir}/logrotate.d
@@ -557,6 +557,7 @@
 @alt@
 @alt@%_initddir		%_initdir
 @alt@%_initrddir	%_initdir
+@alt@%systemd_unitdir	%_unitdir
 @alt@%make_session	%update_wms
 @alt@
 @alt@# GCC versioning.
