@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.48
+Release: alt100.49
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -506,6 +506,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri May 11 2012 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.49
+- platform.in: Added %%_unitdir macro.
+- Fixed build with new automake.
+
 * Mon Mar 19 2012 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.48
 - parseSpec:
   + fixed long lines processing;
