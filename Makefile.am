@@ -19,7 +19,8 @@ INCLUDES = \
 
 myLDFLAGS = # @LDFLAGS_STATIC@
 
-mylibLDADD = $(top_builddir)/lib/librpm.la
+mylibLDADD = $(top_builddir)/lib/librpm.la $(top_builddir)/rpmio/librpmio.la \
+	     $(top_builddir)/rpmdb/librpmdb.la @LIBPOPT@
 myLDADD = $(mylibLDADD) $(top_builddir)/build/librpmbuild.la
 
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
