@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.27
+Release: alt100.27.M60T.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -448,7 +448,10 @@ fi
 %rpmattr %_rpmlibdir/dump_ld_config
 %rpmattr %_rpmlibdir/filesize
 %rpmattr %_rpmlibdir/relative
-%rpmattr %_rpmlibdir/brp-*
+%rpmattr %_rpmlibdir/brp-alt
+%rpmattr %_rpmlibdir/brp-strip
+%rpmattr %dir %_rpmlibdir/brp.d
+%rpmattr %_rpmlibdir/brp.d/*
 %rpmattr %_rpmlibdir/*_files
 %rpmattr %_rpmlibdir/cpp.*
 %rpmattr %_rpmlibdir/ldd
@@ -500,6 +503,29 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon May 21 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.27.M60T.1
+- Backport some useful commits from 'maint' branch:
+  parseSpec:
+    + fixed long lines processing;
+    + made size of line buffer configurable via %%_spec_line_buffer_size
+- find-debuginfo-files: fix packaging of symlinks
+- fsmStage: be careful with file permissions on package removal or
+  upgrade
+- Remove unsafe file permissions on package removal or upgrade
+- Sanity check region offset range on headerLoad()
+- Sanity check region offset in regionSwab()
+- debuginfo.req: fix handling of exotic sonames written as pathnames
+  (ALT#26247)
+- ru.po: recode from KOI8-R to UTF-8
+- po: import translations from Roman Savochenko
+- GROUPS: add Engineering (ALT#25868)
+- Add uk translation for Development/Python3
+- Introduced %_rpmlibdir/brp.d/ directory to allow existance of various
+  brp-* scripts not only in rpm-build package.
+- brp-hardlink_pyo_pyc: splitted from brp-bytecompile_python
+- GROUPS: add Development/Python3 (by Vitaly Kuznetsov) and Other (by
+  Igor Vlasenko)
+
 * Wed May 25 2011 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.27
 - find-{provides,requires}: fixed regression introduced along with
   cleanup in 4.0.4-alt100.25.
