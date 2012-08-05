@@ -790,7 +790,7 @@
 #------------------------------------------------------------------------------
 # arch macro for all ARM processors
 #
-%arm	arm armeb armv3l armv4l armv4b armv5l armv5l armv5tel armv5tejl
+%arm	arm armv3l armv4l armv5l armv5tel armv5tejl armv6l armv7l armh
 
 #------------------------------------------------------------------------
 # Use in %install to generate locale specific file lists. For example,

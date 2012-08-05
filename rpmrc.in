@@ -60,14 +60,12 @@ optflags: mipsel %optflags_default
 optflags: armv3l %optflags_default -fomit-frame-pointer -march=armv3
 optflags: armv4l %optflags_default -fomit-frame-pointer -march=armv4
 optflags: armv5l %optflags_default -fomit-frame-pointer -march=armv5
-optflags: armeb %optflags_default -march=armv4 -mno-thumb-interwork
-optflags: armv4l %optflags_default -fomit-frame-pointer -march=armv4
-optflags: armv5l %optflags_default -fomit-frame-pointer -march=armv5
-optflags: arm %optflags_default -fomit-frame-pointer -march=armv5te
 optflags: armv5tel %optflags_default -fomit-frame-pointer -march=armv5te
 optflags: armv5tejl %optflags_default -fomit-frame-pointer -march=armv5te
 optflags: armv6l %optflags_default -fomit-frame-pointer -march=armv6
-optflags: armv7l %optflags_default -fomit-frame-pointer -march=armv7
+optflags: arm %optflags_default -fomit-frame-pointer -march=armv5te
+optflags: armv7l %optflags_default -fomit-frame-pointer -march=armv7-a -mfloat-abi=hard -mfpu=vfpv3-d16 -mthumb
+optflags: armh %optflags_default -fomit-frame-pointer -march=armv7-a -mfloat-abi=hard -mfpu=vfpv3-d16 -mthumb
 
 optflags: atarist %optflags_default -fomit-frame-pointer
 optflags: atariste %optflags_default -fomit-frame-pointer
@@ -127,7 +125,6 @@ arch_canon:	sparc64:sparc64 10
 arch_canon:	sun4u:	sparc64 10
 arch_canon:	mipsel:	mipsel	11
 
-arch_canon:	armv7l:	arm 	12
 arch_canon:	armv6l:	arm 	12
 arch_canon:	armv5tejl:	armv5tejl 	12
 arch_canon:	armv5tel:	armv5tel 	12
@@ -296,8 +293,9 @@ arch_compat: hppa1.1: hppa1.0
 arch_compat: hppa1.0: parisc
 arch_compat: parisc: noarch
 
-arch_compat: armv7l: armv6l
-arch_compat: armv6l: armv5l
+arch_compat: armv7l: armh
+arch_compat: armh: noarch
+arch_compat: armv6l: armv5tejl
 arch_compat: armv5tejl: armv5tel
 arch_compat: armv5tel: armv5l
 arch_compat: armv5l: arm
@@ -396,6 +394,9 @@ buildarch_compat: ppc64: noarch
 buildarch_compat: mips: noarch
 buildarch_compat: mipsel: noarch
 
+buildarch_compat: armv7l: armh
+buildarch_compat: armh: noarch
+buildarch_compat: armv6l: armv5tejl
 buildarch_compat: armv5tejl: armv5tel
 buildarch_compat: armv5tel: armv5l
 buildarch_compat: armv5l: armv4l
