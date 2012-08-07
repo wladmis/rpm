@@ -71,7 +71,6 @@ For completeness, here's the complete set of tokens that may be
 added to Requires: as in the example above:
 \verbatim
     "interp",         RPMSENSE_INTERP
-    "prereq",         RPMSENSE_PREREQ
     "preun",          RPMSENSE_SCRIPT_PREUN
     "pre",            RPMSENSE_SCRIPT_PRE
     "postun",         RPMSENSE_SCRIPT_POSTUN
