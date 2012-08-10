@@ -3638,6 +3638,9 @@ msgstr "Графические оболочки/Icewm"
 msgid "Graphical desktop/KDE"
 msgstr "Графические оболочки/KDE"
 
+msgid "Graphical desktop/MATE"
+msgstr "Графические оболочки/MATE"
+
 msgid "Graphical desktop/Motif"
 msgstr "Графические оболочки/Motif"
 
