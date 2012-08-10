@@ -63,14 +63,18 @@ static int checkOwners(const char * urlfn)
  * @param db		saved file suffix (i.e. patch --suffix argument)
  * @param reverse	include -R?
  * @param removeEmpties	include -E?
+ * @param fuzz		fuzz factor, fuzz<0 means no fuzz set
+ * @param dir		dir to change to (i.e. patch -d argument)
  * @return		expanded %patch macro (NULL on error)
  */
 /*@observer@*/ static char *doPatch(Spec spec, int c, int strip, const char *db,
-		     int reverse, int removeEmpties, int silent)
+		     int reverse, int removeEmpties, int fuzz, const char *dir, int silent)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem@*/
 	/*@modifies rpmGlobalMacroContext, fileSystem @*/
 {
+    char *arg_fuzz = NULL;
+    char *arg_patch_flags = rpmExpand("%{?_default_patch_flags}", NULL);
     struct Source *sp;
     for (sp = spec->sources; sp != NULL; sp = sp->next) {
 	if ((sp->flags & RPMBUILD_ISPATCH) && (sp->num == c)) {
@@ -85,7 +89,7 @@ static int checkOwners(const char * urlfn)
     const char *urlfn = rpmGetPath("%{_sourcedir}/", sp->source, NULL);
 
     char args[BUFSIZ];
-    sprintf(args, "-p%d", strip);
+    sprintf(args, "%s -p%d", arg_patch_flags, strip);
     if (silent)
 	strcat(args, " -s");
     if (db) {
@@ -96,6 +100,15 @@ static int checkOwners(const char * urlfn)
 	strcat(args, " -R");
     if (removeEmpties)
 	strcat(args, " -E");
+    if (dir) {
+	strcat(args, " -d ");
+	strcat(args, dir);
+    }
+    if (fuzz >= 0) {
+	asprintf(&arg_fuzz, " --fuzz=%d", fuzz);
+	strcat(args, arg_fuzz);
+	free(arg_fuzz);
+    };
 
     rpmCompressedMagic compressed = COMPRESSED_NOT;
     /* XXX On non-build parse's, file cannot be stat'd or read */
@@ -439,8 +452,8 @@ static int doPatchMacro(Spec spec, char *line)
 		fileSystem@*/
 	/*@modifies spec->prep, rpmGlobalMacroContext, fileSystem @*/
 {
-    char *opt_b;
-    int opt_P, opt_p, opt_R, opt_E, opt_s;
+    char *opt_b, *opt_d;
+    int opt_P, opt_p, opt_R, opt_E, opt_F, opt_s;
     char *s;
     char buf[BUFSIZ], *bp;
     int patch_nums[1024];  /* XXX - we can only handle 1024 patches! */
@@ -448,7 +461,8 @@ static int doPatchMacro(Spec spec, char *line)
 
     memset(patch_nums, 0, sizeof(patch_nums));
     opt_P = opt_p = opt_R = opt_E = opt_s = 0;
-    opt_b = NULL;
+    opt_F = rpmExpandNumeric("%{_default_patch_fuzz}");		/* get default fuzz factor for %patch */
+    opt_b = opt_d = NULL;
     patch_index = 0;
 
     if (! strchr(" \t\n", line[6])) {
@@ -481,6 +495,15 @@ static int doPatchMacro(Spec spec, char *line)
 			spec->lineNum, spec->line);
 		return RPMERR_BADSPEC;
 	    }
+	} else if (!strcmp(s, "-d")) {
+	    /* dest dir */
+	    opt_d = strtok(NULL, " \t\n");
+	    if (! opt_d) {
+		rpmError(RPMERR_BADSPEC,
+			_("line %d: Need arg to %%patch -d: %s\n"),
+			spec->lineNum, spec->line);
+		return RPMERR_BADSPEC;
+	    }
 	} else if (!strcmp(s, "-z")) {
 	    /* orig suffix */
 	    opt_b = strtok(NULL, " \t\n");
@@ -509,6 +532,20 @@ static int doPatchMacro(Spec spec, char *line)
 			spec->lineNum, spec->line);
 		return RPMERR_BADSPEC;
 	    }
+	} else if (!strcmp(s, "-F")) {
+	    s = strtok(NULL, " \t\n");
+	    if (s == NULL) {
+		rpmError(RPMERR_BADSPEC,
+			 _("line %d: Need arg to %%patch -F: %s\n"),
+			 spec->lineNum, spec->line);
+		return RPMERR_BADSPEC;
+	    }
+	    if (parseNum(s, &opt_F)) {
+		rpmError(RPMERR_BADSPEC,
+			_("line %d: Bad arg to %%patch -F: %s\n"),
+			spec->lineNum, spec->line);
+		return RPMERR_BADSPEC;
+	    }
 	} else {
 	    /* Must be a patch num */
 	    if (patch_index == 1024) {
@@ -528,14 +565,14 @@ static int doPatchMacro(Spec spec, char *line)
     /* All args processed */
 
     if (! opt_P) {
-	s = doPatch(spec, 0, opt_p, opt_b, opt_R, opt_E, opt_s);
+	s = doPatch(spec, 0, opt_p, opt_b, opt_R, opt_E, opt_F, opt_d, opt_s);
 	if (s == NULL)
 	    return RPMERR_BADSPEC;
 	appendLineStringBuf(spec->prep, s);
     }
 
     for (x = 0; x < patch_index; x++) {
-	s = doPatch(spec, patch_nums[x], opt_p, opt_b, opt_R, opt_E, opt_s);
+	s = doPatch(spec, patch_nums[x], opt_p, opt_b, opt_R, opt_E, opt_F, opt_d, opt_s);
 	if (s == NULL)
 	    return RPMERR_BADSPEC;
 	appendLineStringBuf(spec->prep, s);
