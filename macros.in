@@ -281,10 +281,10 @@
 #%vendor
 
 #	Default fuzz level for %patch in spec file.
-%_default_patch_fuzz	0
+#%_default_patch_fuzz	-1
 
 #	Default patch flags
-#%_default_patch_flags	-s
+#%_default_patch_flags	%{nil}
 
 # Should unpackaged files in a buildroot terminate a build?
 #

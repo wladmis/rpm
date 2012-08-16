@@ -73,8 +73,7 @@ static int checkOwners(const char * urlfn)
 		fileSystem@*/
 	/*@modifies rpmGlobalMacroContext, fileSystem @*/
 {
-    char *arg_fuzz = NULL;
-    char *arg_patch_flags = rpmExpand("%{?_default_patch_flags}", NULL);
+    const char *arg_patch_flags = rpmExpand("%{?_default_patch_flags}", NULL);
     struct Source *sp;
     for (sp = spec->sources; sp != NULL; sp = sp->next) {
 	if ((sp->flags & RPMBUILD_ISPATCH) && (sp->num == c)) {
@@ -89,7 +88,8 @@ static int checkOwners(const char * urlfn)
     const char *urlfn = rpmGetPath("%{_sourcedir}/", sp->source, NULL);
 
     char args[BUFSIZ];
-    sprintf(args, "%s -p%d", arg_patch_flags, strip);
+    sprintf(args, "%s%s-p%d",
+	arg_patch_flags, *arg_patch_flags ? " ": "", strip);
     if (silent)
 	strcat(args, " -s");
     if (db) {
@@ -105,9 +105,10 @@ static int checkOwners(const char * urlfn)
 	strcat(args, dir);
     }
     if (fuzz >= 0) {
-	asprintf(&arg_fuzz, " --fuzz=%d", fuzz);
-	strcat(args, arg_fuzz);
-	free(arg_fuzz);
+	char str_fuzz[sizeof(int) * 3 + 1];
+	sprintf(str_fuzz, "%d", fuzz);
+	strcat(args, " -F ");
+	strcat(args, str_fuzz);
     };
 
     rpmCompressedMagic compressed = COMPRESSED_NOT;
@@ -461,7 +462,7 @@ static int doPatchMacro(Spec spec, char *line)
 
     memset(patch_nums, 0, sizeof(patch_nums));
     opt_P = opt_p = opt_R = opt_E = opt_s = 0;
-    opt_F = rpmExpandNumeric("%{_default_patch_fuzz}");		/* get default fuzz factor for %patch */
+    opt_F = rpmExpandNumeric("%{?_default_patch_fuzz}%{?!_default_patch_fuzz:-1}");
     opt_b = opt_d = NULL;
     patch_index = 0;
 
