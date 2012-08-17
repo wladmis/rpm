@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.53
+Release: alt100.54
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -506,6 +506,14 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri Aug 17 2012 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.54
+- Added armh arch support (by Sergey Bolshakov; closes: #26253).
+- GROUPS: added Graphical desktop/MATE (by Igor Vlasenko; closes: #27626).
+- %%patch: added -F/-d options and appropriate macros for better
+  spec file compatibility (by Igor Vlasenko; closes: #27627).
+- %%configure: update config.sub and config.guess right before configure.
+- debugedit: backported DWARF-4 support from rpm.org.
+
 * Wed Aug 08 2012 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.53
 - brp-fix-perms: fixed "find -perm" syntax.
 
