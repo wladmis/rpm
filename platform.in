@@ -41,6 +41,7 @@
 %_configure_platform %{expand:%%{?_configure_platform_%_target_cpu}%%{!?_configure_platform_%_target_cpu:%%_target_platform}}
 %_configure_target	--build=%{_configure_platform} --host=%{_configure_platform}
 %_configure_gettext	--without-included-gettext
+%_configure_update_config	find $(dirname %{_configure_script}) -type f '(' -name config.sub -or -name config.guess ')' -printf '%%h/\\n' |sort -u |xargs -rn1 install -pm755 -- /usr/share/gnu-config/config.{sub,guess}
 %configure \
   CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
   CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
@@ -48,6 +49,7 @@
   %{?_disable_static:export lt_cv_prog_cc_static_works=no ;} \
   %{?_enable_static:export lt_cv_prog_cc_static_works=yes ;} \
   export lt_cv_deplibs_check_method=pass_all ; \
+  %{_configure_update_config}; \
   %{_configure_script} %{?_configure_target:%{_configure_target}} \\\
  	--prefix=%{_prefix} \\\
 	--exec-prefix=%{_exec_prefix} \\\
