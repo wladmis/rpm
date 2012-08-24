@@ -533,13 +533,18 @@ static int doPatchMacro(Spec spec, char *line)
 			spec->lineNum, spec->line);
 		return RPMERR_BADSPEC;
 	    }
-	} else if (!strcmp(s, "-F")) {
-	    s = strtok(NULL, " \t\n");
-	    if (s == NULL) {
-		rpmError(RPMERR_BADSPEC,
-			 _("line %d: Need arg to %%patch -F: %s\n"),
-			 spec->lineNum, spec->line);
-		return RPMERR_BADSPEC;
+	} else if (!strncmp(s, "-F", sizeof("-F")-1)) {
+	    /* unfortunately, we must support -FX */
+	    if (! strchr(" \t\n", s[2])) {
+		s = s + 2;
+	    } else {
+		s = strtok(NULL, " \t\n");
+		if (s == NULL) {
+		    rpmError(RPMERR_BADSPEC,
+			     _("line %d: Need arg to %%patch -F: %s\n"),
+			     spec->lineNum, spec->line);
+		    return RPMERR_BADSPEC;
+		}
 	    }
 	    if (parseNum(s, &opt_F)) {
 		rpmError(RPMERR_BADSPEC,
