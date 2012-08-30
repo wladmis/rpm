@@ -57,7 +57,16 @@ if [ -n "$lib" ]; then
 	/sbin/ldconfig
 fi
 
+[ -n "$sys" ] || exit 0
+
+telinit=/sbin/telinit
+if [ -x "$telinit" ] &&
+   [ -L /proc/1/exe -a -L /proc/1/root -a -f /proc/1/maps ]; then
+	grep -qs '(deleted) \| (deleted)' /proc/1/maps &&
+	"$telinit" u ||:
+fi
+
 update_chrooted=/sbin/update_chrooted
-if [ -n "$sys" ] && [ -x "$update_chrooted" ]; then
+if [ -x "$update_chrooted" ]; then
 	"$update_chrooted" lib
 fi
