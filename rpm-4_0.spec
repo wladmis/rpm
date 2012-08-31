@@ -228,7 +228,7 @@ export ac_cv_path___SSH=/usr/bin/ssh
 
 set_c_cflags="$(sed -n 's/^CFLAGS = //p' lib/Makefile) -W -Wno-missing-prototypes -Wno-override-init %{!?_enable_debug:-O3} -fno-builtin-memcmp"
 %make_build -C lib set.lo CFLAGS="$set_c_cflags"
-%make_build YACC='bison -y'
+%make_build
 
 %if_with profile
 rm lib/set.lo lib/librpm.la tools/setcmp.static

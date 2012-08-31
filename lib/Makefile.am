@@ -8,8 +8,6 @@ INCLUDES = -I. \
 	-I$(top_srcdir)/rpmio \
 	@INCPATH@
 
-EXTRA_DIST = getdate.y
-
 pkgincdir = $(pkgincludedir)
 pkginc_HEADERS = \
 	header.h misc.h rpmcli.h rpmlib.h stringbuf.h
@@ -28,7 +26,7 @@ LIBS =
 
 lib_LTLIBRARIES = librpm.la
 librpm_la_SOURCES = \
-	al.c closeall.c cpio.c depends.c formats.c fs.c fsm.c getdate.c \
+	al.c closeall.c cpio.c depends.c formats.c fs.c fsm.c \
 	header_internal.c manifest.c misc.c order.c package.c \
 	problems.c poptI.c poptK.c poptQV.c psm.c query.c \
 	rpmchecksig.c rpminstall.c rpmlead.c rpmlibprov.c rpmrc.c \
@@ -42,34 +40,6 @@ noinst_PROGRAMS = test-set
 test_set_SOURCES = set.c
 test_set_CPPFLAGS = -DSELF_TEST
 test_set_LDADD = $(top_builddir)/rpmio/librpmio.la
-
-getdate.c: getdate.y
-	@echo expect 10 shift/reduce conflicts
-	$(YACC) $(srcdir)/getdate.y
-	-@if test -f y.tab.c; then \
-	 { echo "/*@-globstate -statictrans -unqualifiedtrans -noparams @*/";\
-	   echo "/*@-retvalint -usedef -varuse -nullderef -nullassign @*/";\
-	   echo "/*@-readonlytrans -modunconnomods -compdef @*/";\
-	   sed	-e 's,y.tab.c,getdate.c,' y.tab.c \
-		-e 's,^YYSTYPE ,static &,' \
-		-e 's,^short ,static &,' \
-		-e 's,^const short ,static &,' \
-		-e 's,^int yydebug,/*@unused@*/ static &,' \
-		-e 's,^int ,static &,' ;\
-	   echo "/*@=readonlytrans =modunconnomods =compdef @*/";\
-	   echo "/*@=retvalint =usedef =varuse =nullderef =nullassign @*/";\
-	   echo "/*@=globstate =statictrans =unqualifiedtrans =noparams @*/";\
-	 } > getdate.c ;\
-	   rm -f y.tab.c; \
-	else \
-	   if test -f getdate.tab.c ; then \
-	       mv getdate.tab.c getdate.c ; \
-	   else \
-	       echo '*** Unable to create getdate.c' ;\
-	   fi ;\
-	fi
-
-BUILT_SOURCES = getdate.c
 
 .PHONY:	sources
 sources:

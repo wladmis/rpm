@@ -28,7 +28,6 @@ Makefile.in
 /rpmpopt-4.0.4
 /rpmrc
 
-/lib/getdate.c
 /rpmdb/tagtbl.c
 
 /rpm
