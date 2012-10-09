@@ -45,7 +45,7 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_python:BuildPreReq: python-devel}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
-%{?_with_selinux:BuildPreReq: libselinux-devel-static >= 2.0.96}
+%{?_with_selinux:BuildPreReq: libselinux-devel >= 2.0.96}
 %{?_with_profile:BuildPreReq: coreutils >= 6.0}
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
@@ -220,12 +220,18 @@ export ac_cv_path___LZMA=/usr/bin/lzma
 export ac_cv_path___XZ=/usr/bin/xz
 export ac_cv_path___GPG=/usr/bin/gpg
 export ac_cv_path___SSH=/usr/bin/ssh
+export LDFLAGS="-L$PWD/stub"
 %configure \
 	%{?_with_python} %{?_without_python} \
 	%{?_with_apidocs} %{?_without_apidocs} \
 	%{?_with_db} %{?_without_db} \
 	%{subst_with selinux} \
 	--program-transform-name=
+
+# create a stub libselinux.a so that -lselinux would work in -static mode
+mkdir stub
+ar cq stub/libselinux.a
+ln -s %_libdir/libselinux.so stub/
 
 set_c_cflags="$(sed -n 's/^CFLAGS = //p' lib/Makefile) -W -Wno-missing-prototypes %{!?_enable_debug:-O3}"
 %make_build -C lib set.lo CFLAGS="$set_c_cflags"
