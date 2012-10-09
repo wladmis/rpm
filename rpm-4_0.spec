@@ -236,19 +236,23 @@ set_c_cflags="$(sed -n 's/^CFLAGS = //p' lib/Makefile) -W -Wno-missing-prototype
 %make_build -C lib set.lo CFLAGS="$set_c_cflags"
 %make_build
 
+rpmquery -a --provides |fgrep '= set:' |sort >P
+rpmquery -a --requires |fgrep '= set:' |sort >R
+join -o 1.3,2.3 P R |shuf >setcmp-data
+
 %if_with profile
 rm lib/set.lo lib/librpm.la tools/setcmp.static
 %make_build -C lib set.lo librpm.la CFLAGS="$set_c_cflags -fprofile-generate"
 %make_build -C tools setcmp.static CFLAGS="$(sed -n 's/^CFLAGS = //p' tools/Makefile) -fprofile-generate"
-rpmquery -a --provides |fgrep '= set:' |sort >P
-rpmquery -a --requires |fgrep '= set:' |sort >R
-join -o 1.3,2.3 P R |shuf >setcmp-data
 ./tools/setcmp <setcmp-data >/dev/null
 ./tools/setcmp.static <setcmp-data >/dev/null
 ls -l lib/.libs/set.gcda lib/set.gcda
 rm lib/set.lo lib/librpm.la tools/setcmp.static
 %make_build -C lib set.lo CFLAGS="$set_c_cflags -fprofile-use"
 %make_build
+%else
+./tools/setcmp <setcmp-data >/dev/null
+./tools/setcmp.static <setcmp-data >/dev/null
 %endif #with profile
 
 %if_with apidocs
