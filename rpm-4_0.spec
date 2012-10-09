@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.56
+Release: alt100.57
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -516,6 +516,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Oct 09 2012 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.57
+- Build selinux support in dynamically linked objects only.
+- %%configure: export -m* part of %%optflags as ASFLAGS (for assembler)
+  along with other *FLAGS exported for compilers.
+
 * Fri Aug 31 2012 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.56
 - Removed obsolete getdate.y.
 
