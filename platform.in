@@ -43,9 +43,10 @@
 %_configure_gettext	--without-included-gettext
 %_configure_update_config	find $(dirname %{_configure_script}) -type f '(' -name config.sub -or -name config.guess ')' -printf '%%h/\\n' |sort -u |xargs -rn1 install -pm755 -- /usr/share/gnu-config/config.{sub,guess}
 %configure \
-  CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
-  CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
-  FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
+  CFLAGS="${CFLAGS:-%optflags}"; export CFLAGS; \
+  CXXFLAGS="${CXXFLAGS:-%optflags}"; export CXXFLAGS; \
+  FFLAGS="${FFLAGS:-%optflags}"; export FFLAGS; \
+  [ -n "${ASFLAGS-}" ] || ASFLAGS="$(printf %%s '%optflags' |sed -r 's/(^|[[:space:]]+)-[^m][^[:space:]]*//g')"; export ASFLAGS; \
   %{?_disable_static:export lt_cv_prog_cc_static_works=no ;} \
   %{?_enable_static:export lt_cv_prog_cc_static_works=yes ;} \
   export lt_cv_deplibs_check_method=pass_all ; \
