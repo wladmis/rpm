@@ -246,7 +246,7 @@ extern int _tolower(int) __THROW	/*@*/;
 #include <malloc.h>
 #endif
 
-#if WITH_SELINUX
+#if WITH_SELINUX && (defined(__pic__) || defined(__PIC__)|| defined(__pie__)|| defined(__PIE__))
 #include <selinux/selinux.h>
 #else
 typedef char * security_context_t;
