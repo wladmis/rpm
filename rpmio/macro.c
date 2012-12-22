@@ -1071,6 +1071,8 @@ doFoo(MacroBuf mb, int negate, const char * f, size_t fn,
     } else if (STREQ("F", f, fn)) {
 	b = buf + strlen(buf) + 1;
 	sprintf(b, "file%s.file", buf);
+    } else if (STREQ("getenv", f, fn)) {
+	b = getenv(buf);
     } else if (STREQ("homedir", f, fn)) {
 	struct passwd *pw = 0;
 
@@ -1351,6 +1353,7 @@ expandMacro(MacroBuf mb)
 	    STREQ("uncompress", f, fn) ||
 	    STREQ("url2path", f, fn) ||
 	    STREQ("u2p", f, fn) ||
+	    STREQ("getenv", f, fn) ||
 	    STREQ("homedir", f, fn) ||
 	    STREQ("S", f, fn) ||
 	    STREQ("P", f, fn) ||
