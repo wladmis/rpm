@@ -169,7 +169,7 @@ static int rpmMkpath(const char * path, mode_t mode, uid_t uid, gid_t gid)
 
 int makeTempFile(const char * prefix, const char ** fnptr, FD_t * fdptr)
 {
-    const char * tpmacro = "%{?_tmppath:%{_tmppath}}%{!?_tmppath:/var/tmp}";
+    const char * tpmacro = "%{?_tmppath:%{_tmppath}}%{!?_tmppath:%{_tmpdir}}";
     const char * tempfn = NULL;
     const char * tfn = NULL;
     static int _initialized = 0;

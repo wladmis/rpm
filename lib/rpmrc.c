@@ -510,7 +510,7 @@ static void rpmSetDefaults(void)
 		setVar ("_preScriptEnvironment", prescriptenviron);
 
 		setVar ("_topdir", "%{_usr}/src/RPM");
-		setVar ("_tmppath", "%{_var}/tmp");
+		setVar ("_tmppath", "%{_tmpdir}");
 		setVar ("_dbpath", "%{_var}/lib/rpm");
 		setVar ("_defaultdocdir", "%{_usr}/share/doc");
 

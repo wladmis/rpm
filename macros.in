@@ -164,7 +164,7 @@
 %_srcrpmdir		%{_topdir}/SRPMS
 
 #	Directory where temporaray files can be created.
-%_tmppath		%{_var}/tmp
+%_tmppath		%{_tmpdir}
 
 #	Path to top of build area.
 %_topdir		%{_usrsrc}/RPM
