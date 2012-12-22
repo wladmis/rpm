@@ -14,12 +14,12 @@ optflags: i386 %optflags_default -march=i386 -mtune=generic
 optflags: i486 %optflags_default -march=i486 -mtune=generic
 optflags: i586 %optflags_default -march=i586 -mtune=generic
 optflags: i686 %optflags_default -march=i686 -mtune=generic
-optflags: pentium2 %optflags_default -march=pentium2 -mtune=pentium4
-optflags: pentium3 %optflags_default -march=pentium3 -mtune=pentium4
-optflags: pentium4 %optflags_default -march=pentium4
-optflags: k6 %optflags_default -march=k6 -mtune=athlon-xp
-optflags: athlon %optflags_default -march=athlon -mtune=athlon-xp
-optflags: athlon_xp %optflags_default -march=athlon-xp
+optflags: pentium2 %optflags_default -march=pentium2 -mtune=generic
+optflags: pentium3 %optflags_default -march=pentium3 -mtune=generic
+optflags: pentium4 %optflags_default -march=pentium4 -mtune=generic
+optflags: k6 %optflags_default -march=k6 -mtune=generic
+optflags: athlon %optflags_default -march=athlon -mtune=generic
+optflags: athlon_xp %optflags_default -march=athlon-xp -mtune=generic
 optflags: amd64 %optflags_default
 optflags: ia64 %optflags_default
 optflags: ia32e %optflags_default
