@@ -1073,6 +1073,10 @@ doFoo(MacroBuf mb, int negate, const char * f, size_t fn,
 	sprintf(b, "file%s.file", buf);
     } else if (STREQ("getenv", f, fn)) {
 	b = getenv(buf);
+    } else if (STREQ("_tmpdir", f, fn)) {
+	b = getenv("TMPDIR");
+	if (!b || *b != '/' || access(b, X_OK | W_OK))
+	    b = "/tmp";
     } else if (STREQ("homedir", f, fn)) {
 	struct passwd *pw = 0;
 
@@ -1354,6 +1358,7 @@ expandMacro(MacroBuf mb)
 	    STREQ("url2path", f, fn) ||
 	    STREQ("u2p", f, fn) ||
 	    STREQ("getenv", f, fn) ||
+	    STREQ("_tmpdir", f, fn) ||
 	    STREQ("homedir", f, fn) ||
 	    STREQ("S", f, fn) ||
 	    STREQ("P", f, fn) ||
