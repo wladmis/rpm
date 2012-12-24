@@ -1107,8 +1107,8 @@ int rpmsetcmp(const char *str1, const char *str2)
     int c1 = cache_decode_set(str1, Mshift1, &v1);
     if (c1 < 0)
 	return -3;
-    unsigned v1bufA[c1 + 1];
-    unsigned v1bufB[c1 + 1];
+    unsigned v1bufA[c1 + SENTINELS];
+    unsigned v1bufB[c1 + SENTINELS];
     // decode set2 (on the stack)
     int len2 = strlen(str2);
     int c2 = decode_set_size(len2, Mshift2);
