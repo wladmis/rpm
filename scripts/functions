@@ -19,6 +19,7 @@
 #
 
 unset CDPATH ||:
+export LC_ALL=C
 PROG="${0##*/}"
 
 case "${RPM_SCRIPTS_DEBUG:-0}" in
