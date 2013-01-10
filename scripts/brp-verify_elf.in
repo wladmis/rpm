@@ -27,6 +27,7 @@ cd "$RPM_BUILD_ROOT"
 
 export VERIFY_ELF_ARCH=normal
 export VERIFY_ELF_FHS=normal
+export VERIFY_ELF_LFS=relaxed
 export VERIFY_ELF_LINT=relaxed
 export VERIFY_ELF_RPATH=normal
 export VERIFY_ELF_STACK=normal
@@ -44,6 +45,9 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 			;;
 		fhs=?*)
 			VERIFY_ELF_FHS="${t#fhs=}"
+			;;
+		lfs=?*)
+			VERIFY_ELF_LFS="${t#lfs=}"
 			;;
 		lint=?*)
 			VERIFY_ELF_LINT="${t#lint=}"
@@ -63,6 +67,7 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 		default)
 			VERIFY_ELF_ARCH=normal
 			VERIFY_ELF_FHS=normal
+			VERIFY_ELF_LFS=relaxed
 			VERIFY_ELF_LINT=relaxed
 			VERIFY_ELF_RPATH=normal
 			VERIFY_ELF_STACK=normal
@@ -72,6 +77,7 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 		normal)
 			VERIFY_ELF_ARCH=normal
 			VERIFY_ELF_FHS=normal
+			VERIFY_ELF_LFS=normal
 			VERIFY_ELF_LINT=normal
 			VERIFY_ELF_RPATH=normal
 			VERIFY_ELF_STACK=normal
@@ -81,6 +87,7 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 		strict)
 			VERIFY_ELF_ARCH=strict
 			VERIFY_ELF_FHS=strict
+			VERIFY_ELF_LFS=strict
 			VERIFY_ELF_LINT=strict
 			VERIFY_ELF_RPATH=strict
 			VERIFY_ELF_STACK=strict
@@ -90,6 +97,7 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 		relaxed)
 			VERIFY_ELF_ARCH=relaxed
 			VERIFY_ELF_FHS=relaxed
+			VERIFY_ELF_LFS=relaxed
 			VERIFY_ELF_LINT=relaxed
 			VERIFY_ELF_RPATH=relaxed
 			VERIFY_ELF_STACK=relaxed
@@ -112,7 +120,7 @@ fi
 : ${RPM_VERIFY_ELF_SKIPLIST:=}
 [ -d "$RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR" ] || exit 0
 
-echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (arch=$VERIFY_ELF_ARCH,fhs=$VERIFY_ELF_FHS,lint=$VERIFY_ELF_LINT,rpath=$VERIFY_ELF_RPATH,stack=$VERIFY_ELF_STACK,textrel=$VERIFY_ELF_TEXTREL,unresolved=$VERIFY_ELF_UNRESOLVED)"
+echo "Verifying ELF objects in $RPM_BUILD_ROOT$RPM_VERIFY_ELF_TOPDIR (arch=$VERIFY_ELF_ARCH,fhs=$VERIFY_ELF_FHS,lfs=$VERIFY_ELF_LFS,lint=$VERIFY_ELF_LINT,rpath=$VERIFY_ELF_RPATH,stack=$VERIFY_ELF_STACK,textrel=$VERIFY_ELF_TEXTREL,unresolved=$VERIFY_ELF_UNRESOLVED)"
 
 dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
 RPM_VERIFY_ELF_LDD_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT")"

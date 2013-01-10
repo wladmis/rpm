@@ -49,7 +49,7 @@ get_verify_policy()
 	printf %s "$value"
 }
 
-for m in ARCH FHS LINT RPATH STACK TEXTREL UNRESOLVED; do
+for m in ARCH FHS LFS LINT RPATH STACK TEXTREL UNRESOLVED; do
 	[ "${VERIFY_ELF_ANY-}" != strict ] || break
 	case "$(get_verify_policy "$m")" in
 		strict) VERIFY_ELF_ANY=strict ;;
@@ -246,6 +246,51 @@ verify_stack()
 	fi
 }
 
+find_elf_interp()
+{
+	local f
+	f="$1"; shift
+
+	readelf --wide --segments "$f" |
+		sed -n 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p'
+}
+
+LFS_CFLAGS="$(getconf LFS_CFLAGS)"
+non_lfs_funcs='@RPMCONFIGDIR@/verify-elf-non-lfs-funcs.list'
+dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
+default_elf_interp=
+
+verify_lfs()
+{
+	[ -n "$LFS_CFLAGS" -a -s "$non_lfs_funcs" ] || return 0
+
+	local f interp funcs
+	f="$1"; shift
+
+	[ -n "$default_elf_interp" ] ||
+		default_elf_interp="$(find_elf_interp "$dump_ld_config")"
+
+	if [ -z "$default_elf_interp" ]; then
+		error_normal LFS "$dump_ld_config" 'program interpreter not found'
+		default_elf_interp=/
+	fi
+	interp="$(find_elf_interp "$f")" || {
+		error_normal LFS "$f" 'program interpreter not found'
+		return
+	}
+	[ "$interp" = "$default_elf_interp" ] ||
+		return 0
+
+	funcs="$(readelf --wide --symbols "$f" |
+		sed -n 's/^[[:space:]]*[0-9]\+:[[:space:]]\+[0-9a-f]\+[[:space:]]\+[0-9]\+[[:space:]]\+FUNC[[:space:]]\+[^[:space:]]\+[[:space:]]\+DEFAULT[[:space:]]\+UND[[:space:]]\+\([^@[:space:]]\+\)@.*/\1/p' |
+		sort -u |
+		comm -12 - "$non_lfs_funcs" |
+		tr '\n' ' ')"
+	funcs="${funcs%% }"
+	[ -z "$funcs" ] ||
+		error_normal LFS "$f" "uses non-LFS functions: $funcs"
+}
+
 run_eu()
 {
 	local prog="$1"; shift
@@ -305,6 +350,9 @@ VerifyELF()
 	if [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; then
 		verify_unresolved "$f" "$fname" \
 			"$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
+		if [ -z "${t##*ELF 32-bit*}" ]; then
+			verify_lfs "$f"
+		fi
 	fi
 }
 
