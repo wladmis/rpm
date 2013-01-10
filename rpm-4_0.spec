@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.59
+Release: alt100.60
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -532,6 +532,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Fri Jan 11 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.60
+- verify-elf: implemented LFS check (closes: #28290).
+
 * Mon Dec 24 2012 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.59
 - set.c: fixed sentinel allocation (by Alexey Tourbin).
 
