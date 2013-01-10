@@ -26,11 +26,11 @@ for file in "$@"; do
 			chmod -v u+w,a-x,ug-s "$file"
 			;;
 		ELF\ *\ shared\ object,\ *|*\ ELF\ *\ shared\ object,\ *)
-			file_header="$(readelf -h "$file")" || continue
+			file_header="$(readelf --wide --file-header "$file")" || continue
 			entry=`printf %s "$file_header" |sed -ne 's/^ \+Entry point address: \+0x0*\([0-9a-f]\+\)$/\1/p'`
 			[ -n "$entry" ] || continue
 
-			section_header="$(readelf -S "$file")" || continue
+			section_header="$(readelf --wide --sections "$file")" || continue
 
 			# See: comm -12 <(fgrep -l .interp /usr/lib/ldscripts/*) <(fgrep -le --shared /usr/lib/ldscripts/*)
 			if printf %s "$section_header" |fgrep -qs ' .interp '; then
