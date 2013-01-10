@@ -56,13 +56,13 @@ esac
 file="$1" && shift
 rpath="$1" && shift
 
-info="$(readelf -l "$file")" ||
+info="$(readelf --wide --segments "$file")" ||
 	Fatal "$file: unable to fetch ELF segment headers"
 interp="$(printf '%s\n' "$info" |sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')" ||
 	Fatal "$file: program interpreter not specified"
 if [ -z "$interp" ]; then
 	dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
-	info="$(readelf -l "$dump_ld_config")" ||
+	info="$(readelf --wide --segments "$dump_ld_config")" ||
 		Fatal "$dump_ld_config: unable to fetch ELF segment headers"
 	interp="$(printf '%s\n' "$info" |sed -ne 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p')" ||
 		Fatal "$dump_ld_config: program interpreter not specified"
