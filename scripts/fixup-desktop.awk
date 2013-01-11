@@ -6,8 +6,8 @@ BEGIN {FS = "="}
 # 2. Icon= .png/svg/xpm cleanup if not absolute
 /^Icon=[^/].*\.(png|svg|xpm)$/ {sub (/\.(png|svg|xpm)$/,"")}
 # 3. trailing ; in MimeType=, Category=
-/^MimeType=.*[^[:blank:];][:blank:]*$/ {$0=$0 ";"}
-/^Categories=.*[^[:blank:];][:blank:]*$/ {$0=$0 ";"}
+/^MimeType=.*[^[:blank:];][[:blank:]]*$/ {$0=$0 ";"}
+/^Categories=.*[^[:blank:];][[:blank:]]*$/ {$0=$0 ";"}
 # 4. Category: subst Desktop -> X-Desktop and so on
 # kill Application; in category
 /^Categories=/ {
