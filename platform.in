@@ -560,6 +560,8 @@
 @alt@%systemd_unitdir	%_unitdir
 @alt@%make_session	%update_wms
 @alt@
+@alt@%EVR	%{?epoch:%epoch:}%{version}-%{release}
+@alt@
 @alt@# GCC versioning.
 @alt@%__gcc_version %(gcc -dumpversion)
 @alt@%__gcc_version_major %(gcc -dumpversion |cut -d. -f1)
