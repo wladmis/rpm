@@ -143,12 +143,51 @@ int depRequires(Package pkg1, Package pkg2)
     return ap ? 1 : 0;
 }
 
-static
-struct Req *makeRequires(Spec spec, int warn)
+static int
+is_listed_dep(const char *list, const char *n1, const char *n2)
 {
-    struct Req *r = xmalloc(sizeof *r);
-    r->c = 0;
-    r->v = NULL;
+    int listed = 0;
+    if (!list)
+	return listed;
+    char *copy = xstrdup(list);
+    char *str1, *saveptr1;
+    for (str1 = copy; ; str1 = NULL) {
+	char *elem = strtok_r(str1, " 	", &saveptr1);
+	if (!elem)
+	    break;
+	char *saveptr2;
+	char *p1 = strtok_r(elem, ",", &saveptr2);
+	if (!p1)
+	    continue;
+	char *p2 = strtok_r(NULL, ",", &saveptr2);
+	if (!p2)
+	    continue;
+	if (strtok_r(NULL, ",", &saveptr2))
+	    continue;
+	if (strcmp(p1, n1) == 0 && strcmp(p2, n2) == 0) {
+	    listed = 1;
+	    break;
+	}
+    }
+    free(copy);
+    return listed;
+}
+
+static void
+report_nonstrict_dep(const char *allowed,
+		     const char *pkg1, const char *pkg2, int *errors)
+{
+    int werror = !is_listed_dep(allowed, pkg1, pkg2);
+    fprintf(stderr, "%s: %s: non-strict dependency on %s\n",
+	    werror ? "error" : "warning", pkg1, pkg2);
+    if (werror)
+	*errors = 1;
+}
+
+static
+struct Req *makeRequires(Spec spec, int warn, int *errors)
+{
+    struct Req *r = xcalloc(1, sizeof *r);
     Package pkg1, pkg2;
     for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
@@ -180,15 +219,19 @@ struct Req *makeRequires(Spec spec, int warn)
     while (propagated);
     if ((warn & 2) == 0)
 	return r;
+
+    const char *allowed = rpmExpand("%{?_allowed_nonstrict_interdeps}", NULL);
+    *errors = 0;
     for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
 	    if (!Requires(r, pkg1, pkg2) && depRequires(pkg1, pkg2))
-		fprintf(stderr, "warning: %s: non-strict dependency on %s\n",
-			pkgName(pkg1), pkgName(pkg2));
+		report_nonstrict_dep(allowed,
+				     pkgName(pkg1), pkgName(pkg2), errors);
 	    if (!Requires(r, pkg2, pkg1) && depRequires(pkg2, pkg1))
-		fprintf(stderr, "warning: %s: non-strict dependency on %s\n",
-			pkgName(pkg2), pkgName(pkg1));
+		report_nonstrict_dep(allowed,
+				     pkgName(pkg2), pkgName(pkg1), errors);
 	}
+    allowed = _free(allowed);
     return r;
 }
 
@@ -669,17 +712,24 @@ void pruneExtraRDeps(struct Req *r, Spec spec)
 
 int processInterdep(Spec spec)
 {
-    struct Req *r = makeRequires(spec, 1);
+    int errors;
+    struct Req *r = makeRequires(spec, 1, &errors);
     pruneDebuginfoSrc(r, spec);
     liftDebuginfoDeps(r, spec);
     r = freeRequires(r);
+
+    r = makeRequires(spec, 2, &errors);
     int optlevel = rpmExpandNumeric("%{?_deps_optimization}%{?!_deps_optimization:2}");
-    if (optlevel < 2)
-	return 0;
-    r = makeRequires(spec, 2);
-    pruneExtraDeps(r, spec);
-    pruneExtraRDeps(r, spec);
+    if (optlevel >= 2) {
+	pruneExtraDeps(r, spec);
+	pruneExtraRDeps(r, spec);
+    }
     r = freeRequires(r);
+
+    if (errors) {
+	rpmlog(RPMLOG_ERR, "Interdep check failed, terminating build\n");
+	return 1;
+    }
     return 0;
 }
 
