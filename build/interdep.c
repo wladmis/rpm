@@ -63,7 +63,7 @@ void addRequires(struct Req *r, Package pkg1, Package pkg2)
 }
 
 static
-void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn)
+void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn, int *errors)
 {
     int c = 0;
     const char **reqNv = NULL;
@@ -99,9 +99,11 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn)
 	if (strcmp(reqR, provR))
 	    continue;
 	addRequires(r, pkg1, pkg2);
-	if (warn && colon == NULL && headerIsEntry(pkg2->header, RPMTAG_EPOCH))
-	    fprintf(stderr, "warning: %s: dependency on %s needs Epoch\n",
+	if (warn && colon == NULL && headerIsEntry(pkg2->header, RPMTAG_EPOCH)) {
+	    fprintf(stderr, "error: %s: dependency on %s needs Epoch\n",
 		    pkgName(pkg1), pkgName(pkg2));
+	    *errors = 1;
+	}
 	break;
     }
     const HFD_t hfd = (HFD_t) headerFreeData;
@@ -191,8 +193,8 @@ struct Req *makeRequires(Spec spec, int warn, int *errors)
     Package pkg1, pkg2;
     for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
-	    makeReq1(r, pkg1, pkg2, warn & 1);
-	    makeReq1(r, pkg2, pkg1, warn & 1);
+	    makeReq1(r, pkg1, pkg2, warn & 1, errors);
+	    makeReq1(r, pkg2, pkg1, warn & 1, errors);
 	}
     int propagated;
     do {
@@ -221,7 +223,6 @@ struct Req *makeRequires(Spec spec, int warn, int *errors)
 	return r;
 
     const char *allowed = rpmExpand("%{?_allowed_nonstrict_interdeps}", NULL);
-    *errors = 0;
     for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
 	    if (!Requires(r, pkg1, pkg2) && depRequires(pkg1, pkg2))
@@ -712,7 +713,7 @@ void pruneExtraRDeps(struct Req *r, Spec spec)
 
 int processInterdep(Spec spec)
 {
-    int errors;
+    int errors = 0;
     struct Req *r = makeRequires(spec, 1, &errors);
     pruneDebuginfoSrc(r, spec);
     liftDebuginfoDeps(r, spec);
