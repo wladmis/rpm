@@ -63,8 +63,49 @@ int addRequires(struct Req *r, Package pkg1, Package pkg2)
     return 1;
 }
 
+static void
+propagateRequires(struct Req *r)
+{
+    unsigned propagated;
+    do {
+	propagated = 0;
+	int i1, i2;
+	for (i1 = 0; i1 < r->c; i1++)
+	    for (i2 = i1; i2 < r->c; i2++) {
+		struct Pair r1 = r->v[i1];
+		struct Pair r2 = r->v[i2];
+		if (r1.pkg2 == r2.pkg1 && addRequires(r, r1.pkg1, r2.pkg2))
+		    propagated = 1;
+		if (r2.pkg2 == r1.pkg1 && addRequires(r, r2.pkg1, r1.pkg2))
+		    propagated = 1;
+	    }
+    }
+    while (propagated);
+}
+
+static void
+addDeps1(struct Req *r, Package pkg1, Package pkg2)
+{
+    if (Requires(r, pkg1, pkg2))
+	return;
+    const char *name = pkgName(pkg2);
+    const char *evr = headerSprintf(pkg2->header,
+	    "%|epoch?{%{epoch}:}|%{version}-%{release}",
+	    rpmTagTable, rpmHeaderFormats, NULL);
+    assert(evr);
+    int flags = RPMSENSE_EQUAL | RPMSENSE_FIND_REQUIRES;
+    int added = !addReqProv(NULL, pkg1->header, flags, name, evr, 0);
+    if (added) {
+	addRequires(r, pkg1, pkg2);
+	propagateRequires(r);
+	fprintf(stderr, "Adding to %s a strict dependency on %s\n",
+		pkgName(pkg1), pkgName(pkg2));
+    }
+    evr = _free(evr);
+}
+
 static
-void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn, int *errors)
+void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn)
 {
     int c = 0;
     const char **reqNv = NULL;
@@ -99,11 +140,12 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn, int *errors)
 	    continue;
 	if (strcmp(reqR, provR))
 	    continue;
-	addRequires(r, pkg1, pkg2);
 	if (warn && colon == NULL && headerIsEntry(pkg2->header, RPMTAG_EPOCH)) {
-	    fprintf(stderr, "error: %s: dependency on %s needs Epoch\n",
+	    fprintf(stderr, "warning: %s: dependency on %s needs Epoch\n",
 		    pkgName(pkg1), pkgName(pkg2));
-	    *errors = 1;
+	    addDeps1(r, pkg1, pkg2);
+	} else {
+	    addRequires(r, pkg1, pkg2);
 	}
 	break;
     }
@@ -118,6 +160,8 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn, int *errors)
 static
 int depRequires(Package pkg1, Package pkg2)
 {
+    if (pkg1 == pkg2)
+	return 0;
     int reqc = 0;
     const char **reqNv = NULL;
     const char **reqVv = NULL;
@@ -129,104 +173,21 @@ int depRequires(Package pkg1, Package pkg2)
        hge(pkg1->header, RPMTAG_REQUIREFLAGS, NULL, (void **) &reqFv, NULL);
     if (!ok)
 	return 0;
-    availableList proval = alloca(sizeof proval);
-    alCreate(proval);
-    alAddPackage(proval, pkg2->header, NULL, NULL, NULL);
+    struct availableList_s proval;
+    alCreate(&proval);
+    alAddPackage(&proval, pkg2->header, NULL, NULL, NULL);
     int i;
     struct availablePackage *ap = NULL;
     for (i = 0; i < reqc; i++) {
-	ap = alSatisfiesDepend(proval, reqNv[i], reqVv[i], reqFv[i]);
+	ap = alSatisfiesDepend(&proval, reqNv[i], reqVv[i], reqFv[i]);
 	if (ap)
 	    break;
     }
     const HFD_t hfd = (HFD_t) headerFreeData;
     reqNv = hfd(reqNv, RPM_STRING_ARRAY_TYPE);
     reqVv = hfd(reqVv, RPM_STRING_ARRAY_TYPE);
-    alFree(proval);
+    alFree(&proval);
     return ap ? 1 : 0;
-}
-
-static int
-is_listed_dep(const char *list, const char *n1, const char *n2)
-{
-    int listed = 0;
-    if (!list)
-	return listed;
-    char *copy = xstrdup(list);
-    char *str1, *saveptr1;
-    for (str1 = copy; ; str1 = NULL) {
-	char *elem = strtok_r(str1, " 	", &saveptr1);
-	if (!elem)
-	    break;
-	char *saveptr2;
-	char *p1 = strtok_r(elem, ",", &saveptr2);
-	if (!p1)
-	    continue;
-	char *p2 = strtok_r(NULL, ",", &saveptr2);
-	if (!p2)
-	    continue;
-	if (strtok_r(NULL, ",", &saveptr2))
-	    continue;
-	if (strcmp(p1, n1) == 0 && strcmp(p2, n2) == 0) {
-	    listed = 1;
-	    break;
-	}
-    }
-    free(copy);
-    return listed;
-}
-
-static void
-report_nonstrict_dep(const char *allowed,
-		     const char *pkg1, const char *pkg2, int *errors)
-{
-    int werror = !is_listed_dep(allowed, pkg1, pkg2);
-    fprintf(stderr, "%s: %s: non-strict dependency on %s\n",
-	    werror ? "error" : "warning", pkg1, pkg2);
-    if (werror)
-	*errors = 1;
-}
-
-static
-struct Req *makeRequires(Spec spec, int warn, int *errors)
-{
-    struct Req *r = xcalloc(1, sizeof *r);
-    Package pkg1, pkg2;
-    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
-	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
-	    makeReq1(r, pkg1, pkg2, warn & 1, errors);
-	    makeReq1(r, pkg2, pkg1, warn & 1, errors);
-	}
-    int propagated;
-    do {
-	propagated = 0;
-	int i1, i2;
-	for (i1 = 0; i1 < r->c; i1++)
-	    for (i2 = i1; i2 < r->c; i2++) {
-		struct Pair r1 = r->v[i1];
-		struct Pair r2 = r->v[i2];
-		if (r1.pkg2 == r2.pkg1 && addRequires(r, r1.pkg1, r2.pkg2))
-		    propagated = 1;
-		if (r2.pkg2 == r1.pkg1 && addRequires(r, r2.pkg1, r1.pkg2))
-		    propagated = 1;
-	    }
-    }
-    while (propagated);
-    if ((warn & 2) == 0)
-	return r;
-
-    const char *allowed = rpmExpand("%{?_allowed_nonstrict_interdeps}", NULL);
-    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
-	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
-	    if (!Requires(r, pkg1, pkg2) && depRequires(pkg1, pkg2))
-		report_nonstrict_dep(allowed,
-				     pkgName(pkg1), pkgName(pkg2), errors);
-	    if (!Requires(r, pkg2, pkg1) && depRequires(pkg2, pkg1))
-		report_nonstrict_dep(allowed,
-				     pkgName(pkg2), pkgName(pkg1), errors);
-	}
-    allowed = _free(allowed);
-    return r;
 }
 
 static
@@ -234,6 +195,103 @@ struct Req *freeRequires(struct Req *r)
 {
     r->v = _free(r->v);
     return _free(r);
+}
+
+/*
+ * For every subpackage pkg2 in the set, pkg1 will get a strict dep
+ * on pkg2 if at least one of two conditions is met:
+ * - pkg1 depends on pkg2;
+ * - pkg1 has a RPMSENSE_FIND_REQUIRES dep on X, and
+ *   pkg2 is the only subpackage in the set that provides X.
+ */
+static void
+fix_weak_deps(struct Req *r, Package pkg1, Package packages)
+{
+    int reqc = 0;
+    const char **reqNv = NULL;
+    const char **reqVv = NULL;
+    const int *reqFv = NULL;
+    const HGE_t hge = (HGE_t) headerGetEntryMinMemory;
+    int ok =
+       hge(pkg1->header, RPMTAG_REQUIRENAME, NULL, (void **) &reqNv, &reqc) &&
+       hge(pkg1->header, RPMTAG_REQUIREVERSION, NULL, (void **) &reqVv, NULL) &&
+       hge(pkg1->header, RPMTAG_REQUIREFLAGS, NULL, (void **) &reqFv, NULL);
+    if (!ok)
+	return;
+    int i;
+    Package pkg2;
+    for (i = 0, pkg2 = packages; pkg2; ++i, pkg2 = pkg2->next)
+	    ;;
+    Package *provs = xcalloc(i, sizeof(*provs));
+    availableList proval = xcalloc(i, sizeof(*proval));
+    for (i = 0, pkg2 = packages; pkg2; ++i, pkg2 = pkg2->next) {
+	if (pkg1 != pkg2) {
+	    alCreate(&proval[i]);
+	    alAddPackage(&proval[i], pkg2->header, NULL, NULL, NULL);
+	}
+    }
+    for (i = 0; i < reqc; ++i) {
+	int j, k;
+	Package prov = NULL;
+	for (j = 0, pkg2 = packages; pkg2; ++j, pkg2 = pkg2->next) {
+	    if (pkg1 != pkg2) {
+		if (alSatisfiesDepend(&proval[j], reqNv[i], reqVv[i], reqFv[i])) {
+		    if (prov) {
+			prov = NULL;
+			break;
+		    }
+		    prov = pkg2;
+		    k = j;
+		}
+	    }
+	}
+	if (prov) {
+	    if ((reqFv[i] & RPMSENSE_FIND_REQUIRES)
+		|| !strcmp(reqNv[i], pkgName(prov)))
+		provs[k] = prov;
+	}
+    }
+    for (i = 0, pkg2 = packages; pkg2; ++i, pkg2 = pkg2->next) {
+	if (pkg1 != pkg2)
+	    alFree(&proval[i]);
+    }
+    proval = _free(proval);
+    const HFD_t hfd = (HFD_t) headerFreeData;
+    reqNv = hfd(reqNv, RPM_STRING_ARRAY_TYPE);
+    reqVv = hfd(reqVv, RPM_STRING_ARRAY_TYPE);
+    for (i = 0, pkg2 = packages; pkg2; ++i, pkg2 = pkg2->next) {
+	if (provs[i])
+	    addDeps1(r, pkg1, provs[i]);
+    }
+    provs = _free(provs);
+}
+
+static
+struct Req *makeRequires(Spec spec, int warn)
+{
+    struct Req *r = xcalloc(1, sizeof *r);
+    Package pkg1, pkg2;
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
+	    makeReq1(r, pkg1, pkg2, warn & 1);
+	    makeReq1(r, pkg2, pkg1, warn & 1);
+	}
+    propagateRequires(r);
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+	fix_weak_deps(r, pkg1, spec->packages);
+    if ((warn & 2) == 0)
+	return r;
+
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
+	    if (!Requires(r, pkg1, pkg2) && depRequires(pkg1, pkg2))
+		fprintf(stderr, "warning: %s: non-strict dependency on %s\n",
+			pkgName(pkg1), pkgName(pkg2));
+	    if (!Requires(r, pkg2, pkg1) && depRequires(pkg2, pkg1))
+		fprintf(stderr, "warning: %s: non-strict dependency on %s\n",
+			pkgName(pkg2), pkgName(pkg1));
+	}
+    return r;
 }
 
 #include "checkFiles.h" // fiIntersect
@@ -395,7 +453,7 @@ void fiPrune(TFI_t fi, char pruned[])
 
 // prune src dups from pkg1 and add dependency on pkg2
 static
-void pruneSrc1(Package pkg1, Package pkg2)
+void pruneSrc1(struct Req *r, Package pkg1, Package pkg2)
 {
     TFI_t fi1 = pkg1->cpioList;
     TFI_t fi2 = pkg2->cpioList;
@@ -418,7 +476,7 @@ void pruneSrc1(Package pkg1, Package pkg2)
     fiIntersect(fi1, fi2, cb);
     if (npruned == 0)
 	return;
-    fprintf(stderr, "removing %d sources from %s and adding dependency on %s\n",
+    fprintf(stderr, "Removing %d sources from %s and adding dependency on %s\n",
 	    npruned, pkgName(pkg1), pkgName(pkg2));
     fiPrune(fi1, pruned);
     const char *name = pkgName(pkg2);
@@ -431,12 +489,13 @@ void pruneSrc1(Package pkg1, Package pkg2)
     headerAddOrAppendEntry(fi1->h, RPMTAG_REQUIRENAME, RPM_STRING_ARRAY_TYPE, &name, 1);
     headerAddOrAppendEntry(fi1->h, RPMTAG_REQUIREVERSION, RPM_STRING_ARRAY_TYPE, &evr, 1);
     headerAddOrAppendEntry(fi1->h, RPMTAG_REQUIREFLAGS, RPM_INT32_TYPE, &flags, 1);
+    addRequires(r, pkg1, pkg2);
     evr = _free(evr);
 }
 
 static void
 processDependentDebuginfo(struct Req *r, Spec spec,
-    void (*cb)(Package pkg1, Package pkg2), int mutual)
+    void (*cb)(struct Req *r, Package pkg1, Package pkg2), int mutual)
 {
     int i1, i2;
     struct Pair r1, r2;
@@ -460,12 +519,12 @@ processDependentDebuginfo(struct Req *r, Spec spec,
 		continue;
 	    // (pkg1 <-> pkg2) => (pkg1-debuginfo <-> pkg2-debuginfo)
 	    if (Requires(r, r1.pkg2, r2.pkg2)) {
-		cb(r1.pkg1, r2.pkg1);
+		cb(r, r1.pkg1, r2.pkg1);
 		if (!mutual)
 		    continue;
 	    }
 	    if (Requires(r, r2.pkg2, r1.pkg2))
-		cb(r2.pkg1, r1.pkg1);
+		cb(r, r2.pkg1, r1.pkg1);
 	}
     }
 }
@@ -477,23 +536,12 @@ void pruneDebuginfoSrc(struct Req *r, Spec spec)
 }
 
 // if pkg1 implicitly requires pkg2, add strict dependency
-static
-void liftDeps1(Package pkg1, Package pkg2)
+static void
+liftDeps1(struct Req *r, Package pkg1, Package pkg2)
 {
-    if (!depRequires(pkg1, pkg2))
-	return;
-    const char *name = pkgName(pkg2);
-    const char *evr = headerSprintf(pkg2->header,
-	    "%|epoch?{%{epoch}:}|%{version}-%{release}",
-	    rpmTagTable, rpmHeaderFormats, NULL);
-    assert(evr);
-    int flags = RPMSENSE_EQUAL | RPMSENSE_FIND_REQUIRES;
-    if (addReqProv(NULL, pkg1->header, flags, name, evr, 0) == 0)
-	fprintf(stderr, "%s: adding strict dependency on %s\n",
-		pkgName(pkg1), pkgName(pkg2));
-    evr = _free(evr);
+    if (!Requires(r, pkg1, pkg2) && depRequires(pkg1, pkg2))
+	addDeps1(r, pkg1, pkg2);
 }
-
 static
 void liftDebuginfoDeps(struct Req *r, Spec spec)
 {
@@ -522,9 +570,9 @@ void pruneDeps1(Package pkg1, Package pkg2)
     int reqFv[reqc];
     for (i = 0; i < reqc; i++)
 	reqFv[i] = reqFv_[i];
-    availableList proval = alloca(sizeof proval);
-    alCreate(proval);
-    alAddPackage(proval, pkg2->header, NULL, NULL, NULL);
+    struct availableList_s proval;
+    alCreate(&proval);
+    alAddPackage(&proval, pkg2->header, NULL, NULL, NULL);
     int flags = 0, *flagsp = NULL;
     struct availablePackage *ap = NULL;
     int rpmlibSetVersions = -1;
@@ -547,7 +595,7 @@ void pruneDeps1(Package pkg1, Package pkg2)
 		rpmlibSetVersions = i;
 	    continue;
 	}
-	ap = alSatisfiesDepend(proval, reqNv[i], reqVv[i], reqFv[i]);
+	ap = alSatisfiesDepend(&proval, reqNv[i], reqVv[i], reqFv[i]);
 	if (ap == NULL) {
 	    if ((reqFv[i] & RPMSENSE_SENSEMASK))
 		if (strncmp(reqVv[i], "set:", 4) == 0)
@@ -558,7 +606,7 @@ void pruneDeps1(Package pkg1, Package pkg2)
 	npruned++;
 	flags |= reqFv[i];
     }
-    alFree(proval);
+    alFree(&proval);
     if (npruned == 0) {
 	reqNv = fi->hfd(reqNv, RPM_STRING_ARRAY_TYPE);
 	reqVv = fi->hfd(reqVv, RPM_STRING_ARRAY_TYPE);
@@ -568,7 +616,7 @@ void pruneDeps1(Package pkg1, Package pkg2)
 	pruned[rpmlibSetVersions] = 1;
 	npruned++;
     }
-    fprintf(stderr, "removing %d extra deps from %s due to dependency on %s\n",
+    fprintf(stderr, "Removing %d extra deps from %s due to dependency on %s\n",
 	    npruned, pkgName(pkg1), pkgName(pkg2));
     if (flagsp)
 	*flagsp |= (flags & RPMSENSE_PREREQ);
@@ -667,7 +715,7 @@ void pruneRDeps1(struct Req *r, Spec spec, Package pkg1, Package pkg2)
 	    prune(i, j);
     if (npruned == 0)
 	goto free;
-    fprintf(stderr, "removing %d extra deps from %s due to repentancy on %s\n",
+    fprintf(stderr, "Removing %d extra deps from %s due to repentancy on %s\n",
 	    npruned, pkgName(pkg1), pkgName(pkg2));
     for (i = 0, j = 0; i < reqc; i++) {
 	if (pruned[i])
@@ -706,24 +754,18 @@ void pruneExtraRDeps(struct Req *r, Spec spec)
 
 int processInterdep(Spec spec)
 {
-    int errors = 0;
-    struct Req *r = makeRequires(spec, 1, &errors);
+    struct Req *r = makeRequires(spec, 1);
     pruneDebuginfoSrc(r, spec);
     liftDebuginfoDeps(r, spec);
     r = freeRequires(r);
 
-    r = makeRequires(spec, 2, &errors);
+    r = makeRequires(spec, 2);
     int optlevel = rpmExpandNumeric("%{?_deps_optimization}%{?!_deps_optimization:2}");
     if (optlevel >= 2) {
 	pruneExtraDeps(r, spec);
 	pruneExtraRDeps(r, spec);
     }
     r = freeRequires(r);
-
-    if (errors) {
-	rpmlog(RPMLOG_ERR, "Interdep check failed, terminating build\n");
-	return 1;
-    }
     return 0;
 }
 
