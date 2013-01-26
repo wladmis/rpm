@@ -204,7 +204,17 @@ dep_compare_t compare_deps (rpmTag tag,
 	    bEVR = xstrdup(Bevr);
 	    parseEVR(bEVR, &bE, &bV, &bR);
 
-	    sense = rpmEVRcmp(aE, aV, aR, Aevr, bE, bV, bR, Bevr);
+	    /*
+	     * When comparing deps whose senses are identical, Epoch needs
+	     * special treatment: if one of deps has Epoch and another one
+	     * hasn't, we first compare them without Epoch, and if it
+	     * happens that they are equal, the dep that has Epoch wins.
+	     */
+	    const char *ae = aE, *be = bE;
+	    if (Asense == Bsense && (!(aE && *aE) || !(bE && *bE)))
+		ae = NULL; be = NULL;
+
+	    sense = rpmEVRcmp(ae, aV, aR, Aevr, be, bV, bR, Bevr);
 	    aEVR = _free(aEVR);
 	    bEVR = _free(bEVR);
 	}
@@ -212,7 +222,7 @@ dep_compare_t compare_deps (rpmTag tag,
 	/* 9. detect overlaps. */
 	cmp_rc = compare_sense_flags (tag, sense, Asense, Bsense);
 
-	/* 10. EVRs with serial are stronger. */
+	/* 10. EVRs with Epoch are stronger. */
 	if (cmp_rc == DEP_EQ)
 	{
 		if ((aE && *aE) && !(bE && *bE))
