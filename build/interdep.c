@@ -199,10 +199,12 @@ struct Req *freeRequires(struct Req *r)
 
 /*
  * For every subpackage pkg2 in the set, pkg1 will get a strict dep
- * on pkg2 if at least one of two conditions is met:
- * - pkg1 depends on pkg2;
+ * on pkg2 if at least one of these conditions is met:
+ * - pkg1 has a RPMSENSE_FIND_REQUIRES dep on pkg2;
+ * - pkg1 has a manual dep on pkg2 and
+ *   this dep has no ~RPMSENSE_EQUAL sense flags;
  * - pkg1 has a RPMSENSE_FIND_REQUIRES dep on X, and
- *   pkg2 is the only subpackage in the set that provides X.
+ *   pkg2 is the only subpackage in the set that satisfies X.
  */
 static void
 fix_weak_deps(struct Req *r, Package pkg1, Package packages)
@@ -231,7 +233,17 @@ fix_weak_deps(struct Req *r, Package pkg1, Package packages)
 	}
     }
     for (i = 0; i < reqc; ++i) {
-	int j, k;
+	if (reqFv[i] & RPMSENSE_SENSEMASK & ~RPMSENSE_EQUAL &&
+	    !(reqFv[i] & RPMSENSE_FIND_REQUIRES))
+	    continue;
+	int j;
+	for (j = 0, pkg2 = packages; pkg2; ++j, pkg2 = pkg2->next) {
+	    if (pkg1 != pkg2 && !strcmp(reqNv[i], pkgName(pkg2))) {
+		provs[j] = pkg2;
+		break;
+	    }
+	}
+	int k;
 	Package prov = NULL;
 	for (j = 0, pkg2 = packages; pkg2; ++j, pkg2 = pkg2->next) {
 	    if (pkg1 != pkg2) {
@@ -245,11 +257,8 @@ fix_weak_deps(struct Req *r, Package pkg1, Package packages)
 		}
 	    }
 	}
-	if (prov) {
-	    if ((reqFv[i] & RPMSENSE_FIND_REQUIRES)
-		|| !strcmp(reqNv[i], pkgName(prov)))
-		provs[k] = prov;
-	}
+	if (prov && reqFv[i] & RPMSENSE_FIND_REQUIRES)
+	    provs[k] = prov;
     }
     for (i = 0, pkg2 = packages; pkg2; ++i, pkg2 = pkg2->next) {
 	if (pkg1 != pkg2)
