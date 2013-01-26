@@ -2684,6 +2684,38 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
     return rc;
 }
 
+static int
+checkProvides(Spec spec, Package pkg)
+{
+    HGE_t hge = (HGE_t)headerGetEntryMinMemory;
+    HFD_t hfd = headerFreeData;
+    const char **names = NULL;
+    rpmTagType dnt;
+    int i, len = 0;
+
+    if (!hge(pkg->header, RPMTAG_PROVIDENAME, &dnt, (void **) &names, &len))
+	return 0;
+
+    Package p;
+    for (p = spec->packages; p; p = p->next) {
+	if (p == pkg)
+	    continue;
+	const char *n = NULL;
+	headerNVR(p->header, &n, NULL, NULL);
+	for (i = 0; i < len; ++i) {
+	    if (!strcmp(n, names[i])) {
+		headerNVR(pkg->header, &n, NULL, NULL);
+		rpmMessage(RPMMESS_WARNING,
+			   "%s provides another subpackage: %s\n", n, names[i]);
+		break;
+	    }
+	}
+    }
+
+    names = hfd(names, dnt);
+    return 0;
+}
+
 static int makeDebugInfo(Spec spec, Package pkg)
 {
     TFI_t fi = pkg->cpioList;
@@ -2905,6 +2937,9 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	if (rc) break;
 
 	rc = generateDepends(spec, pkg, pkg->cpioList);
+	if (rc) break;
+
+	rc = checkProvides(spec, pkg);
 	if (rc) break;
 
 	/*@-noeffect@*/
