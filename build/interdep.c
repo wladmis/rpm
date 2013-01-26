@@ -98,8 +98,8 @@ addDeps1(struct Req *r, Package pkg1, Package pkg2)
     if (added) {
 	addRequires(r, pkg1, pkg2);
 	propagateRequires(r);
-	fprintf(stderr, "Adding to %s a strict dependency on %s\n",
-		pkgName(pkg1), pkgName(pkg2));
+	rpmMessage(RPMMESS_NORMAL, "Adding to %s a strict dependency on %s\n",
+		   pkgName(pkg1), pkgName(pkg2));
     }
     evr = _free(evr);
 }
@@ -141,8 +141,8 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn)
 	if (strcmp(reqR, provR))
 	    continue;
 	if (warn && colon == NULL && headerIsEntry(pkg2->header, RPMTAG_EPOCH)) {
-	    fprintf(stderr, "warning: %s: dependency on %s needs Epoch\n",
-		    pkgName(pkg1), pkgName(pkg2));
+	    rpmMessage(RPMMESS_WARNING, "%s: dependency on %s needs Epoch\n",
+		       pkgName(pkg1), pkgName(pkg2));
 	    addDeps1(r, pkg1, pkg2);
 	} else {
 	    addRequires(r, pkg1, pkg2);
@@ -294,11 +294,11 @@ struct Req *makeRequires(Spec spec, int warn)
     for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
 	    if (!Requires(r, pkg1, pkg2) && depRequires(pkg1, pkg2))
-		fprintf(stderr, "warning: %s: non-strict dependency on %s\n",
-			pkgName(pkg1), pkgName(pkg2));
+		rpmMessage(RPMMESS_WARNING, "%s: non-strict dependency on %s\n",
+			   pkgName(pkg1), pkgName(pkg2));
 	    if (!Requires(r, pkg2, pkg1) && depRequires(pkg2, pkg1))
-		fprintf(stderr, "warning: %s: non-strict dependency on %s\n",
-			pkgName(pkg2), pkgName(pkg1));
+		rpmMessage(RPMMESS_WARNING, "%s: non-strict dependency on %s\n",
+			   pkgName(pkg2), pkgName(pkg1));
 	}
     return r;
 }
@@ -352,7 +352,7 @@ void fiPrune(TFI_t fi, char pruned[])
 		if (strncmp(D + dlen + blen, "/", 2))
 		    continue;
 		// makr parent_dir+name for removal
-		fprintf(stderr, "also prunning dir %s%s\n", d, b);
+		rpmMessage(RPMMESS_NORMAL, "also prunning dir %s%s\n", d, b);
 		pruned[j] = 1;
 		// decrement parent_dir usage
 		if (--dirused[dil[j]] == 0)
@@ -485,7 +485,7 @@ void pruneSrc1(struct Req *r, Package pkg1, Package pkg2)
     fiIntersect(fi1, fi2, cb);
     if (npruned == 0)
 	return;
-    fprintf(stderr, "Removing %d sources from %s and adding dependency on %s\n",
+    rpmMessage(RPMMESS_NORMAL, "Removing %d sources from %s and adding dependency on %s\n",
 	    npruned, pkgName(pkg1), pkgName(pkg2));
     fiPrune(fi1, pruned);
     const char *name = pkgName(pkg2);
@@ -625,8 +625,9 @@ void pruneDeps1(Package pkg1, Package pkg2)
 	pruned[rpmlibSetVersions] = 1;
 	npruned++;
     }
-    fprintf(stderr, "Removing %d extra deps from %s due to dependency on %s\n",
-	    npruned, pkgName(pkg1), pkgName(pkg2));
+    rpmMessage(RPMMESS_NORMAL,
+	       "Removing %d extra deps from %s due to dependency on %s\n",
+	       npruned, pkgName(pkg1), pkgName(pkg2));
     if (flagsp)
 	*flagsp |= (flags & RPMSENSE_PREREQ);
     for (i = 0, j = 0; i < reqc; i++) {
@@ -724,8 +725,9 @@ void pruneRDeps1(struct Req *r, Spec spec, Package pkg1, Package pkg2)
 	    prune(i, j);
     if (npruned == 0)
 	goto free;
-    fprintf(stderr, "Removing %d extra deps from %s due to repentancy on %s\n",
-	    npruned, pkgName(pkg1), pkgName(pkg2));
+    rpmMessage(RPMMESS_NORMAL,
+	       "Removing %d extra deps from %s due to repentancy on %s\n",
+	       npruned, pkgName(pkg1), pkgName(pkg2));
     for (i = 0, j = 0; i < reqc; i++) {
 	if (pruned[i])
 	    continue;
