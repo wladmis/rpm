@@ -208,13 +208,13 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 	    parseEVR(bEVR, &bE, &bV, &bR);
 
 	    /*
-	     * When comparing deps whose senses are identical, Epoch needs
-	     * special treatment: if one of deps has Epoch and another one
-	     * hasn't, we first compare them without Epoch, and if it
-	     * happens that they are equal, the dep that has Epoch wins.
+	     * Promote Epoch by giving it special treatment:
+	     * if one of deps has Epoch and another one hasn't,
+	     * we first compare them without Epoch, and if it happens
+	     * that they are equal, then the dep that has Epoch wins.
 	     */
 	    const char *ae = aE, *be = bE;
-	    if (Asense == Bsense && (!(aE && *aE) || !(bE && *bE)))
+	    if ((!(aE && *aE) || !(bE && *bE)))
 		ae = NULL; be = NULL;
 
 	    sense = rpmEVRcmp(ae, aV, aR, Aevr, be, bV, bR, Bevr);
