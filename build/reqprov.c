@@ -22,52 +22,54 @@ deps_opt_enabled (void)
 	return enabled;
 }
 
+static int
+tag_is_reqprov (rpmTag tag)
+{
+	switch (tag) {
+		case RPMTAG_REQUIREFLAGS:
+		case RPMTAG_PROVIDEFLAGS:
+			return 1;
+		default:
+			return 0;
+	}
+}
+
 static dep_compare_t
 compare_sense_flags (rpmTag tag, int cmp, rpmsenseFlags a, rpmsenseFlags b)
 {
-	if (cmp < 0)
-	{
-		/* Aevr < Bevr */
-		switch (tag)
-		{
-			case RPMTAG_REQUIREFLAGS:
-				if ((a == 0) && (b != 0))
-					return DEP_WK;
-				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
-					return DEP_ST;
-				if ((a & RPMSENSE_GREATER) && !(b & RPMSENSE_LESS))
-					return DEP_WK;
-				return DEP_UN;
-			case RPMTAG_PROVIDEFLAGS:
-				if ((a == 0) && (b != 0))
-					return DEP_WK;
-				if ((a & RPMSENSE_GREATER) && !(b & RPMSENSE_LESS))
-					return DEP_ST;
-				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
-					return DEP_WK;
-				return DEP_UN;
-			default:
-				if ((a == 0) && (b != 0))
-					return DEP_ST;
-				if ((a & RPMSENSE_GREATER) && !(b & RPMSENSE_LESS))
-					return DEP_ST;
-				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
-					return DEP_WK;
-				return DEP_UN;
-		}
-	} else if (cmp > 0)
-	{
+	if (cmp > 0) {
 		/* Aevr > Bevr */
 		return -compare_sense_flags (tag, -cmp, b, a);
-	} else /* cmp == 0 */
-	{
+	} else if (cmp == 0) {
 		/* Aevr == Bevr */
 		if (a == b)
 			return DEP_EQ;
-		if ((a & b) == a)
+		if ((a & b) == a) /* b contains a */
 			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_ST : DEP_WK;
-		if ((a & b) == b)
+		if ((a & b) == b) /* a contains b */
 			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_WK : DEP_ST;
+		return DEP_UN;
+	}
+	/* cmp < 0 => Aevr < Bevr */
+	if (a == 0) {
+		/* a == 0 && cmp < 0 means b != 0 */
+		return tag_is_reqprov(tag) ? DEP_WK : DEP_ST;
+	}
+	if (tag == RPMTAG_REQUIREFLAGS) {
+		/* EQ || LE || LT is stronger than LE || LT */
+		if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
+			return DEP_ST;
+		/* GE || GT is weaker than EQ || GE || GT */
+		if ((a & RPMSENSE_GREATER) && !(b & RPMSENSE_LESS))
+			return DEP_WK;
+		return DEP_UN;
+	} else {
+		/* GE || GT is stronger than EQ || GE || GT */
+		if ((a & RPMSENSE_GREATER) && !(b & RPMSENSE_LESS))
+			return DEP_ST;
+		/* EQ || LE || LT is weaker than LE || LT */
+		if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
+			return DEP_WK;
 		return DEP_UN;
 	}
 }
