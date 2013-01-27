@@ -22,8 +22,8 @@ deps_opt_enabled (void)
 	return enabled;
 }
 
-static dep_compare_t compare_sense_flags (rpmTag tag, int cmp,
-	rpmsenseFlags a, rpmsenseFlags b)
+static dep_compare_t
+compare_sense_flags (rpmTag tag, int cmp, rpmsenseFlags a, rpmsenseFlags b)
 {
 	if (cmp < 0)
 	{
@@ -35,13 +35,13 @@ static dep_compare_t compare_sense_flags (rpmTag tag, int cmp,
 					return DEP_WK;
 				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
 					return DEP_ST;
-				if (!(b & RPMSENSE_LESS) && (a & RPMSENSE_GREATER))
+				if ((a & RPMSENSE_GREATER) && !(b & RPMSENSE_LESS))
 					return DEP_WK;
 				return DEP_UN;
 			case RPMTAG_PROVIDEFLAGS:
 				if ((a == 0) && (b != 0))
 					return DEP_WK;
-				if (!(b & RPMSENSE_LESS) && (a & RPMSENSE_GREATER))
+				if ((a & RPMSENSE_GREATER) && !(b & RPMSENSE_LESS))
 					return DEP_ST;
 				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
 					return DEP_WK;
@@ -49,7 +49,7 @@ static dep_compare_t compare_sense_flags (rpmTag tag, int cmp,
 			default:
 				if ((a == 0) && (b != 0))
 					return DEP_ST;
-				if (!(b & RPMSENSE_LESS) && (a & RPMSENSE_GREATER))
+				if ((a & RPMSENSE_GREATER) && !(b & RPMSENSE_LESS))
 					return DEP_ST;
 				if (!(a & RPMSENSE_GREATER) && (b & RPMSENSE_LESS))
 					return DEP_WK;
@@ -74,9 +74,9 @@ static dep_compare_t compare_sense_flags (rpmTag tag, int cmp,
 
 #include "set.h"
 
-dep_compare_t compare_deps (rpmTag tag,
-	const char *Aevr, rpmsenseFlags Aflags,
-	const char *Bevr, rpmsenseFlags Bflags)
+dep_compare_t
+compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
+			  const char *Bevr, rpmsenseFlags Bflags)
 {
 	dep_compare_t rc = DEP_UN, cmp_rc;
 	rpmsenseFlags Asense, Bsense;
@@ -120,31 +120,32 @@ dep_compare_t compare_deps (rpmTag tag,
 	   )
 		return DEP_UN;
 
-	/* 5. filter out essentialy differ versions. */
+	/* 5. filter out essentially different versions. */
 	if (
 	    ((Asense & RPMSENSE_LESS) && (Bsense & RPMSENSE_GREATER)) ||
 	    ((Bsense & RPMSENSE_LESS) && (Asense & RPMSENSE_GREATER))
 	   )
 		return DEP_UN;
 
-	/* 7. filter out essentialy differ flags. */
+	/* 7. filter out essentially different flags. */
 	if ((Aflags & ~RPMSENSE_SENSEMASK) != (Bflags & ~RPMSENSE_SENSEMASK))
 	{
 		rpmsenseFlags Areq, Breq;
 
-		/* 7a. additional check for REQUIREFLAGS */
+		/* 7a. no way to optimize different non-REQUIREFLAGS */
 		if (tag != RPMTAG_REQUIREFLAGS)
 			return DEP_UN;
 
-		/* 7b. filter out essentialy differ requires. */
+		/* 7b. filter out essentially different requires. */
 		if ((Aflags & ~RPMSENSE_SENSEMASK & ~_ALL_REQUIRES_MASK) !=
 		    (Bflags & ~RPMSENSE_SENSEMASK & ~_ALL_REQUIRES_MASK))
 			return DEP_UN;
 
 		Areq = Aflags & _ALL_REQUIRES_MASK;
 		Breq = Bflags & _ALL_REQUIRES_MASK;
+		/* it is established fact that Areq != Breq */
 
-		/* 7c. Aflags is legacy PreReq? */
+		/* 7c. Aflags is a legacy PreReq? */
 		if (isLegacyPreReq (Areq))
 		{
 			if (Breq == 0)
@@ -156,7 +157,7 @@ dep_compare_t compare_deps (rpmTag tag,
 				return DEP_UN;
 		}
 
-		/* 7d. Bflags is legacy PreReq? */
+		/* 7d. Bflags is a legacy PreReq? */
 		else if (isLegacyPreReq (Breq))
 		{
 			if (Areq == 0)
@@ -232,14 +233,14 @@ dep_compare_t compare_deps (rpmTag tag,
 	}
 
 #if 0
-		fprintf (stderr, "D: compare_sense_flags=%d: tag=%d, sense=%d, Asense=%#x, Bsense=%#x\n",
-			cmp_rc, tag, sense, Asense, Bsense);
+	fprintf(stderr, "D: compare_sense_flags=%d: tag=%d, sense=%d, Asense=%#x, Bsense=%#x\n",
+		cmp_rc, tag, sense, Asense, Bsense);
 #endif
 
+	/* 11. compare expected with received. */
 	if (cmp_rc == DEP_UN || rc == DEP_UN)
 		return cmp_rc;
 
-	/* 11. compare expected with received. */
 	if (cmp_rc != rc && cmp_rc != DEP_EQ)
 		return DEP_UN;
 
