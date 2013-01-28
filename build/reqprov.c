@@ -35,19 +35,32 @@ tag_is_reqprov (rpmTag tag)
 }
 
 static dep_compare_t
-compare_sense_flags (rpmTag tag, int cmp, rpmsenseFlags a, rpmsenseFlags b)
+compare_sense_flags (rpmTag tag, int cmp, int wcmp, rpmsenseFlags a, rpmsenseFlags b)
 {
 	if (cmp > 0) {
 		/* Aevr > Bevr */
-		return -compare_sense_flags (tag, -cmp, b, a);
+		return -compare_sense_flags (tag, -cmp, -wcmp, b, a);
 	} else if (cmp == 0) {
 		/* Aevr == Bevr */
-		if (a == b)
-			return DEP_EQ;
-		if ((a & b) == a) /* b contains a */
+		if (a == b) {
+			if (wcmp == 0)
+				return DEP_EQ;
+			else if (wcmp < 0)
+				return tag_is_reqprov(tag) ? DEP_ST : DEP_WK;
+			else
+				return tag_is_reqprov(tag) ? DEP_WK : DEP_ST;
+		}
+		if (a && ((a & b) == a)) {
+			/* b contains a */
+			/* LT,LE || EQ,LE || EQ,GE || GT,GE */
+			if (wcmp <= 0)
+				return (tag == RPMTAG_REQUIREFLAGS) ? DEP_ST : DEP_WK;
+			if (a == RPMSENSE_EQUAL)
+				return DEP_UN;
 			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_ST : DEP_WK;
-		if ((a & b) == b) /* a contains b */
-			return (tag == RPMTAG_REQUIREFLAGS) ? DEP_WK : DEP_ST;
+		}
+		if (b && ((a & b) == b)) /* a contains b */
+			return -compare_sense_flags (tag, -cmp, -wcmp, b, a);
 		return DEP_UN;
 	}
 	/* cmp < 0 => Aevr < Bevr */
@@ -82,7 +95,7 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 {
 	dep_compare_t rc = DEP_UN, cmp_rc;
 	rpmsenseFlags Asense, Bsense;
-	int sense;
+	int sense, wcmp = 0;
 	char *aEVR, *bEVR;
 	const char *aE, *aV, *aR, *bE, *bV, *bR;
 
@@ -217,13 +230,18 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 	    if ((!(aE && *aE) || !(bE && *bE)))
 		ae = NULL; be = NULL;
 
+		if ((aR && *aR) && !(bR && *bR))
+			wcmp = -1;
+		else if ((bR && *bR) && !(aR && *aR))
+			wcmp = 1;
+
 	    sense = rpmEVRcmp(ae, aV, aR, Aevr, be, bV, bR, Bevr);
 	    aEVR = _free(aEVR);
 	    bEVR = _free(bEVR);
 	}
 
 	/* 9. detect overlaps. */
-	cmp_rc = compare_sense_flags (tag, sense, Asense, Bsense);
+	cmp_rc = compare_sense_flags (tag, sense, wcmp, Asense, Bsense);
 
 	/* 10. EVRs with Epoch are stronger. */
 	if (cmp_rc == DEP_EQ)
@@ -235,8 +253,8 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 	}
 
 #if 0
-	fprintf(stderr, "D: compare_sense_flags=%d: tag=%d, sense=%d, Asense=%#x, Bsense=%#x\n",
-		cmp_rc, tag, sense, Asense, Bsense);
+	fprintf(stderr, "D: compare_sense_flags=%d: tag=%d, sense=%d, wcmp=%d, Asense=%#x, Bsense=%#x\n",
+		cmp_rc, tag, sense, wcmp, Asense, Bsense);
 #endif
 
 	/* 11. compare expected with received. */
