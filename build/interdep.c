@@ -485,21 +485,10 @@ void pruneSrc1(struct Req *r, Package pkg1, Package pkg2)
     fiIntersect(fi1, fi2, cb);
     if (npruned == 0)
 	return;
-    rpmMessage(RPMMESS_NORMAL, "Removing %d sources from %s and adding dependency on %s\n",
-	    npruned, pkgName(pkg1), pkgName(pkg2));
+    addDeps1(r, pkg1, pkg2);
+    rpmMessage(RPMMESS_NORMAL, "Removing %d sources provided by %s from %s\n",
+	    npruned, pkgName(pkg2), pkgName(pkg1));
     fiPrune(fi1, pruned);
-    const char *name = pkgName(pkg2);
-    const char *evr = headerSprintf(pkg2->header,
-	    "%|epoch?{%{epoch}:}|%{version}-%{release}",
-	    rpmTagTable, rpmHeaderFormats, NULL);
-    assert(evr);
-    int flags = RPMSENSE_EQUAL | RPMSENSE_FIND_REQUIRES;
-    assert(pkg1->header == fi1->h);
-    headerAddOrAppendEntry(fi1->h, RPMTAG_REQUIRENAME, RPM_STRING_ARRAY_TYPE, &name, 1);
-    headerAddOrAppendEntry(fi1->h, RPMTAG_REQUIREVERSION, RPM_STRING_ARRAY_TYPE, &evr, 1);
-    headerAddOrAppendEntry(fi1->h, RPMTAG_REQUIREFLAGS, RPM_INT32_TYPE, &flags, 1);
-    addRequires(r, pkg1, pkg2);
-    evr = _free(evr);
 }
 
 static void
