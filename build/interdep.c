@@ -280,19 +280,31 @@ struct Req *makeRequires(Spec spec, int warn)
 {
     struct Req *r = xcalloc(1, sizeof *r);
     Package pkg1, pkg2;
-    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next) {
+	if (!pkg1->cpioList)
+	    continue;
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
+	    if (!pkg2->cpioList)
+		continue;
 	    makeReq1(r, pkg1, pkg2, warn & 1);
 	    makeReq1(r, pkg2, pkg1, warn & 1);
 	}
+    }
     propagateRequires(r);
-    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next) {
+	if (!pkg1->cpioList)
+	    continue;
 	fix_weak_deps(r, pkg1, spec->packages);
+    }
     if ((warn & 2) == 0)
 	return r;
 
-    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next) {
+	if (!pkg1->cpioList)
+	    continue;
 	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
+	    if (!pkg2->cpioList)
+		continue;
 	    if (!Requires(r, pkg1, pkg2) && depRequires(pkg1, pkg2))
 		rpmMessage(RPMMESS_WARNING, "%s: non-strict dependency on %s\n",
 			   pkgName(pkg1), pkgName(pkg2));
@@ -300,6 +312,7 @@ struct Req *makeRequires(Spec spec, int warn)
 		rpmMessage(RPMMESS_WARNING, "%s: non-strict dependency on %s\n",
 			   pkgName(pkg2), pkgName(pkg1));
 	}
+    }
     return r;
 }
 
@@ -743,13 +756,19 @@ static
 void pruneExtraRDeps(struct Req *r, Spec spec)
 {
     Package pkg1, pkg2;
-    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next)
-	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next)
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next) {
+	if (!pkg1->cpioList)
+	    continue;
+	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
+	    if (!pkg2->cpioList)
+		continue;
 	    if (Requires(r, pkg1, pkg2))
 		pruneRDeps1(r, spec, pkg1, pkg2);
 	    // "else" guards against mutual deletions
 	    else if (Requires(r, pkg2, pkg1))
 		pruneRDeps1(r, spec, pkg2, pkg1);
+	}
+    }
 }
 
 int processInterdep(Spec spec)
