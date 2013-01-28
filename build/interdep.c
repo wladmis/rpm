@@ -499,8 +499,8 @@ void pruneSrc1(struct Req *r, Package pkg1, Package pkg2)
     if (npruned == 0)
 	return;
     addDeps1(r, pkg1, pkg2);
-    rpmMessage(RPMMESS_NORMAL, "Removing %d sources provided by %s from %s\n",
-	    npruned, pkgName(pkg2), pkgName(pkg1));
+    rpmMessage(RPMMESS_NORMAL, "Removing from %s %d sources provided by %s\n",
+	    pkgName(pkg1), npruned, pkgName(pkg2));
     fiPrune(fi1, pruned);
 }
 
