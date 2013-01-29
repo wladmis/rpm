@@ -96,7 +96,7 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 	dep_compare_t rc = DEP_UN, cmp_rc;
 	rpmsenseFlags Asense, Bsense;
 	int sense, wcmp = 0;
-	char *aEVR, *bEVR;
+	char *aEVR = NULL, *bEVR = NULL;
 	const char *aE, *aV, *aR, *bE, *bV, *bR;
 
 	/* 1. filter out noise */
@@ -236,8 +236,6 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 			wcmp = 1;
 
 	    sense = rpmEVRcmp(ae, aV, aR, Aevr, be, bV, bR, Bevr);
-	    aEVR = _free(aEVR);
-	    bEVR = _free(bEVR);
 	}
 
 	/* 9. detect overlaps. */
@@ -251,6 +249,9 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 		else if ((bE && *bE) && !(aE && *aE))
 			cmp_rc = DEP_WK;
 	}
+
+	aEVR = _free(aEVR);
+	bEVR = _free(bEVR);
 
 #if 0
 	fprintf(stderr, "D: compare_sense_flags=%d: tag=%d, sense=%d, wcmp=%d, Asense=%#x, Bsense=%#x\n",
