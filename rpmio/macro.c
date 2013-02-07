@@ -536,7 +536,7 @@ doShellEscape(MacroBuf mb, const char * cmd, size_t clen)
 
     /* XXX delete trailing \r \n */
     while (mb->t > start && iseol(mb->t[-1])) {
-	*(mb->t--) = '\0';
+	*(--mb->t) = '\0';
 	mb->nb++;
     }
     return 0;
