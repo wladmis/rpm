@@ -41,7 +41,7 @@
 %_configure_platform %{expand:%%{?_configure_platform_%_target_cpu}%%{!?_configure_platform_%_target_cpu:%%_target_platform}}
 %_configure_target	--build=%{_configure_platform} --host=%{_configure_platform}
 %_configure_gettext	--without-included-gettext
-%_configure_update_config	find $(dirname %{_configure_script}) -type f '(' -name config.sub -or -name config.guess ')' -printf '%%h/\\n' |sort -u |xargs -rn1 install -pm755 -- /usr/share/gnu-config/config.{sub,guess}
+%_configure_update_config	readlink -e -- '%{_configure_script}' |xargs -ri dirname -- '{}' |xargs -ri find '{}' -type f '(' -name config.sub -or -name config.guess ')' -printf '%%h/\\n' |sort -u |xargs -rn1 install -pm755 -- /usr/share/gnu-config/config.{sub,guess}
 %configure \
   CFLAGS="${CFLAGS:-%optflags}"; export CFLAGS; \
   CXXFLAGS="${CXXFLAGS:-%optflags}"; export CXXFLAGS; \
