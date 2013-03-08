@@ -382,7 +382,16 @@
 @alt@
 @alt@# Initscripts.
 @alt@%_initdir	%{_sysconfdir}/rc.d/init.d
-@alt@%_unitdir	/lib/systemd/system
+@alt@
+@alt@# systemd
+@alt@%_binfmtdir	/lib/binfmt.d
+@alt@%_modulesloaddir	/lib/modules-load.d
+@alt@%_presetdir	/lib/systemd/system-preset
+@alt@%_sysctldir	/lib/sysctl.d
+@alt@%_tmpfilesdir	/lib/tmpfiles.d
+@alt@%_udevhwdbdir	/lib/udev/hwdb.d
+@alt@%_udevrulesdir	/lib/udev/rules.d
+@alt@%_unitdir		/lib/systemd/system
 @alt@
 @alt@# logrotate configs.
 @alt@%_logrotatedir	%{_sysconfdir}/logrotate.d
