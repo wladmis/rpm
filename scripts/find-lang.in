@@ -44,6 +44,7 @@ Valid options are:
   --with-man                look for man pages;
   --with-gnome              look for GNOME help and omf files;
   --with-kde                look for KDE help files;
+  --with-qt                 look for QT translation files;
   --all-name                match all package/domain names;
   --custom-dir-script=FILE  look for directories using specified sed script;
   --custom-file-script=FILE look for files using specified sed script;
@@ -86,6 +87,7 @@ FIND_MO=1
 FIND_MAN=
 FIND_GNOME=
 FIND_KDE=
+FIND_QT=
 ALL_NAME=
 CUSTOM_DIR_SCRIPT=
 CUSTOM_FILE_SCRIPT=
@@ -106,6 +108,9 @@ while :; do
 			;;
 		--with-kde)
 			FIND_KDE=1
+			;;
+		--with-qt)
+			FIND_QT=1
 			;;
 		--append)
 			APPEND=1
@@ -262,6 +267,27 @@ s:^[^/].*::
 s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$PATTERN"'/.*\):%lang(\2) %attr(-,root,root) \1\2\3:
 s:^[^%].*::
 s:%lang(en) ::
+		' |grep -v '^$' ||:
+	fi >> "$OUTFILE"
+
+	if [ -n "$FIND_QT" ]; then
+		find "$TOPDIR" -type f |sed -e '
+s:'"$TOPDIR"'::
+s:^[^/].*::
+s:^\(/.*/'"$PATTERN"'[_./-]\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?\.qm\)$:%lang(\2) \1:
+s:^\(/.*/'"$PATTERN"'/.\+/\([a-zA-Z0-9][a-zA-Z0-9._-]*[_.-]\)\?\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?\.qm\)$:%lang(\3) \1:
+s:^\(/.*/'"$PATTERN"'/.\+/\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?/[a-z][a-z0-9]*\.qm\)$:%lang(\2) \1:
+s:^[^%].*::
+s:^%lang(en) ::
+		' |grep -v '^$' ||:
+		find "$TOPDIR" -type l |sed -e '
+s:'"$TOPDIR"'::
+s:^[^/].*::
+s:^\(/.*/'"$PATTERN"'[_./-]\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?\.qm\)$:%lang(\2) %attr(-,root,root) \1:
+s:^\(/.*/'"$PATTERN"'/.\+/\([a-zA-Z0-9][a-zA-Z0-9._-]*[_.-]\)\?\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?\.qm\)$:%lang(\3) %attr(-,root,root) \1:
+s:^\(/.*/'"$PATTERN"'/.\+/\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?/[a-z][a-z0-9]*\.qm\)$:%lang(\2) %attr(-,root,root) \1:
+s:^[^%].*::
+s:^%lang(en) ::
 		' |grep -v '^$' ||:
 	fi >> "$OUTFILE"
 
