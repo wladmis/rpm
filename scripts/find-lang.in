@@ -166,7 +166,7 @@ s:/$::
 FindLang()
 {
 	if [ -n "$ALL_NAME" ]; then
-		PATTERN='[a-zA-Z0-9._-]\+'
+		PATTERN='[a-zA-Z0-9][a-zA-Z0-9._-]*'
 	else
 		PATTERN="$NAME"
 	fi
@@ -178,83 +178,92 @@ FindLang()
 	if [ -n "$FIND_MO" ]; then
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:\(.*/share/locale/\)\([a-z][^/_@]\+\)\(.*'"$PATTERN"'\.mo$\):%lang(\2) \1\2\3:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(en) ::
-		' |grep -v '^$' >> "$OUTFILE" ||:
+		' |grep -v '^$' ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:\(.*/share/locale/\)\([a-z][^/_@]\+\)\(.*'"$PATTERN"'\.mo$\):%lang(\2) %attr(-,root,root) \1\2\3:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(en) ::
-		' |grep -v '^$' >> "$OUTFILE" ||:
-	fi
+		' |grep -v '^$' ||:
+	fi >> "$OUTFILE"
 
 	if [ -n "$FIND_MAN" ]; then
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:\(.*/share/man/\)\([a-z][^/_@]\+\)\(.*'"$PATTERN"'\.[0-9a-z]\+\)\(\.[^/]*\)\?$:%lang(\2) \1\2\3*:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(\(en\|man.*\)) ::
-		' |grep -v '^$' >> "$OUTFILE" ||:
+		' |grep -v '^$' ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:\(.*/share/man/\)\([a-z][^/_@]\+\)\(.*'"$PATTERN"'\.[0-9a-z]\+\)\(\.[^/]*\)\?$:%lang(\2) %attr(-,root,root) \1\2\3*:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(\(en\|man.*\)) ::
-		' |grep -v '^$' >> "$OUTFILE" ||:
-	fi
+		' |grep -v '^$' ||:
+	fi >> "$OUTFILE"
 
 	if [ -n "$FIND_GNOME" ]; then
 # GNOME starting with version 3.2 stores its help files in $RPM_DATADIR/help/%lang/$NAME
 		find $TOPDIR -type d |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:^\('"$RPM_DATADIR"'/help/\)\(C\|[a-z][^/_@]\+\)\(\([_@][^/_@]*\)\?/'"$PATTERN"'\(/.*\)\?\)$:%lang(\2) %dir \1\2\3:
 s:\(.*/gnome/help/'"$PATTERN"'\)$:%dir \1:
 s:\(.*/gnome/help/'"$PATTERN"'/\)\(C\|[a-z][^/_@]\+\):%dir %lang(\2) \1\2:
 s:\(.*/share/omf/'"$PATTERN"'\)$:%dir \1:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(\(en\|C\)) ::
-		' |grep -v '^$' >> "$OUTFILE" ||:
+		' |grep -v '^$' ||:
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:^\('"$RPM_DATADIR"'/help/\)\(C\|[a-z][^/_@]\+\)\(\([_@][^/_@]*\)\?/'"$PATTERN"'/\):%lang(\2) \1\2\3:
 s:\(.*/gnome/help/'"$PATTERN"'/\)\(C\|[a-z][^/_@]\+\):%lang(\2) \1\2:
 s:\(.*/share/omf/'"$PATTERN"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) \1\2\3\4:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(\(en\|C\)) ::
-		' |grep -v '^$' >> "$OUTFILE" ||:
+		' |grep -v '^$' ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:^\('"$RPM_DATADIR"'/help/\)\(C\|[a-z][^/_@]\+\)\(\([_@][^/_@]*\)\?/'"$PATTERN"'/\):%lang(\2) %attr(-,root,root) \1\2\3:
 s:\(.*/gnome/help/'"$PATTERN"'/\)\(C\|[a-z][^/_@]\+\):%lang(\2) %attr(-,root,root) \1\2:
 s:\(.*/share/omf/'"$PATTERN"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) %attr(-,root,root) \1\2\3\4:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(\(en\|C\)) ::
-		' |grep -v '^$' >> "$OUTFILE" ||:
-	fi
+		' |grep -v '^$' ||:
+	fi >> "$OUTFILE"
 
 	if [ -n "$FIND_KDE" ]; then
 		find $TOPDIR -type d |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$PATTERN"'\):%lang(\2) %dir \1\2\3:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(en) ::
-	        ' |grep -v '^$' >> "$OUTFILE" ||:
-
+	        ' |grep -v '^$' ||:
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$PATTERN"'/.*\):%lang(\2) \1\2\3:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(en) ::
-		' |grep -v '^$' >> "$OUTFILE" ||:
+		' |grep -v '^$' ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
+s:^[^/].*::
 s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$PATTERN"'/.*\):%lang(\2) %attr(-,root,root) \1\2\3:
-s:^\([^%].*\)::
+s:^[^%].*::
 s:%lang(en) ::
-		' |grep -v '^$' >> "$OUTFILE" ||:
-	fi
+		' |grep -v '^$' ||:
+	fi >> "$OUTFILE"
 
 	if [ -n "$CUSTOM_DIR_SCRIPT" ]; then
 		[ -r "$CUSTOM_DIR_SCRIPT" ] && custom_opt=f || custom_opt=e
