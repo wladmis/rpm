@@ -3504,7 +3504,7 @@ msgstr "Документація/Faqs"
 msgid "Books/Howtos"
 msgstr "Документація/Howtos"
 
-msgid "Books/Litterature"
+msgid "Books/Literature"
 msgstr "Документація/Література"
 
 msgid "Books/Other"
