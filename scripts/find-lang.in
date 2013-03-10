@@ -79,7 +79,7 @@ EOF
 	exit 0
 }
 
-TEMP=`getopt -n "$PROG" -o h -l without-mo,with-man,with-gnome,with-kde,all-name,custom-dir-script:,custom-file-script:,custom-link-script:,append,output:,topdir:,help,version -- "$@"` || Usage
+TEMP=`getopt -n "$PROG" -o h -l without-mo,with-man,with-gnome,with-kde,with-qt,all-name,custom-dir-script:,custom-file-script:,custom-link-script:,append,output:,topdir:,help,version -- "$@"` || Usage
 eval set -- "$TEMP"
 
 : ${TOPDIR:=$RPM_BUILD_ROOT}
