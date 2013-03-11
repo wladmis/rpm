@@ -3,7 +3,7 @@
 # find-lang - generate list of language specific files.
 # Inspired by tool with same name from W. L. Estes <wlestes@uncg.edu>.
 #
-# Copyright (C) 2000, 2003, 2004  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2000-2013  Dmitry V. Levin <ldv@altlinux.org>
 #
 # 2012-05-23 Igor Vlasenko <viy@altlinux.org>
 #   * added PLD/fedora compatible all-name option (mkochano,pascalek@PLD)
@@ -19,8 +19,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# along with this program; if not, see <http://www.gnu.org/licenses/>.
 #
 
 : ${RPMCONFIGDIR:=@RPMCONFIGDIR@}
@@ -69,7 +68,7 @@ print_version()
 	cat <<EOF
 find-lang version $revision
 
-Copyright (C) 2000, 2003, 2004  Dmitry V. Levin <ldv@altlinux.org>
+Copyright (C) 2000-2013  Dmitry V. Levin <ldv@altlinux.org>
 
 This is free software; see the source for copying conditions.
 There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
