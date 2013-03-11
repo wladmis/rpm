@@ -189,15 +189,17 @@ s:'"$TOPDIR"'::
 s:^[^/].*::
 s:\(.*/locale/'"$RLOCALE"'/\([^/]\+/\)*'"$PATTERN"'\.mo\)$:%lang(\2) \1:
 s:^[^%].*::
-s:%lang(en) ::
-		' |grep -v '^$' ||:
+s:^%lang(en) ::
+/^$/d
+		'
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
 s:\(.*/locale/'"$RLOCALE"'/\([^/]\+/\)*'"$PATTERN"'\.mo\)$:%lang(\2) %attr(-,root,root) \1:
 s:^[^%].*::
-s:%lang(en) ::
-		' |grep -v '^$' ||:
+s:^%lang(en) ::
+/^$/d
+		'
 	fi >> "$OUTFILE"
 
 	if [ -n "$FIND_MAN" ]; then
@@ -206,15 +208,17 @@ s:'"$TOPDIR"'::
 s:^[^/].*::
 s:\(.*/share/man/'"$RLOCALE"'/[^/]\+/'"$PATTERN"'\.[0-9a-z]\+\)\(\.[^/]\+\)\?$:%lang(\2) \1*:
 s:^[^%].*::
-s:%lang(en) ::
-		' |grep -v '^$' ||:
+s:^%lang(en) ::
+/^$/d
+		'
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
 s:\(.*/share/man/'"$RLOCALE"'/[^/]\+/'"$PATTERN"'\.[0-9a-z]\+\)\(\.[^/]\+\)\?$:%lang(\2) %attr(-,root,root) \1*:
 s:^[^%].*::
-s:%lang(en) ::
-		' |grep -v '^$' ||:
+s:^%lang(en) ::
+/^$/d
+		'
 	fi >> "$OUTFILE"
 
 	if [ -n "$FIND_GNOME" ]; then
@@ -224,11 +228,12 @@ s:'"$TOPDIR"'::
 s:^[^/].*::
 s:^\('"$RPM_DATADIR"'/help/'"$RCLOCALE"'/'"$PATTERN"'\(/.*\)\?\)$:%lang(\2) %dir \1:
 s:\(.*/gnome/help/'"$PATTERN"'\)$:%dir \1:
-s:\(.*/gnome/help/'"$PATTERN"'/'"$RCLOCALE"'\(/.*\)\?\)$:%dir %lang(\2) \1:
+s:\(.*/gnome/help/'"$PATTERN"'/'"$RCLOCALE"'\(/.*\)\?\)$:%lang(\2) %dir \1:
 s:\(.*/share/omf/'"$PATTERN"'\)$:%dir \1:
 s:^[^%].*::
-s:%lang(\(en\|C\)) ::
-		' |grep -v '^$' ||:
+s:^%lang(\(en\|C\)) ::
+/^$/d
+		'
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
@@ -236,8 +241,9 @@ s:^\('"$RPM_DATADIR"'/help/'"$RCLOCALE"'/'"$PATTERN"'/\):%lang(\2) \1:
 s:\(.*/gnome/help/'"$PATTERN"'/'"$RCLOCALE"'\(/.*\)\?\)$:%lang(\2) \1:
 s:\(.*/share/omf/'"$PATTERN"'/[^/]*-'"$RCLOCALE"'\.omf\)$:%lang(\2) \1:
 s:^[^%].*::
-s:%lang(\(en\|C\)) ::
-		' |grep -v '^$' ||:
+s:^%lang(\(en\|C\)) ::
+/^$/d
+		'
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
@@ -245,8 +251,9 @@ s:^\('"$RPM_DATADIR"'/help/'"$RCLOCALE"'/'"$PATTERN"'/\):%lang(\2) %attr(-,root,
 s:\(.*/gnome/help/'"$PATTERN"'/'"$RCLOCALE"'\(/.*\)\?\)$:%lang(\2) %attr(-,root,root) \1:
 s:\(.*/share/omf/'"$PATTERN"'/[^/]*-'"$RCLOCALE"'\.omf\)$:%lang(\2) %attr(-,root,root) \1:
 s:^[^%].*::
-s:%lang(\(en\|C\)) ::
-		' |grep -v '^$' ||:
+s:^%lang(\(en\|C\)) ::
+/^$/d
+		'
 	fi >> "$OUTFILE"
 
 	if [ -n "$FIND_KDE" ]; then
@@ -255,22 +262,25 @@ s:'"$TOPDIR"'::
 s:^[^/].*::
 s:\(.*/share/\([^/]\+/\)\?doc/HTML/'"$RLOCALE"'/'"$PATTERN"'\(/.*\)\?\)$:%lang(\3) %dir \1:
 s:^[^%].*::
-s:%lang(en) ::
-	        ' |grep -v '^$' ||:
+s:^%lang(en) ::
+/^$/d
+	        '
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
 s:\(.*/share/\([^/]\+/\)\?doc/HTML/'"$RLOCALE"'/'"$PATTERN"'/\):%lang(\3) \1:
 s:^[^%].*::
-s:%lang(en) ::
-		' |grep -v '^$' ||:
+s:^%lang(en) ::
+/^$/d
+		'
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
 s:\(.*/share/\([^/]\+/\)\?doc/HTML/'"$RLOCALE"'/'"$PATTERN"'/\):%lang(\3) %attr(-,root,root) \1:
 s:^[^%].*::
-s:%lang(en) ::
-		' |grep -v '^$' ||:
+s:^%lang(en) ::
+/^$/d
+		'
 	fi >> "$OUTFILE"
 
 	if [ -n "$FIND_QT" ]; then
@@ -282,7 +292,8 @@ s:^\(/.*/'"$PATTERN"'[_./-]'"$RLOCALE"'\.qm\)$:%lang(\2) \1:
 s:^\(/.*/'"$PATTERN"'/.\+/\([a-zA-Z0-9][a-zA-Z0-9._+-]*[_.-]\)\?'"$RLOCALE"'\.qm\)$:%lang(\3) \1:
 s:^[^%].*::
 s:^%lang(en) ::
-		' |grep -v '^$' ||:
+/^$/d
+		'
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
@@ -291,7 +302,8 @@ s:^\(/.*/'"$PATTERN"'[_./-]'"$RLOCALE"'\.qm\)$:%lang(\2) %attr(-,root,root) \1:
 s:^\(/.*/'"$PATTERN"'/.\+/\([a-zA-Z0-9][a-zA-Z0-9._+-]*[_.-]\)\?'"$RLOCALE"'\.qm\)$:%lang(\3) %attr(-,root,root) \1:
 s:^[^%].*::
 s:^%lang(en) ::
-		' |grep -v '^$' ||:
+/^$/d
+		'
 	fi >> "$OUTFILE"
 
 	if [ -n "$CUSTOM_DIR_SCRIPT" ]; then
