@@ -253,21 +253,21 @@ s:%lang(\(en\|C\)) ::
 		find $TOPDIR -type d |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$PATTERN"'\):%lang(\2) %dir \1\2\3:
+s:\(.*/share/\([^/]\+/\)\?doc/HTML/'"$RLOCALE"'/'"$PATTERN"'\(/.*\)\?\)$:%lang(\3) %dir \1:
 s:^[^%].*::
 s:%lang(en) ::
 	        ' |grep -v '^$' ||:
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$PATTERN"'/.*\):%lang(\2) \1\2\3:
+s:\(.*/share/\([^/]\+/\)\?doc/HTML/'"$RLOCALE"'/'"$PATTERN"'/\):%lang(\3) \1:
 s:^[^%].*::
 s:%lang(en) ::
 		' |grep -v '^$' ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:\(.*/share/doc/HTML/\)\([a-z][^/_]\+\)\(/'"$PATTERN"'/.*\):%lang(\2) %attr(-,root,root) \1\2\3:
+s:\(.*/share/\([^/]\+/\)\?doc/HTML/'"$RLOCALE"'/'"$PATTERN"'/\):%lang(\3) %attr(-,root,root) \1:
 s:^[^%].*::
 s:%lang(en) ::
 		' |grep -v '^$' ||:
