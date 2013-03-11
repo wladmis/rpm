@@ -203,16 +203,16 @@ s:%lang(en) ::
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:\(.*/share/man/\)\([a-z][^/_@]\+\)\(.*'"$PATTERN"'\.[0-9a-z]\+\)\(\.[^/]*\)\?$:%lang(\2) \1\2\3*:
+s:\(.*/share/man/'"$RLOCALE"'/[^/]\+/'"$PATTERN"'\.[0-9a-z]\+\)\(\.[^/]\+\)\?$:%lang(\2) \1*:
 s:^[^%].*::
-s:%lang(\(en\|man.*\)) ::
+s:%lang(en) ::
 		' |grep -v '^$' ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:\(.*/share/man/\)\([a-z][^/_@]\+\)\(.*'"$PATTERN"'\.[0-9a-z]\+\)\(\.[^/]*\)\?$:%lang(\2) %attr(-,root,root) \1\2\3*:
+s:\(.*/share/man/'"$RLOCALE"'/[^/]\+/'"$PATTERN"'\.[0-9a-z]\+\)\(\.[^/]\+\)\?$:%lang(\2) %attr(-,root,root) \1*:
 s:^[^%].*::
-s:%lang(\(en\|man.*\)) ::
+s:%lang(en) ::
 		' |grep -v '^$' ||:
 	fi >> "$OUTFILE"
 
