@@ -171,6 +171,7 @@ s:/$::
 FindLang()
 {
 	local RLOCALE='\([a-z]\{2,3\}\)\(_[A-Z]\{2\}\)\?\(@[a-z]\{3,\}\)\?\(\.[A-Z][a-zA-Z0-9]\+\(-[A-Z0-9]\)\?\)\?'
+	local RCLOCALE='\(C\|[a-z]\{2,3\}\)\(_[A-Z]\{2\}\)\?\(@[a-z]\{3,\}\)\?\(\.[A-Z][a-zA-Z0-9]\+\(-[A-Z0-9]\)\?\)\?'
 
 	if [ -n "$ALL_NAME" ]; then
 		PATTERN='[a-zA-Z0-9][a-zA-Z0-9._+-]*'
@@ -221,9 +222,9 @@ s:%lang(en) ::
 		find $TOPDIR -type d |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:^\('"$RPM_DATADIR"'/help/\)\(C\|[a-z][^/_@]\+\)\(\([_@][^/_@]*\)\?/'"$PATTERN"'\(/.*\)\?\)$:%lang(\2) %dir \1\2\3:
+s:^\('"$RPM_DATADIR"'/help/'"$RCLOCALE"'/'"$PATTERN"'\(/.*\)\?\)$:%lang(\2) %dir \1:
 s:\(.*/gnome/help/'"$PATTERN"'\)$:%dir \1:
-s:\(.*/gnome/help/'"$PATTERN"'/\)\(C\|[a-z][^/_@]\+\):%dir %lang(\2) \1\2:
+s:\(.*/gnome/help/'"$PATTERN"'/'"$RCLOCALE"'\(/.*\)\?\)$:%dir %lang(\2) \1:
 s:\(.*/share/omf/'"$PATTERN"'\)$:%dir \1:
 s:^[^%].*::
 s:%lang(\(en\|C\)) ::
@@ -231,18 +232,18 @@ s:%lang(\(en\|C\)) ::
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:^\('"$RPM_DATADIR"'/help/\)\(C\|[a-z][^/_@]\+\)\(\([_@][^/_@]*\)\?/'"$PATTERN"'/\):%lang(\2) \1\2\3:
-s:\(.*/gnome/help/'"$PATTERN"'/\)\(C\|[a-z][^/_@]\+\):%lang(\2) \1\2:
-s:\(.*/share/omf/'"$PATTERN"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) \1\2\3\4:
+s:^\('"$RPM_DATADIR"'/help/'"$RCLOCALE"'/'"$PATTERN"'/\):%lang(\2) \1:
+s:\(.*/gnome/help/'"$PATTERN"'/'"$RCLOCALE"'\(/.*\)\?\)$:%lang(\2) \1:
+s:\(.*/share/omf/'"$PATTERN"'/[^/]*-'"$RCLOCALE"'\.omf\)$:%lang(\2) \1:
 s:^[^%].*::
 s:%lang(\(en\|C\)) ::
 		' |grep -v '^$' ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:^\('"$RPM_DATADIR"'/help/\)\(C\|[a-z][^/_@]\+\)\(\([_@][^/_@]*\)\?/'"$PATTERN"'/\):%lang(\2) %attr(-,root,root) \1\2\3:
-s:\(.*/gnome/help/'"$PATTERN"'/\)\(C\|[a-z][^/_@]\+\):%lang(\2) %attr(-,root,root) \1\2:
-s:\(.*/share/omf/'"$PATTERN"'/\)\([^/]*-\)\(C\|[a-z][^/]\+\)\(\.omf\)$:%lang(\3) %attr(-,root,root) \1\2\3\4:
+s:^\('"$RPM_DATADIR"'/help/'"$RCLOCALE"'/'"$PATTERN"'/\):%lang(\2) %attr(-,root,root) \1:
+s:\(.*/gnome/help/'"$PATTERN"'/'"$RCLOCALE"'\(/.*\)\?\)$:%lang(\2) %attr(-,root,root) \1:
+s:\(.*/share/omf/'"$PATTERN"'/[^/]*-'"$RCLOCALE"'\.omf\)$:%lang(\2) %attr(-,root,root) \1:
 s:^[^%].*::
 s:%lang(\(en\|C\)) ::
 		' |grep -v '^$' ||:
