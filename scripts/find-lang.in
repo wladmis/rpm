@@ -277,18 +277,18 @@ s:%lang(en) ::
 		find "$TOPDIR" -type f |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:^\(/.*/'"$PATTERN"'[_./-]\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?\.qm\)$:%lang(\2) \1:
-s:^\(/.*/'"$PATTERN"'/.\+/\([a-zA-Z0-9][a-zA-Z0-9._-]*[_.-]\)\?\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?\.qm\)$:%lang(\3) \1:
-s:^\(/.*/'"$PATTERN"'/.\+/\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?/[a-z][a-z0-9]*\.qm\)$:%lang(\2) \1:
+s:^\(/.*/'"$PATTERN"'/.\+/'"$RLOCALE"'/[a-z][a-z0-9]*\.qm\)$:%lang(\2) \1:
+s:^\(/.*/'"$PATTERN"'[_./-]'"$RLOCALE"'\.qm\)$:%lang(\2) \1:
+s:^\(/.*/'"$PATTERN"'/.\+/\([a-zA-Z0-9][a-zA-Z0-9._+-]*[_.-]\)\?'"$RLOCALE"'\.qm\)$:%lang(\3) \1:
 s:^[^%].*::
 s:^%lang(en) ::
 		' |grep -v '^$' ||:
 		find "$TOPDIR" -type l |sed -e '
 s:'"$TOPDIR"'::
 s:^[^/].*::
-s:^\(/.*/'"$PATTERN"'[_./-]\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?\.qm\)$:%lang(\2) %attr(-,root,root) \1:
-s:^\(/.*/'"$PATTERN"'/.\+/\([a-zA-Z0-9][a-zA-Z0-9._-]*[_.-]\)\?\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?\.qm\)$:%lang(\3) %attr(-,root,root) \1:
-s:^\(/.*/'"$PATTERN"'/.\+/\([a-z]\{2\}\)\(_[A-Z]\{2,\}\)\?\(@[a-z]\+\)\?/[a-z][a-z0-9]*\.qm\)$:%lang(\2) %attr(-,root,root) \1:
+s:^\(/.*/'"$PATTERN"'/.\+/'"$RLOCALE"'/[a-z][a-z0-9]*\.qm\)$:%lang(\2) %attr(-,root,root) \1:
+s:^\(/.*/'"$PATTERN"'[_./-]'"$RLOCALE"'\.qm\)$:%lang(\2) %attr(-,root,root) \1:
+s:^\(/.*/'"$PATTERN"'/.\+/\([a-zA-Z0-9][a-zA-Z0-9._+-]*[_.-]\)\?'"$RLOCALE"'\.qm\)$:%lang(\3) %attr(-,root,root) \1:
 s:^[^%].*::
 s:^%lang(en) ::
 		' |grep -v '^$' ||:
