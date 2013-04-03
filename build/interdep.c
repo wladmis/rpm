@@ -227,7 +227,7 @@ fix_weak_deps(struct Req *r, Package pkg1, Package packages)
     Package *provs = xcalloc(i, sizeof(*provs));
     availableList proval = xcalloc(i, sizeof(*proval));
     for (i = 0, pkg2 = packages; pkg2; ++i, pkg2 = pkg2->next) {
-	if (pkg1 != pkg2) {
+	if (pkg1 != pkg2 && pkg2->cpioList) {
 	    alCreate(&proval[i]);
 	    alAddPackage(&proval[i], pkg2->header, NULL, NULL, NULL);
 	}
@@ -238,7 +238,7 @@ fix_weak_deps(struct Req *r, Package pkg1, Package packages)
 	    continue;
 	int j;
 	for (j = 0, pkg2 = packages; pkg2; ++j, pkg2 = pkg2->next) {
-	    if (pkg1 != pkg2 && !strcmp(reqNv[i], pkgName(pkg2))) {
+	    if (pkg1 != pkg2 && pkg2->cpioList && !strcmp(reqNv[i], pkgName(pkg2))) {
 		provs[j] = pkg2;
 		break;
 	    }
@@ -246,7 +246,7 @@ fix_weak_deps(struct Req *r, Package pkg1, Package packages)
 	int k;
 	Package prov = NULL;
 	for (j = 0, pkg2 = packages; pkg2; ++j, pkg2 = pkg2->next) {
-	    if (pkg1 != pkg2) {
+	    if (pkg1 != pkg2 && pkg2->cpioList) {
 		if (alSatisfiesDepend(&proval[j], reqNv[i], reqVv[i], reqFv[i])) {
 		    if (prov) {
 			prov = NULL;
@@ -261,7 +261,7 @@ fix_weak_deps(struct Req *r, Package pkg1, Package packages)
 	    provs[k] = prov;
     }
     for (i = 0, pkg2 = packages; pkg2; ++i, pkg2 = pkg2->next) {
-	if (pkg1 != pkg2)
+	if (pkg1 != pkg2 && pkg2->cpioList)
 	    alFree(&proval[i]);
     }
     proval = _free(proval);
