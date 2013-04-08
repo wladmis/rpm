@@ -211,7 +211,6 @@ the Python programming language to use the interface supplied by RPM
 touch config.rpath
 gettextize --force --quiet --no-changelog --symlink
 install -pv -m644 /usr/share/automake/mkinstalldirs .
-install -pv -m644 /usr/share/gettext/intl/Makevars* po/Makevars
 autoreconf -fisv -I m4
 # avoid extra build dependencies
 export ac_cv_path___CPIO=/bin/cpio

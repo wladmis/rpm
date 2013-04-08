@@ -49,7 +49,6 @@ Makefile.in
 /tags
 
 /po/Makefile.in.in
-/po/Makevars
 /po/POTFILES
 /po/ru.gmo
 /po/stamp-po
