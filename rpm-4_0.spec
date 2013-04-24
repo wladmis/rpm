@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.24.M60P.3
+Release: alt100.24.M60P.4
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -509,11 +509,25 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Wed Apr 24 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.24.M60P.4
+- Backport from Sisyphus:
+  + Fixed build with new gettext and automake.
+  + Fixed build with ld --no-copy-dt-needed-entries.
+  + Build selinux support in dynamically linked objects only.
+  + Added %%getenv and %%_tmpdir builtin macros.
+  + platform.in: added systemd macros.
+  + platform.in: add %%EVR macro.
+  + scripts: cleaned up readelf(1) invocations.
+  + brp-fix-perms: fixed "find -perm" syntax.
+  + 0common-files.req.list: added /etc/sudoers.d.
+  + rpmio/macro.c (doShellEscape): fixed an off-by-one error
+    in stripping trailing newlines.
+
 * Thu Apr 12 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.24.M60P.3
 - Backport from 'maint':
   parseSpec:
     + fixed long lines processing;
-    + made size of line buffer configurable via %_spec_line_buffer_size.
+    + made size of line buffer configurable via %%_spec_line_buffer_size.
 
 * Tue Feb 21 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.24.M60P.2
 - Backport some useful commits from 'maint' branch:
