@@ -223,6 +223,7 @@ static struct
 #define DEBUG_RANGES	10
 #define DEBUG_TYPES	11
 #define DEBUG_MACRO	12
+#define DEBUG_GDB_SCRIPT	13
     { ".debug_info", NULL, NULL, 0, 0, 0 },
     { ".debug_abbrev", NULL, NULL, 0, 0, 0 },
     { ".debug_line", NULL, NULL, 0, 0, 0 },
@@ -236,6 +237,7 @@ static struct
     { ".debug_ranges", NULL, NULL, 0, 0, 0 },
     { ".debug_types", NULL, NULL, 0, 0, 0 },
     { ".debug_macro", NULL, NULL, 0, 0, 0 },
+    { ".debug_gdb_script", NULL, NULL, 0, 0, 0 },
     { NULL, NULL, NULL, 0, 0, 0 }
   };
 
