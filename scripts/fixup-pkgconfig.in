@@ -33,7 +33,7 @@ fix()
 
 	local includedir=
 	local libdir=
-	sed -ne "s/^\(\([a-z_]*\)\(prefix\|dir\|path\)\)=\(.*\)\$/local \1=\4/pg" "$f" >"$TMPFILE" || return 1
+	sed -ne "s/^\(\([a-z_]*\)\(prefix\|dir\|path\)\)[[:space:]]*=[[:space:]]*\(.*\)\$/local \1=\4/pg" "$f" >"$TMPFILE" || return 1
 
 	# source parameters
 
