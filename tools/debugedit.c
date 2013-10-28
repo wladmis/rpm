@@ -1384,8 +1384,8 @@ handle_build_id (DSO *dso, Elf_Data *build_id,
     }
   if (hf == NULL)
     {
-      fprintf (stderr, "Cannot handle %Zu-byte build ID\n", build_id_size);
-      exit (1);
+      error (1, 0, "%s: Cannot handle %Zu-byte build ID",
+	     dso->filename, build_id_size);
     }
 
   if (!dirty_elf)
@@ -1393,9 +1393,8 @@ handle_build_id (DSO *dso, Elf_Data *build_id,
 
   if (elf_update (dso->elf, ELF_C_NULL) < 0)
     {
-      fprintf (stderr, "Failed to update file: %s\n",
-	       elf_errmsg (elf_errno ()));
-      exit (1);
+      error (1, 0, "%s: Failed to update file: %s",
+	     dso->filename, elf_errmsg (elf_errno ()));
     }
 
   /* Clear the old bits so they do not affect the new hash.  */
@@ -1433,9 +1432,8 @@ handle_build_id (DSO *dso, Elf_Data *build_id,
     if (elf64_xlatetom (&x, &x, dso->ehdr.e_ident[EI_DATA]) == NULL)
       {
       bad:
-	fprintf (stderr, "Failed to compute header checksum: %s\n",
-		 elf_errmsg (elf_errno ()));
-	exit (1);
+	error (1, 0, "%s: Failed to compute header checksum: %s",
+	       dso->filename, elf_errmsg (elf_errno ()));
       }
 
     x.d_type = ELF_T_PHDR;
@@ -1530,13 +1528,11 @@ main (int argc, char *argv[])
     {
       if (base_dir == NULL)
 	{
-	  fprintf (stderr, "You must specify a base dir if you specify a dest dir\n");
-	  exit (1);
+	  error (1, 0, "You must specify a base dir if you specify a dest dir");
 	}
       if (strlen (dest_dir) > strlen (base_dir))
 	{
-	  fprintf (stderr, "Dest dir longer than base dir is not supported\n");
-	  exit (1);
+	  error (1, 0, "Dest dir longer than base dir is not supported");
 	}
     }
 
@@ -1567,14 +1563,12 @@ main (int argc, char *argv[])
 
   if (elf_version(EV_CURRENT) == EV_NONE)
     {
-      fprintf (stderr, "library out of date\n");
-      exit (1);
+      error (1, 0, "library out of date");
     }
 
   if (stat(file, &stat_buf) < 0)
     {
-      fprintf (stderr, "Failed to open input file '%s': %s\n", file, strerror(errno));
-      exit (1);
+      error (1, errno, "Failed to stat input file '%s'", file);
     }
 
   /* Make sure we can read and write */
@@ -1583,8 +1577,7 @@ main (int argc, char *argv[])
   fd = open (file, O_RDWR);
   if (fd < 0)
     {
-      fprintf (stderr, "Failed to open input file '%s': %s\n", file, strerror(errno));
-      exit (1);
+      error (1, errno, "Failed to open input file '%s'", file);
     }
 
   dso = fdopen_dso (fd, file);
@@ -1602,7 +1595,7 @@ main (int argc, char *argv[])
 	  /* TODO: Handle stabs */
 	  if (strcmp (name, ".stab") == 0)
 	    {
-	      fprintf (stderr, "Stabs debuginfo not supported: %s\n", file);
+	      error (0, 0, "%s: Stabs debuginfo is not supported", file);
 	      break;
 	    }
 	  if (strcmp (name, ".debug_info") == 0)
@@ -1657,13 +1650,12 @@ main (int argc, char *argv[])
 
   if (elf_update (dso->elf, ELF_C_WRITE) < 0)
     {
-      fprintf (stderr, "Failed to write file: %s\n", elf_errmsg (elf_errno()));
-      exit (1);
+      error (1, 0, "%s: Failed to write file: %s",
+	     dso->filename, elf_errmsg (elf_errno()));
     }
   if (elf_end (dso->elf) < 0)
     {
-      fprintf (stderr, "elf_end failed: %s\n", elf_errmsg (elf_errno()));
-      exit (1);
+      error (1, 0, "%s: elf_end failed: %s", file, elf_errmsg (elf_errno()));
     }
   close (fd);
 
