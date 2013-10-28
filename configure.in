@@ -140,11 +140,6 @@ AC_SUBST(MKDIR_P)
 
 AC_ISC_POSIX
 
-dnl This test must precede tests of compiler characteristics like
-dnl that for the inline keyword, since it may change the degree to
-dnl which the compiler supports such features.
-AM_C_PROTOTYPES
-
 AC_PROG_AWK
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
