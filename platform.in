@@ -216,6 +216,7 @@
 @alt@	%{?_findprov_topdir:export RPM_FINDPROV_TOPDIR=\"%_findprov_topdir\"}\
 @alt@	%{?_cleanup_skiplist:export RPM_CLEANUP_SKIPLIST=\"%_cleanup_skiplist\"}\
 @alt@	%{?_compress_skiplist:export RPM_COMPRESS_SKIPLIST=\"%_compress_skiplist\"}\
+@alt@	%{?_debuginfo_skiplist:export RPM_DEBUGINFO_SKIPLIST=\"%_debuginfo_skiplist\"}\
 @alt@	%{?_fixup_skiplist:export RPM_FIXUP_SKIPLIST=\"%_fixup_skiplist\"}\
 @alt@	%{?_verify_elf_skiplist:export RPM_VERIFY_ELF_SKIPLIST=\"%_verify_elf_skiplist\"}\
 @alt@	%{?_findreq_skiplist:export RPM_FINDREQ_SKIPLIST=\"%_findreq_skiplist\"}\
@@ -456,6 +457,7 @@
 @alt@
 @alt@%_cleanup_skiplist	%nil
 @alt@%_compress_skiplist	%nil
+@alt@%_debuginfo_skiplist	%nil
 @alt@%_fixup_skiplist	%nil
 @alt@%_verify_elf_skiplist	%nil
 @alt@%_findreq_skiplist	%_docdir/*
@@ -479,6 +481,7 @@
 @alt@
 @alt@%set_cleanup_skiplist()	%global _cleanup_skiplist %*
 @alt@%set_compress_skiplist()	%global _compress_skiplist %*
+@alt@%set_debuginfo_skiplist()	%global _debuginfo_skiplist %*
 @alt@%set_fixup_skiplist()	%global _fixup_skiplist %*
 @alt@%set_verify_elf_skiplist()	%global _verify_elf_skiplist %*
 @alt@%set_findreq_skiplist()	%global _findreq_skiplist %*
@@ -489,6 +492,7 @@
 @alt@
 @alt@%add_cleanup_skiplist()	%global _cleanup_skiplist %_cleanup_skiplist %*
 @alt@%add_compress_skiplist()	%global _compress_skiplist %_compress_skiplist %*
+@alt@%add_debuginfo_skiplist()	%global _debuginfo_skiplist %_debuginfo_skiplist %*
 @alt@%add_fixup_skiplist()	%global _fixup_skiplist %_fixup_skiplist %*
 @alt@%add_verify_elf_skiplist()	%global _verify_elf_skiplist %_verify_elf_skiplist %*
 @alt@%add_findreq_skiplist()	%global _findreq_skiplist %_findreq_skiplist %*
