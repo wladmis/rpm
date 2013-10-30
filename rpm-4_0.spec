@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.72
+Release: alt100.72.M70C.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -47,7 +47,7 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_selinux:BuildPreReq: libselinux-devel >= 2.0.96}
 %{?_with_profile:BuildPreReq: coreutils >= 6.0}
 
-BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
+BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1
 BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 
 # For debugedit.
@@ -193,7 +193,6 @@ Summary(ru_RU.UTF-8): Интерфейс для разработки Python-пр
 License: GPL/LGPL
 Group: Development/Python
 PreReq: lib%name = %rpm_version-%release
-Requires: python = %__python_version
 Provides: rpm-python = %{rpm_version}_%__python_version-%release
 Obsoletes: rpm-python
 
@@ -530,6 +529,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Wed Oct 30 2013 Anton V. Boyarshinov <boyarsh@altlinux.ru> 4.0.4-alt100.72.M70C.1
+- rebuild for c7
+
 * Mon Apr 08 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.72
 - Fixed build with new gettext.
 
