@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 foreign
 
-INCLUDES = -I. \
+AM_CPPFLAGS = -I. \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/rpmdb \
 	-I$(top_srcdir)/rpmio \
@@ -34,4 +34,4 @@ sources:
 
 .PHONY:	lclint
 lclint:
-	lclint ${DEFS} ${INCLUDES} ${librpmbuild_la_SOURCES}
+	lclint ${DEFS} ${AM_CPPFLAGS} ${librpmbuild_la_SOURCES}
