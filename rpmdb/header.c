@@ -524,7 +524,6 @@ static /*@only@*/ /*@null@*/ void * doHeaderUnload(Header h,
     int i;
     int drlen, ndribbles;
     int driplen, ndrips;
-    int legacy = 0;
 
     /* Sort entries by (offset,tag). */
     headerUnsort(h);
@@ -634,7 +633,6 @@ t = te;
 	    if (i == 0 && (h->flags & HEADERFLAG_LEGACY)) {
 		int_32 stei[4];
 
-		legacy = 1;
 		memcpy(pe+1, src, rdl);
 		memcpy(te, src + rdl, rdlen);
 		te += rdlen;
@@ -886,7 +884,6 @@ Header headerLoad(/*@kept@*/ void * uh)
     char * dataStart;
     indexEntry entry; 
     int rdlen;
-    int i;
 
     /* Sanity checks on header intro. */
     if (hdrchkTags(il) || hdrchkData(dl))
@@ -925,7 +922,6 @@ Header headerLoad(/*@kept@*/ void * uh)
     }
 
     entry = h->index;
-    i = 0;
     if (!(htonl(pe->tag) < HEADER_I18NTABLE)) {
 	h->flags |= HEADERFLAG_LEGACY;
 	entry->info.type = REGION_TAG_TYPE;
@@ -1139,11 +1135,9 @@ Header headerRead(FD_t fd, enum hMagic magicp)
 	/*@modifies fd @*/
 {
     int_32 block[4];
-    int_32 reserved;
     int_32 * ei = NULL;
     int_32 il;
     int_32 dl;
-    int_32 magic;
     Header h = NULL;
     size_t len;
     int i;
@@ -1161,10 +1155,10 @@ Header headerRead(FD_t fd, enum hMagic magicp)
     i = 0;
 
     if (magicp == HEADER_MAGIC_YES) {
-	magic = block[i++];
+	int_32 magic = block[i++];
 	if (memcmp(&magic, header_magic, sizeof(magic)))
 	    goto exit;
-	reserved = block[i++];
+	i++;
     }
     
     il = ntohl(block[i]);	i++;
@@ -3092,7 +3086,6 @@ char * headerSprintf(Header h, const char * fmt,
     headerSprintfExtension exts = (headerSprintfExtension) extensions;
     headerTagTableEntry tags = (headerTagTableEntry) tbltags;
     /*@=castexpose@*/
-    char * t;
     char * fmtString;
     sprintfToken format;
     int numTokens;
@@ -3116,7 +3109,7 @@ char * headerSprintf(Header h, const char * fmt,
     val = xstrdup("");
     for (i = 0; i < numTokens; i++) {
 	/*@-mods@*/
-	t = singleSprintf(h, format + i, exts, extCache, 0,
+	singleSprintf(h, format + i, exts, extCache, 0,
 		&val, &vallen, &alloced);
 	/*@=mods@*/
     }

@@ -866,7 +866,6 @@ static int openDatabase(/*@null@*/ const char * prefix,
 {
     rpmdb db;
     int rc, xx;
-    unsigned int gflags = 0;	/* dbiGet() flags */
     static int _dbenv_removed = 0;
     int justCheck = flags & RPMDB_FLAG_JUSTCHECK;
     int minimal = flags & RPMDB_FLAG_MINIMAL;
