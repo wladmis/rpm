@@ -470,14 +470,14 @@ static int regionSwab(/*@null@*/ indexEntry entry, int il, int dl,
 	case RPM_INT32_TYPE:
 	{   int_32 *it = (int_32 *) t;
 	    t = (char *)(it + ie.info.count);
-	    while (it < (int_32 *) t)
-		*it++ = htonl(*it);
+	    for (; it < (int_32 *) t; ++it)
+		*it = htonl(*it);
 	}   /*@switchbreak@*/ break;
 	case RPM_INT16_TYPE:
 	{   int_16 *it = (int_16 *) t;
 	    t = (char *)(it + ie.info.count);
-	    while (it < (int_16 *) t)
-		*it++ = htons(*it);
+	    for (; it < (int_16 *) t; ++it)
+		*it = htons(*it);
 	}   /*@switchbreak@*/ break;
 	default:
 	    t += ie.length;
