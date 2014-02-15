@@ -140,7 +140,7 @@ CppReq()
 	fi
 
 	# Keep only linemarks and includes, strip filename quotes.
-	sed -ni '/^# .* "\//{s/"//g;p};/^#i.* ["<]/{s/[<">]//g;p}' $tmpdir/out
+	sed -ni '/^# .* "\(\/\|<command-line>"\)/{s/"//g;p};/^#i.* ["<]/{s/[<">]//g;p}' $tmpdir/out
 
 	# Prepare the list of files in cpp output which are packaged in this subpackage.
 	awk '$1=="#" && $4==1 { print $3 }' <$tmpdir/out |
@@ -188,7 +188,7 @@ CppReq()
 			Stack[++SP] = f
 		}
 		function Pop(f) {
-			if (f != Stack[--SP])
+			if (f != Stack[--SP] && f != "<command-line>")
 				printf "%s: %s: expected pop %s, got pop %s\n",
 					prog, hdr, Stack[SP], f >"/dev/stderr"
 			if (SPmark > SP)
