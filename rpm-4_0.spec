@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.77
+Release: alt100.76.M70P.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -530,6 +530,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Apr 27 2014 Andrey Cherepanov <cas@altlinux.org> 4.0.4-alt100.76.M70P.1
+- Backport to p7 branch
+
 * Tue Feb 25 2014 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.77
 - fixup-binconfig:
   extended library search path stripping algorithm to handle rpaths.
