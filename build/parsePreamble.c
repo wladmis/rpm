@@ -30,6 +30,7 @@ static rpmTag copyTagsDuringParse[] = {
     RPMTAG_CHANGELOGTEXT,
     RPMTAG_PREFIXES,
     RPMTAG_BUILDHOST,
+    RPMTAG_DISTTAG,
     0
 };
 
@@ -322,6 +323,7 @@ static struct optionalTag {
     { RPMTAG_DISTRIBUTION,	"%{?distribution}" },
     { RPMTAG_DISTURL,		"%{?disturl}" },
     { RPMTAG_BUILDHOST,		"%{?buildhost}" },
+    { RPMTAG_DISTTAG,		"%{?disttag}"},
     { -1, NULL }
 };
 
@@ -505,6 +507,7 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
       case RPMTAG_VERSION:
       case RPMTAG_RELEASE:
       case RPMTAG_URL:
+      case RPMTAG_DISTTAG:
 	SINGLE_TOKEN_ONLY;
 	/* These macros are for backward compatibility */
 	if (tag == RPMTAG_VERSION) {
@@ -747,6 +750,7 @@ static struct PreambleRec_s preambleList[] = {
     {RPMTAG_AUTOREQ,		0, 0, "autoreq"},
     {RPMTAG_AUTOPROV,		0, 0, "autoprov"},
     {RPMTAG_DOCDIR,		0, 0, "docdir"},
+    {RPMTAG_DISTTAG,		0, 0, "disttag"},
     /*@-nullassign@*/	/* LCL: can't add null annotation */
     {0, 0, 0, 0}
     /*@=nullassign@*/
