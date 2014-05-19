@@ -1222,6 +1222,23 @@ static int runImmedTriggers(PSM_t psm)
     /*@noteached@*/
 }
 
+static void fi_log(TFI_t fi, const char *s)
+{
+#if HAVE_SYSLOG_H
+	if (!geteuid())
+	{
+	    int_32 *uip = 0;
+	    fi->hge(fi->h, RPMTAG_BUILDTIME, NULL, (void **) &uip, NULL);
+	    if (-1 == fi->epoch)
+		syslog (LOG_NOTICE, "%s-%s-%s %u %s\n",
+		    fi->name, fi->version, fi->release, uip ? *uip : 0, s);
+	    else
+		syslog (LOG_NOTICE, "%s-%u:%s-%s %u %s\n",
+		    fi->name, fi->epoch, fi->version, fi->release, uip ? *uip : 0, s);
+	}
+#endif
+}
+
 /**
  * @todo Packages w/o files never get a callback, hence don't get displayed
  * on install with -v.
@@ -1726,28 +1743,12 @@ fprintf(stderr, "*** PSM_RDB_LOAD: header #%u not found\n", fi->record);
 	if (ts->transFlags & RPMTRANS_FLAG_TEST)	break;
 	if (fi->h != NULL)	/* XXX can't happen */
 	rc = rpmdbAdd(ts->rpmdb, ts->id, fi->h);
-#if HAVE_SYSLOG_H
-	if (!geteuid())
-	    if (-1 == fi->epoch)
-		syslog (LOG_NOTICE, "%s-%s-%s installed\n",
-			fi->name, fi->version, fi->release);
-	    else
-		syslog (LOG_NOTICE, "%s-%u:%s-%s installed\n",
-			fi->name, fi->epoch, fi->version, fi->release);
-#endif
+	fi_log(fi, "installed");
 	break;
     case PSM_RPMDB_REMOVE:
 	if (ts->transFlags & RPMTRANS_FLAG_TEST)	break;
 	rc = rpmdbRemove(ts->rpmdb, ts->id, fi->record);
-#if HAVE_SYSLOG_H
-	if (!geteuid())
-	    if (-1 == fi->epoch)
-		syslog (LOG_NOTICE, "%s-%s-%s removed\n",
-			fi->name, fi->version, fi->release);
-	    else
-		syslog (LOG_NOTICE, "%s-%u:%s-%s removed\n",
-			fi->name, fi->epoch, fi->version, fi->release);
-#endif
+	fi_log(fi, "removed");
 	break;
 
     default:
