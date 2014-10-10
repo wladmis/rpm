@@ -33,6 +33,9 @@ case "$arch" in
   i[3456]86|k6|athlon|athlon_xp|pentium[234])
     SUBSTS='s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),i386, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),i486, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),i586, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),i686, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),k6, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),athlon, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),athlon_xp, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),pentium2, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),pentium3, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),pentium4, s,\(i[3456]86\|k6\|athlon_xp\|athlon\|pentium[234]\),noarch,'
     ;;
+  aarch64)
+    SUBSTS='s,aarch64,aarch64, s,aarch64,noarch,'
+    ;;
   alpha*)
     SUBSTS='s,alpha,alpha, s,alpha,alphaev5, s,alpha,alphaev56, s,alpha,alphapca56, s,alpha,alphaev6, s,alpha,alphaev67,'
     ;;
@@ -72,6 +75,7 @@ for SUBST in $SUBSTS ; do
 
   ARCH_INSTALL_POST='%{nil}'
   case "${ARCH}-${OS}" in
+    aarch64-linux) LIB=lib64 ;;
     sparc64-linux) LIB=lib64 ;;
     x86_64-linux) LIB=lib64 ;;
   esac
