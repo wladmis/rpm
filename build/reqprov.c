@@ -11,17 +11,10 @@
 static int
 deps_opt_enabled (void)
 {
-	static int enabled = 0, initialized = 0;
+	static int enabled = -1;
 
-	if (!initialized)
-	{
-		int optlevel = rpmExpandNumeric("%{?_deps_optimization}%{?!_deps_optimization:2}");
-		initialized = 1;
-		if (optlevel >= 2)
-			{
-				enabled = 1;
-			}
-	}
+	if (enabled == -1)
+		enabled = rpmExpandNumeric("%{?_deps_optimization}%{?!_deps_optimization:2}") >= 2;
 
 	return enabled;
 }
