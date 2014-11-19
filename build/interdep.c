@@ -773,18 +773,20 @@ void pruneExtraRDeps(struct Req *r, Spec spec)
 
 int processInterdep(Spec spec)
 {
-    struct Req *r = makeRequires(spec, 1);
-    pruneDebuginfoSrc(r, spec);
-    liftDebuginfoDeps(r, spec);
-    r = freeRequires(r);
-
-    r = makeRequires(spec, 2);
-    int optlevel = rpmExpandNumeric("%{?_deps_optimization}%{?!_deps_optimization:2}");
-    if (optlevel >= 2) {
+    struct Req *r;
+    int optlevel = rpmExpandNumeric("%{?_deps_optimization}%{?!_deps_optimization:3}");
+    if (optlevel >= 1) {
+	r = makeRequires(spec, 1);
+	pruneDebuginfoSrc(r, spec);
+	liftDebuginfoDeps(r, spec);
+	r = freeRequires(r);
+    }
+    if (optlevel >= 3) {
+	r = makeRequires(spec, 2);
 	pruneExtraDeps(r, spec);
 	pruneExtraRDeps(r, spec);
+	r = freeRequires(r);
     }
-    r = freeRequires(r);
     return 0;
 }
 
