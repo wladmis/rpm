@@ -611,6 +611,7 @@
 %__spec_build_cmd	%{___build_cmd}
 %__spec_build_pre\
 %{___build_pre}\
+(set +x; find . -type f -exec touch -ca {} +)\
 %{__spec_build_custom_pre}\
 %{nil}
 %__spec_build_body	%{___build_body}
