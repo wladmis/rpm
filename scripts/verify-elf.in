@@ -231,19 +231,37 @@ END {
 	[ "$ldd_rc" = 0 ] || rc=1
 }
 
+read_elf_segments()
+{
+	local f
+	f="$1"; shift
+
+	[ -n "$elf_segments" ] ||
+	elf_segments="$(readelf --wide --segments -- "$f")" ||
+		error_relaxed ANY "$f" 'readelf failed'
+}
+
 verify_stack()
 {
-	local f objdump_info stack
+	local f
 	f="$1"; shift
-	objdump_info="$1"; shift
 
-	stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
-	if [ -z "$stack" ]; then
+	read_elf_segments "$f"
+	[ -n "$elf_segments" ] || return 0
+
+	local sp0 nsp0 sp1 hex stack exe_reg exe_stack
+	sp0='[[:space:]]*'
+	nsp0='[^[:space:]]*'
+	sp1='[[:space:]]\+'
+	hex='0x[0-9a-f]\+'
+	stack="$(printf '%s\n' "$elf_segments" |grep "^${sp0}GNU_STACK${sp1}")" || {
 		error_strict STACK "$f" 'STACK entry not found'
-	elif [ "$stack" = on ]; then
-		stack="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*STACK[[:space:]]\+\([^[:space:]]\+.*\)/\1/p')"
-		error_strict STACK "$f" "found executable STACK entry: $stack"
-	fi
+		return
+	}
+	exe_reg="${sp0}GNU_STACK${sp1}${hex}${sp1}${hex}${sp1}${hex}${sp1}${hex}${sp1}${hex}${sp1}${nsp0}E${nsp0}${sp1}${hex}"
+	exe_stack="$(printf '%s\n' "$stack" |grep -x "$exe_reg")" ||
+		return 0
+	error_strict STACK "$f" "found executable STACK entry: $exe_stack"
 }
 
 find_elf_interp()
@@ -251,7 +269,10 @@ find_elf_interp()
 	local f
 	f="$1"; shift
 
-	readelf --wide --segments "$f" |
+	read_elf_segments "$f"
+	[ -n "$elf_segments" ] || return 0
+
+	printf '%s\n' "$elf_segments" |
 		sed -n 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p'
 }
 
@@ -303,6 +324,7 @@ VerifyELF()
 {
 	local f t objdump_info fname lint_info textrel
 	f="$1"; shift
+	elf_segments=
 
 	if [ ! -f "$f" ]; then
 		error_strict ANY "$f" 'file not available'
@@ -338,7 +360,7 @@ VerifyELF()
 	verify_rpath "$f" "$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}')"
 
 	if [ -z "${t##*ELF* executable*}" -o -z "${t##*ELF* shared object*}" ]; then
-		verify_stack "$f" "$objdump_info"
+		verify_stack "$f"
 	fi
 
 	textrel="$(printf %s "$objdump_info" |sed -ne 's/^[[:space:]]*TEXTREL[[:space:]]\+\([^[:space:]]\+\).*/\1/p')"
