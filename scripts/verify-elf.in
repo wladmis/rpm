@@ -288,17 +288,20 @@ verify_lfs()
 	local f interp funcs
 	f="$1"; shift
 
-	[ -n "$default_elf_interp" ] ||
-		default_elf_interp="$(find_elf_interp "$dump_ld_config")"
-
-	if [ -z "$default_elf_interp" ]; then
-		error_normal LFS "$dump_ld_config" 'program interpreter not found'
-		default_elf_interp=/
-	fi
 	interp="$(find_elf_interp "$f")" || {
 		error_normal LFS "$f" 'program interpreter not found'
 		return
 	}
+
+	[ -n "$default_elf_interp" ] || {
+		elf_segments=
+		default_elf_interp="$(find_elf_interp "$dump_ld_config")"
+	}
+	[ -n "$default_elf_interp" ] || {
+		error_normal LFS "$dump_ld_config" 'program interpreter not found'
+		default_elf_interp=/
+	}
+
 	[ "$interp" = "$default_elf_interp" ] ||
 		return 0
 
