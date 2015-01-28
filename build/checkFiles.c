@@ -10,10 +10,12 @@
 
 #include "checkFiles.h"
 
-void fiIntersect(TFI_t fi1, TFI_t fi2, void (*cb)(char *f, int i1, int i2))
+void fiIntersect(const TFI_t fi1, const TFI_t fi2,
+		 void (*cb)(const TFI_t fi1, const TFI_t fi2,
+			    const char *f, int i1, int i2, void *data),
+		 void *data)
 {
-    if (fi1 == NULL) return;
-    if (fi2 == NULL) return;
+    if (!fi1 || !fi2) return;
     int i1 = 0, i2 = 0;
     while (i1 < fi1->fc && i2 < fi2->fc) {
 	char f1[PATH_MAX], f2[PATH_MAX];
@@ -30,35 +32,40 @@ void fiIntersect(TFI_t fi1, TFI_t fi2, void (*cb)(char *f, int i1, int i2))
 	    i2++;
 	    continue;
 	}
-	cb(f1, i1, i2);
+	cb(fi1, fi2, f1, i1, i2, data);
 	i1++;
 	i2++;
     }
 }
 
 static
-void checkPkgIntersect(Package pkg1, Package pkg2)
+void fiIntersect_cb(const TFI_t fi1, const TFI_t fi2, const char *f,
+		    int i1, int i2, void *data)
 {
-    TFI_t fi1 = pkg1->cpioList;
-    TFI_t fi2 = pkg2->cpioList;
-    if (fi1 == NULL) return;
-    if (fi2 == NULL) return;
-    int once = 0;
-    void cb(char *f, int i1, int i2)
-    {
 	if (S_ISDIR(fi1->fmodes[i1]) && S_ISDIR(fi2->fmodes[i2]))
-	    return;
+		return;
 	const char src[] = "/usr/src/debug/";
 	if (strncmp(f, src, sizeof(src) - 1) == 0)
-	    return;
-	if (once++ == 0)
-	    rpmlog(RPMLOG_WARNING,
-		    "File(s) packaged into both %s-%s-%s and %s-%s-%s:\n",
-		    fi1->name, fi1->version, fi1->release,
-		    fi2->name, fi2->version, fi2->release);
+		return;
+	int *once = data;
+	if (!*once) {
+		rpmlog(RPMLOG_WARNING,
+		       "File(s) packaged into both %s-%s-%s and %s-%s-%s:\n",
+		       fi1->name, fi1->version, fi1->release,
+		       fi2->name, fi2->version, fi2->release);
+		*once = 1;
+	}
 	rpmlog(RPMLOG_INFO, "    %s\n", f);
-    }
-    fiIntersect(fi1, fi2, cb);
+}
+
+static
+void checkPkgIntersect(Package pkg1, Package pkg2)
+{
+    const TFI_t fi1 = pkg1->cpioList;
+    const TFI_t fi2 = pkg2->cpioList;
+    if (!fi1 || !fi2) return;
+    int once = 0;
+    fiIntersect(fi1, fi2, fiIntersect_cb, (void *) &once);
 }
 
 static
@@ -99,35 +106,40 @@ int fiSearch(TFI_t fi, const char *path)
 #include <fts.h>
 
 static
-int checkUnpackaged(Spec spec)
+int avcmp(const void *sptr1, const void *sptr2)
 {
-    int rc = 0;
-    int uc = 0;
-    char **uv = NULL;
-    int avcmp(const void *sptr1, const void *sptr2)
-    {
 	const char *s1 = *(const char **) sptr1;
 	const char *s2 = *(const char **) sptr2;
 	return strcmp(s1, s2);
-    }
-    if (spec->exclude)
-	qsort(spec->exclude, spec->excludeCount, sizeof(char *), avcmp);
-    void check(const char *path)
-    {
+}
+
+static
+int check(const char *path, const Spec spec, unsigned int *uc, char ***uv)
+{
 	Package pkg;
 	for (pkg = spec->packages; pkg; pkg = pkg->next)
 	    if (fiSearch(pkg->cpioList, path) >= 0)
-		return;
+		return 0;
 	if (spec->exclude) {
 	    const char *key = path + strlen(spec->buildRootURL);
 	    if (bsearch(&key, spec->exclude, spec->excludeCount,
 			sizeof(char *), avcmp))
-		return;
+		return 0;
 	}
-	AUTO_REALLOC(uv, uc, 8);
-	uv[uc++] = xstrdup(path + strlen(spec->buildRootURL));
-	rc |= 1;
-    }
+	AUTO_REALLOC(*uv, *uc, 8);
+	(*uv)[(*uc)++] = xstrdup(path + strlen(spec->buildRootURL));
+	return 1;
+}
+
+static
+int checkUnpackaged(Spec spec)
+{
+    int rc = 0;
+    unsigned int uc = 0;
+    char **uv = NULL;
+
+    if (spec->exclude)
+	qsort(spec->exclude, spec->excludeCount, sizeof(char *), avcmp);
     char *paths[] = { (char *) spec->buildRootURL, 0 };
     int options = FTS_COMFOLLOW | FTS_PHYSICAL;
     FTS *ftsp = fts_open(paths, options, NULL);
@@ -169,7 +181,7 @@ int checkUnpackaged(Spec spec)
 	case FTS_SL:
 	case FTS_SLNONE:
 	case FTS_DEFAULT:
-	    check(fts->fts_path);
+	    rc |= check(fts->fts_path, spec, &uc, &uv);
 	    break;
 	default:
 	    rpmlog(RPMLOG_WARNING, "%s: fts error\n", fts->fts_path);
@@ -180,7 +192,7 @@ int checkUnpackaged(Spec spec)
     if (uv) {
 	rpmlog(RPMLOG_WARNING, "Installed (but unpackaged) file(s) found:\n");
 	qsort(uv, uc, sizeof(*uv), avcmp);
-	int i;
+	unsigned int i;
 	for (i = 0; i < uc; i++)
 	    rpmlog(RPMLOG_INFO, "    %s\n", uv[i]);
 	free(uv);

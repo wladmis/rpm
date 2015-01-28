@@ -19,7 +19,7 @@ AC_PROG_CC
 AS=${AS-as}
 AC_SUBST(AS)
 if test "$ac_cv_prog_gcc" = yes; then
-	CFLAGS="$CFLAGS -D_GNU_SOURCE -D_REENTRANT -fno-strict-aliasing -Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wno-char-subscripts"
+	CFLAGS="$CFLAGS -D_GNU_SOURCE -D_REENTRANT -fno-strict-aliasing -Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wno-char-subscripts -Werror=trampolines"
 fi
 export CFLAGS
 

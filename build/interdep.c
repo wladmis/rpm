@@ -473,35 +473,44 @@ void fiPrune(TFI_t fi, char pruned[])
     fi->astriplen = save_fi.astriplen;
 }
 
-// prune src dups from pkg1 and add dependency on pkg2
 static
-void pruneSrc1(struct Req *r, Package pkg1, Package pkg2)
+void fiIntersect_cb(const TFI_t fi1, const TFI_t fi2, const char *f,
+		    int i1, int i2, void *data)
 {
-    TFI_t fi1 = pkg1->cpioList;
-    TFI_t fi2 = pkg2->cpioList;
-    if (fi1 == NULL) return;
-    if (fi2 == NULL) return;
-    int npruned = 0;
-    char pruned[fi1->fc];
-    bzero(pruned, fi1->fc);
-    void cb(char *f, int i1, int i2)
-    {
+	(void) fi2;
 	(void) i2;
 	if (S_ISDIR(fi1->fmodes[i1]))
 	    return;
 	const char src[] = "/usr/src/debug/";
 	if (strncmp(f, src, sizeof(src) - 1))
 	    return;
-	pruned[i1] = 1;
-	npruned++;
+	struct {
+		unsigned int n;
+		char list[fi1->fc];
+	} *pruned = data;
+	pruned->list[i1] = 1;
+	pruned->n++;
     }
-    fiIntersect(fi1, fi2, cb);
-    if (npruned == 0)
+
+// prune src dups from pkg1 and add dependency on pkg2
+static
+void pruneSrc1(struct Req *r, Package pkg1, Package pkg2)
+{
+    TFI_t fi1 = pkg1->cpioList;
+    const TFI_t fi2 = pkg2->cpioList;
+    if (!fi1 || !fi2) return;
+    struct {
+	    unsigned int n;
+	    char list[fi1->fc];
+    } pruned;
+    bzero(&pruned, sizeof(pruned));
+    fiIntersect(fi1, fi2, fiIntersect_cb, &pruned);
+    if (pruned.n == 0)
 	return;
     addDeps1(r, pkg1, pkg2);
     rpmMessage(RPMMESS_NORMAL, "Removing from %s %d sources provided by %s\n",
-	    pkgName(pkg1), npruned, pkgName(pkg2));
-    fiPrune(fi1, pruned);
+	    pkgName(pkg1), pruned.n, pkgName(pkg2));
+    fiPrune(fi1, pruned.list);
 }
 
 static void
@@ -709,22 +718,19 @@ void pruneRDeps1(struct Req *r, Spec spec, Package pkg1, Package pkg2)
 	    break;
 	}
     }
-    void prune(int i, int j)
-    {
-	if (strcmp(reqNv[i], provNv[j]))
-	    return;
-	if (cycle && (reqFv[i] & RPMSENSE_SENSEMASK) == RPMSENSE_EQUAL)
-	    return;
-	dep_compare_t cmp = compare_deps(RPMTAG_REQUIRENAME,
-		provVv[j], provFv[j], reqVv[i], reqFv[i]);
-	if (!(cmp == DEP_ST || cmp == DEP_EQ))
-	    return;
-	pruned[i] = 1;
-	npruned++;
-    }
     for (i = 0; i < reqc; i++)
-	for (j = 0; j < provc; j++)
-	    prune(i, j);
+	for (j = 0; j < provc; j++) {
+	    if (strcmp(reqNv[i], provNv[j]))
+		continue;
+	    if (cycle && (reqFv[i] & RPMSENSE_SENSEMASK) == RPMSENSE_EQUAL)
+		continue;
+	    dep_compare_t cmp = compare_deps(RPMTAG_REQUIRENAME,
+				provVv[j], provFv[j], reqVv[i], reqFv[i]);
+	    if (!(cmp == DEP_ST || cmp == DEP_EQ))
+		continue;
+	    pruned[i] = 1;
+	    npruned++;
+	}
     if (npruned == 0)
 	goto free;
     rpmMessage(RPMMESS_NORMAL,
