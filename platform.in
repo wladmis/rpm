@@ -654,7 +654,7 @@
 @alt@%optflags_optimization -O%{_optlevel}
 @alt@
 @alt@# warning flags
-@alt@%optflags_warnings	-Wall -Wtrampolines%{?_enable_Werror: -Werror}
+@alt@%optflags_warnings	-Wall%{?_enable_Werror: -Werror}
 @alt@
 @alt@# debug flags
 @alt@%optflags_debug	-g
