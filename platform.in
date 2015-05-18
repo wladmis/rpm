@@ -557,7 +557,15 @@
 @alt@%__gcc_version_major %(gcc -dumpversion |cut -d. -f1)
 @alt@%__gcc_version_minor %(gcc -dumpversion |cut -d. -f2)
 @alt@%__gcc_version_patch %(gcc -dumpversion |cut -d. -f3)
-@alt@%__gcc_version_base %(gcc -dumpversion |cut -d. -f-2)
+@alt@%__gcc_version_base %(	\
+@alt@  maj=`echo %__gcc_version_major`;	\
+@alt@  min=`echo %__gcc_version_minor`;	\
+@alt@  if [ "$maj" -ge 5 ]; then	\
+@alt@    echo -n "$maj";	\
+@alt@  else	\
+@alt@    echo -n "$maj.$min";	\
+@alt@  fi	\
+@alt@)
 @alt@
 @alt@# <BEGIN GLIBC TRICKS
 @alt@%__glibc_version %(rpmquery --qf '%%{VERSION}' glibc)
