@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 foreign
 
-INCLUDES = -I. \
+AM_CPPFLAGS = -I. \
 	-I$(top_srcdir)/build \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/rpmio \
@@ -55,7 +55,7 @@ sources:
 
 .PHONY:	lclint
 lclint:
-	lclint $(DEFS) $(INCLUDES) $(librpmdb_la_SOURCES)
+	lclint $(DEFS) $(AM_CPPFLAGS) $(librpmdb_la_SOURCES)
 
 tdbi: librpmdb.la tdbi.o
 	$(LINK) -all-static $@.o $< $(mylibpaths) $(mylibs) $(LIBS)

@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.72.M70C.2
+Release: alt100.76.M70C.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -529,11 +529,36 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Sep 22 2015 Anton V. Boyarshinov <boyarsh@altlinux.ru> 4.0.4-alt100.76.M70C.1
+- backport from p7
+
 * Wed Jan 21 2015 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt100.72.M70C.2
 - Very Important Change.
 
-* Wed Oct 30 2013 Anton V. Boyarshinov <boyarsh@altlinux.ru> 4.0.4-alt100.72.M70C.1
-- rebuild for c7
+* Sun Apr 27 2014 Andrey Cherepanov <cas@altlinux.org> 4.0.4-alt100.76.M70P.1
+- Backport to p7 branch
+
+* Tue Feb 25 2014 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.77
+- fixup-binconfig:
+  extended library search path stripping algorithm to handle rpaths.
+- pkgconfig.{req,prov}:
+  allowed pkgconfig names to start with "+" (closes: #29737).
+
+* Sun Feb 16 2014 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.76
+- cpp.req: adapted parser to handle cpp 4.8 output.
+- rpmdb: fixed miscompilation by gcc 4.8.
+
+* Tue Oct 29 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.75
+- platform.in: added %%add_debuginfo_skiplist and related macros.
+- debugedit: enhanced error diagnostics.
+
+* Mon Oct 28 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.74
+- debugedit: updated from rpm.org.
+
+* Mon Oct 28 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.73
+- fixup-pkgconfig: workaround some broken pkgconfig files (closes: #29427).
+- Fixed build with new automake.
+>>>>>>> p7
 
 * Mon Apr 08 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.72
 - Fixed build with new gettext.

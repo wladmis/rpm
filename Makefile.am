@@ -10,7 +10,7 @@ EXTRA_DIST = CHANGES CREDITS Doxyheader GROUPS INSTALL \
 
 SUBDIRS = po rpmio rpmdb lib build @WITH_PYTHON_SUBDIR@ tools scripts doc .
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/build \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/rpmdb \
@@ -95,7 +95,7 @@ $(PROGRAMS): 		$(myLDADD) @WITH_APIDOCS_TARGET@
 
 .PHONY:	lclint
 lclint:
-	lclint $(DEFS) $(INCLUDES) rpmqv.c $(rpmb_SOURCES) \
+	lclint $(DEFS) $(AM_CPPFLAGS) rpmqv.c $(rpmb_SOURCES) \
 		`make -s sources -C build` \
 		`make -s sources -C lib` \
 		`make -s sources -C rpmdb` \

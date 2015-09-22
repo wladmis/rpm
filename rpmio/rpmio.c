@@ -381,7 +381,8 @@ ssize_t fdRead(void * cookie, /*@out@*/ char * buf, size_t count)
     rc = read(fdFileno(fd), buf, (count > fd->bytesRemain ? fd->bytesRemain : count));
     fdstat_exit(fd, FDSTAT_READ, rc);
 
-    if (fd->ndigests && rc > 0) fdUpdateDigests(fd, buf, rc);
+    if (fd->ndigests && rc > 0)
+	fdUpdateDigests(fd, (const unsigned char *)buf, rc);
 
 /*@-modfilesys@*/
 DBGIO(fd, (stderr, "==>\tfdRead(%p,%p,%ld) rc %ld %s\n", cookie, buf, (long)count, (long)rc, fdbg(fd)));
@@ -400,7 +401,8 @@ ssize_t fdWrite(void * cookie, const char * buf, size_t count)
 
     if (fd->bytesRemain == 0) return 0;	/* XXX simulate EOF */
 
-    if (fd->ndigests && count > 0) fdUpdateDigests(fd, buf, count);
+    if (fd->ndigests && count > 0)
+	fdUpdateDigests(fd, (const unsigned char *)buf, count);
 
     if (fd->wr_chunked) {
 	char chunksize[20];
@@ -2256,7 +2258,8 @@ DBGIO(fd, (stderr, "==>\tgzdRead(%p,%p,%u) rc %lx %s\n", cookie, buf, (unsigned)
     } else if (rc >= 0) {
 	fdstat_exit(fd, FDSTAT_READ, rc);
 	/*@-compdef@*/
-	if (fd->ndigests && rc > 0) fdUpdateDigests(fd, buf, rc);
+	if (fd->ndigests && rc > 0)
+	    fdUpdateDigests(fd, (const unsigned char *)buf, rc);
 	/*@=compdef@*/
     }
     return rc;
@@ -2427,7 +2430,8 @@ static ssize_t gzdWrite(void * cookie, const char * buf, size_t count)
 
     if (fd == NULL || fd->bytesRemain == 0) return 0;	/* XXX simulate EOF */
 
-    if (fd->ndigests && count > 0) fdUpdateDigests(fd, buf, count);
+    if (fd->ndigests && count > 0)
+	fdUpdateDigests(fd, (const unsigned char *)buf, count);
 
     rpmgz = gzdFileno(fd);
     if (rpmgz == NULL) return -2;	/* XXX can't happen */
@@ -2654,7 +2658,8 @@ static ssize_t bzdRead(void * cookie, /*@out@*/ char * buf, size_t count)
     } else if (rc >= 0) {
 	fdstat_exit(fd, FDSTAT_READ, rc);
 	/*@-compdef@*/
-	if (fd->ndigests && rc > 0) fdUpdateDigests(fd, buf, rc);
+	if (fd->ndigests && rc > 0)
+	    fdUpdateDigests(fd, (const unsigned char *)buf, rc);
 	/*@=compdef@*/
     }
     return rc;
@@ -2673,7 +2678,8 @@ static ssize_t bzdWrite(void * cookie, const char * buf, size_t count)
 
     if (fd->bytesRemain == 0) return 0;	/* XXX simulate EOF */
 
-    if (fd->ndigests && count > 0) fdUpdateDigests(fd, buf, count);
+    if (fd->ndigests && count > 0)
+	fdUpdateDigests(fd, (const unsigned char *)buf, count);
 
     bzfile = bzdFileno(fd);
     fdstat_enter(fd, FDSTAT_WRITE);
@@ -3071,7 +3077,8 @@ static ssize_t lzdRead(void * cookie, /*@out@*/ char * buf, size_t count)
     } else if (rc >= 0) {
 	fdstat_exit(fd, FDSTAT_READ, rc);
 	/*@-compdef@*/
-	if (fd->ndigests && rc > 0) fdUpdateDigests(fd, (void *)buf, rc);
+	if (fd->ndigests && rc > 0)
+	    fdUpdateDigests(fd, (const unsigned char *)buf, rc);
 	/*@=compdef@*/
     }
     return rc;
@@ -3090,7 +3097,8 @@ static ssize_t lzdWrite(void * cookie, const char * buf, size_t count)
 
     if (fd == NULL || fd->bytesRemain == 0) return 0;   /* XXX simulate EOF */
 
-    if (fd->ndigests && count > 0) fdUpdateDigests(fd, (void *)buf, count);
+    if (fd->ndigests && count > 0)
+	fdUpdateDigests(fd, (const unsigned char *)buf, count);
 
     lzfile = lzdFileno(fd);
 

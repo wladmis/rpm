@@ -6,7 +6,7 @@ EXTRA_DIST = tdigest.c tficl.c tkey.c trpmio.c
 
 EXTRA_PROGRAMS = tdigest tkey tring trpmio
 
-INCLUDES = -I. @INCPATH@
+AM_CPPFLAGS = -I. @INCPATH@
 
 pkgincdir = $(pkgincludedir)
 pkginc_HEADERS = \
@@ -43,7 +43,7 @@ sources:
 
 .PHONY:	lclint
 lclint:
-	lclint $(DEFS) $(INCLUDES) $(librpmio_la_SOURCES)
+	lclint $(DEFS) $(AM_CPPFLAGS) $(librpmio_la_SOURCES)
 
 tficl.o: tficl.c
 	$(COMPILE) -I/usr/include/ficl -o $@ -c tficl.c 

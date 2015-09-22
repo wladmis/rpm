@@ -16,8 +16,14 @@ rm -rf .tmp
 mkdir .tmp
 
 # Strip binaries, create .debug files under /usr/lib/debug and install sources into /usr/src/debug.
-prune_paths='-path ./usr/share -o -path ./lib/firmware -o -path ./usr/lib/debug -o -path ./usr/src'
-find . '(' -path './.*' -o $prune_paths ')' -prune -o -type f -print |sort |
+
+: ${RPM_DEBUGINFO_SKIPLIST:=}
+prune_paths="/lib/firmware /usr/lib/debug /usr/share /usr/src $RPM_DEBUGINFO_SKIPLIST"
+prune_tests="$(printf %s "$prune_paths" |
+		tr '[:space:]' '\n' |
+		sort -u |
+		sed -n '/^\// s/.*/ -o -path .&/p')"
+find . '(' -path './.*' $prune_tests ')' -prune -o -type f -print |sort |
 file -NF$'\t' -f - |sed -n 's/\t.* ELF .* \(executable\|shared object\), .*, not stripped.*//p' |
 xargs -r --delimiter='\n' stat -c '%h %i %n' >.tmp/flist
 while read -r nlink ino f; do
@@ -72,7 +78,7 @@ while read -r nlink ino f; do
 done <.tmp/flist
 
 # Make symbolic links that mimic the original tree.
-find . '(' -path './.*' -o $prune_paths ')' -prune -o -type l -print |sort >.tmp/flist
+find . '(' -path './.*' $prune_tests ')' -prune -o -type l -print |sort >.tmp/flist
 while read -r l; do
 	f=$(readlink -vm "$l")
 	f=${f#$RPM_BUILD_ROOT}

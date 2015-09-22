@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = 1.4 foreign
 
 PYVER= @WITH_PYTHON_VERSION@
 
-INCLUDES = -I. \
+AM_CPPFLAGS = -I. \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/rpmdb \
 	-I$(top_srcdir)/rpmio \
@@ -30,4 +30,4 @@ rpmmodule_la_SOURCES = rpmmodule.c hash.c upgrade.c header-py.c db-py.c
 
 .PHONY:	lclint
 lclint:
-	lclint $(DEFS) $(INCLUDES) $(rpmmodule_la_SOURCES)
+	lclint $(DEFS) $(AM_CPPFLAGS) $(rpmmodule_la_SOURCES)

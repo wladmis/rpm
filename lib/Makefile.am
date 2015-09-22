@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = 1.4 foreign
 
-INCLUDES = -I. \
+AM_CPPFLAGS = -I. \
 	-I$(top_srcdir)/build \
 	-I$(top_srcdir)/rpmdb \
 	-I$(top_srcdir)/rpmio \
@@ -38,7 +38,7 @@ librpm_la_DEPENDENCIES = $(top_builddir)/rpmdb/librpmdb.la $(top_builddir)/rpmio
 
 noinst_PROGRAMS = test-set
 test_set_SOURCES = set.c
-test_set_CPPFLAGS = -DSELF_TEST
+test_set_CPPFLAGS = $(AM_CPPFLAGS) -DSELF_TEST
 test_set_LDADD = $(top_builddir)/rpmio/librpmio.la
 
 .PHONY:	sources
@@ -47,13 +47,13 @@ sources:
 
 .PHONY:	lclint
 lclint:
-	lclint $(DEFS) $(INCLUDES) $(librpm_la_SOURCES)
+	lclint $(DEFS) $(AM_CPPFLAGS) $(librpm_la_SOURCES)
 
 th: th.c librpm.la
-	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) -o $@ $< $(mylibpaths) $(mylibs) $(LIBS)
+	$(CC) $(CFLAGS) $(DEFS) $(AM_CPPFLAGS) -o $@ $< $(mylibpaths) $(mylibs) $(LIBS)
 
 trb: trb.o librpm.la
-	$(LINK) @LDFLAGS_STATIC@ $(CFLAGS) $(DEFS) $(INCLUDES) -o $@ trb.o $(mylibs) $(LIBS)
+	$(LINK) @LDFLAGS_STATIC@ $(CFLAGS) $(DEFS) $(AM_CPPFLAGS) -o $@ trb.o $(mylibs) $(LIBS)
 
 trhn: trhn.o librpm.la
-	$(LINK) @LDFLAGS_STATIC@ $(CFLAGS) $(DEFS) $(INCLUDES) -o $@ trhn.o $(mylibs) $(LIBS)
+	$(LINK) @LDFLAGS_STATIC@ $(CFLAGS) $(DEFS) $(AM_CPPFLAGS) -o $@ trhn.o $(mylibs) $(LIBS)
