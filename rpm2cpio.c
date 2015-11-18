@@ -10,6 +10,7 @@ int main(int argc, char **argv)
     FD_t fdi, fdo;
     Header h;
     char * rpmio_flags;
+    const int * archive_size;
     int rc, isSource;
     FD_t gzdi;
     
@@ -57,6 +58,10 @@ int main(int argc, char **argv)
 	    t = stpcpy(t, ".lzdio");
 	if (!strcmp(payload_compressor, "xz"))
 	    t = stpcpy(t, ".xzdio");
+
+	if (!headerGetEntry(h, RPMTAG_ARCHIVESIZE, NULL,
+			    (void **) &archive_size, NULL))
+	    archive_size = NULL;
     }
 
     gzdi = Fdopen(fdi, rpmio_flags);	/* XXX gzdi == fdi */
@@ -66,7 +71,9 @@ int main(int argc, char **argv)
     }
 
     rc = ufdCopy(gzdi, fdo);
-    rc = (rc <= 0) ? EXIT_FAILURE : EXIT_SUCCESS;
+    rc = archive_size
+	    ? (*archive_size != rc ? EXIT_FAILURE : EXIT_SUCCESS)
+	    : ((rc <= 0) ? EXIT_FAILURE : EXIT_SUCCESS);
     if (Fclose(fdo) < 0)
 	rc = EXIT_FAILURE;
 

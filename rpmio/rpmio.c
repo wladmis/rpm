@@ -1285,8 +1285,8 @@ void urlSetCallback(rpmCallbackFunction notify, void *notifyData, int notifyCoun
 int ufdCopy(FD_t sfd, FD_t tfd)
 {
     char buf[BUFSIZ];
-    int itemsRead;
-    int itemsCopied = 0;
+    unsigned int itemsRead;
+    unsigned int itemsCopied = 0;
     int rc = 0;
     int notifier = -1;
 
