@@ -104,6 +104,7 @@ Requires: gcc gettext-tools glibc-devel gnu-config file kernel-headers libtool m
 Requires: procps psmisc sed service which
 Requires: bash >= 0:3.1.17-alt4
 Requires: bzip2 >= 1:1.0.2-alt4
+Requires: xz
 Requires: gzip >= 0:1.3.3-alt2
 Requires: mktemp >= 1:1.3.1
 Requires: patch >= 2.5

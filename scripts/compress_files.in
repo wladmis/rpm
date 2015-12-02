@@ -39,11 +39,7 @@ for f in "$@"; do
 			bzip2 -9f "$f"
 			;;
 		*)
-			bzip2 -9kf "$f"
-			gzip -9nf "$f"
-			SIZE_BZIP2=`@RPMCONFIGDIR@/filesize "$f.bz2" 512`
-			SIZE_GZIP=`@RPMCONFIGDIR@/filesize "$f.gz" 512`
-			[ "$SIZE_GZIP" -gt "$SIZE_BZIP2" ] && rm -f "$f.gz" || rm -f "$f.bz2"
+			xz -f "$f"
 			;;
 	esac
 done
