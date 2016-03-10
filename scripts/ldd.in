@@ -83,7 +83,7 @@ verify_out="$("$rtld" --verify "$file")"
 	Fatal "$file: trace failed"
 
 LD_TRACE_LOADED_OBJECTS=1 LD_WARN=$warn LD_BIND_NOW=$bind_now LD_DEBUG=$debug LD_LIBRARY_VERSION=$verify_out \
-	"$rtld" --list --library-path "$rpath" "$file" ||
+	"$rtld" --library-path "$rpath" "$file" ||
 	Fatal "$file: trace failed"
 
 exit 0
