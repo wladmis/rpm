@@ -178,10 +178,8 @@ NF==2 && ($1==name || basename($1)==name) && $1~"^/" && $2~"^[(]0x" {print $1}
 		LC_ALL=C fgrep "binding file $f [" |
 		awk '($4!=$7){print$11"\t"$7}' |
 		sed -e "s/[\`']//g" >"$tmpdir"/a/sym2lib
-	if ! [ -s "$tmpdir"/a/sym2lib ]; then
-		Warning "$f: no symbol bindings"
-		return 0
-	fi
+	[ -s "$tmpdir"/a/sym2lib ] ||
+		Fatal "$f: no symbol bindings"
 	# Diagnose overlinking.
 	cut -f1 "$tmpdir"/a/lib2dep >"$tmpdir"/a/lib1
 	if [ -s "$tmpdir"/a/flib ]; then
