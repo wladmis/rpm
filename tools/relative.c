@@ -141,7 +141,7 @@ main(int ac, char *av[])
 	if (!*what_p && !*to_p)
 		result(base_name(orig_what));
 
-	res = xmalloc(strlen(what) + strlen(to) * 3 / 2 + 3);
+	res = xmalloc(strlen(orig_what) + strlen(to) * 3 / 2 + 3);
 
 	if (('/' == *what_p) && !*to_p)
 		result(orig_what + (++what_p - what));
