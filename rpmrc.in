@@ -64,8 +64,8 @@ optflags: armv5tel %optflags_default -fomit-frame-pointer -march=armv5te
 optflags: armv5tejl %optflags_default -fomit-frame-pointer -march=armv5te
 optflags: armv6l %optflags_default -fomit-frame-pointer -march=armv6
 optflags: arm %optflags_default -fomit-frame-pointer -march=armv5te
-optflags: armv7l %optflags_default -fomit-frame-pointer -march=armv7-a -mfloat-abi=hard -mfpu=vfpv3-d16 -mthumb
-optflags: armh %optflags_default -fomit-frame-pointer -march=armv7-a -mfloat-abi=hard -mfpu=vfpv3-d16 -mthumb
+optflags: armv7l %optflags_default -fomit-frame-pointer -march=armv7-a -mthumb
+optflags: armh %optflags_default -fomit-frame-pointer -march=armv7-a -mthumb
 optflags: aarch64 %optflags_default
 
 optflags: atarist %optflags_default -fomit-frame-pointer
