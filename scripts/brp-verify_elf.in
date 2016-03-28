@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ef
 #
 # brp-verify_elf - verify ELF objects.
 #
@@ -139,6 +139,17 @@ while IFS=$'\t' read -r f t; do
 			$skip) continue 2 ;;
 		esac
 	done
-	printf '%s\n' "$f"
+	VERIFY_ELF_LD_PRELOAD=
+	for rule in ${!RPM_LD_PRELOAD_@}; do
+	    pats="${rule/#RPM/RPM_FILES_TO}"
+	    for pat in ${!pats}; do
+		case "${f#.}" in
+		    $pat) VERIFY_ELF_LD_PRELOAD="$VERIFY_ELF_LD_PRELOAD ${!rule}"
+			break
+			;;
+		esac
+	    done
+	done
+	printf '%s\t%s\n' "$f" "$VERIFY_ELF_LD_PRELOAD"
 done |
 @RPMCONFIGDIR@/verify-elf
