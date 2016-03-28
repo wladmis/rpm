@@ -159,8 +159,9 @@ verify_rpath()
 
 verify_unresolved()
 {
-	local f fname rpath ldd_info ldd_rc
+	local f preload fname rpath ldd_info ldd_rc
 	f="$1"; shift
+	preload="$1"; shift
 	fname="$1"; shift
 	rpath="$1"; shift
 
@@ -177,7 +178,7 @@ verify_unresolved()
 		tr -s '[:space:]' : |
 		sed -e 's/^:\+//; s/:\+$//')"
 
-	if ! ldd_info="$("$elf_ldd" --undefined -- "$f" "$rpath" 2>&1)"; then
+	if ! ldd_info="$(LD_PRELOAD="$preload" "$elf_ldd" --undefined -- "$f" "$rpath" 2>&1)"; then
 		printf >&2 '%s\n' "$ldd_info"
 		error_relaxed UNRESOLVED "$f" 'ldd failed'
 		return
@@ -325,8 +326,9 @@ run_eu()
 
 VerifyELF()
 {
-	local f t objdump_info fname lint_info textrel
+	local f preload t objdump_info fname lint_info textrel
 	f="$1"; shift
+	preload="$1"; shift
 	elf_segments=
 
 	if [ ! -f "$f" ]; then
@@ -373,7 +375,7 @@ VerifyELF()
 	fi
 
 	if [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; then
-		verify_unresolved "$f" "$fname" \
+		verify_unresolved "$f" "$preload" "$fname" \
 			"$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
 		if [ -z "${t##*ELF 32-bit*}" ]; then
 			verify_lfs "$f"
@@ -383,11 +385,11 @@ VerifyELF()
 
 if [ $# -gt 0 ]; then
 	for f; do
-		VerifyELF "$f"
+		VerifyELF "$f" ''
 	done
 else
-	while read -r f; do
-		VerifyELF "$f"
+	while IFS=$'\t' read -r f preload; do
+		VerifyELF "$f" "$preload"
 	done
 fi
 
