@@ -127,6 +127,9 @@ RPM_VERIFY_ELF_LDD_RPATH="$("$dump_ld_config" '' "$RPM_BUILD_ROOT")"
 RPM_VERIFY_ELF_LDD_RPATH="$RPM_VERIFY_ELF_LDD_RPATH /$RPM_LIB $RPM_LIBDIR $("$dump_ld_config")"
 export RPM_VERIFY_ELF_LDD_RPATH
 
+# just in case
+set -o pipefail
+
 find .$RPM_VERIFY_ELF_TOPDIR -path ./usr/lib/debug -prune -o -type f -print |
 file -NF$'\t' -f - |
 while IFS=$'\t' read -r f t; do
