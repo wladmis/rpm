@@ -41,6 +41,17 @@ if [ -z "$methods" ]; then
 	exit 0
 fi
 
+# We must be careful not use any symlink not from the known files.
+# Therefore, we cannot use readlink -f or any other standard
+# symlink-following tools
+# (because they might read symlinks belonging to other packages).
+canonicalize_relative_link()
+{
+    local fname="$1"
+    local to="$2"
+    realpath --no-symlinks --canonicalize-missing --logical "$(dirname "$fname")"/"$to"
+}
+
 # filter file list through TOPDIR and SKIPLIST patterns
 while IFS= read -r f; do
 	fname="${f#$RPM_BUILD_ROOT}"
@@ -57,20 +68,31 @@ while IFS= read -r f; do
 			fi
 		done
 	fi
-	# absolute symbolic links should not be passed down to file(1)
+	# almost no symbolic links should be passed directly to file(1)
 	if [ -L "$f" ]; then
 		to="$(readlink "$f")"
+		# absolute symbolic links should not be passed down to file(1)
+		# (because of buildreq)
 		if [ -n "$to" -a -z "${to##/*}" ]; then
 			if [ -e "$f" ]; then
 				printf '%s\t symbolic link to `%s'\''\n' "$f" "$to"
 			else
 				printf '%s\t broken symbolic link to `%s'\''\n' "$f" "$to"
 			fi
-			continue
+		else
+		# relative symbolic links should be followed within this package
+		# (they represent fixed content inside the package
+		# which should be analysed instead);
+		# only the unresolved "remainder" will be passed
+		    printf '%s\t%s\n' "$f" "$(canonicalize_relative_link "$f" "$to")" >&5
 		fi >&4
+		continue
 	fi
 	printf '%s\n' "$f"
-done >"$workdir"/files 3>"$RPM_BUILD_ROOT/.files:$RPM_SUBPACKAGE_NAME" 4>"$workdir"/files+types
+done >"$workdir"/files \
+    3>"$RPM_BUILD_ROOT/.files:$RPM_SUBPACKAGE_NAME" \
+    4>"$workdir"/files+types \
+    5>"$workdir"/symlinks+targets-unsorted
 
 if ! [ -s "$workdir"/files ]; then
 	Info "empty file list, nothing to do"
@@ -79,6 +101,17 @@ fi
 
 # filter file list through file(1) to append types
 if ! file -NF$'\t' -f "$workdir"/files >>"$workdir"/files+types; then
+	sed -n '/\t *ERROR:/p' "$workdir"/files+types >&2
+	exit 1
+fi
+
+# resolve symlinks inside the package
+sort -t$'\t' -k2 <"$workdir"/symlinks+targets-unsorted >"$workdir"/symlinks+targets
+JFS=$'\t' @RPMCONFIGDIR@/percolate "$workdir"/files+types "$workdir"/symlinks+targets
+# append the remainder
+if ! cut -f1 < "$workdir"/symlinks+targets |
+    file -NF$'\t' -f- >>"$workdir"/files+types
+then
 	sed -n '/\t *ERROR:/p' "$workdir"/files+types >&2
 	exit 1
 fi
