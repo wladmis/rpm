@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 #
 # percolate annotations from "wet" nodes through a "dry" graph of links.
 # (A more formal description can be found below after the input
