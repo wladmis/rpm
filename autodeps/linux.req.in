@@ -51,6 +51,15 @@ canonicalize_relative_link()
     local to="$2"
     realpath --no-symlinks --canonicalize-missing --logical "$(dirname "$fname")"/"$to"
 }
+# (TODO: we don't pay any attention to directory symlinks
+# that might appear as components of some files' paths.
+# When can this be important?
+# Example: a/c -> b/c, b -> d, d/c has type t.
+# If done more correctly, a/c should get type t.
+# But our resolution can't substitute d for b now.
+# The problem why we don't use realpath for this is that
+# whereas d/c could belong to our package, b might not to do so,
+# and the our package can't guarantee that a/c is always the same as d/c.)
 
 # filter file list through TOPDIR and SKIPLIST patterns
 while IFS= read -r f; do
