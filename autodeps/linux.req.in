@@ -24,15 +24,7 @@
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
-exit_handler()
-{
-	rm -rf -- "$workdir"
-	exit $1
-}
-
-trap 'exit 143' HUP INT QUIT PIPE TERM
-workdir=$(mktemp -dt "$PROG".XXXXXXXX)
-trap 'exit_handler $?' EXIT
+. @RPMCONFIGDIR@/tmpdir.sh
 
 methods=$(SetupMethods req "$RPM_FINDREQ_METHOD")
 if [ -z "$methods" ]; then
@@ -98,30 +90,30 @@ while IFS= read -r f; do
 		continue
 	fi
 	printf '%s\n' "$f"
-done >"$workdir"/files \
+done >"$tmpdir"/files \
     3>"$RPM_BUILD_ROOT/.files:$RPM_SUBPACKAGE_NAME" \
-    4>"$workdir"/files+types \
-    5>"$workdir"/symlinks+targets-unsorted
+    4>"$tmpdir"/files+types \
+    5>"$tmpdir"/symlinks+targets-unsorted
 
-if ! [ -s "$workdir"/files ]; then
+if ! [ -s "$tmpdir"/files ]; then
 	Info "empty file list, nothing to do"
 	exit 0
 fi
 
 # filter file list through file(1) to append types
-if ! file -NF$'\t' -f "$workdir"/files >>"$workdir"/files+types; then
-	sed -n '/\t *ERROR:/p' "$workdir"/files+types >&2
+if ! file -NF$'\t' -f "$tmpdir"/files >>"$tmpdir"/files+types; then
+	sed -n '/\t *ERROR:/p' "$tmpdir"/files+types >&2
 	exit 1
 fi
 
 # resolve symlinks inside the package
-sort -t$'\t' -k2 <"$workdir"/symlinks+targets-unsorted >"$workdir"/symlinks+targets
-JFS=$'\t' @RPMCONFIGDIR@/percolate "$workdir"/files+types "$workdir"/symlinks+targets
+sort -t$'\t' -k2 <"$tmpdir"/symlinks+targets-unsorted >"$tmpdir"/symlinks+targets
+JFS=$'\t' @RPMCONFIGDIR@/percolate "$tmpdir"/files+types "$tmpdir"/symlinks+targets
 # append the remainder
-if ! cut -f1 < "$workdir"/symlinks+targets |
-    file -NF$'\t' -f- >>"$workdir"/files+types
+if ! cut -f1 < "$tmpdir"/symlinks+targets |
+    file -NF$'\t' -f- >>"$tmpdir"/files+types
 then
-	sed -n '/\t *ERROR:/p' "$workdir"/files+types >&2
+	sed -n '/\t *ERROR:/p' "$tmpdir"/files+types >&2
 	exit 1
 fi
 
@@ -135,10 +127,10 @@ RunMethod()
 		Info "$filter not available"
 		return
 	fi
-	local filelist="$workdir/${exe##*/}".files
-	local deplist="$workdir/${exe##*/}".deps
+	local filelist="$tmpdir/${exe##*/}".files
+	local deplist="$tmpdir/${exe##*/}".deps
 	Debug "running $filter"
-	"$filter" <"$workdir"/files+types >"$filelist" ||
+	"$filter" <"$tmpdir"/files+types >"$filelist" ||
 		Fatal "$filter failed"
 	Verbose "$filter: $(wc -l <"$filelist") files"
 	[ -s "$filelist" ] || return 0
@@ -162,14 +154,14 @@ Info "running scripts ($methods)"
 RunMethods req "$methods" RunMethod
 
 if [ -n "$found" ]; then
-	(set +f && LC_ALL=C sort -u -m "$workdir"/*.deps) >"$workdir"/find-requires-deps || false
+	(set +f && LC_ALL=C sort -u -m "$tmpdir"/*.deps) >"$tmpdir"/find-requires-deps || false
 	if [ -n "${RPM_FIND_REQUIRES_FILTER-}" ]; then
-		(eval "set -x; $RPM_FIND_REQUIRES_FILTER") <"$workdir"/find-requires-deps >"$workdir"/filter-requires-deps
+		(eval "set -x; $RPM_FIND_REQUIRES_FILTER") <"$tmpdir"/find-requires-deps >"$tmpdir"/filter-requires-deps
 		[ $? = 0 ] || Fatal "filter failed"
-		(cd "$workdir" && diff -U1 find-requires-deps filter-requires-deps) >&2 ||:
-		cat "$workdir"/filter-requires-deps
+		(cd "$tmpdir" && diff -U1 find-requires-deps filter-requires-deps) >&2 ||:
+		cat "$tmpdir"/filter-requires-deps
 	else
-		cat "$workdir"/find-requires-deps
+		cat "$tmpdir"/find-requires-deps
 	fi
 fi
 

@@ -24,15 +24,7 @@
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
-exit_handler()
-{
-	rm -rf -- "$workdir"
-	exit $1
-}
-
-trap 'exit 143' HUP INT QUIT PIPE TERM
-workdir=$(mktemp -dt "$PROG".XXXXXXXX)
-trap 'exit_handler $?' EXIT
+. @RPMCONFIGDIR@/tmpdir.sh
 
 methods=$(SetupMethods prov "$RPM_FINDPROV_METHOD")
 if [ -z "$methods" ]; then
@@ -68,16 +60,16 @@ while IFS= read -r f; do
 		fi
 	fi
 	printf '%s\n' "$f"
-done >"$workdir"/files 3>"$RPM_BUILD_ROOT/.files:$RPM_SUBPACKAGE_NAME"
+done >"$tmpdir"/files 3>"$RPM_BUILD_ROOT/.files:$RPM_SUBPACKAGE_NAME"
 
-if ! [ -s "$workdir"/files ]; then
+if ! [ -s "$tmpdir"/files ]; then
 	Info "empty file list, nothing to do"
 	exit 0
 fi
 
 # filter file list through file(1) to append types (dereference symlinks)
-if ! file -L -NF$'\t' -f "$workdir"/files >"$workdir"/files+types; then
-	sed -n '/\t *ERROR:/p' "$workdir"/files+types >&2
+if ! file -L -NF$'\t' -f "$tmpdir"/files >"$tmpdir"/files+types; then
+	sed -n '/\t *ERROR:/p' "$tmpdir"/files+types >&2
 	exit 1
 fi
 
@@ -91,10 +83,10 @@ RunMethod()
 		Info "$filter not available"
 		return
 	fi
-	local filelist="$workdir/${exe##*/}".files
-	local deplist="$workdir/${exe##*/}".deps
+	local filelist="$tmpdir/${exe##*/}".files
+	local deplist="$tmpdir/${exe##*/}".deps
 	Debug "running $filter"
-	"$filter" <"$workdir"/files+types >"$filelist" ||
+	"$filter" <"$tmpdir"/files+types >"$filelist" ||
 		Fatal "$filter failed"
 	Verbose "$filter: $(wc -l <"$filelist") files"
 	[ -s "$filelist" ] || return 0
@@ -115,13 +107,13 @@ Info "running scripts ($methods)"
 RunMethods prov "$methods" RunMethod
 
 if [ -n "$found" ]; then
-	(set +f && LC_ALL=C sort -u -m "$workdir"/*.deps) >"$workdir"/find-provides-deps || false
+	(set +f && LC_ALL=C sort -u -m "$tmpdir"/*.deps) >"$tmpdir"/find-provides-deps || false
 	if [ -n "${RPM_FIND_PROVIDES_FILTER-}" ]; then
-		(eval "set -x; $RPM_FIND_PROVIDES_FILTER") <"$workdir"/find-provides-deps >"$workdir"/filter-provides-deps
+		(eval "set -x; $RPM_FIND_PROVIDES_FILTER") <"$tmpdir"/find-provides-deps >"$tmpdir"/filter-provides-deps
 		[ $? = 0 ] || Fatal "filter failed"
-		(cd "$workdir" && diff -U1 find-provides-deps filter-provides-deps) >&2 ||:
-		cat "$workdir"/filter-provides-deps
+		(cd "$tmpdir" && diff -U1 find-provides-deps filter-provides-deps) >&2 ||:
+		cat "$tmpdir"/filter-provides-deps
 	else
-		cat "$workdir"/find-provides-deps
+		cat "$tmpdir"/find-provides-deps
 	fi
 fi
