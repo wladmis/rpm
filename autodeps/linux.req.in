@@ -27,7 +27,6 @@ ValidateBuildRoot
 exit_handler()
 {
 	rm -rf -- "$workdir"
-	cat > /dev/null
 	exit $1
 }
 
@@ -38,6 +37,7 @@ trap 'exit_handler $?' EXIT
 methods=$(SetupMethods req "$RPM_FINDREQ_METHOD")
 if [ -z "$methods" ]; then
 	Info 'AutoReq disabled, nothing to do'
+	cat > /dev/null
 	exit 0
 fi
 

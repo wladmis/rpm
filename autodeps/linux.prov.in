@@ -27,7 +27,6 @@ ValidateBuildRoot
 exit_handler()
 {
 	rm -rf -- "$workdir"
-	cat > /dev/null
 	exit $1
 }
 
@@ -38,6 +37,7 @@ trap 'exit_handler $?' EXIT
 methods=$(SetupMethods prov "$RPM_FINDPROV_METHOD")
 if [ -z "$methods" ]; then
 	Info 'AutoProv disabled, nothing to do'
+	cat > /dev/null
 	exit 0
 fi
 
