@@ -490,6 +490,7 @@ fi
 %rpmattr %config %_rpmlibdir/*-files.req.list
 %rpmattr %_rpmlibdir/lib.*
 %rpmattr %_rpmlibdir/pam.*
+%rpmattr %_rpmlibdir/percolate
 %rpmattr %_rpmlibdir/pkgconfig.*
 %rpmattr %_rpmlibdir/pkgconfiglib.*
 %rpmattr %_rpmlibdir/rpmlib.*

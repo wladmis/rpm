@@ -72,6 +72,7 @@ Makefile.in
 /scripts/fixup-libtool
 /scripts/fixup-pkgconfig
 /scripts/ldd
+/scripts/percolate
 /scripts/posttrans-filetriggers
 /scripts/rpmlib.req.files
 /scripts/verify-elf

@@ -20,6 +20,7 @@ EXTRA_DIST = \
 	files.req files.req.files 0common-files.req.list \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files \
+	percolate \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
 	rpmlib.req rpmlib.req.files \
 	rpm2cpio.sh \
@@ -52,6 +53,7 @@ config_SCRIPTS = \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
+	percolate \
 	rpmlib.req rpmlib.req.files \
 	rpm2cpio.sh \
 	shebang.req shebang.req.files \
