@@ -112,11 +112,6 @@ then
 	exit 1
 fi
 
-if ! [ -s "$tmpdir"/files+types ]; then
-	Info "empty file list, nothing to do"
-	exit 0
-fi
-
 found=
 RunMethod()
 {
