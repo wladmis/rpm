@@ -95,11 +95,6 @@ done >"$tmpdir"/files \
     4>"$tmpdir"/files+types \
     5>"$tmpdir"/symlinks+targets-unsorted
 
-if ! [ -s "$tmpdir"/files ]; then
-	Info "empty file list, nothing to do"
-	exit 0
-fi
-
 # filter file list through file(1) to append types
 if ! file -NF$'\t' -f "$tmpdir"/files >>"$tmpdir"/files+types; then
 	sed -n '/\t *ERROR:/p' "$tmpdir"/files+types >&2
@@ -115,6 +110,11 @@ if ! cut -f1 < "$tmpdir"/symlinks+targets |
 then
 	sed -n '/\t *ERROR:/p' "$tmpdir"/files+types >&2
 	exit 1
+fi
+
+if ! [ -s "$tmpdir"/files+types ]; then
+	Info "empty file list, nothing to do"
+	exit 0
 fi
 
 found=
