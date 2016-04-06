@@ -69,8 +69,6 @@ while [ -s "$new" ]; do
     sort ${JFS:+-t"$JFS"} -k1 <"$new" >"$wet"
     join_and_remainder "$DRY_LINKS" "$wet" >"$new" 3>"$rem"
 
-    [ -s "$new" ] || break
-
     # append WET and update DRY_LINKS:
     cat <"$new" >>"$WET"
     cat <"$rem" >"$DRY_LINKS"
