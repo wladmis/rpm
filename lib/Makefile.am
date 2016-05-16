@@ -77,6 +77,8 @@ librpm_la_SOURCES += \
 	backend/ndb/rpmxdb.h
 endif
 
+librpm_la_SOURCES += set.c set.h
+
 tagtbl.C: Makefile.am $(srcdir)/rpmtag.h gentagtbl.sh
 	@AWK=${AWK} ${SHELL} $(srcdir)/gentagtbl.sh \
 		    	     $(srcdir)/rpmtag.h > $@.new && \
