@@ -65,7 +65,7 @@ RPM_GNUC_INTERNAL
 rpmScript rpmScriptFree(rpmScript script);
 
 RPM_GNUC_INTERNAL
-rpmRC rpmScriptRun(rpmScript script, int arg1, int arg2, FD_t scriptFd,
+rpmRC rpmScriptRun(rpmScript script, const char *teName, int arg1, int arg2, FD_t scriptFd,
                    ARGV_const_t prefixes, int warn_only, rpmPlugins plugins);
 
 RPM_GNUC_INTERNAL

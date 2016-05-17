@@ -1431,7 +1431,7 @@ rpmRC runScript(rpmts ts, rpmte te, ARGV_const_t prefixes,
 	sfd = rpmtsScriptFd(ts);
 
     rpmswEnter(rpmtsOp(ts, RPMTS_OP_SCRIPTLETS), 0);
-    rc = rpmScriptRun(script, arg1, arg2, sfd,
+    rc = rpmScriptRun(script, rpmteN(te), arg1, arg2, sfd,
 		      prefixes, warn_only, rpmtsPlugins(ts));
     rpmswExit(rpmtsOp(ts, RPMTS_OP_SCRIPTLETS), 0);
 
