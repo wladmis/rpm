@@ -1421,6 +1421,10 @@ rpmRC runScript(rpmts ts, rpmte te, ARGV_const_t prefixes,
     rpmRC stoprc, rc = RPMRC_OK;
     rpmTagVal stag = rpmScriptTag(script);
     FD_t sfd = NULL;
+    const char *n = NULL;
+    char arg1_str [sizeof(int)*3+1] = "";
+    char arg2_str [sizeof(int)*3+1] = "";
+
     int warn_only = (stag != RPMTAG_PREIN &&
 		     stag != RPMTAG_PREUN &&
 		     stag != RPMTAG_PRETRANS &&
@@ -1429,6 +1433,22 @@ rpmRC runScript(rpmts ts, rpmte te, ARGV_const_t prefixes,
     sfd = rpmtsNotify(ts, te, RPMCALLBACK_SCRIPT_START, stag, 0);
     if (sfd == NULL)
 	sfd = rpmtsScriptFd(ts);
+
+    if (arg1 >= 0)
+	sprintf(arg1_str, "%d", arg1);
+    if (arg2 >= 0)
+	sprintf(arg2_str, "%d", arg2);
+
+    n = rpmteN(te);
+    if (n) {
+	setenv ("RPM_INSTALL_NAME", n, 1);
+    }
+    if (*arg1_str) {
+	setenv ("RPM_INSTALL_ARG1", arg1_str, 1);
+    }
+    if (*arg2_str) {
+	setenv ("RPM_INSTALL_ARG2", arg2_str, 1);
+    }
 
     rpmswEnter(rpmtsOp(ts, RPMTS_OP_SCRIPTLETS), 0);
     rc = rpmScriptRun(script, arg1, arg2, sfd,
