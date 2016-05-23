@@ -212,6 +212,9 @@ rpmlibexec_PROGRAMS +=	rpmdeps
 rpmdeps_SOURCES =	tools/rpmdeps.c
 rpmdeps_LDADD =		lib/librpm.la rpmio/librpmio.la build/librpmbuild.la @WITH_POPT_LIB@
 
+rpmlibexec_PROGRAMS +=	pdeath_execute
+pdeath_execute_SOURCES =	tools/pdeath_execute.c
+
 bin_PROGRAMS +=		rpmgraph
 rpmgraph_SOURCES =	tools/rpmgraph.c
 rpmgraph_LDADD =	lib/librpm.la rpmio/librpmio.la @WITH_POPT_LIB@
