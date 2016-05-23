@@ -93,7 +93,9 @@ int main(int argc, char *argv[])
     /* Set the major mode based on argv[0] */
 #ifdef	IAM_RPMQV
     if (rstreq(__progname, "rpmquery"))	bigMode = MODE_QUERY;
+    if (rstreq(__progname, "rpmq"))	bigMode = MODE_QUERY;
     if (rstreq(__progname, "rpmverify")) bigMode = MODE_VERIFY;
+    if (rstreq(__progname, "rpmv")) bigMode = MODE_VERIFY;
 #endif
 
 #if defined(IAM_RPMQV)
