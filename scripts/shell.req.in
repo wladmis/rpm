@@ -21,20 +21,26 @@
 . @RPMCONFIGDIR@/functions
 . @RPMCONFIGDIR@/find-package
 
+print_sh_number_from_shebang()
+{
+    sed -rn -e '1 s,^\#![[:space:]]*(|/usr/bin/env[[:space:]]+)[^[:space:]]*sh([0-9]+)(|[[:space:]].*)$,\2,p'
+}
+
 shREQ= shPROV=
 ShellReq()
 {
 	local f="$1"; shift
 
-	local t sh
+	local t sh sh_num
 	t=$(file -bL "$f") || Fatal "${t:-$f: file type not available}"
+	sh_num="$(print_sh_number_from_shebang <"$f")"
 	case "$t" in
 		*"Bourne-Again shell script text"*)
-			sh=/bin/bash ;;
+			sh=/bin/bash"$sh_num" ;;
 		*" bash script text"*)
-			sh=/bin/bash ;;
+			sh=/bin/bash"$sh_num" ;;
 		*)
-			sh=/bin/sh ;;
+			sh=/bin/sh"$sh_num" ;;
 	esac
 
 	local out line1
