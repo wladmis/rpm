@@ -23,7 +23,7 @@
 
 print_sh_number_from_shebang()
 {
-    sed -rn -e '1 s,^\#![[:space:]]*(/usr/bin/env[[:space:]]+)?[^[:space:]]*sh([0-9]+)([[:space:]].*)?$,\2,p'
+    sed -rn -e '1 s,^\#![[:space:]]*([^[:space:]]*/bin/env[[:space:]]+)?[^[:space:]]*sh([0-9]+)([[:space:]].*)?$,\2,p'
 }
 
 shREQ= shPROV=
