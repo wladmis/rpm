@@ -598,6 +598,9 @@ int main(int argc, char *argv[])
     int ec = 0;
     poptContext optCon = rpmcliInit(argc, argv, optionsTable);
 
+    if (!(geteuid() || rpmExpandNumeric("%_allow_root_build")))
+	argerror(_("current site policy disallows root to build packages"));
+
     /* Args required only when building, let lone --eval etc through */
     if (ba->buildAmount && poptPeekArg(optCon) == NULL) {
 	printUsage(optCon, stderr, 0);
