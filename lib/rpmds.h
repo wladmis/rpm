@@ -363,6 +363,18 @@ int rpmdsMerge(rpmds * dsp, rpmds ods);
 int rpmdsSearch(rpmds ds, rpmds ods);
 
 /** \ingroup rpmds
+ * Split EVR into epoch, version, and release components.
+ * @param evr		[epoch:]version[-release] string
+ * @retval *ep		pointer to epoch
+ * @retval *vp		pointer to version
+ * @retval *rp		pointer to release
+ */
+#ifdef ALT_RPM_API
+void parseEVR(char * evr, const char ** ep, const char ** vp, const char ** rp);
+#endif
+
+
+/** \ingroup rpmds
  * Compare two versioned dependency ranges, looking for overlap.
  * @param A		1st dependency
  * @param B		2nd dependency
