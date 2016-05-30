@@ -3,6 +3,8 @@
  */
 #include "system.h"
 
+#define ALT_RPM_API /* for parseEVR */
+
 #include <rpm/rpmtypes.h>
 #include <rpm/rpmlib.h>		/* rpmvercmp */
 #include <rpm/rpmstring.h>
@@ -995,7 +997,6 @@ int rpmdsSearch(rpmds ds, rpmds ods)
  * @retval *vp		pointer to version
  * @retval *rp		pointer to release
  */
-static
 void parseEVR(char * evr,
 		const char ** ep,
 		const char ** vp,
