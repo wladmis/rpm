@@ -217,6 +217,17 @@ rpmdeps_LDADD =		lib/librpm.la rpmio/librpmio.la build/librpmbuild.la @WITH_POPT
 rpmlibexec_PROGRAMS +=	pdeath_execute
 pdeath_execute_SOURCES =	tools/pdeath_execute.c
 
+bin_PROGRAMS +=		rpmvercmp
+rpmvercmp_SOURCES =	tools/rpmvercmp.c
+rpmvercmp_LDADD =	lib/librpm.la
+rpmvercmp_CFLAGS =	-D_GNU_SOURCE
+
+bin_PROGRAMS +=		rpmevrcmp
+rpmevrcmp_SOURCES =	tools/rpmevrcmp.c
+rpmevrcmp_LDADD =	lib/librpm.la
+rpmevrcmp_CFLAGS =	-D_GNU_SOURCE
+
+
 bin_PROGRAMS +=		rpmgraph
 rpmgraph_SOURCES =	tools/rpmgraph.c
 rpmgraph_LDADD =	lib/librpm.la rpmio/librpmio.la @WITH_POPT_LIB@
