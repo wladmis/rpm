@@ -1455,11 +1455,22 @@ static int rpmfilesPopulate(rpmfiles fi, Header h, rpmfiFlags flags)
 	const char *fdigest;
 	size_t diglen = rpmDigestLength(fi->digestalgo);
 	fi->digests = t = xmalloc(rpmtdCount(&fdigests) * diglen);
+	int ix = -1;
 
 	while ((fdigest = rpmtdNextString(&fdigests))) {
+	    ix++;
 	    if (!(fdigest && *fdigest != '\0')) {
-		memset(t, 0, diglen);
-		t += diglen;
+		if (fi->fsizes[ix] == 0 && fi->digestalgo == PGPHASHALGO_MD5 &&
+		    (fi->fflags[ix] & RPMFILE_GHOST) == 0) {
+		    char *md5_of_empty_file = "\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\x09"
+					      "\x98\xec\xf8\x42\x7e";
+		    memcpy(t, md5_of_empty_file, diglen);
+		    t += diglen;
+		}
+		else {
+		    memset(t, 0, diglen);
+		    t += diglen;
+		}
 		continue;
 	    }
 	    for (int j = 0; j < diglen; j++, t++, fdigest += 2)
