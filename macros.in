@@ -236,7 +236,7 @@ package or when debugging this package.\
 %buildroot		%{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}
 
 #	Directory where temporaray files can be created.
-%_tmppath		%{_var}/tmp
+%_tmppath		%{_tmpdir}
 
 #	Path to top of build area.
 %_topdir		%{getenv:HOME}/rpmbuild
