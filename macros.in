@@ -66,6 +66,7 @@
 %__sed			@__SED@
 %__semodule		@__SEMODULE@
 %__ssh			@__SSH@
+%__subst		@__SUBST@
 %__tar			@__TAR@
 %__unzip		@__UNZIP@
 %__git			@__GIT@
