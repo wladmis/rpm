@@ -6,6 +6,9 @@
 #include "system.h"
 
 #include <errno.h>
+#include <syslog.h>
+
+#define ALT_RPM_API /* for rpmteBT */
 
 #include <rpm/rpmlib.h>		/* rpmvercmp and others */
 #include <rpm/rpmmacro.h>
@@ -640,6 +643,16 @@ static rpmRC rpmpsmRemove(rpmpsm psm)
     return (fsmrc == 0) ? RPMRC_OK : RPMRC_FAIL;
 }
 
+static void te_log(rpmte te, const char *s)
+{
+#if HAVE_SYSLOG_H
+    if (!geteuid())
+    {
+	syslog (LOG_NOTICE, "%s %s %s\n", rpmteNEVR(te), rpmteBT(te), s);
+    }
+#endif
+}
+
 static rpmRC rpmPackageInstall(rpmts ts, rpmpsm psm)
 {
     rpmRC rc = RPMRC_OK;
@@ -681,6 +694,7 @@ static rpmRC rpmPackageInstall(rpmts ts, rpmpsm psm)
 
 	rc = dbAdd(ts, psm->te);
 	if (rc) break;
+	te_log(psm->te, "installed");
 
 	if (!(rpmtsFlags(ts) & RPMTRANS_FLAG_NOTRIGGERIN)) {
 	    /* Run upper file triggers i. e. with higher priorities */
@@ -805,6 +819,7 @@ static rpmRC rpmPackageErase(rpmts ts, rpmpsm psm)
 	}
 
 	rc = dbRemove(ts, psm->te);
+	te_log(psm->te, "removed");
     }
 
     rpmswExit(rpmtsOp(psm->ts, RPMTS_OP_ERASE), 0);
