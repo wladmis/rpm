@@ -24,5 +24,6 @@ librpmbuild_la_LIBADD = \
 	$(top_builddir)/rpmio/librpmio.la \
 	$(top_builddir)/misc/libmisc.la \
 	@LTLIBICONV@ \
+	@WITH_CAP_LIB@ \
 	@WITH_POPT_LIB@ \
 	@WITH_MAGIC_LIB@
