@@ -573,6 +573,16 @@ static char * expandFormat(rpmtd td)
     return val;
 }
 
+static char * nothingFormat(rpmtd td)
+{
+    const char *str = "";
+    char * val = NULL;
+
+    val = xstrdup(str);
+
+    return val;
+}
+
 static const struct headerFormatFunc_s rpmHeaderFormats[] = {
     { RPMTD_FORMAT_STRING,	"string",	stringFormat },
     { RPMTD_FORMAT_ARMOR,	"armor",	armorFormat },
@@ -595,6 +605,7 @@ static const struct headerFormatFunc_s rpmHeaderFormats[] = {
     { RPMTD_FORMAT_VFLAGS,	"vflags",	vflagsFormat },
     { RPMTD_FORMAT_EXPAND,	"expand",	expandFormat },
     { RPMTD_FORMAT_FSTATUS,	"fstatus",	fstatusFormat },
+    { RPMTD_FORMAT_NOTHING,	"nothing",	nothingFormat },
     { -1,			NULL, 		NULL }
 };
 
