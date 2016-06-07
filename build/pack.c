@@ -168,7 +168,7 @@ static const char * buildHost(void)
     char *bhMacro;
 
     if (! oneshot) {
-        bhMacro = rpmExpand("%{?_buildhost}", NULL);
+        bhMacro = rpmExpand("%{?buildhost}%{!?buildhost:%{?_buildhost}}", NULL);
         if (strcmp(bhMacro, "") != 0 && strlen(bhMacro) < 1024) {
             strcpy(hostname, bhMacro);
         } else {
