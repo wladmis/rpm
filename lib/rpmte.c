@@ -21,6 +21,9 @@
 #include "lib/rpmds_internal.h"
 #include "lib/rpmts_internal.h"
 
+#include "lib/rpmchroot.h"
+#include <errno.h>
+
 #include "debug.h"
 
 /** \ingroup rpmte
@@ -737,6 +740,8 @@ rpmfs rpmteGetFileStates(rpmte te)
     return te->fs;
 }
 
+static void rpmteSaveTriggerFiles(rpmte te);
+
 int rpmteProcess(rpmte te, pkgGoal goal)
 {
     /* Only install/erase resets pkg file info */
@@ -754,6 +759,9 @@ int rpmteProcess(rpmte te, pkgGoal goal)
 
     if (rpmteOpen(te, reset_fi)) {
 	failed = rpmpsmRun(te->ts, te, goal);
+	if (failed == 0 && scriptstage == 0) {
+	    rpmteSaveTriggerFiles(te);
+	}
 	rpmteClose(te, reset_fi);
     }
     
@@ -762,4 +770,36 @@ int rpmteProcess(rpmte te, pkgGoal goal)
     }
 
     return failed;
+}
+
+static
+void rpmteSaveTriggerFiles(rpmte te)
+{
+    if (rpmtsFlags(te->ts) & (RPMTRANS_FLAG_TEST))
+	return;
+    if (rpmtsFlags(te->ts) & (_noTransScripts | _noTransTriggers))
+	return;
+
+    rpmfi fi = rpmteFI(te);
+
+    if (rpmChrootIn() != 0)
+	return;
+    const char *file = rpmGetPath(te->ts->rdb->db_home,
+				  "/files-awaiting-filetriggers", NULL);
+    FILE *fp = fopen(file, "a");
+
+    if (fp == NULL)
+	rpmlog(RPMLOG_ERR, "open of %s failed: %s\n", file, strerror(errno));
+    else {
+	while (rpmfiNext(fi) >= 0)
+	{
+	    const char *N = rpmfiFN(fi);
+	    if (strchr(N, '\n'))
+		continue;
+	    fprintf(fp, "%s\n", N);
+	}
+	fclose(fp);
+    }
+    free((void *)file);
+    (void) rpmChrootOut();
 }

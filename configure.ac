@@ -854,5 +854,6 @@ AC_CONFIG_FILES([Makefile
  	tests/Makefile
  	plugins/Makefile
 	python/setup.py
+	scripts/posttrans-filetriggers
   ])
 AC_OUTPUT
