@@ -1289,6 +1289,9 @@ static const struct rpmlibProvides_s rpmlibProvides[] = {
     { "rpmlib(SetVersions)",		"4.0.4-alt98",
         (RPMSENSE_RPMLIB|RPMSENSE_EQUAL),
     N_("dependencies support set/subset versions.") },
+    { "rpmlib(PosttransFiletriggers)",  "4.0.4",
+	(                RPMSENSE_EQUAL),
+    N_("package installs post-transaction filetrigger.") },
     { NULL,				NULL, 0,	NULL }
 };
 
