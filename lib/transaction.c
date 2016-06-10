@@ -27,6 +27,8 @@
 
 #include "lib/rpmplugins.h"
 
+void rpmScriptTriggerPosttrans(rpmts ts);
+
 /* XXX FIXME: merge with existing (broken?) tests in system.h */
 /* portability fiddles */
 #if STATFS_IN_SYS_STATVFS
@@ -1558,6 +1560,8 @@ int rpmtsRun(rpmts ts, rpmps okProbs, rpmprobFilterFlags ignoreSet)
     if (!(rpmtsFlags(ts) & (RPMTRANS_FLAG_NOPOSTTRANS|RPMTRANS_FLAG_NOTRIGGERIN))) {
 	runTransScripts(ts, PKG_TRANSFILETRIGGERIN);
     }
+
+    rpmScriptTriggerPosttrans(ts);
 exit:
     /* Run post transaction hook for all plugins */
     if (TsmPreDone) /* If TsmPre hook has been called, call the TsmPost hook */

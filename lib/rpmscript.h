@@ -75,6 +75,9 @@ RPM_GNUC_INTERNAL
 rpmscriptTypes rpmScriptType(rpmScript script);
 
 RPM_GNUC_INTERNAL
+void rpmScriptTriggerPosttrans(rpmts ts);
+
+RPM_GNUC_INTERNAL
 void rpmScriptSetNextFileFunc(rpmScript script, char *(*func)(void *),
 			    void *param);
 #ifdef __cplusplus

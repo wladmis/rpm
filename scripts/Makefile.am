@@ -24,6 +24,8 @@ EXTRA_DIST = \
 
 EXTRA_DIST += functions .provides.sh
 
+EXTRA_DIST += posttrans-filetriggers 0ldconfig.filetrigger
+
 rpmconfig_SCRIPTS = \
 	appdata.prov \
 	brp-compress brp-python-bytecompile brp-java-gcjcompile \
@@ -40,6 +42,8 @@ rpmconfig_SCRIPTS = \
 	rpmdb_loadcvt rpm2cpio.sh tgpg 
 
 rpmconfig_SCRIPTS += functions .provides.sh
+
+rpmconfig_SCRIPTS += posttrans-filetriggers 0ldconfig.filetrigger
 
 rpmconfig_DATA = \
 	rpm.daily rpm.log rpm.supp \
