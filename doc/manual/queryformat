@@ -159,6 +159,33 @@ the SOMETAG tag is present, and "missing" otherwise:
 Notice that the subformats "present" and "missing" must be inside of curly
 braces.
 
+In rpm used on an ALT's system, there is also one more (non-trivial) test
+expression which is accepted as the first operand of \verb!%| ?{}:{} |!. Here's an example:
+
+\begin{verbatim}
+  %|%{SOME}expression>epoch:version-release?{ultra-fresh}:{pre-historic}|
+\end{verbatim}
+
+It's idea is to test whether an expression evaluates to a value which is
+more fresh than a specified epoch:versiobn-release triple (in the sense
+rpm compares E:V-Rs). Things get more complicated because of the special
+use of this hack: it should be used to filter changelog entries, that
+contain \verb!%{CHANGELOGNAME}! of the form:
+
+\begin{verbatim}
+  John Smith <js@my-distro.com> 5.0.1-my6
+\end{verbatim}
+
+so the test extracts the part of the value that follows the email address,
+and compares it to the specified epoch:version-release. (If there is no
+email address, it takes the whole value, so you could use a query like this
+
+\begin{verbatim}
+    %|2-1mdk>2-alt1?{mdk}:{alt}|
+\end{verbatim}
+
+to determine which of the releases is considered by rpm to be more fresh.)
+
 \section queryformat_example Example: Viewing the Verify Flags
 
 The following example query is run against dev because I know %verify

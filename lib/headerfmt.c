@@ -4,11 +4,17 @@
 
 #include "system.h"
 
+#define ALT_RPM_API /* for parseEVR, isChangeNameMoreFresh */
+#include <rpm/rpmlib.h>
+#include <rpm/rpmds.h>
+
 #include <rpm/header.h>
 #include <rpm/rpmtag.h>
 #include <rpm/rpmstring.h>
 #include <rpm/rpmpgp.h>
 #include "lib/misc.h"		/* format function protos */
+
+#include <rpm/rpmlog.h>
 
 #include "debug.h"
 
@@ -56,7 +62,18 @@ struct sprintfToken_s {
 	    int numIfTokens;
 	    sprintfToken elseFormat;
 	    int numElseTokens;
-	    struct sprintfTag_s tag;
+	    struct {
+		enum { TRIVIAL, StringTAG_String3 } type;
+		union {
+		    struct sprintfTag_s tag;
+		    struct {
+			/* args */
+			sprintfToken headFormat;
+			int numHeadTokens;
+			const char * tail[3];
+		    } tag_str3;
+		} u;
+	    } test;
 	} cond;				/*!< PTOK_COND */
     } u;
 };
@@ -129,6 +146,23 @@ freeFormat( sprintfToken format, int num)
 	    format[i].u.cond.elseFormat =
 		freeFormat(format[i].u.cond.elseFormat, 
 			format[i].u.cond.numElseTokens);
+	    switch (format[i].u.cond.test.type) {
+		case TRIVIAL:
+		    /* the usual old way; format[i].test.u.tag is a struct */
+		    break;
+		case StringTAG_String3:
+		    /* the added option */
+		    format[i].u.cond.test.u.tag_str3.headFormat =
+			freeFormat(format[i].u.cond.test.u.tag_str3.headFormat,
+				format[i].u.cond.test.u.tag_str3.numHeadTokens);
+		    /* We don't need to free the strings; we have not allocated them.
+		       And PTOK_STRING case is analogous and also doesn't free the string. */
+		    break;
+		default:
+		    /* report an error */
+		    rpmlog(RPMLOG_WARNING, _("Unknown test type in %%|?:|; perhaps some memory is leaking right now.\n"));
+		    break;
+	    }
 	    break;
 	case PTOK_NONE:
 	case PTOK_TAG:
@@ -228,7 +262,7 @@ static int findTag(headerSprintfArgs hsa, sprintfToken token, const char * name)
 {
     const char *tagname = name;
     sprintfTag stag = (token->type == PTOK_COND
-	? &token->u.cond.tag : &token->u.tag);
+	? &token->u.cond.test.u.tag : &token->u.tag);
 
     stag->fmt = NULL;
     stag->tag = RPMTAG_NOT_FOUND;
@@ -570,7 +604,45 @@ static int parseExpression(headerSprintfArgs hsa, sprintfToken token,
 
     token->type = PTOK_COND;
 
-    (void) findTag(hsa, token, str);
+    { /* branching between the trivial old test for the conditional and
+	 the added test for EVR comparison. */
+	char * str2 = strchr(str, '>');
+	if (str2) {
+	    char * endOfParsed = NULL;
+	    rpmlog(RPMLOG_WARNING, _("Parsing non-standard test (>) for %%|?{}:{}|.\n"));
+	    *str2 ='\0';
+	    ++str2; /* str2 is the beginning of the second part: after the > sign. */
+
+	    if (parseFormat(hsa, str, &token->u.cond.test.u.tag_str3.headFormat,
+			&token->u.cond.test.u.tag_str3.numHeadTokens,
+			&endOfParsed, PARSER_IN_EXPR))
+	    {
+		token->u.cond.ifFormat =
+		    freeFormat(token->u.cond.ifFormat, token->u.cond.numIfTokens);
+		token->u.cond.elseFormat =
+		    freeFormat(token->u.cond.elseFormat, token->u.cond.numElseTokens);
+		return 1;
+	    }
+
+	    token->u.cond.test.type = StringTAG_String3;
+
+	    parseEVR(str2,
+		    &token->u.cond.test.u.tag_str3.tail[0],
+		    &token->u.cond.test.u.tag_str3.tail[1],
+		    &token->u.cond.test.u.tag_str3.tail[2]);
+	    /* We could strdup tail[j], but it seems we don't need this: the rest of similar code
+	       doesn't perform this. And we don't have to free them. */
+	    rpmlog(RPMLOG_DEBUG, "Will cmp with e=%s, v=%s, r=%s\n",
+		    token->u.cond.test.u.tag_str3.tail[0],
+		    token->u.cond.test.u.tag_str3.tail[1],
+		    token->u.cond.test.u.tag_str3.tail[2]);
+	}
+	else {
+	    rpmlog(RPMLOG_DEBUG, _("The usual way of parsing the test part for %%|?:|\n"));
+	    (void) findTag(hsa, token, str);
+	    token->u.cond.test.type = TRIVIAL;
+	}
+    }
 
     return 0;
 }
@@ -691,14 +763,41 @@ static char * singleSprintf(headerSprintfArgs hsa, sprintfToken token,
 	break;
 
     case PTOK_COND:
-	if (getData(hsa, token->u.cond.tag.tag) ||
-		      headerIsEntry(hsa->h, token->u.cond.tag.tag)) {
+       {
+	int testResult = 0; /* false by default */
+	switch (token->u.cond.test.type) {
+	    case TRIVIAL:
+		testResult = getData(hsa, token->u.cond.test.u.tag.tag) ||
+		    headerIsEntry(hsa->h, token->u.cond.test.u.tag.tag);
+		break;
+	    case StringTAG_String3:
+		{
+		    struct headerSprintfArgs_s HSA = {
+			.cache = hsa->cache
+		    };
+		    t = hsaReserve(&HSA, 128);
+		    for (i = 0; i < token->u.cond.test.u.tag_str3.numHeadTokens; i++)
+			singleSprintf(&HSA, token->u.cond.test.u.tag_str3.headFormat + i, element);
+
+		    testResult = HSA.val && isChangeNameMoreFresh(HSA.val, token->u.cond.test.u.tag_str3.tail);
+		    free(HSA.val);
+		}
+		break;
+	    default:
+		/* report an error */
+		rpmlog(RPMLOG_WARNING, _("Unknown test type in %%|?:|; assuming false.\n"));
+		testResult = 0;
+		break;
+	}
+
+	if (testResult) {
 	    spft = token->u.cond.ifFormat;
 	    condNumFormats = token->u.cond.numIfTokens;
 	} else {
 	    spft = token->u.cond.elseFormat;
 	    condNumFormats = token->u.cond.numElseTokens;
 	}
+       }
 
 	need = condNumFormats * 20;
 	if (spft == NULL || need == 0) break;
