@@ -168,6 +168,7 @@ rpm	alias --ftpproxy	--define '_httpproxy !#:+'
 rpm	alias --httpport	--define '_httpport !#:+'
 #	[--httpproxy <host>]	"hostname or IP of http proxy"
 rpm	alias --httpproxy	--define '_httpproxy !#:+'
+rpm	alias --ignorebuildtime --define '_upgrade_honor_buildtime 0'
 
 # Minimally preserve commonly used switches from cli split-up
 rpm	exec --addsign		rpmsign --addsign
@@ -248,6 +249,7 @@ rpme	alias --ftpport		--define '_ftpport !#:+'
 rpme	alias --ftpproxy	--define '_ftpproxy !#:+'
 rpme	alias --httpport	--define '_httpport !#:+'
 rpme	alias --httpproxy	--define '_httpproxy !#:+'
+rpme	alias --ignorebuildtime --define '_upgrade_honor_buildtime 0'
 #==============================================================================
 rpmi	alias --dbpath		--define '_dbpath !#:+' \
 	--POPTdesc=$"use <dir> as the directory for the database" \
