@@ -4,6 +4,8 @@
  */
 #include "system.h"
 
+#define ALT_RPM_API /* for rpmteBT */
+
 #include <rpm/rpmtypes.h>
 #include <rpm/rpmlib.h>		/* RPM_MACHTABLE_* */
 #include <rpm/rpmmacro.h>
@@ -39,6 +41,7 @@ struct rpmte_s {
     char * epoch;
     char * version;		/*!< Version: */
     char * release;		/*!< Release: */
+    char * buildtime;
     char * arch;		/*!< Architecture hint. */
     char * os;			/*!< Operating system hint. */
     int isSource;		/*!< (TR_ADDED) source rpm? */
@@ -135,6 +138,7 @@ static int addTE(rpmte p, Header h, fnpyKey key, rpmRelocation * relocs)
 	goto exit;
 
     p->epoch = headerGetAsString(h, RPMTAG_EPOCH);
+    p->buildtime = headerGetAsString(h, RPMTAG_BUILDTIME);
 
     p->arch = headerGetAsString(h, RPMTAG_ARCH);
     p->os = headerGetAsString(h, RPMTAG_OS);
@@ -299,6 +303,11 @@ const char * rpmteV(rpmte te)
 const char * rpmteR(rpmte te)
 {
     return (te != NULL ? te->release : NULL);
+}
+
+const char * rpmteBT(rpmte te)
+{
+    return (te != NULL ? te->buildtime : NULL);
 }
 
 const char * rpmteA(rpmte te)
