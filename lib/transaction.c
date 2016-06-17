@@ -6,6 +6,8 @@
 
 #include <inttypes.h>
 
+#define ALT_RPM_API /* for rpmteBT */
+
 #include <rpm/rpmlib.h>		/* rpmMachineScore, rpmReadPackageFile */
 #include <rpm/rpmmacro.h>	/* XXX for rpmExpand */
 #include <rpm/rpmlog.h>
@@ -1125,6 +1127,16 @@ void checkInstalledFiles(rpmts ts, uint64_t fileCount, fingerPrintCache fpc)
 #define badArch(_a) (rpmMachineScore(RPM_MACHTABLE_INSTARCH, (_a)) == 0)
 #define badOs(_a) (rpmMachineScore(RPM_MACHTABLE_INSTOS, (_a)) == 0)
 
+static int upgrade_honor_buildtime(void)
+{
+    static int honor_buildtime = -1;
+
+    if (honor_buildtime < 0)
+	honor_buildtime = rpmExpandNumeric("%{?_upgrade_honor_buildtime}%{?!_upgrade_honor_buildtime:1}") ? 1 : 0;
+
+    return honor_buildtime;
+}
+
 /*
  * For packages being installed:
  * - verify package arch/os.
@@ -1165,6 +1177,8 @@ static rpmps checkProblems(rpmts ts)
 	    rpmdbSetIteratorRE(mi, RPMTAG_EPOCH, RPMMIRE_STRCMP, rpmteE(p));
 	    rpmdbSetIteratorRE(mi, RPMTAG_VERSION, RPMMIRE_STRCMP, rpmteV(p));
 	    rpmdbSetIteratorRE(mi, RPMTAG_RELEASE, RPMMIRE_STRCMP, rpmteR(p));
+	    if (upgrade_honor_buildtime())
+		rpmdbSetIteratorRE(mi, RPMTAG_BUILDTIME, RPMMIRE_STRCMP, rpmteBT(p));
 	    if (tscolor) {
 		rpmdbSetIteratorRE(mi, RPMTAG_ARCH, RPMMIRE_STRCMP, rpmteA(p));
 		rpmdbSetIteratorRE(mi, RPMTAG_OS, RPMMIRE_STRCMP, rpmteO(p));
