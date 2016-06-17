@@ -121,6 +121,39 @@ int rpmvercmp(const char * a, const char * b)
     if (!*one) return -1; else return 1;
 }
 
+static int rpm_cmp_tag_int(Header first, Header second, rpmTag tag)
+{
+    uint64_t one, two;
+
+    one = headerGetNumber(first, tag);
+    two = headerGetNumber(second, tag);
+
+    if (one < two)
+	return -1;
+    else if (one > two)
+	return 1;
+    else
+	return 0;
+}
+
+static int rpm_cmp_tag_version(Header first, Header second, rpmTag tag)
+{
+    const char * one, * two;
+
+    one = headerGetString(first, tag);
+    two = headerGetString(second, tag);
+
+    if (!one && !two)
+	return 0;
+    else if (!one && two)
+	return -1;
+    else if (one && !two)
+	return 1;
+    else
+	return rpmvercmp(one, two);
+}
+
+#if 0
 int rpmVersionCompare(Header first, Header second)
 {
     /* Missing epoch becomes zero here, which is what we want */
@@ -140,4 +173,21 @@ int rpmVersionCompare(Header first, Header second)
 
     return rpmvercmp(headerGetString(first, RPMTAG_RELEASE),
 		     headerGetString(second, RPMTAG_RELEASE));
+}
+#endif
+
+int rpmVersionCompare(Header first, Header second)
+{
+    int rc;
+
+    if ((rc = rpm_cmp_tag_int(first, second, RPMTAG_EPOCH)))
+	return rc;
+
+    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_VERSION)))
+	return rc;
+
+    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_RELEASE)))
+	return rc;
+
+    return 0;
 }
