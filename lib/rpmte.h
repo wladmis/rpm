@@ -74,6 +74,15 @@ const char * rpmteV(rpmte te);
 const char * rpmteR(rpmte te);
 
 /** \ingroup rpmte
+ * Retrieve buildtime string of transaction element.
+ * @param te		transaction element
+ * @return		buildtime string
+ */
+#ifdef ALT_RPM_API
+const char * rpmteBT(rpmte te);
+#endif
+
+/** \ingroup rpmte
  * Retrieve arch string of transaction element.
  * @param te		transaction element
  * @return		arch string
