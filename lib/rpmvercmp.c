@@ -121,6 +121,16 @@ int rpmvercmp(const char * a, const char * b)
     if (!*one) return -1; else return 1;
 }
 
+static int upgrade_honor_buildtime(void)
+{
+    static int honor_buildtime = -1;
+
+    if (honor_buildtime < 0)
+	honor_buildtime = rpmExpandNumeric("%{?_upgrade_honor_buildtime}%{?!_upgrade_honor_buildtime:1}") ? 1 : 0;
+
+    return honor_buildtime;
+}
+
 static int rpm_cmp_tag_int(Header first, Header second, rpmTag tag)
 {
     uint64_t one, two;
@@ -188,6 +198,9 @@ int rpmVersionCompare(Header first, Header second)
 
     if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_RELEASE)))
 	return rc;
+
+    if (upgrade_honor_buildtime())
+	return rpm_cmp_tag_int(first, second, RPMTAG_BUILDTIME);
 
     return 0;
 }
