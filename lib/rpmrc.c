@@ -465,13 +465,16 @@ static void setDefaults(void)
 #ifndef MACROFILES
     if (!macrofiles) {
 	macrofiles = rstrscat(NULL, confdir, "/macros", ":",
-				confdir, "/macros.d/macros.*", ":",
 				confdir, "/platform/%{_target}/macros", ":",
+				confdir, "/macros.d/*", ":",
+#if 0
 				confdir, "/fileattrs/*.attr", ":",
+#endif
   				confdir, "/" RPMCANONVENDOR "/macros", ":",
 				SYSCONFDIR "/rpm/macros.*", ":",
 				SYSCONFDIR "/rpm/macros", ":",
 				SYSCONFDIR "/rpm/%{_target}/macros", ":",
+				SYSCONFDIR "/rpm/macros.d/*", ":",
 				"~/.rpmmacros", NULL);
     }
 #else
