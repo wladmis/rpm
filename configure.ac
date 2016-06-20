@@ -856,5 +856,6 @@ AC_CONFIG_FILES([Makefile
  	plugins/Makefile
 	python/setup.py
 	scripts/posttrans-filetriggers
+	scripts/find-package
   ])
 AC_OUTPUT
