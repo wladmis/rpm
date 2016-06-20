@@ -84,9 +84,9 @@ int rpmvercmp(const char * a, const char * b)
 
 	/* take care of the case where the two version segments are */
 	/* different types: one numeric, the other alpha (i.e. empty) */
-	/* numeric segments are always newer than alpha segments */
+	/* alpha segments are always newer than numeric segments */
 	/* XXX See patch #60884 (and details) from bugzilla #50977. */
-	if (two == str2) return (isnum ? 1 : -1);
+	if (two == str2) return (isnum ? -1 : 1);
 
 	if (isnum) {
 	    size_t onelen, twolen;
