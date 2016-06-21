@@ -280,6 +280,8 @@ rpmpopt-@VERSION@: $(top_srcdir)/rpmpopt.in
 CLEANFILES += rpmpopt-@VERSION@.tmp rpmpopt-@VERSION@
 EXTRA_DIST += rpmpopt.in
 
+rpmconfig_DATA += GROUPS
+
 usrsrcdir = $(prefix)/src
 
 rpmvardir = $(localstatedir)/lib/rpm
