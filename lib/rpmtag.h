@@ -66,6 +66,7 @@ typedef enum rpmTag_e {
 #define	RPMTAG_R	RPMTAG_RELEASE	/* s */
     RPMTAG_EPOCH   		= 1003,	/* i */
 #define	RPMTAG_E	RPMTAG_EPOCH	/* i */
+#define	RPMTAG_SERIAL	RPMTAG_EPOCH	/* i */
     RPMTAG_SUMMARY		= 1004,	/* s{} */
     RPMTAG_DESCRIPTION		= 1005,	/* s{} */
     RPMTAG_BUILDTIME		= 1006,	/* i */
