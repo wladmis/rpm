@@ -871,12 +871,12 @@ AC_DEFINE_UNQUOTED(SYSCONFIGDIR, "$SYSCONFIGDIR",
 	[Full path to rpm system configuration directory (usually /etc/rpm)])
 AC_SUBST(SYSCONFIGDIR)
 
-MACROFILES="${RPMCONFIGDIR}/macros:${RPMCONFIGDIR}/%{_target}/macros:${RPMCONFIGDIR}/macros.d/*:${SYSCONFIGDIR}/macros.specspo:${SYSCONFIGDIR}/macros.cdb:${SYSCONFIGDIR}/macros:${SYSCONFIGDIR}/%{_target}/macros:${SYSCONFIGDIR}/macros.d/*:~/.rpmmacros"
+MACROFILES="${RPMCONFIGDIR}/buildmacros:${RPMCONFIGDIR}/%{_target}/macros:${RPMCONFIGDIR}/macros.d/*:${SYSCONFIGDIR}/macros.specspo:${SYSCONFIGDIR}/macros.cdb:${SYSCONFIGDIR}/macros:${SYSCONFIGDIR}/%{_target}/macros:${SYSCONFIGDIR}/macros.d/*:~/.rpmmacros"
 AC_DEFINE_UNQUOTED(MACROFILES, "$MACROFILES",
 	[Colon separated paths of macro files to read.])
 AC_SUBST(MACROFILES)
 
-LIBRPMRC_FILENAME="${RPMCONFIGDIR}/rpmrc"
+LIBRPMRC_FILENAME="${RPMCONFIGDIR}/rpmbuildrc"
 AC_DEFINE_UNQUOTED(LIBRPMRC_FILENAME, "$LIBRPMRC_FILENAME",
 	[Full path to rpmrc configuration file (usually /usr/lib/rpm/rpmrc)])
 AC_SUBST(LIBRPMRC_FILENAME)

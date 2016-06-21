@@ -310,7 +310,7 @@ popd
 
 /bin/ls -1d %buildroot%_rpmlibdir/*-%_target_os |
 	grep -Fv /brp- |
-	sed -e "s|^%buildroot|%%attr(-,root,%oname) |g" >>%oname.lang
+	sed -e "s|^%buildroot|%%attr(-,root,%oname) |g" >>rpmbuild.platform
 
 %ifdef add_findreq_skiplist
 # These shell libraries hopefully do not require anything special,
@@ -351,8 +351,8 @@ mv %buildroot%_rpmlibdir/{,build}macros
 
 %files -n lib%oname
 %rpmdirattr %_rpmlibdir
-%rpmdatattr %_rpmlibdir/rpmrc
-%rpmdatattr %_rpmlibdir/macros
+%rpmdatattr %_rpmlibdir/rpmbuildrc
+%rpmdatattr %_rpmlibdir/buildmacros
 %_libdir/librpm-*.so
 %_libdir/librpmdb-*.so
 %_libdir/librpmio-*.so
@@ -438,7 +438,7 @@ mv %buildroot%_rpmlibdir/{,build}macros
 %_man8dir/rpm2cpio.*
 %endif
 
-%files
+%files -f rpmbuild.platform
 %config %_sysconfdir/buildreqs/files/ignore.d/*
 %rpmattr %_bindir/gendiff
 %_bindir/rpmbuild
