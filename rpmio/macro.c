@@ -1618,6 +1618,7 @@ rpmInitMacros(rpmMacroContext mc, const char * macrofiles)
 	for (path = files; *path; path++) {
 	    if (rpmFileHasSuffix(*path, ".rpmnew") || 
 		rpmFileHasSuffix(*path, ".rpmsave") ||
+		rpmFileHasSuffix(*path, ".env") ||
 		rpmFileHasSuffix(*path, ".rpmorig")) {
 		continue;
 	    }
