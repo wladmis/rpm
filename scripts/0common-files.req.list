@@ -27,5 +27,4 @@
 /lib/udev/rules.d	udev-rules
 /lib64/udev	udev-rules
 /lib64/udev/rules.d	udev-rules
-/usr/lib/rpm	librpm
 /usr/lib/rpm/macros.d	rpm
