@@ -84,6 +84,7 @@ PreReq: zlib >= 1.1.4
 PreReq: bzlib >= 1:1.0.2-alt2
 PreReq: libpopt >= 1:1.7-alt3
 PreReq: libdb4.7
+Provides: librpm = 4.0.4-alt100.96
 
 %package -n librpmbuild
 Summary: Shared library required for applications which will build RPM packages
@@ -91,6 +92,7 @@ Summary(ru_RU.UTF-8): Разделяемая библиотека для раз�
 License: GPL/LGPL
 Group: System/Libraries
 Requires: lib%oname = %version-%release
+Provides: librpmbuild = 4.0.4-alt100.96
 
 %package -n lib%oname-devel
 Summary: Development files for applications which will manipulate RPM packages
