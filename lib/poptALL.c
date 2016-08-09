@@ -225,6 +225,8 @@ struct poptOption rpmcliAllPoptTable[] = {
 
  { "promoteepoch", '\0', POPT_ARG_VAL|POPT_ARGFLAG_DOC_HIDDEN, &_rpmds_nopromote, 0,
 	NULL, NULL},
+ { "nopromoteepoch", '\0', POPT_ARG_VAL|POPT_ARGFLAG_NOT|POPT_ARGFLAG_DOC_HIDDEN,
+	&_rpmds_nopromote, 0, NULL, NULL},
 
  { "fsmdebug", '\0', POPT_ARG_VAL|POPT_ARGFLAG_DOC_HIDDEN, &_fsm_debug, -1,
 	N_("debug payload file state machine"), NULL},
