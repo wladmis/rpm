@@ -2865,7 +2865,7 @@ msgstr "%s a zo un ezhomm eus %s%s"
 
 #: lib/rpmprob.c:160 lib/rpmprob.c:164 lib/rpmprob.c:168
 msgid "(installed) "
-msgstr "(staliet)"
+msgstr "(staliet) "
 
 #: lib/rpmprob.c:163
 #, c-format
