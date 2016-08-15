@@ -536,6 +536,9 @@ package or when debugging this package.\
 #   nofsync		Disable fsync(2) call performed after db3 writes?
 #
 
+# Legacy DB api macro
+%_dbapi				3
+
 # Misc BDB tuning options
 %__dbi_other			mp_mmapsize=128Mb mp_size=1Mb
 
