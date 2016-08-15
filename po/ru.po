@@ -2912,7 +2912,7 @@ msgstr "%s нужен для %s%s"
 
 #: lib/rpmprob.c:160 lib/rpmprob.c:164 lib/rpmprob.c:168
 msgid "(installed) "
-msgstr "(установлен)"
+msgstr "(установлен) "
 
 #: lib/rpmprob.c:163
 #, c-format
