@@ -2915,7 +2915,7 @@ msgstr "%s estas postulata de %s%s"
 
 #: lib/rpmprob.c:160 lib/rpmprob.c:164 lib/rpmprob.c:168
 msgid "(installed) "
-msgstr "(instalita)"
+msgstr "(instalita) "
 
 #: lib/rpmprob.c:163
 #, c-format

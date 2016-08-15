@@ -2926,7 +2926,7 @@ msgstr "%s は %s%s に必要とされています"
 
 #: lib/rpmprob.c:160 lib/rpmprob.c:164 lib/rpmprob.c:168
 msgid "(installed) "
-msgstr "(インストール済み)"
+msgstr "(インストール済み) "
 
 #: lib/rpmprob.c:163
 #, c-format
