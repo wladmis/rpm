@@ -146,3 +146,9 @@ include/rpm/rpmspec.h: build/rpmspec.h include/rpm/$(dirstamp)
 	$(INSTALL_DATA) $(top_srcdir)/build/rpmspec.h include/rpm/rpmspec.h
 BUILT_SOURCES += include/rpm/rpmspec.h
 CLEANFILES += include/rpm/rpmspec.h
+if ENABLE_ALTHEADERCACHE
+include/rpm/rpmaltheadercache.h: rpmaltheadercache/rpmaltheadercache.h include/rpm/$(dirstamp)
+	$(INSTALL_DATA) $(top_srcdir)/rpmaltheadercache/rpmaltheadercache.h include/rpm/rpmaltheadercache.h
+BUILT_SOURCES += include/rpm/rpmaltheadercache.h
+CLEANFILES += include/rpm/rpmaltheadercache.h
+endif
