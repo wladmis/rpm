@@ -371,7 +371,7 @@ static rpmRC runExtScript(rpmPlugins plugins, ARGV_const_t prefixes,
         int ret;
         ret = setpriority(PRIO_PROCESS, 0, 0);
         if (ret == -1) {
-            rpmlog(RPMLOG_WARNING, _("Unable to reset nice value: %s"),
+            rpmlog(RPMLOG_DEBUG, "Unable to reset nice value: %s",
                 strerror(errno));
         }
 
