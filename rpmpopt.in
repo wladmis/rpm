@@ -188,6 +188,30 @@ rpm	exec --rebuilddb	rpmdb --rebuilddb
 rpm	exec --verifydb		rpmdb --verifydb
 rpm	exec --specfile		rpmspec -q
 
+rpm	exec --bc		rpmbuild -bc
+rpm	exec --bi		rpmbuild -bi
+rpm	exec --bl		rpmbuild -bl
+rpm	exec --ba		rpmbuild -ba
+rpm	exec --bb		rpmbuild -bb
+rpm	exec --bs		rpmbuild -bs
+rpm	exec --bt		rpmbuild -bt
+rpm	exec --bE		rpmbuild -bE
+rpm	exec --bM		rpmbuild -bM
+rpm	exec --tp		rpmbuild -tp
+rpm	exec --tc		rpmbuild -tc
+rpm	exec --ti		rpmbuild -ti
+rpm	exec --tl		rpmbuild -tl
+rpm	exec --ta		rpmbuild -ta
+rpm	exec --tb		rpmbuild -tb
+rpm	exec --ts		rpmbuild -ts
+rpm	exec --rebuild		rpmbuild --rebuild
+rpm	exec --recompile	rpmbuild --recompile
+rpm	exec --clean		rpmbuild --clean
+rpm	exec --rmsource		rpmbuild --rmsource
+rpm	exec --rmspec		rpmbuild --rmspec
+rpm	exec --target		rpmbuild --target
+rpm	exec --short-circuit	rpmbuild --short-circuit
+
 #==============================================================================
 rpmbuild alias --ftpport		--define '_httpport !#:+'
 rpmbuild alias --ftpproxy	--define '_httpproxy !#:+'
