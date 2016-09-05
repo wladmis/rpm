@@ -230,16 +230,16 @@ package or when debugging this package.\
 %_srcrpmdir		%{_topdir}/SRPMS
 
 #	The directory where buildroots will be created.
-%_buildrootdir		%{_topdir}/BUILDROOT
+%_buildrootdir		%{_tmppath}
 
 #	Build root path, where %install installs the package during build.
-%buildroot		%{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}
+%buildroot		%{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}-buildroot
 
 #	Directory where temporaray files can be created.
 %_tmppath		%{_tmpdir}
 
 #	Path to top of build area.
-%_topdir		%{getenv:HOME}/rpmbuild
+%_topdir		%{getenv:HOME}/RPM
 
 #	The path to the unzip executable (legacy, use %{__unzip} instead).
 %_unzipbin		%{__unzip}
