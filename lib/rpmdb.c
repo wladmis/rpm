@@ -8,10 +8,6 @@
 #include <utime.h>
 #include <errno.h>
 
-#ifndef	DYING	/* XXX already in "system.h" */
-#include <fnmatch.h>
-#endif
-
 #include <regex.h>
 
 #include <rpm/rpmtypes.h>
