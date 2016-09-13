@@ -10,6 +10,7 @@
 
 #include <errno.h>
 #include <regex.h>
+#include <fts.h>
 #if WITH_CAP
 #include <sys/capability.h>
 #endif
@@ -22,7 +23,6 @@
 #include <rpm/rpmbase64.h>
 
 #include "rpmio/rpmio_internal.h"	/* XXX rpmioSlurp */
-#include "misc/fts.h"
 #include "lib/rpmfi_internal.h"	/* XXX fi->apath */
 #include "lib/rpmug.h"
 #include "build/rpmbuild_internal.h"
@@ -1450,8 +1450,8 @@ static rpmRC recurseDir(FileList fl, const char * diskPath)
 
     ftsSet[0] = (char *) diskPath;
     ftsSet[1] = NULL;
-    ftsp = Fts_open(ftsSet, myFtsOpts, NULL);
-    while ((fts = Fts_read(ftsp)) != NULL) {
+    ftsp = fts_open(ftsSet, myFtsOpts, NULL);
+    while ((fts = fts_read(ftsp)) != NULL) {
 	switch (fts->fts_info) {
 	case FTS_D:		/* preorder directory */
 	case FTS_F:		/* regular file */
@@ -1478,7 +1478,7 @@ static rpmRC recurseDir(FileList fl, const char * diskPath)
 	if (rc)
 	    break;
     }
-    (void) Fts_close(ftsp);
+    (void) fts_close(ftsp);
 
     return rc;
 }
