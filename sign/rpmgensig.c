@@ -220,7 +220,7 @@ static int putSignature(Header sigh, int ishdr, uint8_t *pkt, size_t pktlen)
 	sigtag = ishdr ? RPMSIGTAG_DSA : RPMSIGTAG_GPG;
 	break;
     case PGPPUBKEYALGO_RSA:
-	sigtag = ishdr ? RPMSIGTAG_RSA : RPMSIGTAG_PGP;
+	sigtag = ishdr ? RPMSIGTAG_RSA : RPMSIGTAG_GPG;
 	break;
     default:
 	rpmlog(RPMLOG_ERR, _("Unsupported PGP pubkey algorithm %u\n"),
