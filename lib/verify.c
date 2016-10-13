@@ -449,7 +449,7 @@ static int verifyHeader(rpmts ts, Header h, rpmVerifyAttrs omitMask, int ghosts)
 	if (buf) {
 	    if (fstate)
 		buf = rstrscat(&buf, " (", fstate, ")", NULL);
-	    rpmlog(RPMLOG_NOTICE, "%s\n", buf);
+	    fprintf(stdout, "%s\n", buf);
 	    buf = _free(buf);
 	}
     }
@@ -486,7 +486,7 @@ static int verifyDependencies(rpmts ts, Header h)
 
 	while ((p = rpmpsiNext(psi)) != NULL) {
 	    char * ps = rpmProblemString(p);
-	    rpmlog(RPMLOG_NOTICE, "\t%s\n", ps);
+	    fprintf(stdout, "\t%s\n", ps);
 	    free(ps);
 	}
 	rpmpsFreeIterator(psi);
