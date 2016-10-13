@@ -330,10 +330,10 @@ static int rpmpkgVerifySigs(rpmKeyring keyring, rpmQueryFlags flags,
     res = failed;
 
     if (rpmIsVerbose()) {
-	rpmlog(RPMLOG_NOTICE, "%s", buf);
+	fprintf(stdout, "%s", buf);
     } else {
 	const char *ok = (failed ? _("NOT OK") : _("OK"));
-	rpmlog(RPMLOG_NOTICE, "%s%s%s%s%s%s%s%s\n", buf, ok,
+	fprintf(stdout, "%s%s%s%s%s%s%s%s\n", buf, ok,
 	       missingKeys ? _(" (MISSING KEYS:") : "",
 	       missingKeys ? missingKeys : "",
 	       missingKeys ? _(") ") : "",
