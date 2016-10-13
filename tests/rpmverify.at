@@ -20,10 +20,10 @@ runroot rpm -U --nodeps /build/RPMS/noarch/deptest-one-1.0-1.noarch.rpm
 runroot rpm -Va --nofiles
 ],
 [1],
-[Unsatisfied dependencies for deptest-one-1.0-1.noarch:
-	deptest-two is needed by (installed) deptest-one-1.0-1.noarch
+[	deptest-two is needed by (installed) deptest-one-1.0-1.noarch
 ],
-[])
+[Unsatisfied dependencies for deptest-one-1.0-1.noarch:
+])
 AT_CLEANUP
 
 # Test file verify when no errors expected.

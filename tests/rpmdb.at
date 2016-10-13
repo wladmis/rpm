@@ -79,9 +79,9 @@ runroot rpm -q foo-
 
 ],
 [1],
-[package foo- is not installed
-],
-[])
+[],
+[package foo- is not installed]
+)
 AT_CLEANUP
 
 # ------------------------------
