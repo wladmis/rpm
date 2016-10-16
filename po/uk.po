@@ -3504,7 +3504,7 @@ msgstr "Документація/Faqs"
 msgid "Books/Howtos"
 msgstr "Документація/Howtos"
 
-msgid "Books/Litterature"
+msgid "Books/Literature"
 msgstr "Документація/Література"
 
 msgid "Books/Other"
@@ -3650,6 +3650,9 @@ msgstr "Графічні оболонки/Icewm"
 
 msgid "Graphical desktop/KDE"
 msgstr "Графічні оболонки/KDE"
+
+msgid "Graphical desktop/MATE"
+msgstr "Графічні оболонки/MATE"
 
 msgid "Graphical desktop/Motif"
 msgstr "Графічні оболонки/Motif"

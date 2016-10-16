@@ -61,7 +61,7 @@ LibReq()
 
 	# Obtain ELF segments.
 	local segments
-	if ! segments=$(readelf -Wl "$f"); then
+	if ! segments=$(readelf --wide --segments "$f"); then
 		Warning "$f: readelf failed"
 		return 0
 	fi

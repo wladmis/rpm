@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.27.M60T.1
+Release: alt100.27.M60T.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -44,7 +44,7 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_python:BuildPreReq: python-devel}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
 %{?_with_libelf:BuildPreReq: libelf-devel-static}
-%{?_with_selinux:BuildPreReq: libselinux-devel-static >= 2.0.96}
+%{?_with_selinux:BuildPreReq: libselinux-devel >= 2.0.96}
 %{?_with_profile:BuildPreReq: coreutils >= 6.0}
 
 BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
@@ -210,7 +210,6 @@ the Python programming language to use the interface supplied by RPM
 touch config.rpath
 gettextize --force --quiet --no-changelog --symlink
 install -pv -m644 /usr/share/automake/mkinstalldirs .
-install -pv -m644 /usr/share/gettext/intl/Makevars* po/Makevars
 autoreconf -fisv -I m4
 # avoid extra build dependencies
 export ac_cv_path___CPIO=/bin/cpio
@@ -219,12 +218,18 @@ export ac_cv_path___LZMA=/usr/bin/lzma
 export ac_cv_path___XZ=/usr/bin/xz
 export ac_cv_path___GPG=/usr/bin/gpg
 export ac_cv_path___SSH=/usr/bin/ssh
+export LDFLAGS="-L$PWD/stub"
 %configure \
 	%{?_with_python} %{?_without_python} \
 	%{?_with_apidocs} %{?_without_apidocs} \
 	%{?_with_db} %{?_without_db} \
 	%{subst_with selinux} \
 	--program-transform-name=
+
+# create a stub libselinux.a so that -lselinux would work in -static mode
+mkdir stub
+ar cq stub/libselinux.a
+ln -s %_libdir/libselinux.so stub/
 
 set_c_cflags="$(sed -n 's/^CFLAGS = //p' lib/Makefile) -W -Wno-missing-prototypes %{!?_enable_debug:-O3}"
 %make_build -C lib set.lo CFLAGS="$set_c_cflags"
@@ -503,6 +508,24 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Jul 18 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.24.M60P.5
+- Backported from Sisyphus (closes: #29190):
+  + %%_sharedstatedir: changed to /var/lib (suggested by Alexey Gladkov).
+
+* Wed Apr 24 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.24.M60P.4
+- Backport from Sisyphus:
+  + Fixed build with new gettext and automake.
+  + Fixed build with ld --no-copy-dt-needed-entries.
+  + Build selinux support in dynamically linked objects only.
+  + Added %%getenv and %%_tmpdir builtin macros.
+  + platform.in: added systemd macros.
+  + platform.in: add %%EVR macro.
+  + scripts: cleaned up readelf(1) invocations.
+  + brp-fix-perms: fixed "find -perm" syntax.
+  + 0common-files.req.list: added /etc/sudoers.d.
+  + rpmio/macro.c (doShellEscape): fixed an off-by-one error
+    in stripping trailing newlines.
+
 * Mon May 21 2012 Vitaly Kuznetsov <vitty@altlinux.ru> 4.0.4-alt100.27.M60T.1
 - Backport some useful commits from 'maint' branch:
   parseSpec:

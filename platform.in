@@ -21,7 +21,7 @@
 %_libexecdir		@libexecdir@
 %_datadir		@datadir@
 %_sysconfdir		@sysconfdir@
-%_sharedstatedir	@sharedstatedir@
+%_sharedstatedir	%{_var}/lib
 %_localstatedir		@localstatedir@
 %_lib			@LIB@
 %_libdir		@prefix@/@LIB@
@@ -382,7 +382,16 @@
 @alt@
 @alt@# Initscripts.
 @alt@%_initdir	%{_sysconfdir}/rc.d/init.d
-@alt@%systemd_unitdir	/lib/systemd/system
+@alt@
+@alt@# systemd
+@alt@%_binfmtdir	/lib/binfmt.d
+@alt@%_modulesloaddir	/lib/modules-load.d
+@alt@%_presetdir	/lib/systemd/system-preset
+@alt@%_sysctldir	/lib/sysctl.d
+@alt@%_tmpfilesdir	/lib/tmpfiles.d
+@alt@%_udevhwdbdir	/lib/udev/hwdb.d
+@alt@%_udevrulesdir	/lib/udev/rules.d
+@alt@%_unitdir		/lib/systemd/system
 @alt@
 @alt@# logrotate configs.
 @alt@%_logrotatedir	%{_sysconfdir}/logrotate.d
@@ -547,7 +556,10 @@
 @alt@
 @alt@%_initddir		%_initdir
 @alt@%_initrddir	%_initdir
+@alt@%systemd_unitdir	%_unitdir
 @alt@%make_session	%nil
+@alt@
+@alt@%EVR	%{?epoch:%epoch:}%{version}-%{release}
 @alt@
 @alt@# GCC versioning.
 @alt@%__gcc_version %(gcc -dumpversion)

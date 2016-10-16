@@ -39,5 +39,5 @@ done
 find -type f \( -perm -4100 -o -perm -2100 \) -print0 |
 	xargs -r0 chmod -c -R go-rw --
 
-find -type f -perm +0111 -print0 |
+find -type f -perm /a=x -print0 |
 	xargs -r0 @RPMCONFIGDIR@/fixup-libraries

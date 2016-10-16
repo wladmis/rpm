@@ -23,7 +23,7 @@ Debug "RPM_FINDREQ_RPATH=$RPM_FINDREQ_RPATH"
 not_yet_list=
 HasDebugInfo()
 {
-	if readelf --sections "$1" |LC_ALL=C fgrep -qs '.gnu_debuglink'; then
+	if readelf --wide --sections "$1" |LC_ALL=C fgrep -qs '.gnu_debuglink'; then
 		return 0
 	fi
 	if [ -z "$not_yet_list" ] || [ -n "${not_yet_list##* $1 *}" ]; then
@@ -49,7 +49,7 @@ DebugInfoReq()
 
 	# Obtain ELF segments.
 	local segments
-	if ! segments=$(readelf -Wl "$f"); then
+	if ! segments=$(readelf --wide --segments "$f"); then
 		Warning "$f: readelf failed"
 		return 0
 	fi

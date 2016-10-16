@@ -19,6 +19,7 @@
 /etc/rpm/macros.d	rpm
 /etc/security/console.apps	pam0_console
 /etc/sudo.d	sudo
+/etc/sudoers.d	sudo
 /etc/sysconfig/limits.d	service
 /etc/sysctl.d	startup
 /etc/syslog.d	syslog-common
