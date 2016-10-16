@@ -508,6 +508,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sun Oct 16 2016 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt100.27.M60T.2
+- Synced with p6. (Merged the changes which have been in p6, but not in t6 yet.)
+
 * Thu Jul 18 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.24.M60P.5
 - Backported from Sisyphus (closes: #29190):
   + %%_sharedstatedir: changed to /var/lib (suggested by Alexey Gladkov).
