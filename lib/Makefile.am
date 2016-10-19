@@ -78,10 +78,6 @@ librpm_la_SOURCES += \
 	backend/ndb/rpmxdb.h
 endif
 
-if ENABLE_ALTHEADERCACHE
-librpm_la_LIBADD += $(top_builddir)/rpmaltheadercache/librpmaltheadercache.la
-endif
-
 librpm_la_SOURCES += set.c set.h
 
 tagtbl.C: Makefile.am $(srcdir)/rpmtag.h gentagtbl.sh

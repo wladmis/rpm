@@ -18,10 +18,6 @@ endif
 if WITH_LUA
 SUBDIRS += luaext
 endif
-if ENABLE_ALTHEADERCACHE
-SUBDIRS += rpmaltheadercache
-endif
-
 SUBDIRS += rpmio lib sign build scripts fileattrs doc .
 
 if ENABLE_PYTHON
@@ -36,11 +32,7 @@ if HAVE_FAKECHROOT
 SUBDIRS += tests
 endif
 
-DIST_SUBDIRS = po misc luaext rpmio
-if ENABLE_ALTHEADERCACHE
-DIST_SUBDIRS += rpmaltheadercache
-endif
-DIST_SUBDIRS += lib sign build python scripts fileattrs doc tests plugins
+DIST_SUBDIRS = po misc luaext rpmio lib sign build python scripts fileattrs doc tests plugins
 
 pkgconfigdir = $(libdir)/pkgconfig
 
@@ -97,9 +89,6 @@ pkginclude_HEADERS += sign/rpmsign.h
 pkginclude_HEADERS += build/rpmbuild.h
 pkginclude_HEADERS += build/rpmfc.h
 pkginclude_HEADERS += build/rpmspec.h
-if ENABLE_ALTHEADERCACHE
-pkginclude_HEADERS += rpmaltheadercache/rpmaltheadercache.h
-endif
 
 
 

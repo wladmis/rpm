@@ -763,12 +763,6 @@ AS_IF([test "$enable_plugins" = yes],[
 ])
 AM_CONDITIONAL(ENABLE_PLUGINS,[test "$enable_plugins" = yes])
 
-AC_ARG_ENABLE([altheadercache], [AS_HELP_STRING([--enable-altheadercache],[enable ALT header cache dummy library])],,[enable_plugins=no])
-AS_IF([test "$enable_altheadercache" = yes],[
-       AC_DEFINE(ENABLE_ALTHEADERCACHE, 1, [Build with ALT header cache dummy library?])
-       ])
-AM_CONDITIONAL(ENABLE_ALTHEADERCACHE,[test "$enable_altheadercache" = yes])
-
 with_dbus=no
 AS_IF([test "$enable_plugins" != no],[
   PKG_CHECK_MODULES([DBUS],
@@ -863,6 +857,5 @@ AC_CONFIG_FILES([Makefile
 	python/setup.py
 	scripts/posttrans-filetriggers
 	scripts/find-package
-	rpmaltheadercache/Makefile
   ])
 AC_OUTPUT
