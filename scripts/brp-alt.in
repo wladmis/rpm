@@ -20,6 +20,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 
+_strip=@__STRIP@
+_objdump=@__OBJDUMP@
+
+[ -n "$RPM_CONFIGDIR" ] ||
+	RPM_CONFIGDIR=@RPMCONFIGDIR@
+
+$RPM_CONFIGDIR/brp-compress
+$RPM_CONFIGDIR/brp-strip "$_strip"
+$RPM_CONFIGDIR/brp-strip-static-archive "$_strip"
+$RPM_CONFIGDIR/brp-strip-comment-note "$_strip" "$_objdump"
+
+exit 0
+
 . @RPMCONFIGDIR@/functions
 ValidateBuildRoot
 
