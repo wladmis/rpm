@@ -12,9 +12,6 @@
 #include <rpm/rpmlog.h>
 #include <rpm/rpmstring.h>
 #include <rpm/rpmkeyring.h>
-#if defined ENABLE_ALTHEADERCACHE
-#include <rpm/rpmaltheadercache.h>
-#endif
 
 #include "lib/rpmlead.h"
 #include "lib/signature.h"
@@ -658,25 +655,10 @@ rpmRC rpmReadPackageFile(rpmts ts, FD_t fd, const char * fn, Header * hdrp)
     unsigned int keyid = 0;
     char *msg = NULL;
 
-#if ENABLE_ALTHEADERCACHE
-    struct stat st;
-
-    if (fstat(Fileno(fd), &st) == 0) {
-	if (rpmaltheadercacheHACKGet(fd, fn, &st, hdrp) == 0) {
-	    rc = RPMRC_OK;
-	} else {
-	    rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
-
-	    if (rc != RPMRC_FAIL)
-		rpmaltheadercacheHACKSet(fd, fn, &st, hdrp);
-	}
-    } else
-#endif
-    rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
-
     if (fn == NULL)
 	fn = Fdescr(fd);
 
+    rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
 
     switch (rc) {
     case RPMRC_OK:		/* Signature is OK. */
