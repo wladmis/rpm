@@ -1,4 +1,4 @@
-%bcond_with symlink
+%def_without symlink
 
 Name:		symlinktest
 Version:	1.0
