@@ -382,3 +382,45 @@ rpmRC rpmpluginsCallFsmFilePrepare(rpmPlugins plugins, rpmfi fi,
 
     return rc;
 }
+
+rpmRC rpmpluginsCallHeaderCacheSet(rpmPlugins plugins, FD_t fd,
+	const char * fn,
+	const struct stat *st,
+	Header * hdrp)
+{
+    plugin_package_file_cache_set_func hookFunc;
+    int i;
+    rpmRC rc = RPMRC_OK;
+
+    for (i = 0; i < plugins->count; i++) {
+	rpmPlugin plugin = plugins->plugins[i];
+	RPMPLUGINS_SET_HOOK_FUNC(header_cache_set);
+	if (hookFunc && hookFunc(plugin, fd, fn, st, hdrp) == RPMRC_FAIL)
+	    rc = RPMRC_FAIL;
+    }
+
+    return rc;
+}
+
+rpmRC rpmpluginsCallHeaderCacheGet(rpmPlugins plugins, FD_t fd,
+	const char * fn,
+	const struct stat *st,
+	Header * hdrp)
+{
+    plugin_package_file_cache_get_func hookFunc;
+    int i;
+    rpmRC rc = RPMRC_NOTFOUND;
+
+    for (i = 0; i < plugins->count; i++) {
+	rpmPlugin plugin = plugins->plugins[i];
+	RPMPLUGINS_SET_HOOK_FUNC(header_cache_get);
+	if (hookFunc &&
+		hookFunc(plugin, fd, fn, st, hdrp) == RPMRC_OK &&
+		*hdrp != NULL) {
+	    rc = RPMRC_OK;
+	    return rc;
+	}
+    }
+
+    return rc;
+}
