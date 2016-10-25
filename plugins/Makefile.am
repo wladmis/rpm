@@ -35,3 +35,7 @@ plugins_LTLIBRARIES += syslog.la
 ima_la_sources = ima.c
 ima_la_LIBADD = $(top_builddir)/lib/librpm.la $(top_builddir)/rpmio/librpmio.la
 plugins_LTLIBRARIES += ima.la
+
+hdrcache_la_SOURCES = hdrcache.c mcdb.c
+hdrcache_la_LIBADD = $(top_builddir)/lib/librpm.la -lmemcached -lmemcachedutil -llzo2
+plugins_LTLIBRARIES += hdrcache.la
