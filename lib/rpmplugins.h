@@ -167,6 +167,25 @@ rpmRC rpmpluginsCallFsmFilePrepare(rpmPlugins plugins, rpmfi fi,
                                    const char *path, const char *dest,
                                    mode_t mode, rpmFsmOp op);
 
+/** \ingroup rpmplugins
+ * Call the ... plugin hook.
+ */
+RPM_GNUC_INTERNAL
+rpmRC rpmpluginsCallHeaderCacheSet(rpmPlugins plugins, FD_t fd,
+				   const char * fn,
+				   const struct stat *st,
+				   Header * hdrp);
+
+/** \ingroup rpmplugins
+ * Call the ... plugin hook.
+ */
+RPM_GNUC_INTERNAL
+rpmRC rpmpluginsCallHeaderCacheGet(rpmPlugins plugins, FD_t fd,
+				   const char * fn,
+				   const struct stat *st,
+				   Header * hdrp);
+
+
 #ifdef __cplusplus
 }
 #endif
