@@ -785,6 +785,7 @@
 %__transaction_selinux		%{__plugindir}/selinux.so
 %__transaction_syslog		%{__plugindir}/syslog.so
 %__transaction_ima		%{__plugindir}/ima.so
+%__transaction_hdrcache		%{__plugindir}/hdrcache.so
 
 # \endverbatim
 #*/
