@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2000-2007,2011  Dmitry V. Levin <ldv@altlinux.org>
 # Copyright (C) 2007       Alexey Tourbin <at@altlinux.org>
+# Copyright (C) 2016       Ivan Zakharyaschev <imz@altlinux.org>
 #
 # find-requires - generate list of linux-specific package requires.
 # Inspired by tool with same name from RPM distribution.
