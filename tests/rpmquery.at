@@ -399,3 +399,21 @@ runroot rpm \
 [error: incorrect format: invalid field width
 ])
 AT_CLEANUP
+
+# ------------------------------
+AT_SETUP([format with single value tags in loops])
+AT_KEYWORDS([query])
+AT_CHECK([
+runroot rpm \
+  --queryformat="[[%{filenames} %{name}\n]]" \
+  -qp /data/RPMS/hello-2.0-1.i686.rpm
+],
+[0],
+[/usr/bin/hello hello
+/usr/share/doc/hello-2.0 hello
+/usr/share/doc/hello-2.0/COPYING hello
+/usr/share/doc/hello-2.0/FAQ hello
+/usr/share/doc/hello-2.0/README hello
+],
+[])
+AT_CLEANUP
