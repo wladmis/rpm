@@ -363,7 +363,7 @@ VerifyELF()
 		error_normal LINT "$f" 'eu-elflint failed'
 	fi
 
-	verify_rpath "$f" "$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}')"
+	verify_rpath "$f" "$(printf %s "$objdump_info" |awk '{if ($1=="RPATH"||$1=="RUNPATH") print $2}')"
 
 	if [ -z "${t##*ELF* executable*}" -o -z "${t##*ELF* shared object*}" ]; then
 		verify_stack "$f"
@@ -377,7 +377,7 @@ VerifyELF()
 
 	if [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; then
 		verify_unresolved "$f" "$preload" "$fname" \
-			"$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
+			"$(printf %s "$objdump_info" |awk '{if ($1=="RPATH"||$1=="RUNPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
 		if [ -z "${t##*ELF 32-bit*}" ]; then
 			verify_lfs "$f"
 		fi
