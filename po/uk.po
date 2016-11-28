@@ -9,7 +9,7 @@ msgstr ""
 "POT-Creation-Date: 2002-03-27 21:08+0300\n"
 "PO-Revision-Date: 2002-03-27 21:08+0300\n"
 "Last-Translator: Roman Savochenko <rom_as@altlinux.ru>\n"
-"Language-Team:  ALT Linux Team <devel@altlinux.ru>\n"
+"Language-Team:  ALT Linux Team <devel@lists.altlinux.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 

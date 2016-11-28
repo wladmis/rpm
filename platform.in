@@ -182,10 +182,10 @@
 @mandrake@%_gamesdatadir  %{_datadir}/%{_gamesdir}
 
 @alt@#---------------------------------------------------------------------
-@alt@#	ALT Linux vendor specific macros.
+@alt@#	ALT vendor specific macros.
 @alt@#	Contact rpm@packages.altlinux.org for details.
 @alt@#
-@alt@%distribution	ALT Linux
+@alt@%distribution	ALT
 @alt@%vendor	ALT Linux Team
 @alt@
 @alt@%___build_pre	\
