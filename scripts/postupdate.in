@@ -1,0 +1,15 @@
+#!/bin/sh -efu
+
+rpmdb -v --rebuilddb
+
+filelist=/var/lib/rpm/files-awaiting-filetriggers
+delay=/var/lib/rpm/delay-posttrans-filetriggers
+
+if [ -f "$delay" ]; then
+	mv -f "$delay" "$filelist"
+	echo 'delayed execution of posttrans filetriggers started'
+	if @RPMCONFIGDIR@/posttrans-filetriggers "$filelist"; then
+		rm -f "$filelist"
+	fi
+	echo 'delayed execution of posttrans filetriggers finished'
+fi >&2

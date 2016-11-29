@@ -858,5 +858,6 @@ AC_CONFIG_FILES([Makefile
 	scripts/posttrans-filetriggers
 	scripts/find-package
 	scripts/brp-alt
+	scripts/postupdate
   ])
 AC_OUTPUT
