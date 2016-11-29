@@ -22,6 +22,12 @@ shift
 RC=0
 
 if [ -s "$filelist" ]; then
+	delay=/var/lib/rpm/delay-posttrans-filetriggers
+	if [ -f "$delay" ]; then
+		cat "$filelist" > "$delay"
+		exit 0
+	fi
+
 	LC_ALL=C sort -u -o "$filelist" "$filelist"
 	for filetrigger in @RPMCONFIGDIR@/*.filetrigger; do
 		if ! [ -x "$filetrigger" ]; then
