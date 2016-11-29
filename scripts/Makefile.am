@@ -30,6 +30,8 @@ EXTRA_DIST += find-package
 
 EXTRA_DIST += brp-alt
 
+EXTRA_DIST += postupdate
+
 rpmconfig_SCRIPTS = \
 	appdata.prov \
 	brp-compress brp-python-bytecompile brp-java-gcjcompile \
@@ -52,6 +54,8 @@ rpmconfig_SCRIPTS += posttrans-filetriggers 0ldconfig.filetrigger
 rpmconfig_SCRIPTS += find-package
 
 rpmconfig_SCRIPTS += brp-alt
+
+rpmconfig_SCRIPTS += postupdate
 
 rpmconfig_DATA = \
 	rpm.daily rpm.log rpm.supp \
