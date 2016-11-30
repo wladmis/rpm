@@ -327,7 +327,7 @@ run_eu()
 
 VerifyELF()
 {
-	local f preload t objdump_info fname lint_info textrel rpath
+	local f preload t objdump_info fname lint_info textrel
 	f="$1"; shift
 	preload="$1"; shift
 	elf_segments=
@@ -376,6 +376,7 @@ VerifyELF()
 	fi
 
 	if [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; then
+		local rpath
 		rpath="$(printf %s "$objdump_info" |awk '{if ($1=="RUNPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
 		if [ -z "$rpath" ]; then
 			rpath="$(printf %s "$objdump_info" |awk '{if ($1=="RPATH") print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
