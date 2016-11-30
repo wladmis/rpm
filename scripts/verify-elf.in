@@ -363,12 +363,12 @@ VerifyELF()
 		error_normal LINT "$f" 'eu-elflint failed'
 	fi
 
-	printf %s "$objdump_info" |awk '($1=="RPATH"||$1=="RUNPATH"){print $2}' |
+	local rpath
 	while read -r rpath; do
 		verify_rpath "$f" "$rpath"
 		# Two RUNPATH/RPATHs are reported; verify_rpath() always prints at least:
 		# error_strict RPATH "$f" "RPATH entry found: $rpath"
-	done
+	done <<<"$(printf %s "$objdump_info" |awk '($1=="RPATH"||$1=="RUNPATH"){print $2}')"
 
 	if [ -z "${t##*ELF* executable*}" -o -z "${t##*ELF* shared object*}" ]; then
 		verify_stack "$f"
@@ -381,7 +381,6 @@ VerifyELF()
 	fi
 
 	if [ -z "${t##*ELF* executable*dynamically linked*}" -o -z "${t##*ELF* shared object*}" ]; then
-		local rpath
 		rpath="$(printf %s "$objdump_info" |awk '($1=="RUNPATH"){print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
 		if [ -z "$rpath" ]; then
 			rpath="$(printf %s "$objdump_info" |awk '($1=="RPATH"){print $2}' |tr -s : ' ' |sed -e "s|\$ORIGIN|${fname%/*}|g")"
