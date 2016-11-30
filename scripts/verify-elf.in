@@ -363,7 +363,12 @@ VerifyELF()
 		error_normal LINT "$f" 'eu-elflint failed'
 	fi
 
-	verify_rpath "$f" "$(printf %s "$objdump_info" |awk '($1=="RPATH"||$1=="RUNPATH"){print $2}')"
+	printf %s "$objdump_info" |awk '($1=="RPATH"||$1=="RUNPATH"){print $2}' |
+	while read -r rpath; do
+		verify_rpath "$f" "$rpath"
+		# Two RUNPATH/RPATHs are reported; verify_rpath() always prints at least:
+		# error_strict RPATH "$f" "RPATH entry found: $rpath"
+	done
 
 	if [ -z "${t##*ELF* executable*}" -o -z "${t##*ELF* shared object*}" ]; then
 		verify_stack "$f"
