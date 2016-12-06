@@ -18,6 +18,7 @@ EXTRA_DIST = \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	fixup-desktop fixup-desktop.awk \
 	files.req files.req.files 0common-files.req.list \
+	is_elf_so_executable \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files \
 	percolate \
@@ -50,6 +51,7 @@ config_SCRIPTS = \
 	fixup-binconfig fixup-pkgconfig fixup-libtool fixup-libraries \
 	fixup-desktop fixup-desktop.awk \
 	files.req files.req.files \
+	is_elf_so_executable \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
 	pam.req pam.req.files pam.prov pam.prov.files \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \

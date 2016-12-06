@@ -478,6 +478,7 @@ fi
 %rpmattr %_rpmlibdir/brp.d/*
 %rpmattr %_rpmlibdir/*_files
 %rpmattr %_rpmlibdir/cpp.*
+%rpmattr %_rpmlibdir/is_elf_so_executable
 %rpmattr %_rpmlibdir/ldd
 %rpmattr %_rpmlibdir/rpm2cpio.sh
 %rpmattr %_rpmlibdir/find-lang
