@@ -196,7 +196,8 @@ verify_unresolved()
 			;;
 		*)
 			if [ -z "${t##*ELF* executable*dynamically linked*}" ] ||
-			   lookup_path "${fname%/*}" "$RPM_VERIFY_ELF_LDD_RPATH"; then
+			   lookup_path "${fname%/*}" "$RPM_VERIFY_ELF_LDD_RPATH" ||
+			   @RPMCONFIGDIR@/is_elf_so_executable "$f"; then
 				ldd_rc=1
 			else
 				ldd_rc=0
