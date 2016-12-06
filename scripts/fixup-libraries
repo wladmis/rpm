@@ -2,7 +2,7 @@
 #
 # fixup-shared - fix permissions of libraries.
 #
-# Copyright (C) 2003-2005,2008  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2003-2016  Dmitry V. Levin <ldv@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,22 +26,39 @@ for file in "$@"; do
 			chmod -v u+w,a-x,ug-s "$file"
 			;;
 		ELF\ *\ shared\ object,\ *|*\ ELF\ *\ shared\ object,\ *)
-			file_header="$(readelf --wide --file-header "$file")" || continue
-			entry=`printf %s "$file_header" |sed -ne 's/^ \+Entry point address: \+0x0*\([0-9a-f]\+\)$/\1/p'`
-			[ -n "$entry" ] || continue
+			# This dynamic linker used to have its entry point
+			# equal to the text segment start address.
+			[ -n "${file##*/lib64/ld-*.so}" ] || continue
 
-			section_header="$(readelf --wide --sections "$file")" || continue
+			# Not an every shared object is a library.
+			# For example, PIEs should be treated as executables.
 
-			# See: comm -12 <(fgrep -l .interp /usr/lib/ldscripts/*) <(fgrep -le --shared /usr/lib/ldscripts/*)
-			if printf %s "$section_header" |fgrep -qs ' .interp '; then
+			section_header="$(readelf --wide --sections "$file" ||:)"
+			# An .interp section means it is an executable, see
+			# comm -12 <(grep -Fl .interp /usr/lib/ldscripts/*)
+			#          <(grep -Fle --shared /usr/lib/ldscripts/*)
+			if printf %s "$section_header" |grep -Fqs ' .interp '; then
 				continue
 			fi
 
-			text=`printf %s "$section_header" |sed -ne 's/^ *\[ *[0-9]\+\] \.text \+PROGBITS \+0*\([0-9a-f]\+\) \+.*/\1/p'`
-			[ -n "$text" ] || continue
-			[ "$entry" = "$text" ] || continue
+			file_header="$(readelf --wide --file-header "$file" ||:)"
+			# Zero entry point is treated like no entry points.
+			entry="$(printf %s "$file_header" |
+				sed -ne 's/^ \+Entry point address: \+0x0*\([1-9a-f][0-9a-f]*\)$/\1/p')"
 
-			[ -n "${file##*/lib64/ld-*.so}" ] || continue
+			# Zero text segment start address is treated
+			# like no text segments.
+			text="$(printf %s "$section_header" |
+				sed -ne 's/^ *\[ *[0-9]\+\] \.text \+PROGBITS \+0*\([1-9a-f][0-9a-f]*\) \+.*/\1/p')"
+
+			# Missing entry point or text segment means
+			# it is not an executable.
+			# Also, if entry point and text segment start address
+			# are equal, it is not an executable.
+			[ -z "$entry" ] ||
+			[ -z "$text" ] ||
+			[ "$entry" = "$text" ] ||
+			continue
 
 			chmod -c u+w,a-x,ug-s "$file"
 			;;
