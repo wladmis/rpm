@@ -259,13 +259,14 @@ verify_stack()
 	nsp0='[^[:space:]]*'
 	sp1='[[:space:]]\+'
 	hex='0x[0-9a-f]\+'
-	stack="$(printf '%s\n' "$elf_segments" |grep "^${sp0}GNU_STACK${sp1}")" || {
+	stack="$(printf '%s\n' "$elf_segments" | { grep "^${sp0}GNU_STACK${sp1}" || [ "$?" -eq 1 ]; } )"
+	[ -n "$stack" ] || {
 		error_strict STACK "$f" 'STACK entry not found'
 		return
 	}
 	exe_reg="${sp0}GNU_STACK${sp1}${hex}${sp1}${hex}${sp1}${hex}${sp1}${hex}${sp1}${hex}${sp1}${nsp0}E${nsp0}${sp1}${hex}"
-	exe_stack="$(printf '%s\n' "$stack" |grep -x "$exe_reg")" ||
-		return 0
+	exe_stack="$(printf '%s\n' "$stack" | { grep -x "$exe_reg" || [ "$?" -eq 1 ]; } )"
+	[ -z "$exe_stack" ] ||
 	error_strict STACK "$f" "found executable STACK entry: $exe_stack"
 }
 
