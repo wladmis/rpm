@@ -175,7 +175,7 @@ verify_unresolved()
 	fi
 	rpath="$(printf %s "$rpath" |
 		tr -s '[:space:]' '\n' |
-		grep -v '^$' |
+		{ grep -v '^$' || [ "$?" -eq 1 ]; } |
 		LANG=C uniq |
 		sed -e "s|^|$RPM_BUILD_ROOT&|" |
 		tr -s '[:space:]' : |
