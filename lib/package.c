@@ -18,6 +18,8 @@
 #include "rpmio/digest.h"
 #include "rpmio/rpmio_internal.h"	/* fd digest bits */
 #include "lib/header_internal.h"	/* XXX headerCheck */
+#include "lib/rpmplugins.h"		/* rpm plugins hooks */
+#include "lib/rpmts_internal.h"		/* for rpmtsSetupTransactionPlugins */
 
 #include "debug.h"
 
@@ -647,6 +649,20 @@ exit:
     return rc;
 }
 
+static int update_use_header_cache(rpmts ts)
+{
+    static int use_header_cache = -1;
+
+    if (use_header_cache < 0) {
+	char * envv = getenv("_RPM_ENABLE_HEADER_CACHE_");
+	use_header_cache = (envv == NULL || *envv == '\0') ? 0 : 1;
+	if (use_header_cache == 1 && rpmtsSetupTransactionPlugins(ts) == RPMRC_FAIL)
+	    use_header_cache = 0;
+    }
+
+    return use_header_cache;
+}
+
 rpmRC rpmReadPackageFile(rpmts ts, FD_t fd, const char * fn, Header * hdrp)
 {
     rpmRC rc;
@@ -655,10 +671,24 @@ rpmRC rpmReadPackageFile(rpmts ts, FD_t fd, const char * fn, Header * hdrp)
     unsigned int keyid = 0;
     char *msg = NULL;
 
+    struct stat st;
+
+    if (update_use_header_cache(ts) && fstat(Fileno(fd), &st) == 0) {
+	rpmPlugins plugins = rpmtsPlugins(ts);
+	if (rpmpluginsCallHeaderCacheGet(plugins, fd, fn, &st, hdrp) == RPMRC_OK) {
+	    rc = RPMRC_OK;
+	} else {
+	    rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
+
+	    if (rc != RPMRC_FAIL)
+		rpmpluginsCallHeaderCacheSet(plugins, fd, fn, &st, hdrp);
+	}
+    } else
+	rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
+
     if (fn == NULL)
 	fn = Fdescr(fd);
 
-    rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
 
     switch (rc) {
     case RPMRC_OK:		/* Signature is OK. */

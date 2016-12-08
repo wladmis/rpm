@@ -16,10 +16,16 @@
 #include <rpm/header.h>
 #include <rpm/rpmds.h>
 
+#include <rpm/rpmts.h> /* For rpmtsGetRdb */
+#include "lib/rpmdb_internal.h" /* For rpmdbHome */
+
 #include "rpmio/rpmlua.h"
 #include "lib/rpmscript.h"
 
 #include "lib/rpmplugins.h"     /* rpm plugins hooks */
+
+#include "lib/rpmchroot.h"
+#include "lib/rpmts_internal.h"
 
 #include "debug.h"
 
@@ -347,7 +353,7 @@ static rpmRC runExtScript(rpmPlugins plugins, ARGV_const_t prefixes,
         int ret;
         ret = setpriority(PRIO_PROCESS, 0, 0);
         if (ret == -1) {
-            rpmlog(RPMLOG_WARNING, _("Unable to reset nice value: %s"),
+            rpmlog(RPMLOG_DEBUG, "Unable to reset nice value: %s",
                 strerror(errno));
         }
 
@@ -681,4 +687,31 @@ rpmTagVal rpmScriptTag(rpmScript script)
 rpmscriptTypes rpmScriptType(rpmScript script)
 {
     return (script != NULL) ? script->type : 0;
+}
+
+void rpmScriptTriggerPosttrans(rpmts ts)
+{
+    rpmScript script = xcalloc(1, sizeof(*script));
+    script->flags = RPMSCRIPT_FLAG_NONE;
+    script->body = NULL;
+    rasprintf(&script->descr, "posttrans filetriggers");
+    script->nextFileFunc.func = NULL;
+    script->nextFileFunc.param = NULL;
+
+    const char *s = RPMCONFIGDIR "/posttrans-filetriggers";
+    const char *file = rpmGetPath(rpmdbHome(rpmtsGetRdb(ts)), "/files-awaiting-filetriggers", NULL);
+
+    if (rpmChrootIn() != 0)
+	return;
+
+    rasprintf(&script->body, "exec %s %s", s, file);
+    rpmlog(RPMLOG_INFO, "Running %s\n", s);
+    int rc = runScript(ts, NULL, NULL, script, -1, -1);
+    if (rc == 0)
+	unlink(file);
+
+    rpmScriptFree(script);
+    free((void *)file);
+
+    rpmChrootOut();
 }

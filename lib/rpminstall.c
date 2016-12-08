@@ -13,16 +13,73 @@
 #include <rpm/rpmlog.h>
 #include <rpm/rpmfileutil.h>
 
+#include <wchar.h>
+#include <sys/ioctl.h>
+int fancyPercents = 0;
+#define DELIM ": "
+
 #include "lib/rpmgi.h"
 #include "lib/manifest.h"
 #include "debug.h"
 
+static int rpmcliCheckedTTY = 0;
+static int rpmcliCountWidth = 0;
+static int rpmcliNameWidth = 40;
 static int rpmcliPackagesTotal = 0;
 static int rpmcliHashesCurrent = 0;
 static int rpmcliHashesTotal = 0;
 static int rpmcliProgressCurrent = 0;
 static int rpmcliProgressTotal = 0;
 static int rpmcliProgressState = 0;
+
+
+static void checkTTY(void)
+{
+    struct winsize ws;
+
+    if (rpmcliCheckedTTY)
+	return;
+
+    rpmcliCheckedTTY = 1;
+
+    int w;
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, (char *)&ws) < 0)
+    {
+	fancyPercents = 0;
+	w = 80;
+    }
+    else {
+	w = ws.ws_col;
+
+	if (w <= 2)
+	    w = 80;
+
+	if (w < 39)
+	{
+	    fancyPercents = 0;
+	    rpmcliCountWidth = 0;
+	    rpmcliNameWidth = w - 2;
+	    rpmcliHashesTotal = 1;
+	    return;
+	}
+    }
+
+    w -= sizeof(" [100%]") - 1;
+
+    /* rpmcliCountWidth = 1 + log10(rpmcliPackagesTotal) */
+    for (int i = rpmcliPackagesTotal; i > 0; i /= 10)
+	++rpmcliCountWidth;
+
+    rpmcliNameWidth -= rpmcliCountWidth + sizeof(DELIM) - 1;
+
+    rpmcliHashesTotal = w - 40;
+    if (rpmcliHashesTotal > 100)
+    {
+	rpmcliNameWidth += (rpmcliHashesTotal - 100);
+	rpmcliHashesTotal = 100;
+    }
+}
 
 /**
  * Print a CLI progress bar.
@@ -34,20 +91,22 @@ static void printHash(const rpm_loff_t amount, const rpm_loff_t total)
 {
     int hashesNeeded;
 
-    rpmcliHashesTotal = (isatty (STDOUT_FILENO) ? 34 : 40);
+    checkTTY();
 
     if (rpmcliHashesCurrent != rpmcliHashesTotal) {
 	float pct = (total ? (((float) amount) / total) : 1.0);
 	hashesNeeded = (rpmcliHashesTotal * pct) + 0.5;
 	while (hashesNeeded > rpmcliHashesCurrent) {
-	    if (isatty (STDOUT_FILENO)) {
+	    if (fancyPercents) {
 		int i;
 		for (i = 0; i < rpmcliHashesCurrent; i++)
 		    (void) putchar ('#');
 		for (; i < rpmcliHashesTotal; i++)
 		    (void) putchar (' ');
-		fprintf(stdout, "(%3d%%)", (int)((100 * pct) + 0.5));
-		for (i = 0; i < (rpmcliHashesTotal + 6); i++)
+		int l = fprintf(stdout, " (%3d%%)", (int)((100 * pct) + 0.5));
+		if (l < 0)
+		    l = 0;
+		for (i = 0; i < (rpmcliHashesTotal + l); i++)
 		    (void) putchar ('\b');
 	    } else
 		fprintf(stdout, "#");
@@ -57,14 +116,16 @@ static void printHash(const rpm_loff_t amount, const rpm_loff_t total)
 	(void) fflush(stdout);
 
 	if (rpmcliHashesCurrent == rpmcliHashesTotal) {
-	    int i;
 	    rpmcliProgressCurrent++;
-	    if (isatty(STDOUT_FILENO)) {
-	        for (i = 1; i < rpmcliHashesCurrent; i++)
-		    (void) putchar ('#');
+	    if (rpmcliCountWidth > 0) {
+		int i;
 		pct = (rpmcliProgressTotal
-		    ? (((float) rpmcliProgressCurrent) / rpmcliProgressTotal)
-		    : 1);
+			? (((float) rpmcliProgressCurrent) / rpmcliProgressTotal)
+			: 1);
+		if (fancyPercents) {
+		    for (i = 0; i < rpmcliHashesCurrent; i++)
+			(void) putchar ('#');
+		}
 		fprintf(stdout, " [%3d%%]", (int)((100 * pct) + 0.5));
 	    }
 	    fprintf(stdout, "\n");
@@ -151,10 +212,10 @@ void * rpmShowProgress(const void * arg,
 	    break;
 	if (flags & INSTALL_HASH) {
 	    char *s = headerGetAsString(h, RPMTAG_NEVR);
-	    if (isatty (STDOUT_FILENO))
-		fprintf(stdout, "%4d:%-33.33s", rpmcliProgressCurrent + 1, s);
+	    if (rpmcliCountWidth > 0)
+		fprintf(stdout, "%*d" DELIM "%-*.*s", rpmcliCountWidth, rpmcliProgressCurrent + 1, rpmcliNameWidth, rpmcliNameWidth, s);
 	    else
-		fprintf(stdout, "%-38.38s", s);
+		fprintf(stdout, "%-*.*s", rpmcliNameWidth, rpmcliNameWidth, s);
 	    (void) fflush(stdout);
 	    free(s);
 	} else {
@@ -188,9 +249,16 @@ void * rpmShowProgress(const void * arg,
 	rpmcliProgressState = what;
 	if (!(flags & INSTALL_LABEL))
 	    break;
-	if (flags & INSTALL_HASH)
-	    fprintf(stdout, "%-38s", _("Preparing..."));
-	else
+	if (flags & INSTALL_HASH) {
+	    checkTTY();
+
+	    char * s = _("Preparing...");
+	    size_t len;
+	    len = mbstowcs(NULL, s, 0);
+	    fprintf(stdout, "%s", s);
+	    int width = rpmcliCountWidth + (rpmcliCountWidth > 0 ? sizeof(DELIM) - 1: 0) + rpmcliNameWidth - len;
+	    fprintf(stdout, "%-*.*s", width, width, "");
+	} else
 	    fprintf(stdout, "%s\n", _("Preparing packages..."));
 	(void) fflush(stdout);
 	break;

@@ -42,7 +42,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/lib
 AM_CPPFLAGS += -I$(top_srcdir)/rpmio
 AM_CPPFLAGS += @WITH_NSS_INCLUDE@
 AM_CPPFLAGS += @WITH_POPT_INCLUDE@
-AM_CPPFLAGS += -I$(top_srcdir)/misc
 AM_CPPFLAGS += -DLOCALEDIR="\"$(localedir)\""
 AM_CPPFLAGS += -DLIBRPMALIAS_FILENAME="\"rpmpopt-${VERSION}\""
 
@@ -115,6 +114,42 @@ rpm_LDADD =		libcliutils.la
 rpm_LDADD +=		lib/librpm.la rpmio/librpmio.la
 rpm_LDADD +=		@WITH_NSS_LIB@ @WITH_POPT_LIB@ @WITH_ZLIB_LIB@
 
+rpmlibexec_PROGRAMS +=	rpmi
+rpmi_SOURCES =
+rpmi_LDADD =		rpmi.o
+rpmi_LDADD +=		libcliutils.la
+rpmi_LDADD +=		lib/librpm.la rpmio/librpmio.la
+rpmi_LDADD +=		@WITH_POPT_LIB@
+rpmi.o: $(top_srcdir)/rpmqv.c
+	$(COMPILE) -DIAM_RPMEIU -o $@ -c $(top_srcdir)/rpmqv.c
+
+rpmlibexec_PROGRAMS +=	rpmk
+rpmk_SOURCES =
+rpmk_LDADD =		rpmk.o
+rpmk_LDADD +=		libcliutils.la
+rpmk_LDADD +=		lib/librpm.la rpmio/librpmio.la
+rpmk_LDADD +=		@WITH_POPT_LIB@
+rpmk.o: $(top_srcdir)/rpmqv.c
+	$(COMPILE) -DIAM_RPMK -o $@ -c $(top_srcdir)/rpmqv.c
+
+rpmlibexec_PROGRAMS +=	rpmq
+rpmq_SOURCES =
+rpmq_LDADD =		rpmq.o
+rpmq_LDADD +=		libcliutils.la
+rpmq_LDADD +=		lib/librpm.la rpmio/librpmio.la
+rpmq_LDADD +=		@WITH_POPT_LIB@
+rpmq.o: $(top_srcdir)/rpmqv.c
+	$(COMPILE) -DIAM_RPMQ -o $@ -c $(top_srcdir)/rpmqv.c
+
+rpmlibexec_PROGRAMS +=	rpmv
+rpmv_SOURCES =
+rpmv_LDADD =		rpmv.o
+rpmv_LDADD +=		libcliutils.la
+rpmv_LDADD +=		lib/librpm.la rpmio/librpmio.la
+rpmv_LDADD +=		@WITH_POPT_LIB@
+rpmv.o: $(top_srcdir)/rpmqv.c
+	$(COMPILE) -DIAM_RPMV -o $@ -c $(top_srcdir)/rpmqv.c
+
 rpmdb_SOURCES =		rpmdb.c debug.h system.h
 rpmdb_CPPFLAGS =	$(AM_CPPFLAGS)
 rpmdb_LDADD =		libcliutils.la
@@ -178,6 +213,20 @@ rpmlibexec_PROGRAMS +=	rpmdeps
 rpmdeps_SOURCES =	tools/rpmdeps.c
 rpmdeps_LDADD =		lib/librpm.la rpmio/librpmio.la build/librpmbuild.la @WITH_POPT_LIB@
 
+rpmlibexec_PROGRAMS +=	pdeath_execute
+pdeath_execute_SOURCES =	tools/pdeath_execute.c
+
+bin_PROGRAMS +=		rpmvercmp
+rpmvercmp_SOURCES =	tools/rpmvercmp.c
+rpmvercmp_LDADD =	lib/librpm.la
+rpmvercmp_CFLAGS =	-D_GNU_SOURCE
+
+bin_PROGRAMS +=		rpmevrcmp
+rpmevrcmp_SOURCES =	tools/rpmevrcmp.c
+rpmevrcmp_LDADD =	lib/librpm.la
+rpmevrcmp_CFLAGS =	-D_GNU_SOURCE
+
+
 bin_PROGRAMS +=		rpmgraph
 rpmgraph_SOURCES =	tools/rpmgraph.c
 rpmgraph_LDADD =	lib/librpm.la rpmio/librpmio.la @WITH_POPT_LIB@
@@ -230,6 +279,8 @@ rpmpopt-@VERSION@: $(top_srcdir)/rpmpopt.in
 CLEANFILES += rpmpopt-@VERSION@.tmp rpmpopt-@VERSION@
 EXTRA_DIST += rpmpopt.in
 
+rpmconfig_DATA += GROUPS
+
 usrsrcdir = $(prefix)/src
 
 rpmvardir = $(localstatedir)/lib/rpm
@@ -237,9 +288,19 @@ rpmvar_DATA =
 
 install-exec-hook:
 	@rm -f $(DESTDIR)$(bindir)/rpmquery
-	@LN_S@ ../../bin/rpm $(DESTDIR)$(bindir)/rpmquery
+	@LN_S@ ../lib/rpm/rpmq $(DESTDIR)$(bindir)/rpmquery
 	@rm -f $(DESTDIR)$(bindir)/rpmverify
-	@LN_S@ ../../bin/rpm $(DESTDIR)$(bindir)/rpmverify
+	@LN_S@ ../lib/rpm/rpmv $(DESTDIR)$(bindir)/rpmverify
+	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmd
+	@@LN_S@ ../../bin/rpmdb $(DESTDIR)$(prefix)/lib/rpm/rpmd
+	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpme
+	@@LN_S@ rpmi $(DESTDIR)$(prefix)/lib/rpm/rpme
+	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmu
+	@@LN_S@ rpmi $(DESTDIR)$(prefix)/lib/rpm/rpmu
+	for bf in e i u ; do \
+	    rm -f $(DESTDIR)$(bindir)/rpm$$bf ; \
+	    @LN_S@ ../lib/rpm/rpm$$bf $(DESTDIR)$(bindir)/rpm$$bf ; \
+	done
 
 install-data-local:
 	DESTDIR="$(DESTDIR)" pkglibdir="$(rpmconfigdir)" \

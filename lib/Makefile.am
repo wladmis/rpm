@@ -5,8 +5,8 @@ include $(top_srcdir)/rpm.am
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) -I$(top_builddir)/include/
 AM_CPPFLAGS += @WITH_NSS_INCLUDE@
 AM_CPPFLAGS += @WITH_POPT_INCLUDE@
-AM_CPPFLAGS += -I$(top_srcdir)/misc
 AM_CPPFLAGS += -DLOCALEDIR="\"$(localedir)\""
+AM_CPPFLAGS += -DRPMCONFIGDIR="\"@RPMCONFIGDIR@\""
 AM_CPPFLAGS += -DSYSCONFDIR="\"$(sysconfdir)\""
 AM_CPPFLAGS += -DLOCALSTATEDIR="\"$(localstatedir)\""
 AM_CPPFLAGS += -DLIBRPMALIAS_FILENAME="\"rpmpopt-${VERSION}\""
@@ -76,6 +76,8 @@ librpm_la_SOURCES += \
 	backend/ndb/rpmxdb.c \
 	backend/ndb/rpmxdb.h
 endif
+
+librpm_la_SOURCES += set.c set.h
 
 tagtbl.C: Makefile.am $(srcdir)/rpmtag.h gentagtbl.sh
 	@AWK=${AWK} ${SHELL} $(srcdir)/gentagtbl.sh \

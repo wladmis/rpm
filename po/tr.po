@@ -2909,7 +2909,7 @@ msgstr ""
 
 #: lib/rpmprob.c:160 lib/rpmprob.c:164 lib/rpmprob.c:168
 msgid "(installed) "
-msgstr "(kuruldu)"
+msgstr "(kuruldu) "
 
 #: lib/rpmprob.c:163
 #, c-format

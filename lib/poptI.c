@@ -9,6 +9,8 @@
 
 #include "debug.h"
 
+extern int fancyPercents;
+
 struct rpmInstallArguments_s rpmIArgs = {
     0,			/* transFlags */
     0,			/* probFilter */
@@ -231,6 +233,9 @@ struct poptOption rpmInstallPoptTable[] = {
  { "percent", '\0', POPT_BIT_SET,
 	&rpmIArgs.installInterfaceFlags, INSTALL_PERCENT,
 	N_("print percentages as package installs"), NULL},
+ { "fancypercent", '\0', 0,
+	&fancyPercents, 0,
+	N_("print fancy percentages as package installs"), NULL},
  { "prefix", '\0', POPT_ARG_STRING, &rpmIArgs.prefix, 0,
 	N_("relocate the package to <dir>, if relocatable"),
 	N_("<dir>") },

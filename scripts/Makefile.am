@@ -22,6 +22,16 @@ EXTRA_DIST = \
 	fontconfig.prov desktop-file.prov script.req \
 	macros.perl macros.php macros.python
 
+EXTRA_DIST += functions .provides.sh
+
+EXTRA_DIST += posttrans-filetriggers 0ldconfig.filetrigger
+
+EXTRA_DIST += find-package
+
+EXTRA_DIST += brp-alt
+
+EXTRA_DIST += postupdate
+
 rpmconfig_SCRIPTS = \
 	appdata.prov \
 	brp-compress brp-python-bytecompile brp-java-gcjcompile \
@@ -36,6 +46,16 @@ rpmconfig_SCRIPTS = \
 	ocaml-find-requires.sh ocaml-find-provides.sh \
 	fontconfig.prov desktop-file.prov script.req \
 	rpmdb_loadcvt rpm2cpio.sh tgpg 
+
+rpmconfig_SCRIPTS += functions .provides.sh
+
+rpmconfig_SCRIPTS += posttrans-filetriggers 0ldconfig.filetrigger
+
+rpmconfig_SCRIPTS += find-package
+
+rpmconfig_SCRIPTS += brp-alt
+
+rpmconfig_SCRIPTS += postupdate
 
 rpmconfig_DATA = \
 	rpm.daily rpm.log rpm.supp \

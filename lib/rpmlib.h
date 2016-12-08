@@ -120,6 +120,16 @@ void rpmFreeRpmrc(void);
  */
 int rpmVersionCompare(Header first, Header second);
 
+/**
+ * Compare versions to determine which version is "newer".
+ * @param head		1st evr string
+ * @param tail		2nd evr string array
+ * @return		result of comparison
+ */
+#ifdef ALT_RPM_API
+int isChangeNameMoreFresh(const char * const head, const char * const tail[3]);
+#endif
+
 /**  \ingroup header
  * Check header consistency, performing headerGetEntry() the hard way.
  *  

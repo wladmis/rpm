@@ -66,6 +66,7 @@ typedef enum rpmTag_e {
 #define	RPMTAG_R	RPMTAG_RELEASE	/* s */
     RPMTAG_EPOCH   		= 1003,	/* i */
 #define	RPMTAG_E	RPMTAG_EPOCH	/* i */
+#define	RPMTAG_SERIAL	RPMTAG_EPOCH	/* i */
     RPMTAG_SUMMARY		= 1004,	/* s{} */
     RPMTAG_DESCRIPTION		= 1005,	/* s{} */
     RPMTAG_BUILDTIME		= 1006,	/* i */
@@ -358,6 +359,17 @@ typedef enum rpmTag_e {
     RPMTAG_TRANSFILETRIGGERTYPE		= 5089, /* s[] extension */
     RPMTAG_FILESIGNATURES	= 5090, /* s[] */
     RPMTAG_FILESIGNATURELENGTH  = 5091, /* i */
+
+    RPMTAG_APTINDEXLEGACYFILENAME	= 1000000, /* s internal */
+    RPMTAG_APTINDEXLEGACYFILESIZE	= 1000001, /* i internal */
+    RPMTAG_APTINDEXLEGACYMD5		= 1000005, /* s internal */
+    RPMTAG_APTINDEXLEGACYSHA1		= 1000006, /* s internal */
+    RPMTAG_APTINDEXLEGACYDIRECTORY	= 1000010, /* s internal */
+    RPMTAG_APTINDEXLEGACYBINARY		= 1000011, /* s[] internal */
+    RPMTAG_APTINDEXLEGACYUPDATE_SUMMARY	= 1000020, /* s internal */
+    RPMTAG_APTINDEXLEGACYUPDATE_IMPORTANCE = 1000021, /* s internal */
+    RPMTAG_APTINDEXLEGACYUPDATE_DATE	= 1000022, /* s internal */
+    RPMTAG_APTINDEXLEGACYUPDATE_URL	= 1000023, /* s internal */
 
     RPMTAG_FIRSTFREE_TAG	/*!< internal */
 } rpmTag;

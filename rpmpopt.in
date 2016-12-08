@@ -43,13 +43,13 @@ rpm	alias --scripts --qf '\
 ' \
 	--POPTdesc=$"list install/erase scriptlets from package(s)"
 
-rpm	alias --setperms -q --qf '[\[ -L %{FILENAMES:shescape} \] || chmod %7{FILEMODES:octal} %{FILENAMES:shescape}\n]' \
-		   --pipe "grep -v \(none\) | grep '^. -L ' | sed 's/chmod .../chmod /' | sh" \
+rpm	alias --setperms -q --qf '[\[ -L %{FILENAMES:shescape} \] || \{ m="%7{FILEMODES:octal}"; chmod "\$\{m#???\}" %{FILENAMES:shescape}; \}\n]' \
+		   --pipe "sh" \
 	--POPTdesc=$"set permissions of files in a package"
 
 rpm	alias --setugids -q --qf \
-        '[ch %{FILEUSERNAME:shescape} %{FILEGROUPNAME:shescape} %{FILENAMES:shescape}\n]' \
-        --pipe "(echo 'ch() { chown -h -- \"$1\" \"$3\";chgrp -h -- \"$2\" \"$3\"; }';grep '^ch '|grep -v \(none\))|sh" \
+	'[chown -c -h -- %{FILEUSERNAME:shescape}:%{FILEGROUPNAME:shescape} %{FILENAMES:shescape}\n]' \
+	--pipe "sh" \
 	--POPTdesc=$"set user/group ownership of files in a package"
 
 rpm	alias --conflicts	--qf \
@@ -105,6 +105,14 @@ Description :\n%{DESCRIPTION}\n' \
 
 rpm	alias --changelog --qf '[* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n\n]' \
 	--POPTdesc=$"list change logs for this package"
+
+rpm	alias --lastchange -q --qf '* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n' \
+	--POPTdesc=$"output last changelog entry for this package"
+
+rpm	alias --changes-since -q --qf '[%{CHANGELOGNAME:nothing}\
+%|%{CHANGELOGNAME}>!#:+?{* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n\n}:{}|]' \
+	--POPTdesc=$"list change logs for this package that are fresher than <e:ver-rel> (as indicated by the word next to the packager's email)" \
+	--POPTargs=$"<option>"
 
 rpm	alias --xml --qf '[%{*:xml}\n]' \
 	--POPTdesc=$"list metadata in xml"
@@ -165,6 +173,7 @@ rpm	alias --ftpproxy	--define '_httpproxy !#:+'
 rpm	alias --httpport	--define '_httpport !#:+'
 #	[--httpproxy <host>]	"hostname or IP of http proxy"
 rpm	alias --httpproxy	--define '_httpproxy !#:+'
+rpm	alias --ignorebuildtime --define '_upgrade_honor_buildtime 0'
 
 # Minimally preserve commonly used switches from cli split-up
 rpm	exec --addsign		rpmsign --addsign
@@ -178,6 +187,30 @@ rpm	exec --initdb		rpmdb --initdb
 rpm	exec --rebuilddb	rpmdb --rebuilddb
 rpm	exec --verifydb		rpmdb --verifydb
 rpm	exec --specfile		rpmspec -q
+
+rpm	exec --bc		rpmbuild -bc
+rpm	exec --bi		rpmbuild -bi
+rpm	exec --bl		rpmbuild -bl
+rpm	exec --ba		rpmbuild -ba
+rpm	exec --bb		rpmbuild -bb
+rpm	exec --bs		rpmbuild -bs
+rpm	exec --bt		rpmbuild -bt
+rpm	exec --bE		rpmbuild -bE
+rpm	exec --bM		rpmbuild -bM
+rpm	exec --tp		rpmbuild -tp
+rpm	exec --tc		rpmbuild -tc
+rpm	exec --ti		rpmbuild -ti
+rpm	exec --tl		rpmbuild -tl
+rpm	exec --ta		rpmbuild -ta
+rpm	exec --tb		rpmbuild -tb
+rpm	exec --ts		rpmbuild -ts
+rpm	exec --rebuild		rpmbuild --rebuild
+rpm	exec --recompile	rpmbuild --recompile
+rpm	exec --clean		rpmbuild --clean
+rpm	exec --rmsource		rpmbuild --rmsource
+rpm	exec --rmspec		rpmbuild --rmspec
+rpm	exec --target		rpmbuild --target
+rpm	exec --short-circuit	rpmbuild --short-circuit
 
 #==============================================================================
 rpmbuild alias --ftpport		--define '_httpport !#:+'
@@ -206,6 +239,11 @@ rpmsign alias --digest-algo --define '_gpg_digest_algo !#:+' \
 	--POPTdesc=$"override default digest algorithm (eg sha1/sha256)" \
 	--POPTargs=$"<algorithm>"
 
+rpmsign	exec --checksig	rpmkeys --checksig
+rpmsign	exec -K	rpmkeys --checksig
+
+#==============================================================================
+
 rpmspec	alias --conflicts	--qf \
   "[%|VERBOSE?{%{CONFLICTFLAGS:deptype}: }:{}|%{CONFLICTNEVRS}\n]" \
 	--POPTdesc=$"list capabilities this package conflicts with"
@@ -224,3 +262,267 @@ rpmspec	alias --buildrequires	--srpm --requires \
 	--POPTdesc=$"list capabilities required to build this package"
 # \endverbatim
 #*/
+#==============================================================================
+rpmdb	alias --dbpath		--define '_dbpath !#:+' \
+	--POPTdesc=$"use <dir> as the directory for the database" \
+	--POPTargs=$"<dir>"
+rpmdb	alias --ftpport		--define '_ftpport !#:+'
+rpmdb	alias --ftpproxy	--define '_ftpproxy !#:+'
+rpmdb	alias --httpport	--define '_httpport !#:+'
+rpmdb	alias --httpproxy	--define '_httpproxy !#:+'
+#==============================================================================
+rpme	alias --dbpath		--define '_dbpath !#:+' \
+	--POPTdesc=$"use <dir> as the directory for the database" \
+	--POPTargs=$"<dir>"
+rpme	alias --ftpport		--define '_ftpport !#:+'
+rpme	alias --ftpproxy	--define '_ftpproxy !#:+'
+rpme	alias --httpport	--define '_httpport !#:+'
+rpme	alias --httpproxy	--define '_httpproxy !#:+'
+rpme	alias --ignorebuildtime --define '_upgrade_honor_buildtime 0'
+#==============================================================================
+rpmi	alias --dbpath		--define '_dbpath !#:+' \
+	--POPTdesc=$"use <dir> as the directory for the database" \
+	--POPTargs=$"<dir>"
+rpmi	alias --ftpport		--define '_ftpport !#:+'
+rpmi	alias --ftpproxy	--define '_ftpproxy !#:+'
+rpmi	alias --httpport	--define '_httpport !#:+'
+rpmi	alias --httpproxy	--define '_httpproxy !#:+'
+rpmi	alias --ignorebuildtime --define '_upgrade_honor_buildtime 0'
+#==============================================================================
+rpmk	alias --dbpath		--define '_dbpath !#:+' \
+	--POPTdesc=$"use <dir> as the directory for the database" \
+	--POPTargs=$"<dir>"
+rpmk	alias --ftpport		--define '_ftpport !#:+'
+rpmk	alias --ftpproxy	--define '_ftpproxy !#:+'
+rpmk	alias --httpport	--define '_httpport !#:+'
+rpmk	alias --httpproxy	--define '_httpproxy !#:+'
+#==============================================================================
+rpmq	alias --dbpath		--define '_dbpath !#:+' \
+	--POPTdesc=$"use <dir> as the directory for the database" \
+	--POPTargs=$"<dir>"
+rpmq	alias --ftpport		--define '_ftpport !#:+'
+rpmq	alias --ftpproxy	--define '_ftpproxy !#:+'
+rpmq	alias --httpport	--define '_httpport !#:+'
+rpmq	alias --httpproxy	--define '_httpproxy !#:+'
+
+rpmq	alias --scripts -q --qf '\
+%|PREIN?{preinstall scriptlet\
+%|PREINPROG?{ (through %{PREINPROG})}|:\n%{PREIN}\n}:\
+{%|PREINPROG?{preinstall program: %{PREINPROG}\n}|}|\
+\
+%|POSTIN?{postinstall scriptlet\
+%|POSTINPROG?{ (through %{POSTINPROG})}|:\n%{POSTIN}\n}:\
+{%|POSTINPROG?{postinstall program: %{POSTINPROG}\n}|}|\
+\
+%|PREUN?{preuninstall scriptlet\
+%|PREUNPROG?{ (through %{PREUNPROG})}|:\n%{PREUN}\n}:\
+{%|PREUNPROG?{preuninstall program: %{PREUNPROG}\n}|}|\
+\
+%|POSTUN?{postuninstall scriptlet\
+%|POSTUNPROG?{ (through %{POSTUNPROG})}|:\n%{POSTUN}\n}:\
+{%|POSTUNPROG?{postuninstall program: %{POSTUNPROG}\n}|}|\
+\
+%|VERIFYSCRIPT?{verify scriptlet:\n%{VERIFYSCRIPT}\n}|\
+' \
+	--POPTdesc=$"list install/erase scriptlets from package(s)"
+
+rpmq	alias --conflicts -q --qf \
+  "[%{CONFLICTNAME} %{CONFLICTFLAGS:depflags} %{CONFLICTVERSION}\n]" \
+	--POPTdesc=$"list capabilities this package conflicts with"
+rpmq	alias --obsoletes -q --qf \
+  "[%{OBSOLETENAME} %|OBSOLETEFLAGS?{%{OBSOLETEFLAGS:depflags} %{OBSOLETEVERSION}}:{}|\n]" \
+	--POPTdesc=$"list other packages removed by installing this package"
+rpmq	alias --provides -q --qf \
+  "[%{PROVIDENAME} %|PROVIDEFLAGS?{%{PROVIDEFLAGS:depflags} %{PROVIDEVERSION}}:{}|\n]" \
+	--POPTdesc=$"list capabilities that this package provides"
+
+rpmq	alias --requires -q --qf \
+  "[%{REQUIRENAME} %{REQUIREFLAGS:depflags} %{REQUIREVERSION}\n]" \
+	--POPTdesc=$"list capabilities required by package(s)"
+rpmq	alias -R --requires
+
+rpmq	alias --info -q --qf '\
+Name        : %{NAME}\n\
+%|EPOCH?{Epoch       : %{EPOCH}\n}|\
+Version     : %{VERSION}\n\
+Release     : %{RELEASE}\n\
+Architecture: %{ARCH}\n\
+Install Date: %|INSTALLTIME?{%{INSTALLTIME:date}}:{(not installed)}|\n\
+Group       : %{GROUP}\n\
+Size        : %{LONGSIZE}\n\
+%|LICENSE?{License     : %{LICENSE}}|\n\
+Signature   : %|DSAHEADER?{%{DSAHEADER:pgpsig}}:{%|RSAHEADER?{%{RSAHEADER:pgpsig}}:{%|SIGGPG?{%{SIGGPG:pgpsig}}:{%|SIGPGP?{%{SIGPGP:pgpsig}}:{(none)}|}|}|}|\n\
+Source RPM  : %{SOURCERPM}\n\
+Build Date  : %{BUILDTIME:date}\n\
+Build Host  : %{BUILDHOST}\n\
+Relocations : %|PREFIXES?{[%{PREFIXES} ]}:{(not relocatable)}|\n\
+%|PACKAGER?{Packager    : %{PACKAGER}\n}|\
+%|VENDOR?{Vendor      : %{VENDOR}\n}|\
+%|URL?{URL         : %{URL}\n}|\
+%|BUGURL?{Bug URL     : %{BUGURL}\n}|\
+Summary     : %{SUMMARY}\n\
+Description :\n%{DESCRIPTION}\n' \
+	--POPTdesc=$"list descriptive information from package(s)"
+
+rpmq	alias --changelog -q --qf '[* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n\n]' \
+	--POPTdesc=$"list change logs for this package"
+
+rpmq	alias --lastchange -q --qf '* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n' \
+	--POPTdesc=$"output last changelog entry for this package"
+
+rpmq	alias --changes-since -q --qf '[%{CHANGELOGNAME:nothing}\
+%|%{CHANGELOGNAME}>!#:+?{* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n\n}:{}|]' \
+	--POPTdesc=$"list change logs for this package that are fresher than <e:ver-rel> (as indicated by the word next to the packager's email)" \
+	--POPTargs=$"<option>"
+
+rpmq	alias --triggerscripts -q --qf '\
+[trigger%{TRIGGERTYPE} script (through %{TRIGGERSCRIPTPROG}) -- %{TRIGGERCONDS}\n\
+%{TRIGGERSCRIPTS}\n]'
+
+rpmq	alias --triggers --triggerscripts \
+	--POPTdesc=$"list trigger scriptlets from package(s)"
+
+rpmq	alias --last -q --qf '%|INSTALLTIME?{%{INSTALLTIME}}:{000000000}| %{NAME}-%{VERSION}-%{RELEASE} %|INSTALLTIME?{%{INSTALLTIME:date}}:{(not installed)}|\n' \
+	--pipe "sort -r -n | sed 's,^[0-9]\+ ,,' | awk '{printf(\"%-45s %-s\n\", $1, substr($0,length($1)+2))}' " \
+	--POPTdesc=$"list package(s) by install time, most recent first"
+
+rpmq	alias --filesbypkg -q --qf '[%-25{=NAME} %{FILENAMES}\n]' \
+	--POPTdesc=$"list all files from each package"
+
+rpmq	alias --with		--define "_with_!#:+       --with-!#:+" \
+	--POPTdesc=$"enable configure <option> for query" \
+	--POPTargs=$"<option>"
+
+rpmq	alias --without		--define "_without_!#:+    --without-!#:+" \
+	--POPTdesc=$"disable configure <option> for query" \
+	--POPTargs=$"<option>"
+
+rpmq	alias --enable		--define "_enable_!#:+     --enable-!#:+" \
+	--POPTdesc=$"enable configure <option> for query" \
+	--POPTargs=$"<option>"
+
+rpmq	alias --disable		--define "_disable_!#:+    --disable-!#:+" \
+	--POPTdesc=$"disable configure <option> for query" \
+	--POPTargs=$"<option>"
+
+rpmq	alias --vendor --eval %vendor
+rpmq	alias --packager --eval %packager
+rpmq	alias --distribution --eval %distribution
+rpmq	alias --nowait-lock --define '_wait_for_lock 0'
+#==============================================================================
+rpmquery	alias --dbpath		--define '_dbpath !#:+' \
+	--POPTdesc=$"use <dir> as the directory for the database" \
+	--POPTargs=$"<dir>"
+rpmquery	alias --ftpport		--define '_ftpport !#:+'
+rpmquery	alias --ftpproxy	--define '_ftpproxy !#:+'
+rpmquery	alias --httpport	--define '_httpport !#:+'
+rpmquery	alias --httpproxy	--define '_httpproxy !#:+'
+
+rpmquery	alias --scripts -q --qf '\
+%|PREIN?{preinstall scriptlet\
+%|PREINPROG?{ (through %{PREINPROG})}|:\n%{PREIN}\n}:\
+{%|PREINPROG?{preinstall program: %{PREINPROG}\n}|}|\
+\
+%|POSTIN?{postinstall scriptlet\
+%|POSTINPROG?{ (through %{POSTINPROG})}|:\n%{POSTIN}\n}:\
+{%|POSTINPROG?{postinstall program: %{POSTINPROG}\n}|}|\
+\
+%|PREUN?{preuninstall scriptlet\
+%|PREUNPROG?{ (through %{PREUNPROG})}|:\n%{PREUN}\n}:\
+{%|PREUNPROG?{preuninstall program: %{PREUNPROG}\n}|}|\
+\
+%|POSTUN?{postuninstall scriptlet\
+%|POSTUNPROG?{ (through %{POSTUNPROG})}|:\n%{POSTUN}\n}:\
+{%|POSTUNPROG?{postuninstall program: %{POSTUNPROG}\n}|}|\
+\
+%|VERIFYSCRIPT?{verify scriptlet:\n%{VERIFYSCRIPT}\n}|\
+' \
+	--POPTdesc=$"list install/erase scriptlets from package(s)"
+
+rpmquery	alias --conflicts -q --qf \
+  "[%{CONFLICTNAME} %{CONFLICTFLAGS:depflags} %{CONFLICTVERSION}\n]" \
+	--POPTdesc=$"list capabilities this package conflicts with"
+
+rpmquery	alias --obsoletes -q --qf \
+  "[%{OBSOLETENAME} %|OBSOLETEFLAGS?{%{OBSOLETEFLAGS:depflags} %{OBSOLETEVERSION}}:{}|\n]" \
+	--POPTdesc=$"list other packages removed by installing this package"
+
+rpmquery	alias --provides -q --qf \
+  "[%{PROVIDENAME} %|PROVIDEFLAGS?{%{PROVIDEFLAGS:depflags} %{PROVIDEVERSION}}:{}|\n]" \
+	--POPTdesc=$"list capabilities that this package provides"
+
+rpmquery	alias --requires -q --qf \
+  "[%{REQUIRENAME} %{REQUIREFLAGS:depflags} %{REQUIREVERSION}\n]" \
+	--POPTdesc=$"list capabilities required by package(s)"
+
+rpmquery	alias -R --requires
+
+rpmquery	alias --info -q --qf '\
+Name        : %{NAME}\n\
+%|EPOCH?{Epoch       : %{EPOCH}\n}|\
+Version     : %{VERSION}\n\
+Release     : %{RELEASE}\n\
+Architecture: %{ARCH}\n\
+Install Date: %|INSTALLTIME?{%{INSTALLTIME:date}}:{(not installed)}|\n\
+Group       : %{GROUP}\n\
+Size        : %{LONGSIZE}\n\
+%|LICENSE?{License     : %{LICENSE}}|\n\
+Signature   : %|DSAHEADER?{%{DSAHEADER:pgpsig}}:{%|RSAHEADER?{%{RSAHEADER:pgpsig}}:{%|SIGGPG?{%{SIGGPG:pgpsig}}:{%|SIGPGP?{%{SIGPGP:pgpsig}}:{(none)}|}|}|}|\n\
+Source RPM  : %{SOURCERPM}\n\
+Build Date  : %{BUILDTIME:date}\n\
+Build Host  : %{BUILDHOST}\n\
+Relocations : %|PREFIXES?{[%{PREFIXES} ]}:{(not relocatable)}|\n\
+%|PACKAGER?{Packager    : %{PACKAGER}\n}|\
+%|VENDOR?{Vendor      : %{VENDOR}\n}|\
+%|URL?{URL         : %{URL}\n}|\
+%|BUGURL?{Bug URL     : %{BUGURL}\n}|\
+Summary     : %{SUMMARY}\n\
+Description :\n%{DESCRIPTION}\n' \
+	--POPTdesc=$"list descriptive information from package(s)"
+
+rpmquery	alias --changelog -q --qf '[* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n\n]' \
+	--POPTdesc=$"list change logs for this package"
+
+rpmquery	alias --lastchange -q --qf '* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n\n%{CHANGELOGTEXT}\n' \
+	--POPTdesc=$"output last changelog entry for this package"
+
+rpmquery	alias --changes-since -q --qf '[%{CHANGELOGNAME:nothing}\
+%|%{CHANGELOGNAME}>!#:+?{* %{CHANGELOGTIME:day} %{CHANGELOGNAME}\n%{CHANGELOGTEXT}\n\n}:{}|]' \
+	--POPTdesc=$"list change logs for this package that are fresher than <e:ver-rel> (as indicated by the word next to the packager's email)" \
+	--POPTargs=$"<option>"
+
+rpmquery	alias --triggerscripts -q --qf '\
+[trigger%{TRIGGERTYPE} script (through %{TRIGGERSCRIPTPROG}) -- %{TRIGGERCONDS}\n\
+%{TRIGGERSCRIPTS}\n]'
+
+rpmquery	alias --triggers --triggerscripts \
+	--POPTdesc=$"list trigger scriptlets from package(s)"
+
+rpmquery	alias --last -q --qf '%|INSTALLTIME?{%{INSTALLTIME}}:{000000000}| %{NAME}-%{VERSION}-%{RELEASE} %|INSTALLTIME?{%{INSTALLTIME:date}}:{(not installed)}|\n' \
+	--pipe "sort -r -n | sed 's,^[0-9]\+ ,,' | awk '{printf(\"%-45s %-s\n\", $1, substr($0,length($1)+2))}' " \
+	--POPTdesc=$"list package(s) by install time, most recent first"
+
+rpmquery	alias --filesbypkg -q --qf '[%-25{=NAME} %{FILENAMES}\n]' \
+	--POPTdesc=$"list all files from each package"
+
+rpmquery	alias --with		--define "_with_!#:+       --with-!#:+" \
+	--POPTdesc=$"enable configure <option> for query" \
+	--POPTargs=$"<option>"
+
+rpmquery	alias --without		--define "_without_!#:+    --without-!#:+" \
+	--POPTdesc=$"disable configure <option> for query" \
+	--POPTargs=$"<option>"
+
+rpmquery	alias --enable		--define "_enable_!#:+     --enable-!#:+" \
+	--POPTdesc=$"enable configure <option> for query" \
+	--POPTargs=$"<option>"
+
+rpmquery	alias --disable		--define "_disable_!#:+    --disable-!#:+" \
+	--POPTdesc=$"disable configure <option> for query" \
+	--POPTargs=$"<option>"
+
+rpmquery	alias --vendor --eval %vendor
+rpmquery	alias --packager --eval %packager
+rpmquery	alias --distribution --eval %distribution
+rpmquery	alias --nowait-lock --define '_wait_for_lock 0'
+#==============================================================================

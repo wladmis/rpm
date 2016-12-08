@@ -427,6 +427,7 @@ AC_CHECK_HEADERS(sys/utsname.h)
 AC_CHECK_HEADERS(sys/systemcfg.h)
 AC_CHECK_HEADERS(sys/param.h)
 AC_CHECK_HEADERS(sys/auxv.h)
+AC_CHECK_HEADERS(syslog.h)
 
 dnl statfs portability fiddles.
 dnl
@@ -854,5 +855,9 @@ AC_CONFIG_FILES([Makefile
  	tests/Makefile
  	plugins/Makefile
 	python/setup.py
+	scripts/posttrans-filetriggers
+	scripts/find-package
+	scripts/brp-alt
+	scripts/postupdate
   ])
 AC_OUTPUT

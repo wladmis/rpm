@@ -4,8 +4,15 @@
 
 #include "system.h"
 
+#include <ctype.h>
+
+#define ALT_RPM_API /* for isChangeNameMoreFresh, parseEVR */
+
 #include <rpm/rpmlib.h>		/* rpmvercmp proto */
 #include <rpm/rpmstring.h>
+
+#include <rpm/rpmlog.h>
+#include <rpm/rpmmacro.h>
 
 #include "debug.h"
 
@@ -77,9 +84,9 @@ int rpmvercmp(const char * a, const char * b)
 
 	/* take care of the case where the two version segments are */
 	/* different types: one numeric, the other alpha (i.e. empty) */
-	/* numeric segments are always newer than alpha segments */
+	/* alpha segments are always newer than numeric segments */
 	/* XXX See patch #60884 (and details) from bugzilla #50977. */
-	if (two == str2) return (isnum ? 1 : -1);
+	if (two == str2) return (isnum ? -1 : 1);
 
 	if (isnum) {
 	    size_t onelen, twolen;
@@ -121,6 +128,49 @@ int rpmvercmp(const char * a, const char * b)
     if (!*one) return -1; else return 1;
 }
 
+static int upgrade_honor_buildtime(void)
+{
+    static int honor_buildtime = -1;
+
+    if (honor_buildtime < 0)
+	honor_buildtime = rpmExpandNumeric("%{?_upgrade_honor_buildtime}%{?!_upgrade_honor_buildtime:1}") ? 1 : 0;
+
+    return honor_buildtime;
+}
+
+static int rpm_cmp_tag_int(Header first, Header second, rpmTag tag)
+{
+    uint64_t one, two;
+
+    one = headerGetNumber(first, tag);
+    two = headerGetNumber(second, tag);
+
+    if (one < two)
+	return -1;
+    else if (one > two)
+	return 1;
+    else
+	return 0;
+}
+
+static int rpm_cmp_tag_version(Header first, Header second, rpmTag tag)
+{
+    const char * one, * two;
+
+    one = headerGetString(first, tag);
+    two = headerGetString(second, tag);
+
+    if (!one && !two)
+	return 0;
+    else if (!one && two)
+	return -1;
+    else if (one && !two)
+	return 1;
+    else
+	return rpmvercmp(one, two);
+}
+
+#if 0
 int rpmVersionCompare(Header first, Header second)
 {
     /* Missing epoch becomes zero here, which is what we want */
@@ -140,4 +190,89 @@ int rpmVersionCompare(Header first, Header second)
 
     return rpmvercmp(headerGetString(first, RPMTAG_RELEASE),
 		     headerGetString(second, RPMTAG_RELEASE));
+}
+#endif
+
+int rpmVersionCompare(Header first, Header second)
+{
+    int rc;
+
+    if ((rc = rpm_cmp_tag_int(first, second, RPMTAG_EPOCH)))
+	return rc;
+
+    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_VERSION)))
+	return rc;
+
+    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_RELEASE)))
+	return rc;
+
+    if (upgrade_honor_buildtime())
+	return rpm_cmp_tag_int(first, second, RPMTAG_BUILDTIME);
+
+    return 0;
+}
+
+static
+Header newHeaderEVR(const char *e, const char *v, const char *r)
+{
+    Header  h;
+
+    if (!(h = headerNew()))
+	return h;
+
+    if (e) {
+	uint32_t i = strtoul(e, NULL, 10);
+
+	headerPutUint32(h, RPMTAG_EPOCH, &i, 1);
+    }
+    if (v)
+	headerPutString(h, RPMTAG_VERSION, v);
+    if (r)
+	headerPutString(h, RPMTAG_RELEASE, r);
+    return h;
+}
+
+int isChangeNameMoreFresh(const char * const head,
+			  const char * const tail[3])
+{
+    int result;
+    const char * evr[3];
+    const char * wordAfterEmail;
+    char * copy;
+
+    Header h1, h2;
+
+    rpmlog(RPMLOG_DEBUG, "test: is '%s' more fresh than e=%s, v=%s, r=%s?\n",
+	   head, tail[0], tail[1], tail[2]);
+
+    /* find the next to <email> word begin */
+    if ((wordAfterEmail = strrchr(head, '>')))
+	++wordAfterEmail;
+    else
+	wordAfterEmail = head;
+    while (*wordAfterEmail && isspace(*wordAfterEmail))
+	++wordAfterEmail;
+    /* found. */
+    copy = xstrdup(wordAfterEmail);
+    parseEVR(copy, &evr[0], &evr[1], &evr[2]);
+    /* The order of two argument groups is important:
+       if evr[] (passed as B on the second place) has no epoch,
+       rpmEVRcmp() assumes the same as in tail[];
+       This fits our needs: the epoch may be omitted in a changelog entry (evr[])
+       but there are no problems in specifying it in the format (tail[]). */
+
+    h1 = newHeaderEVR(tail[0], tail[1], tail[2]);
+    h2 = newHeaderEVR(evr[0], evr[1], evr[2]);
+    if (!h1 || !h2)
+    {
+	rpmlog(RPMLOG_WARNING, "isChangeNameMoreFresh: headerNew failed");
+	return 0;
+    }
+
+    result = rpmVersionCompare(h1, h2) < 0;
+
+    h2 = headerFree(h2);
+    h1 = headerFree(h1);
+    free(copy);
+    return result;
 }

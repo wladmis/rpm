@@ -6,6 +6,8 @@
 
 #include <inttypes.h>
 
+#define ALT_RPM_API /* for rpmteBT */
+
 #include <rpm/rpmlib.h>		/* rpmMachineScore, rpmReadPackageFile */
 #include <rpm/rpmmacro.h>	/* XXX for rpmExpand */
 #include <rpm/rpmlog.h>
@@ -26,6 +28,8 @@
 #include "lib/rpmtriggers.h"
 
 #include "lib/rpmplugins.h"
+
+void rpmScriptTriggerPosttrans(rpmts ts);
 
 /* XXX FIXME: merge with existing (broken?) tests in system.h */
 /* portability fiddles */
@@ -1123,6 +1127,16 @@ void checkInstalledFiles(rpmts ts, uint64_t fileCount, fingerPrintCache fpc)
 #define badArch(_a) (rpmMachineScore(RPM_MACHTABLE_INSTARCH, (_a)) == 0)
 #define badOs(_a) (rpmMachineScore(RPM_MACHTABLE_INSTOS, (_a)) == 0)
 
+static int upgrade_honor_buildtime(void)
+{
+    static int honor_buildtime = -1;
+
+    if (honor_buildtime < 0)
+	honor_buildtime = rpmExpandNumeric("%{?_upgrade_honor_buildtime}%{?!_upgrade_honor_buildtime:1}") ? 1 : 0;
+
+    return honor_buildtime;
+}
+
 /*
  * For packages being installed:
  * - verify package arch/os.
@@ -1163,6 +1177,8 @@ static rpmps checkProblems(rpmts ts)
 	    rpmdbSetIteratorRE(mi, RPMTAG_EPOCH, RPMMIRE_STRCMP, rpmteE(p));
 	    rpmdbSetIteratorRE(mi, RPMTAG_VERSION, RPMMIRE_STRCMP, rpmteV(p));
 	    rpmdbSetIteratorRE(mi, RPMTAG_RELEASE, RPMMIRE_STRCMP, rpmteR(p));
+	    if (upgrade_honor_buildtime())
+		rpmdbSetIteratorRE(mi, RPMTAG_BUILDTIME, RPMMIRE_STRCMP, rpmteBT(p));
 	    if (tscolor) {
 		rpmdbSetIteratorRE(mi, RPMTAG_ARCH, RPMMIRE_STRCMP, rpmteA(p));
 		rpmdbSetIteratorRE(mi, RPMTAG_OS, RPMMIRE_STRCMP, rpmteO(p));
@@ -1421,6 +1437,10 @@ rpmRC runScript(rpmts ts, rpmte te, ARGV_const_t prefixes,
     rpmRC stoprc, rc = RPMRC_OK;
     rpmTagVal stag = rpmScriptTag(script);
     FD_t sfd = NULL;
+    const char *n = NULL;
+    char arg1_str [sizeof(int)*3+1] = "";
+    char arg2_str [sizeof(int)*3+1] = "";
+
     int warn_only = (stag != RPMTAG_PREIN &&
 		     stag != RPMTAG_PREUN &&
 		     stag != RPMTAG_PRETRANS &&
@@ -1429,6 +1449,22 @@ rpmRC runScript(rpmts ts, rpmte te, ARGV_const_t prefixes,
     sfd = rpmtsNotify(ts, te, RPMCALLBACK_SCRIPT_START, stag, 0);
     if (sfd == NULL)
 	sfd = rpmtsScriptFd(ts);
+
+    if (arg1 >= 0)
+	sprintf(arg1_str, "%d", arg1);
+    if (arg2 >= 0)
+	sprintf(arg2_str, "%d", arg2);
+
+    n = rpmteN(te);
+    if (n) {
+	setenv ("RPM_INSTALL_NAME", n, 1);
+    }
+    if (*arg1_str) {
+	setenv ("RPM_INSTALL_ARG1", arg1_str, 1);
+    }
+    if (*arg2_str) {
+	setenv ("RPM_INSTALL_ARG2", arg2_str, 1);
+    }
 
     rpmswEnter(rpmtsOp(ts, RPMTS_OP_SCRIPTLETS), 0);
     rc = rpmScriptRun(script, arg1, arg2, sfd,
@@ -1558,6 +1594,8 @@ int rpmtsRun(rpmts ts, rpmps okProbs, rpmprobFilterFlags ignoreSet)
     if (!(rpmtsFlags(ts) & (RPMTRANS_FLAG_NOPOSTTRANS|RPMTRANS_FLAG_NOTRIGGERIN))) {
 	runTransScripts(ts, PKG_TRANSFILETRIGGERIN);
     }
+
+    rpmScriptTriggerPosttrans(ts);
 exit:
     /* Run post transaction hook for all plugins */
     if (TsmPreDone) /* If TsmPre hook has been called, call the TsmPost hook */

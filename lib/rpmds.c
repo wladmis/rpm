@@ -3,11 +3,14 @@
  */
 #include "system.h"
 
+#define ALT_RPM_API /* for parseEVR */
+
 #include <rpm/rpmtypes.h>
 #include <rpm/rpmlib.h>		/* rpmvercmp */
 #include <rpm/rpmstring.h>
 #include <rpm/rpmlog.h>
 #include <rpm/rpmstrpool.h>
+#include "set.h"
 
 #include "lib/rpmds_internal.h"
 
@@ -15,7 +18,7 @@
 
 int _rpmds_debug = 0;
 
-int _rpmds_nopromote = 1;
+int _rpmds_nopromote = 0;
 
 /**
  * A package dependency set.
@@ -994,7 +997,6 @@ int rpmdsSearch(rpmds ds, rpmds ods)
  * @retval *vp		pointer to version
  * @retval *rp		pointer to release
  */
-static
 void parseEVR(char * evr,
 		const char ** ep,
 		const char ** vp,
@@ -1035,38 +1037,62 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 				  int nopromote)
 {
     const char *aE, *aV, *aR, *bE, *bV, *bR;
-    char *aEVR = xstrdup(AEVR);
-    char *bEVR = xstrdup(BEVR);
+    char *aEVR = NULL;
+    char *bEVR = NULL;
     int sense = 0;
     int result = 0;
 
-    parseEVR(aEVR, &aE, &aV, &aR);
-    parseEVR(bEVR, &bE, &bV, &bR);
+    int aset = strncmp(AEVR, "set:", sizeof("set:")-1) == 0;
+    int bset = strncmp(BEVR, "set:", sizeof("set:")-1) == 0;
 
-    /* Compare {A,B} [epoch:]version[-release] */
-    if (aE && *aE && bE && *bE)
-	sense = rpmvercmp(aE, bE);
-    else if (aE && *aE && atol(aE) > 0) {
-	if (!nopromote) {
+    if (aset && bset) {
+	sense = rpmsetcmp(AEVR, BEVR);
+	if (sense < -1) {
+	    if (sense == -3)
+		rpmlog(RPMLOG_WARNING, _("failed to decode %s\n"), AEVR);
+	    if (sense == -4)
+		rpmlog(RPMLOG_WARNING, _("failed to decode %s\n"), BEVR);
+	    /* neither is subset of each other */
 	    sense = 0;
-	} else
-	    sense = 1;
-    } else if (bE && *bE && atol(bE) > 0)
-	sense = -1;
+	}
+    }
+    else if (aset || bset) {
+	/* no overlap between a set and non-set */
+	result = 0;
+	goto exit;
+    }
+    else {
+	aEVR = xstrdup(AEVR);
+	bEVR = xstrdup(BEVR);
 
-    if (sense == 0) {
-	sense = rpmvercmp(aV, bV);
+	parseEVR(aEVR, &aE, &aV, &aR);
+	parseEVR(bEVR, &bE, &bV, &bR);
+
+	/* Compare {A,B} [epoch:]version[-release] */
+	if (aE && *aE && bE && *bE)
+	    sense = rpmvercmp(aE, bE);
+	else if (aE && *aE && atol(aE) > 0) {
+	    if (!nopromote) {
+		sense = 0;
+	    } else
+		sense = 1;
+	} else if (bE && *bE && atol(bE) > 0)
+	    sense = -1;
+
 	if (sense == 0) {
-	    if (aR && *aR && bR && *bR) {
-		sense = rpmvercmp(aR, bR);
-	    } else {
-		/* always matches if the side with no release has SENSE_EQUAL */
-		if ((aR && *aR && (BFlags & RPMSENSE_EQUAL)) ||
-		    (bR && *bR && (AFlags & RPMSENSE_EQUAL))) {
-		    aEVR = _free(aEVR);
-		    bEVR = _free(bEVR);
-		    result = 1;
-		    goto exit;
+	    sense = rpmvercmp(aV, bV);
+	    if (sense == 0) {
+		if (aR && *aR && bR && *bR) {
+		    sense = rpmvercmp(aR, bR);
+		} else {
+		    /* always matches if the side with no release has SENSE_EQUAL */
+		    if ((aR && *aR && (BFlags & RPMSENSE_EQUAL)) ||
+			    (bR && *bR && (AFlags & RPMSENSE_EQUAL))) {
+			aEVR = _free(aEVR);
+			bEVR = _free(bEVR);
+			result = 1;
+			goto exit;
+		    }
 		}
 	    }
 	}
@@ -1260,6 +1286,12 @@ static const struct rpmlibProvides_s rpmlibProvides[] = {
     { "rpmlib(RichDependencies)",    "4.12.0-1",
 	(		RPMSENSE_EQUAL),
     N_("support for rich dependencies.") },
+    { "rpmlib(SetVersions)",		"4.0.4-alt98",
+        (RPMSENSE_RPMLIB|RPMSENSE_EQUAL),
+    N_("dependencies support set/subset versions.") },
+    { "rpmlib(PosttransFiletriggers)",  "4.0.4",
+	(                RPMSENSE_EQUAL),
+    N_("package installs post-transaction filetrigger.") },
     { NULL,				NULL, 0,	NULL }
 };
 
