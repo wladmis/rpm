@@ -142,15 +142,19 @@ verify_rpath()
 		done
 	fi
 
+	local found_p
+
 	for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR /lib/../lib64; do
-		if printf %s "$rpath" | grep -Fqs "$p"; then
+		found_p="$(printf %s "$rpath" | { grep -F "$p" || [ "$?" -eq 1 ]; } )"
+		if [ -n "$found_p" ]; then
 			error_relaxed RPATH "$f" "RPATH contains illegal entry \"$p\": $rpath"
 			found=1
 		fi
 	done
 
 	for p in /lib /lib64 /usr/lib /usr/lib64; do
-		if printf %s " $rpath " | tr : ' ' | grep -Fqs " $p "; then
+		found_p="$(printf %s " $rpath " | tr : ' ' | { grep -F " $p " || [ "$?" -eq 1 ]; } )"
+		if [ -n "$found_p" ]; then
 			error_normal RPATH "$f" "RPATH contains standard library path \"$p\": $rpath"
 			found=1
 		fi
