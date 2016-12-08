@@ -524,6 +524,13 @@ touch /var/lib/rpm/delay-posttrans-filetriggers
 %config(noreplace) %_sysconfdir/logrotate.d/rpm
 
 %changelog
+* Thu Dec 08 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.13.0-alt2
+- Updated to 4.13:
+  + --checksig: do not use temporary files (ALT#5348);
+  + rpmdb: allowed read from locked db (ALT#26833, ALT#19726);
+  + added support of filedigests (ALT#31969);
+  + use longer type for package size (ALT#32111).
+
 * Wed Nov 30 2016 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt100.96
 - verify-elf: don't confuse the initial verify_rpath() in case
   of two RUNPATH/RPATHs (ALT#32826).
