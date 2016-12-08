@@ -5,7 +5,7 @@
 
 Name: rpm-build
 Version: 4.0.4
-Release: alt100.96
+Release: alt100.97
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -514,6 +514,12 @@ mv %buildroot%_rpmlibdir/{,build}macros
 %endif
 
 %changelog
+* Thu Dec 08 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt100.97
+- fixup-libraries: fixed recognition of PIEs (ldv@).
+- verify-elf: treat PIEs as executables in the check for unresolved symbols (ldv@).
+- Disabled rpm's installer part.
+- Built rpm-build in "compat" mode with rpm-4.13.
+
 * Wed Nov 30 2016 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt100.96
 - verify-elf: don't confuse the initial verify_rpath() in case
   of two RUNPATH/RPATHs (ALT#32826).
