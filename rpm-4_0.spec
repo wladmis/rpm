@@ -533,6 +533,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Thu Dec  8 2016 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt100.96.M80P.1
+- Build for p8.
+- verify-elf: correctly handle grep's status in practically impossible cases.
+
 * Tue Dec 06 2016 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.96.2
 - fixup-libraries: fixed recognition of PIEs.
 - verify-elf: treat PIEs as executables in the check for unresolved symbols.
