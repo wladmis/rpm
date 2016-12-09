@@ -97,7 +97,7 @@ for ARCH in noarch `grep ^arch_canon $RPMRC | cut -d: -f2`; do
 	CANONARCH=${ARCH}
 	CANONCOLOR=0
 	;;
-    armv7h*)
+    armv7h*|armh)
 	ISANAME=armv7hl
 	ISABITS=32
 	CANONARCH=arm
