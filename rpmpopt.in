@@ -160,6 +160,19 @@ rpm	alias --filerequire --qf '[%{FILENAMES}\t%{FILEREQUIRE}\n]' \
 rpm	alias --filecaps --qf '[%{FILENAMES}\t%|FILECAPS?{%{FILECAPS}}|\n]' \
 	--POPTdesc=$"list file names with POSIX1.e capabilities"
 
+rpm	alias --with		--define "_with_!#:+       --with-!#:+" \
+	--POPTdesc=$"enable configure <option> for build or query" \
+	--POPTargs=$"<option>"
+rpm	alias --without		--define "_without_!#:+    --without-!#:+" \
+	--POPTdesc=$"disable configure <option> for build or query" \
+	--POPTargs=$"<option>"
+rpm	alias --enable		--define "_enable_!#:+     --enable-!#:+" \
+	--POPTdesc=$"enable configure <option> for build or query" \
+	--POPTargs=$"<option>"
+rpm	alias --disable		--define "_disable_!#:+    --disable-!#:+" \
+	--POPTdesc=$"disable configure <option> for build or query" \
+	--POPTargs=$"<option>"
+
 # colon separated i18n domains to use as PO catalogue lookaside for
 # retrieving header group/description/summary.
 rpm alias --i18ndomains --define '_i18ndomains !#:+'
