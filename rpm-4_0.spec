@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.95.M80P.1
+Release: alt100.96.M80P.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -478,6 +478,7 @@ fi
 %rpmattr %_rpmlibdir/brp.d/*
 %rpmattr %_rpmlibdir/*_files
 %rpmattr %_rpmlibdir/cpp.*
+%rpmattr %_rpmlibdir/is_elf_so_executable
 %rpmattr %_rpmlibdir/ldd
 %rpmattr %_rpmlibdir/rpm2cpio.sh
 %rpmattr %_rpmlibdir/find-lang
@@ -532,6 +533,10 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Dec 06 2016 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.96.2
+- fixup-libraries: fixed recognition of PIEs.
+- verify-elf: treat PIEs as executables in the check for unresolved symbols.
+
 * Thu Dec  1 2016 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt100.95.M80P.1
 - Build for p8.
 

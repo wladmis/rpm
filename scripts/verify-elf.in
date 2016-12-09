@@ -142,15 +142,19 @@ verify_rpath()
 		done
 	fi
 
+	local found_p
+
 	for p in $RPM_BUILD_ROOT $RPM_BUILD_DIR $RPM_SOURCE_DIR /lib/../lib64; do
-		if printf %s "$rpath" | grep -Fqs "$p"; then
+		found_p="$(printf %s "$rpath" | { grep -F "$p" || [ "$?" -eq 1 ]; } )"
+		if [ -n "$found_p" ]; then
 			error_relaxed RPATH "$f" "RPATH contains illegal entry \"$p\": $rpath"
 			found=1
 		fi
 	done
 
 	for p in /lib /lib64 /usr/lib /usr/lib64; do
-		if printf %s " $rpath " | tr : ' ' | grep -Fqs " $p "; then
+		found_p="$(printf %s " $rpath " | tr : ' ' | { grep -F " $p " || [ "$?" -eq 1 ]; } )"
+		if [ -n "$found_p" ]; then
 			error_normal RPATH "$f" "RPATH contains standard library path \"$p\": $rpath"
 			found=1
 		fi
@@ -175,7 +179,7 @@ verify_unresolved()
 	fi
 	rpath="$(printf %s "$rpath" |
 		tr -s '[:space:]' '\n' |
-		grep -v '^$' |
+		{ grep -v '^$' || [ "$?" -eq 1 ]; } |
 		LANG=C uniq |
 		sed -e "s|^|$RPM_BUILD_ROOT&|" |
 		tr -s '[:space:]' : |
@@ -196,7 +200,8 @@ verify_unresolved()
 			;;
 		*)
 			if [ -z "${t##*ELF* executable*dynamically linked*}" ] ||
-			   lookup_path "${fname%/*}" "$RPM_VERIFY_ELF_LDD_RPATH"; then
+			   lookup_path "${fname%/*}" "$RPM_VERIFY_ELF_LDD_RPATH" ||
+			   @RPMCONFIGDIR@/is_elf_so_executable "$f"; then
 				ldd_rc=1
 			else
 				ldd_rc=0
@@ -258,13 +263,14 @@ verify_stack()
 	nsp0='[^[:space:]]*'
 	sp1='[[:space:]]\+'
 	hex='0x[0-9a-f]\+'
-	stack="$(printf '%s\n' "$elf_segments" |grep "^${sp0}GNU_STACK${sp1}")" || {
+	stack="$(printf '%s\n' "$elf_segments" | { grep "^${sp0}GNU_STACK${sp1}" || [ "$?" -eq 1 ]; } )"
+        [ -n "$stack" ] || {
 		error_strict STACK "$f" 'STACK entry not found'
 		return
 	}
 	exe_reg="${sp0}GNU_STACK${sp1}${hex}${sp1}${hex}${sp1}${hex}${sp1}${hex}${sp1}${hex}${sp1}${nsp0}E${nsp0}${sp1}${hex}"
-	exe_stack="$(printf '%s\n' "$stack" |grep -x "$exe_reg")" ||
-		return 0
+	exe_stack="$(printf '%s\n' "$stack" | { grep -x "$exe_reg" || [ "$?" -eq 1 ]; } )"
+        [ -z "$exe_stack" ] ||
 	error_strict STACK "$f" "found executable STACK entry: $exe_stack"
 }
 
