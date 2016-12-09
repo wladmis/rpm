@@ -779,6 +779,15 @@
 #
 %find_lang	@RPMCONFIGDIR@/find-lang
 
+# Commands + opts to use for retrieving remote files
+# Proxy opts can be set through --httpproxy/--httpport popt aliases,
+# for any special local needs use %__urlhelper_localopts in system-wide
+# or per-user macro configuration.
+%__urlhelpercmd         @__CURL@
+%__urlhelperopts        --silent --show-error --fail --globoff --location -o
+%__urlhelper_proxyopts   %{?_httpproxy:--proxy %{_httpproxy}%{?_httpport::%{_httpport}}}%{!?_httpproxy:%{nil}}
+%_urlhelper             %{__urlhelpercmd} %{?__urlhelper_localopts} %{?__urlhelper_proxyopts} %{__urlhelperopts}
+
 # Transaction plugin macros
 %__plugindir		%{_libdir}/rpm-plugins
 %__transaction_systemd_inhibit	%{__plugindir}/systemd_inhibit.so
