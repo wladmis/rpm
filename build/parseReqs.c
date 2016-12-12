@@ -33,12 +33,6 @@ static rpmRC checkEpoch(const char *s, char **emsg)
     if (!sep)
 	return RPMRC_OK;
 
-    for (si = s; si != sep; si++) {
-	if (!risdigit(*si)) {
-	    rasprintf(emsg, "Invalid version (epoch must be unsigned integer): %s", s);
-	    return RPMRC_FAIL;
-	}
-    }
     return RPMRC_OK;
 }
 
@@ -53,10 +47,6 @@ static rpmRC checkDep(rpmSpec spec, char *N, char *EVR, char **emsg)
         return RPMRC_FAIL;
     }
     if (EVR) {
-        if (N[0] == '/') {
-            rasprintf(emsg, _("Versioned file name not permitted"));
-            return RPMRC_FAIL;
-        }
         if (rpmCharCheck(spec, EVR, ".-_+:%{}~"))
             return RPMRC_FAIL;
 	if (checkSep(EVR, '-', emsg) != RPMRC_OK ||
