@@ -82,7 +82,7 @@ static void printFileInfo(const char * name,
 	(void)strftime(timefield, sizeof(timefield) - 1, fmt, tm);
     }
 
-    rpmlog(RPMLOG_NOTICE, "%s %4d %-8s%-8s %10s %s %s\n", perms,
+    fprintf(stdout, "%s %4d %-8s%-8s %10s %s %s\n", perms,
 	(int)nlink, ownerfield, groupfield, sizefield, timefield, 
 	link ? link : name);
     free(perms);
@@ -101,7 +101,7 @@ int showQueryPackage(QVA_t qva, rpmts ts, Header h)
 	char *str = headerFormat(h, qva->qva_queryFormat, &errstr);
 
 	if ( str != NULL ) {
-	    rpmlog(RPMLOG_NOTICE, "%s", str);
+	    fprintf(stdout, "%s", str);
 	    free(str);
 	} else {
 	    rpmlog(RPMLOG_ERR, _("incorrect format: %s\n"), errstr);
@@ -199,11 +199,11 @@ int showQueryPackage(QVA_t qva, rpmts ts, Header h)
 				 fflags & RPMFILE_DOC ? "1" : "0",
 				 frdev,
 				 (flink && *flink ? flink : "X"));
-	    rpmlog(RPMLOG_NOTICE, "%s%s\n", buf, add);
+	    fprintf(stdout, "%s%s\n", buf, add);
 	    free(add);
 	} else
 	if (!rpmIsVerbose()) {
-	    rpmlog(RPMLOG_NOTICE, "%s%s\n", buf ? buf : "", fn);
+	    fprintf(stdout, "%s%s\n", buf ? buf : "", fn);
 	}
 	else {
 	    uint32_t fnlink = rpmfiFNlink(fi);
@@ -219,7 +219,7 @@ int showQueryPackage(QVA_t qva, rpmts ts, Header h)
 		if (now == 0)
 		    now = time(NULL);
 		if (buf) {
-		    rpmlog(RPMLOG_NOTICE, "%s", buf);
+		    fprintf(stdout, "%s", buf);
 		}
 		printFileInfo(fn, fsize, fmode, fmtime, frdev, fnlink,
 					fuser, fgroup, flink, now);

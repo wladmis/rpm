@@ -176,21 +176,6 @@ static int rpmlogDefault(FILE *stdlog, rpmlogRec rec)
 {
     FILE *msgout = (stdlog ? stdlog : stderr);
 
-    switch (rec->pri) {
-    case RPMLOG_INFO:
-    case RPMLOG_NOTICE:
-        msgout = (stdlog ? stdlog : stdout);
-        break;
-    case RPMLOG_EMERG:
-    case RPMLOG_ALERT:
-    case RPMLOG_CRIT:
-    case RPMLOG_ERR:
-    case RPMLOG_WARNING:
-    case RPMLOG_DEBUG:
-    default:
-        break;
-    }
-
     if (fputs(rpmlogLevelPrefix(rec->pri), msgout) == EOF && errno != EPIPE)
 	perror("Error occurred during writing of a log message");
 

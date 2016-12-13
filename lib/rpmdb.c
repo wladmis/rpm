@@ -29,6 +29,7 @@
 #include "lib/fprint.h"
 #include "lib/header_internal.h"	/* XXX for headerSetInstance() */
 #include "lib/backend/dbiset.h"
+#include "lib/misc.h"
 #include "debug.h"
 
 #undef HASHTYPE
@@ -306,12 +307,26 @@ static rpmdb rpmdbRock;
 static rpmdbMatchIterator rpmmiRock;
 static rpmdbIndexIterator rpmiiRock;
 
-int rpmdbCheckTerminate(int terminate)
+void rpmAtExit(void)
+{
+    rpmdb db;
+    rpmdbMatchIterator mi;
+    rpmdbIndexIterator ii;
+
+    while ((mi = rpmmiRock) != NULL)
+	rpmdbFreeIterator(mi);
+
+    while ((ii = rpmiiRock) != NULL)
+	rpmdbIndexIteratorFree(ii);
+
+    while ((db = rpmdbRock) != NULL)
+	(void) rpmdbClose(db);
+}
+
+static int rpmdbCheckTerminate(void)
 {
     sigset_t newMask, oldMask;
-    static int terminating = 0;
-
-    if (terminating) return terminating;
+    int terminating = 0;
 
     (void) sigfillset(&newMask);		/* block all signals */
     (void) sigprocmask(SIG_BLOCK, &newMask, &oldMask);
@@ -320,40 +335,18 @@ int rpmdbCheckTerminate(int terminate)
      || rpmsqIsCaught(SIGQUIT) > 0
      || rpmsqIsCaught(SIGHUP) > 0
      || rpmsqIsCaught(SIGTERM) > 0
-     || rpmsqIsCaught(SIGPIPE) > 0
-     || terminate)
+     || rpmsqIsCaught(SIGPIPE) > 0)
 	terminating = 1;
 
-    if (terminating) {
-	rpmdb db;
-	rpmdbMatchIterator mi;
-	rpmdbIndexIterator ii;
-
-	while ((mi = rpmmiRock) != NULL) {
-	    rpmmiRock = mi->mi_next;
-	    mi->mi_next = NULL;
-	    rpmdbFreeIterator(mi);
-	}
-
-	while ((ii = rpmiiRock) != NULL) {
-	    rpmiiRock = ii->ii_next;
-	    ii->ii_next = NULL;
-	    rpmdbIndexIteratorFree(ii);
-	}
-
-	while ((db = rpmdbRock) != NULL) {
-	    rpmdbRock = db->db_next;
-	    db->db_next = NULL;
-	    (void) rpmdbClose(db);
-	}
-    }
     sigprocmask(SIG_SETMASK, &oldMask, NULL);
     return terminating;
 }
 
 int rpmdbCheckSignals(void)
 {
-    if (rpmdbCheckTerminate(0)) {
+    static int terminating = 0;
+    if (!terminating && rpmdbCheckTerminate()) {
+	terminating = 1;
 	rpmlog(RPMLOG_DEBUG, "Exiting on signal...\n");
 	exit(EXIT_FAILURE);
     }

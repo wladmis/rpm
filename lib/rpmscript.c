@@ -265,8 +265,8 @@ exit:
  */
 static rpmRC runExtScript(rpmPlugins plugins, ARGV_const_t prefixes,
 		   const char *sname, rpmlogLvl lvl, FD_t scriptFd,
-		   ARGV_t * argvp, const char *script, int arg1, int arg2,
-		   scriptNextFileFunc nextFileFunc)
+		   ARGV_t * argvp, const char *script, const char *teName, int arg1,
+		   int arg2, scriptNextFileFunc nextFileFunc)
 {
     FD_t out = NULL;
     char * fn = NULL;
@@ -339,6 +339,24 @@ static rpmRC runExtScript(rpmPlugins plugins, ARGV_const_t prefixes,
     } else if (pid == 0) {/* Child */
 	rpmlog(RPMLOG_DEBUG, "%s: execv(%s) pid %d\n",
 	       sname, *argvp[0], (unsigned)getpid());
+
+	char arg1_str [sizeof(int)*3+1] = "";
+	char arg2_str [sizeof(int)*3+1] = "";
+
+	if (arg1 >= 0)
+	    sprintf(arg1_str, "%d", arg1);
+	if (arg2 >= 0)
+	    sprintf(arg2_str, "%d", arg2);
+
+	if (teName) {
+	    setenv ("RPM_INSTALL_NAME", teName, 1);
+	}
+	if (*arg1_str) {
+	    setenv ("RPM_INSTALL_ARG1", arg1_str, 1);
+	}
+	if (*arg2_str) {
+	    setenv ("RPM_INSTALL_ARG2", arg2_str, 1);
+	}
 
 	fclose(in);
 	dup2(inpipe[0], STDIN_FILENO);
@@ -448,7 +466,7 @@ exit:
     return rc;
 }
 
-rpmRC rpmScriptRun(rpmScript script, int arg1, int arg2, FD_t scriptFd,
+rpmRC rpmScriptRun(rpmScript script, const char *teName, int arg1, int arg2, FD_t scriptFd,
 		   ARGV_const_t prefixes, int warn_only, rpmPlugins plugins)
 {
     ARGV_t args = NULL;
@@ -473,7 +491,7 @@ rpmRC rpmScriptRun(rpmScript script, int arg1, int arg2, FD_t scriptFd,
 
     if (rc != RPMRC_FAIL) {
 	if (script_type & RPMSCRIPTLET_EXEC) {
-	    rc = runExtScript(plugins, prefixes, script->descr, lvl, scriptFd, &args, script->body, arg1, arg2, &script->nextFileFunc);
+	    rc = runExtScript(plugins, prefixes, script->descr, lvl, scriptFd, &args, script->body, teName, arg1, arg2, &script->nextFileFunc);
 	} else {
 	    rc = runLuaScript(plugins, prefixes, script->descr, lvl, scriptFd, &args, script->body, arg1, arg2, &script->nextFileFunc);
 	}
@@ -705,7 +723,8 @@ void rpmScriptTriggerPosttrans(rpmts ts)
 	return;
 
     rasprintf(&script->body, "exec %s %s", s, file);
-    rpmlog(RPMLOG_INFO, "Running %s\n", s);
+    if (rpmIsVerbose())
+	fprintf(stdout, "Running %s\n", s);
     int rc = runScript(ts, NULL, NULL, script, -1, -1);
     if (rc == 0)
 	unlink(file);
