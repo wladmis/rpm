@@ -705,7 +705,8 @@ void rpmScriptTriggerPosttrans(rpmts ts)
 	return;
 
     rasprintf(&script->body, "exec %s %s", s, file);
-    rpmlog(RPMLOG_INFO, "Running %s\n", s);
+    if (rpmIsVerbose())
+	fprintf(stdout, "Running %s\n", s);
     int rc = runScript(ts, NULL, NULL, script, -1, -1);
     if (rc == 0)
 	unlink(file);
