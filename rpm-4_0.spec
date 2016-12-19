@@ -330,7 +330,7 @@ if [ -s /lib/libc.so.6 -a -s /lib/libz.so.1 -a -n "$(getconf LFS_CFLAGS)" ]; the
 		sed -n 's/^[[:space:]]*[0-9]\+:[[:space:]]\+[0-9a-f]\+[[:space:]]\+[0-9]\+[[:space:]]\+FUNC[[:space:]]\+[^[:space:]]\+[[:space:]]\+DEFAULT[[:space:]]\+[0-9]\+[[:space:]]\+\([^@[:space:]]\+\)@\?.*/\1/p' |
 		sort -u
 fi > all-funcs
-sed -n 's/^\(.\+\)64$/\1/p' all-funcs |
+sed -r -n 's/^(.+)64(_.*|$)/\1\2/p' all-funcs |
 	sort -u |
 	comm -12 - all-funcs |
 	LC_ALL=C sort -u \
