@@ -5,7 +5,7 @@
 
 Name: rpm-build
 Version: 4.0.4
-Release: alt100.98
+Release: alt100.99
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -512,6 +512,10 @@ mv %buildroot%_rpmlibdir/{,build}macros
 %endif
 
 %changelog
+* Mon Dec 19 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt100.99
+- Fixed non-LFS check in verify-elf.
+- Dropped fake provides made for rpm 4.13.0 bootstrap.
+
 * Fri Dec 16 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt100.98
 - Restored rpmpopt file.
 
