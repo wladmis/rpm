@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.96.M80P.1
+Release: alt100.99
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -533,6 +533,19 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Dec 19 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt100.99
+- Fixed non-LFS check in verify-elf.
+- [not for p8] Dropped fake provides made for rpm 4.13.0 bootstrap.
+
+* Fri Dec 16 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt100.98
+- [not for p8] Restored rpmpopt file.
+
+* Thu Dec 08 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt100.97
+- fixup-libraries: fixed recognition of PIEs (ldv@).
+- verify-elf: treat PIEs as executables in the check for unresolved symbols (ldv@).
+- [not for p8] Disabled rpm's installer part.
+- [not for p8] Built rpm-build in "compat" mode with rpm-4.13.
+
 * Thu Dec  8 2016 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt100.96.M80P.1
 - Build for p8.
 - verify-elf: correctly handle grep's status in practically impossible cases.
