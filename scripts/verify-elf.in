@@ -274,46 +274,19 @@ verify_stack()
 	error_strict STACK "$f" "found executable STACK entry: $exe_stack"
 }
 
-find_elf_interp()
-{
-	local f
-	f="$1"; shift
-
-	read_elf_segments "$f"
-	[ -n "$elf_segments" ] || return 0
-
-	printf '%s\n' "$elf_segments" |
-		sed -n 's,^[[:space:]]*\[Requesting program interpreter: \(/[^]]\+\)\]$,\1,p'
-}
-
 LFS_CFLAGS="$(getconf LFS_CFLAGS)"
 non_lfs_funcs='@RPMCONFIGDIR@/verify-elf-non-lfs-funcs.list'
-dump_ld_config='@RPMCONFIGDIR@/dump_ld_config'
-default_elf_interp=
 
 verify_lfs()
 {
 	[ -n "$LFS_CFLAGS" -a -s "$non_lfs_funcs" ] || return 0
 
-	local f interp funcs
+	local f funcs
 	f="$1"; shift
 
-	interp="$(find_elf_interp "$f")" || {
-		error_normal LFS "$f" 'program interpreter not found'
-		return
-	}
-
-	[ -n "$default_elf_interp" ] || {
-		elf_segments=
-		default_elf_interp="$(find_elf_interp "$dump_ld_config")"
-	}
-	[ -n "$default_elf_interp" ] || {
-		error_normal LFS "$dump_ld_config" 'program interpreter not found'
-		default_elf_interp=/
-	}
-
-	[ "$interp" = "$default_elf_interp" ] ||
-		return 0
+	readelf --wide --dynamic "$f" |
+		grep -q '^[[:space:]]*[x0-9a-f]\+[[:space:]]\+(NEEDED)[[:space:]]\+Shared library:[[:space:]]\+\[lib[cz]\.so\..*\]' ||
+			return 0
 
 	funcs="$(readelf --wide --symbols "$f" |
 		sed -n 's/^[[:space:]]*[0-9]\+:[[:space:]]\+[0-9a-f]\+[[:space:]]\+[0-9]\+[[:space:]]\+FUNC[[:space:]]\+[^[:space:]]\+[[:space:]]\+DEFAULT[[:space:]]\+UND[[:space:]]\+\([^@[:space:]]\+\)@.*/\1/p' |
