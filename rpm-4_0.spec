@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.99
+Release: alt101
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -533,8 +533,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Dec 20 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt101
+- verify-elf: made verify_lfs check shared objects too.
+- Relaxed check for gcc package name in {cpp,pkgconfiglib}.req generators.
+- [not for p8] rpm-build: add R: rpmspec.
+
 * Mon Dec 19 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt100.99
-- Fixed non-LFS check in verify-elf.
+- Updated generator of non-LFS functions list.
 - [not for p8] Dropped fake provides made for rpm 4.13.0 bootstrap.
 
 * Fri Dec 16 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt100.98
