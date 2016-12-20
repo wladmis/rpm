@@ -103,7 +103,7 @@ CppReq()
 	local srpm="${RPM_PACKAGE_NAME-}"
 	[ -n "$srpm" ] || srpm=$(rpmquery --qf='%{SOURCERPM}' -f "$f" 2>/dev/null) || srpm=foo
 	case "$srpm" in
-		gcc | gcc-[345]* | gcc[345]* )
+		gcc | gcc-[1-9]* | gcc[1-9]* )
 			[ -n "$gcc" ] ||
 			Verbose "$f: $PROG disabled for gcc"
 			gcc=$srpm

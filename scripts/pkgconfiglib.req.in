@@ -27,7 +27,7 @@ PkgconfigLibReq()
 		# Below we use "gcc -print-search-dirs" to determine library
 		# search path.  If we build gcc itself, then e.g. libgcj.pc
 		# (with -lgcj inside) cannot be processed reliably.
-		gcc | gcc-[345]* | gcc[345]* )
+		gcc | gcc-[1-9]* | gcc[1-9]* )
 			Verbose "$f: $PROG disabled for gcc"
 			return 0 ;;
 	esac
