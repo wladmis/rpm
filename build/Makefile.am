@@ -11,8 +11,9 @@ AM_CPPFLAGS = -I. \
 LIBS =
 
 pkgincdir = $(pkgincludedir)
-pkginc_HEADERS = rpmbuild.h rpmspec.h
-noinst_HEADERS = buildio.h checkFiles.h interdep.h
+noinst_HEADERS = \
+		 rpmbuild.h rpmspec.h \
+		 buildio.h checkFiles.h interdep.h
 
 lib_LTLIBRARIES = librpmbuild.la
 librpmbuild_la_SOURCES = \

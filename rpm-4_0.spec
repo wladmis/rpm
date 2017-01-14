@@ -248,6 +248,8 @@ lib/test-set
 %make_install DESTDIR='%buildroot' install
 chmod a-w %buildroot%_usrsrc/RPM{,/RPMS/*}
 
+rm %buildroot%_libdir/librpm{,build,db,io}.so
+%if 0
 # Save list of packages through cron.
 #mkdir -p %buildroot%_sysconfdir/cron.daily
 #install -p -m750 scripts/%oname.daily %buildroot%_sysconfdir/cron.daily/%oname
@@ -280,10 +282,10 @@ install -p -m644 CHANGES.bz2 CREDITS README README.ALT* \
 	%buildroot%_docdir/%oname-%rpm_version/
 cp -a doc/manual %buildroot%_docdir/%oname-%rpm_version/
 rm -f %buildroot%_docdir/%oname-%rpm_version/manual/{Makefile*,buildroot}
-%if_with apidocs
+#if_with apidocs
 cp -a apidocs/man/man3 %buildroot%_mandir/
 cp -a apidocs/html %buildroot%_docdir/%oname-%rpm_version/apidocs/
-%endif #with apidocs
+#endif #with apidocs
 
 # rpminit(1).
 install -pD -m755 rpminit %buildroot%_bindir/rpminit
@@ -291,6 +293,7 @@ install -pD -m644 rpminit.1 %buildroot%_man1dir/rpminit.1
 
 # Valid groups.
 install -p -m644 GROUPS %buildroot%_rpmlibdir/
+%endif
 
 # buildreq ignore rules.
 install -pD -m644 rpm-build.buildreq %buildroot%_sysconfdir/buildreqs/files/ignore.d/rpm-build
@@ -311,15 +314,17 @@ popd
 	grep -Fv /brp- |
 	sed -e "s|^%buildroot|%%attr(-,root,%oname) |g" >>rpmbuild.platform
 
-%ifdef add_findreq_skiplist
+%if 0
+#ifdef add_findreq_skiplist
 # These shell libraries hopefully do not require anything special,
 # but we want to keep the "rpm" package dependencies to bare minimum.
 %add_findreq_skiplist %_rpmlibdir/functions
 %add_findreq_skiplist %_rpmlibdir/find-package
-%endif
+#endif
 # However, syntax check is still a good idea.
 sh -n %buildroot%_rpmlibdir/functions
 sh -n %buildroot%_rpmlibdir/find-package
+%endif
 
 %if "%_lib" == "lib"
 if [ -s /lib/libc.so.6 -a -s /lib/libz.so.1 -a -n "$(getconf LFS_CFLAGS)" ]; then

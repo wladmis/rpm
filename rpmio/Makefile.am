@@ -9,10 +9,9 @@ EXTRA_PROGRAMS = tdigest tkey tring trpmio
 AM_CPPFLAGS = -I. @INCPATH@
 
 pkgincdir = $(pkgincludedir)
-pkginc_HEADERS = \
-	rpmio.h rpmurl.h rpmmacro.h rpmlog.h rpmmessages.h rpmerr.h \
-	ugid.h
-noinst_HEADERS = bsearch.h rpmio_internal.h rpmpgp.h
+noinst_HEADERS = \
+		 rpmio.h rpmurl.h rpmmacro.h rpmlog.h rpmmessages.h rpmerr.h ugid.h \
+		 bsearch.h rpmio_internal.h rpmpgp.h
 
 lib_LTLIBRARIES = librpmio.la
 librpmio_la_SOURCES = digest.c macro.c rpmio.c rpmlog.c rpmmalloc.c \

@@ -37,11 +37,9 @@ installprefix = $(DESTDIR)
 all:
 
 configdir = ${prefix}/lib/rpm
-config_DATA = .provides.sh 0common-files.req.list
+config_DATA = 0common-files.req.list # .provides.sh
 config_SCRIPTS = \
-	posttrans-filetriggers 0ldconfig.filetrigger \
 	debuginfo.req debuginfo.req.files debuginfo.prov debuginfo.prov.files \
-	functions find-package \
 	find-debuginfo-files \
 	find-scriptlet-requires \
 	brp-alt \
@@ -63,7 +61,8 @@ config_SCRIPTS = \
 	static.req static.req.files \
 	symlinks.req symlinks.req.files \
 	tmpdir.sh \
-	verify-elf
+	verify-elf \
+	# 0ldconfig.filetrigger find-package functions posttrans-filetriggers
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(configdir)/brp.d

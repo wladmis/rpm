@@ -28,8 +28,8 @@ noinst_PROGRAMS = \
 	dump dumpdb rpmarchive rpmheader rpmlead rpmsignature setcmp.static
 
 pkgbindir = @RPMCONFIGDIR@
-pkgbin_PROGRAMS = javadeps filesize dump_ld_config relative pdeath_execute mkset setcmp debugedit
-bin_PROGRAMS = rpmvercmp rpmevrcmp
+pkgbin_PROGRAMS = filesize dump_ld_config relative mkset setcmp debugedit # javadeps pdeath_execute
+#bin_PROGRAMS = rpmvercmp rpmevrcmp
 
 javadeps_SOURCES = javadeps.c
 

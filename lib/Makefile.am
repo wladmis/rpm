@@ -9,9 +9,8 @@ AM_CPPFLAGS = -I. \
 	@INCPATH@
 
 pkgincdir = $(pkgincludedir)
-pkginc_HEADERS = \
-	header.h misc.h rpmcli.h rpmlib.h stringbuf.h
 noinst_HEADERS = \
+	header.h misc.h rpmcli.h rpmlib.h stringbuf.h \
 	al.h cpio.h depends.h fsm.h header_internal.h \
 	manifest.h psm.h \
 	rpmlead.h set.h signature.h

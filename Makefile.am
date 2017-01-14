@@ -26,14 +26,14 @@ myLDADD = $(mylibLDADD) $(top_builddir)/build/librpmbuild.la
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
 rpmbin_PROGRAMS =
 
-bin_PROGRAMS =		rpm rpm2cpio
+#bin_PROGRAMS =		rpm rpm2cpio
 bin_SCRIPTS =		gendiff
 
 pkgdatadir =		@RPMCONFIGDIR@
 pkglibdir =		@RPMCONFIGDIR@
 pkglibexecdir =		@RPMCONFIGDIR@
 pkgdata_DATA =		rpmrc rpmpopt-$(VERSION) macros
-pkglibexec_PROGRAMS =	rpmb rpmd rpmi rpmk rpmq
+pkglibexec_PROGRAMS =	rpmb # rpmd rpmi rpmk rpmq
 pkglibexec_SCRIPTS =	find-provides find-requires
 
 rpmpopt-$(VERSION): rpmpopt
@@ -106,34 +106,34 @@ CVSTAG = r$(subst .,-,$(VERSION))
 pkgsrcdir = $(prefix)/src/RPM
 
 install-data-local:
-	@$(mkinstalldirs) $(DESTDIR)$(rpmbindir)
-	@@LN_S@ ..$(bindir)/rpm $(DESTDIR)$(rpmbindir)/
-	@$(mkinstalldirs) $(DESTDIR)$(varprefix)/lib/rpm
-	@rm -f $(DESTDIR)$(prefix)/lib/rpmrc
-	@@LN_S@ rpm/rpmrc $(DESTDIR)$(prefix)/lib/rpmrc
-	@rm -f $(DESTDIR)$(prefix)/lib/rpmpopt
-	@@LN_S@ rpm/rpmpopt-$(VERSION) $(DESTDIR)$(prefix)/lib/rpmpopt
+	@: $(mkinstalldirs) $(DESTDIR)$(rpmbindir)
+	@: @LN_S@ ..$(bindir)/rpm $(DESTDIR)$(rpmbindir)/
+	@: $(mkinstalldirs) $(DESTDIR)$(varprefix)/lib/rpm
+	@: rm -f $(DESTDIR)$(prefix)/lib/rpmrc
+	@: @LN_S@ rpm/rpmrc $(DESTDIR)$(prefix)/lib/rpmrc
+	@: rm -f $(DESTDIR)$(prefix)/lib/rpmpopt
+	@: @LN_S@ rpm/rpmpopt-$(VERSION) $(DESTDIR)$(prefix)/lib/rpmpopt
 	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmt
 	@@LN_S@ rpmb $(DESTDIR)$(prefix)/lib/rpm/rpmt
-	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpme
-	@@LN_S@ rpmi $(DESTDIR)$(prefix)/lib/rpm/rpme
-	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmu
-	@@LN_S@ rpmi $(DESTDIR)$(prefix)/lib/rpm/rpmu
-	@rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmv
-	@@LN_S@ rpmq $(DESTDIR)$(prefix)/lib/rpm/rpmv
+	@: rm -f $(DESTDIR)$(prefix)/lib/rpm/rpme
+	@: @LN_S@ rpmi $(DESTDIR)$(prefix)/lib/rpm/rpme
+	@: rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmu
+	@: @LN_S@ rpmi $(DESTDIR)$(prefix)/lib/rpm/rpmu
+	@: rm -f $(DESTDIR)$(prefix)/lib/rpm/rpmv
+	@: @LN_S@ rpmq $(DESTDIR)$(prefix)/lib/rpm/rpmv
 	rm -f $(DESTDIR)$(bindir)/rpmbuild
 	@LN_S@ ../lib/rpm/rpmb $(DESTDIR)$(bindir)/rpmbuild
-	rm -f $(DESTDIR)$(bindir)/rpmquery
-	@LN_S@ ../lib/rpm/rpmq $(DESTDIR)$(bindir)/rpmquery
-	rm -f $(DESTDIR)$(bindir)/rpmverify
-	@LN_S@ ../lib/rpm/rpmv $(DESTDIR)$(bindir)/rpmverify
-	rm -f $(DESTDIR)$(bindir)/rpmsign
-	@LN_S@ ../lib/rpm/rpmk $(DESTDIR)$(bindir)/rpmsign
-	rm -f $(DESTDIR)$(bindir)/rpmdb
-	@LN_S@ ../lib/rpm/rpmd $(DESTDIR)$(bindir)/rpmdb
-	for bf in e i u ; do \
-	    rm -f $(DESTDIR)$(bindir)/rpm$$bf ; \
-	    @LN_S@ ../lib/rpm/rpm$$bf $(DESTDIR)$(bindir)/rpm$$bf ; \
+	@: rm -f $(DESTDIR)$(bindir)/rpmquery
+	@: LN_S@ ../lib/rpm/rpmq $(DESTDIR)$(bindir)/rpmquery
+	@: rm -f $(DESTDIR)$(bindir)/rpmverify
+	@: LN_S@ ../lib/rpm/rpmv $(DESTDIR)$(bindir)/rpmverify
+	@: rm -f $(DESTDIR)$(bindir)/rpmsign
+	@: LN_S@ ../lib/rpm/rpmk $(DESTDIR)$(bindir)/rpmsign
+	@: rm -f $(DESTDIR)$(bindir)/rpmdb
+	@: LN_S@ ../lib/rpm/rpmd $(DESTDIR)$(bindir)/rpmdb
+	@for bf in e i u ; do \
+	    : rm -f $(DESTDIR)$(bindir)/rpm$$bf ; \
+	    : @LN_S@ ../lib/rpm/rpm$$bf $(DESTDIR)$(bindir)/rpm$$bf ; \
 	done
 	rm -f $(DESTDIR)$(bindir)/relative
 	@LN_S@ ../lib/rpm/relative $(DESTDIR)$(bindir)/relative
@@ -169,7 +169,7 @@ install-data-local:
 	solaris*|linux*) \
 	   chmod u+x ./installplatform; DESTDIR="$(DESTDIR)" pkglibdir="$(pkglibdir)" ./installplatform rpmrc macros platform ;; \
 	esac
-	@$(mkinstalldirs) $(DESTDIR)/var/tmp
+	@: $(mkinstalldirs) $(DESTDIR)/var/tmp
 
 .PHONY:	setperms
 setperms:
