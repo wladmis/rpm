@@ -3470,8 +3470,8 @@ fprintf(stderr, "*** Fdopen(%p,%s) %s\n", fd, fmode, fdbg(fd));
     if (stdio[0] == '\0')
 	return NULL;
     zstdio[0] = '\0';
-    strncat(zstdio, stdio, sizeof(zstdio) - strlen(zstdio));
-    strncat(zstdio, other, sizeof(zstdio) - strlen(zstdio));
+    strncat(zstdio, stdio, sizeof(zstdio) - 1 - strlen(zstdio));
+    strncat(zstdio, other, sizeof(zstdio) - 1 - strlen(zstdio));
 
     if (end == NULL && other[0] == '\0')
 	/*@-refcounttrans -retalias@*/ return fd; /*@=refcounttrans =retalias@*/
