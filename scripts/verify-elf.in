@@ -2,7 +2,7 @@
 #
 # verify-elf - verify ELF objects.
 #
-# Copyright (C) 2002-2011  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2002-2017  Dmitry V. Levin <ldv@altlinux.org>
 # Copyright (C) 2009  Alexey Tourbin <at@altlinux.org>
 # Copyright (C) 2016       Ivan Zakharyaschev <imz@altlinux.org>
 #
@@ -185,7 +185,7 @@ verify_unresolved()
 		tr -s '[:space:]' : |
 		sed -e 's/^:\+//; s/:\+$//')"
 
-	if ! ldd_info="$(LD_PRELOAD="$preload" "$elf_ldd" --undefined -- "$f" "$rpath" 2>&1)"; then
+	if ! ldd_info="$(RPM_LD_PRELOAD="$preload" "$elf_ldd" --undefined -- "$f" "$rpath" 2>&1)"; then
 		printf >&2 '%s\n' "$ldd_info"
 		error_relaxed UNRESOLVED "$f" 'ldd failed'
 		return
