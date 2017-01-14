@@ -26,7 +26,7 @@ myLDADD = $(mylibLDADD) $(top_builddir)/build/librpmbuild.la
 rpmbindir = `echo $(bindir) | sed -e s,usr/bin,bin,`
 rpmbin_PROGRAMS =
 
-bin_PROGRAMS =		rpm rpm.static rpm2cpio rpm2cpio.static
+bin_PROGRAMS =		rpm rpm2cpio
 bin_SCRIPTS =		gendiff
 
 pkgdatadir =		@RPMCONFIGDIR@

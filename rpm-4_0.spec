@@ -63,18 +63,18 @@ Source: rpm-%version-%release.tar
 
 %{?_with_python:BuildPreReq: python-devel}
 %{?_with_apidocs:BuildPreReq: ctags doxygen}
-%{?_with_libelf:BuildPreReq: libelf-devel-static}
+%{?_with_libelf:BuildPreReq: libelf-devel}
 %{?_with_selinux:BuildPreReq: libselinux-devel >= 2.0.96}
 %{?_with_profile:BuildPreReq: coreutils >= 6.0}
 
-BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
+BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel >= 4.2.1,
 BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 
 # For debugedit.
 BuildPreReq: elfutils-devel
 
 # Automatically added by buildreq on Thu Apr 23 2009 and edited manually.
-BuildRequires: bzlib-devel-static libdb4.7-devel-static libelf-devel-static liblzma-devel-static libpopt-devel-static python-devel zlib-devel-static
+BuildRequires: bzlib-devel libdb4.7-devel libelf-devel liblzma-devel libpopt-devel python-devel zlib-devel
 
 %package -n lib%oname
 Summary: Shared libraries required for applications which will manipulate RPM packages
@@ -208,6 +208,7 @@ export LDFLAGS="-L$PWD/stub"
 	%{?_with_apidocs} %{?_without_apidocs} \
 	%{?_with_db} %{?_without_db} \
 	%{subst_with selinux} \
+	--disable-static \
 	--program-transform-name=
 
 # create a stub libselinux.a so that -lselinux would work in -static mode
@@ -224,18 +225,15 @@ rpmquery -a --requires |fgrep '= set:' |sort >R
 join -o 1.3,2.3 P R |shuf >setcmp-data
 
 %if_with profile
-rm lib/set.lo lib/librpm.la tools/setcmp.static
+rm lib/set.lo lib/librpm.la
 %make_build -C lib set.lo librpm.la CFLAGS="$set_c_cflags -fprofile-generate"
-%make_build -C tools setcmp.static CFLAGS="$(sed -n 's/^CFLAGS = //p' tools/Makefile) -fprofile-generate"
 ./tools/setcmp <setcmp-data >/dev/null
-./tools/setcmp.static <setcmp-data >/dev/null
-ls -l lib/.libs/set.gcda lib/set.gcda
-rm lib/set.lo lib/librpm.la tools/setcmp.static
+ls -l lib/.libs/set.gcda
+rm lib/set.lo lib/librpm.la
 %make_build -C lib set.lo CFLAGS="$set_c_cflags -fprofile-use"
 %make_build
 %else
 ./tools/setcmp <setcmp-data >/dev/null
-./tools/setcmp.static <setcmp-data >/dev/null
 %endif #with profile
 
 %if_with apidocs
@@ -505,12 +503,6 @@ mv %buildroot%_rpmlibdir/{,build}macros
 %files -n python-module-rpm
 %_libdir/python*/site-packages/*module.so
 %endif #with python
-
-%if 0
-%files static
-%_bindir/rpm.static
-%_bindir/rpm2cpio.static
-%endif
 
 %changelog
 * Tue Dec 20 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt101
