@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt101
+Release: alt102
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -533,6 +533,9 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Sat Jan 14 2017 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt102
+- verify-elf: fixed passing of LD_PRELOAD in verify_unresolved.
+
 * Tue Dec 20 2016 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt101
 - verify-elf: made verify_lfs check shared objects too.
 - Relaxed check for gcc package name in {cpp,pkgconfiglib}.req generators.
