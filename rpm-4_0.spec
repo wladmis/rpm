@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt102
+Release: alt101.M80P.1
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -533,6 +533,20 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Jan 16 2017 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt101.M80P.1
+- Merged rpm-build-4.0.4-alt102 into p8
+  (everything except for separating rpm & -build):
+  [4.0.4-alt102]
+  + verify-elf: fixed passing of LD_PRELOAD in verify_unresolved.
+  [4.0.4-alt101]
+  + verify-elf: made verify_lfs check shared objects too.
+  + Relaxed check for gcc package name in {cpp,pkgconfiglib}.req generators.
+  [4.0.4-alt100.99]
+  + Updated generator of non-LFS functions list.
+  [4.0.4-alt100.97]
+  + fixup-libraries: fixed recognition of PIEs (ldv@).
+  + verify-elf: treat PIEs as executables in the check for unresolved symbols (ldv@).
+
 * Sat Jan 14 2017 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt102
 - verify-elf: fixed passing of LD_PRELOAD in verify_unresolved.
 
