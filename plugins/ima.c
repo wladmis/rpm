@@ -1,3 +1,5 @@
+#include "system.h"
+
 #include <sys/xattr.h>
 
 #include <rpm/rpmfi.h>
