@@ -24,7 +24,9 @@ prune_tests="$(printf %s "$prune_paths" |
 		sort -u |
 		sed -n '/^\// s/.*/ -o -path .&/p')"
 find . '(' -path './.*' $prune_tests ')' -prune -o -type f -print |sort |
-file -NF$'\t' -f - |sed -n 's/\t.* ELF .* \(executable\|shared object\), .*, not stripped.*//p' |
+file -NF$'\t' -f - |
+sed -n -e '/ ELF .* shared object, no machine, /d' \
+       -e 's/\t.* ELF .* \(executable\|shared object\), .*, not stripped.*//p' |
 xargs -r --delimiter='\n' stat -c '%h %i %n' >.tmp/flist
 while read -r nlink ino f; do
 	debugf=./usr/lib/debug${f#.}.debug

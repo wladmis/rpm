@@ -134,6 +134,7 @@ find .$RPM_VERIFY_ELF_TOPDIR -path ./usr/lib/debug -prune -o -type f -print |
 file -NF$'\t' -f - |
 while IFS=$'\t' read -r f t; do
 	case " $t" in
+		*' ELF '*' shared object, no machine, '*) continue ;;
 		*' ELF '*) ;;
 		*) continue ;;
 	esac

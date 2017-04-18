@@ -21,11 +21,12 @@
 
 for file in "$@"; do
 	type=`file -b "$file"` || continue
-	case "$type" in
-		current\ ar\ archive|*\ current\ ar\ archive)
+	case " $type" in
+		*' current ar archive')
 			chmod -v u+w,a-x,ug-s "$file"
 			;;
-		ELF\ *\ shared\ object,\ *|*\ ELF\ *\ shared\ object,\ *)
+		*' ELF '*' shared object, no machine, '*) continue ;;
+		*' ELF '*' shared object, '*)
 			@RPMCONFIGDIR@/is_elf_so_executable "$file" ||
 				chmod -c u+w,a-x,ug-s "$file"
 			;;
