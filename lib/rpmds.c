@@ -1182,6 +1182,29 @@ exit:
     return result;
 }
 
+int rpmRangesOverlap(const char * AName, const char * AEVR, uint32_t AFlags,
+		     const char * BName, const char * BEVR, uint32_t BFlags,
+		     int nopromote)
+{
+    int result;
+
+    /* Different names don't overlap. */
+    if (AName != BName && strcmp(AName, BName)) {
+        result = 0;
+        goto exit;
+    }
+
+    /* Same name. If either A or B is an existence test, always overlap. */
+    if (!((AFlags & RPMSENSE_SENSEMASK) && (BFlags & RPMSENSE_SENSEMASK))) {
+	result = 1;
+	goto exit;
+    }
+
+    result = rpmdsCompareEVR(AEVR, AFlags, BEVR, BFlags, nopromote);
+exit:
+    return result;
+}
+
 int rpmdsCompare(const rpmds A, const rpmds B)
 {
     return rpmdsCompareIndex(A, A->i, B, B->i);
@@ -1340,6 +1363,22 @@ int rpmdsRpmlibPool(rpmstrPool pool, rpmds * dsp, const void * tblp)
     if (*dsp && (*dsp)->pool != pool)
 	rpmstrPoolFreeze((*dsp)->pool, 0);
     return (rc < 0) ? -1 : 0;
+}
+
+int rpmCheckRpmlibProvides(const char * keyName, const char * keyEVR,
+			   int keyFlags)
+{
+    const struct rpmlibProvides_s * rlp;
+    int rc = 0;
+
+    for (rlp = rpmlibProvides; rlp->featureName != NULL; rlp++) {
+	if (rlp->featureEVR && rlp->featureFlags)
+	    rc = rpmRangesOverlap(keyName, keyEVR, keyFlags,
+		    rlp->featureName, rlp->featureEVR, rlp->featureFlags, _rpmds_nopromote);
+	if (rc)
+	    break;
+    }
+    return rc;
 }
 
 int rpmdsRpmlib(rpmds * dsp, const void * tblp)
