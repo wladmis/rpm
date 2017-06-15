@@ -1046,7 +1046,14 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
     if (!BEVR) BEVR = "";
 
     if (*AEVR && *BEVR) {
-	/* XXX: optimization for equal EVRs here? */
+	/* equal version strings => equal versions */
+	if ((AFlags & RPMSENSE_SENSEMASK) == RPMSENSE_EQUAL &&
+	    (BFlags & RPMSENSE_SENSEMASK) == RPMSENSE_EQUAL &&
+	    strcmp(AEVR, BEVR) == 0)
+	{
+	    sense = 0;
+	    goto sense_result;
+	}
     }
     /* something beats nothing */
     else if (*AEVR) {
