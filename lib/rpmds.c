@@ -1042,6 +1042,27 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
     int sense = 0;
     int result = 0;
 
+    if (!AEVR) AEVR = "";
+    if (!BEVR) BEVR = "";
+
+    if (*AEVR && *BEVR) {
+	/* XXX: optimization for equal EVRs here? */
+    }
+    /* something beats nothing */
+    else if (*AEVR) {
+	sense = 1;
+	goto sense_result;
+    }
+    else if (*BEVR) {
+	sense = -1 ;
+	goto sense_result;
+    }
+    else {
+	/* both EVRs are non-existent or empty, always overlap */
+	result = 1;
+	goto exit;
+    }
+
     int aset = strncmp(AEVR, "set:", sizeof("set:")-1) == 0;
     int bset = strncmp(BEVR, "set:", sizeof("set:")-1) == 0;
 
@@ -1098,6 +1119,7 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 	}
     }
 
+sense_result:
     /* Detect overlap of {A,B} range. */
     if (sense < 0 && ((AFlags & RPMSENSE_GREATER) || (BFlags & RPMSENSE_LESS))) {
 	result = 1;
@@ -1145,16 +1167,8 @@ int rpmdsCompareIndex(rpmds A, int aix, rpmds B, int bix)
 
     AEVR = rpmdsEVRIndex(A, aix);
     BEVR = rpmdsEVRIndex(B, bix);
-    if (!AEVR) AEVR = "";
-    if (!BEVR) BEVR = "";
 
-    /* When both EVRs are non-existent or empty, always overlap. */
-    if (!(*AEVR || *BEVR)) {
-	result = 1;
-    } else {
-	/* Both AEVR and BEVR exist, compare [epoch:]version[-release]. */
-	result = rpmdsCompareEVR(AEVR, AFlags, BEVR, BFlags, B->nopromote);
-    }
+    result = rpmdsCompareEVR(AEVR, AFlags, BEVR, BFlags, B->nopromote);
 
 exit:
     return result;
