@@ -1081,7 +1081,8 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 	    if (sense == -4)
 		rpmlog(RPMLOG_WARNING, _("failed to decode %s\n"), BEVR);
 	    /* neither is subset of each other */
-	    sense = 0;
+	    result = 0;
+	    goto exit;
 	}
     }
     else if (aset || bset) {
