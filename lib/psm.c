@@ -839,6 +839,29 @@ static const char * pkgGoalString(pkgGoal goal)
     }
 }
 
+static int
+str2bool(const char *value)
+{
+    if (!value)
+	return 0;
+
+    if (!strcmp(value, "1") || !strcasecmp(value, "yes")
+	|| !strcasecmp(value, "true"))
+	return 1;
+
+    return 0;
+}
+
+static int scripts_skip_pretrans(void)
+{
+    static int skip_pretrans = -1;
+
+    if (skip_pretrans < 0)
+	skip_pretrans = str2bool(getenv("DURING_INSTALL")) ? 1 : 0;
+
+    return skip_pretrans;
+}
+
 rpmRC rpmpsmRun(rpmts ts, rpmte te, pkgGoal goal)
 {
     rpmpsm psm = NULL;
@@ -846,6 +869,9 @@ rpmRC rpmpsmRun(rpmts ts, rpmte te, pkgGoal goal)
 
     /* Psm can't fail in test mode, just return early */
     if (rpmtsFlags(ts) & RPMTRANS_FLAG_TEST)
+	return RPMRC_OK;
+
+    if (goal == PKG_PRETRANS && scripts_skip_pretrans())
 	return RPMRC_OK;
 
     psm = rpmpsmNew(ts, te, goal);

@@ -130,6 +130,36 @@ int rpmVersionCompare(Header first, Header second);
 int isChangeNameMoreFresh(const char * const head, const char * const tail[3]);
 #endif
 
+
+/**
+ * Compare two versioned dependency ranges, looking for overlap.
+ * @param AName		1st dependncy name string
+ * @param AEVR		1st dependency [epoch:]version[-release] string
+ * @param AFlags	1st dependency logical range qualifiers
+ * @param BName		2nd dependncy name string
+ * @param BEVR		2nd dependency [epoch:]version[-release] string
+ * @param BFlags	2nd dependency logical range qualifiers
+ * @param nopromote	whether to promote epoch
+ * @return		1 if dependencies overlap, 0 otherwise
+ */
+#ifdef ALT_RPM_API
+int rpmRangesOverlap(const char * AName, const char * AEVR, uint32_t AFlags,
+                     const char * BName, const char * BEVR, uint32_t BFlags,
+                     int nopromote);
+#endif
+
+/**
+ * Check dependency against internal rpmlib feature provides.
+ * @param keyName	dependency name string
+ * @param keyEVR	dependency [epoch:]version[-release] string
+ * @param keyFlags	dependency logical range qualifiers
+ * @return		1 if dependency overlaps, 0 otherwise
+ */
+#ifdef ALT_RPM_API
+int rpmCheckRpmlibProvides(const char * keyName, const char * keyEVR,
+			   int keyFlags);
+#endif
+
 /**  \ingroup header
  * Check header consistency, performing headerGetEntry() the hard way.
  *  

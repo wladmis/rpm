@@ -665,26 +665,41 @@ static int update_use_header_cache(rpmts ts)
 
 rpmRC rpmReadPackageFile(rpmts ts, FD_t fd, const char * fn, Header * hdrp)
 {
-    rpmRC rc;
+    rpmRC rc = RPMRC_FAIL;
     rpmVSFlags vsflags = rpmtsVSFlags(ts);
     rpmKeyring keyring = rpmtsGetKeyring(ts, 1);
     unsigned int keyid = 0;
     char *msg = NULL;
 
+    int cache_hit = 0;
+    int readahead_off = 0;
+    rpmPlugins plugins;
     struct stat st;
 
-    if (update_use_header_cache(ts) && fstat(Fileno(fd), &st) == 0) {
-	rpmPlugins plugins = rpmtsPlugins(ts);
-	if (rpmpluginsCallHeaderCacheGet(plugins, fd, fn, &st, hdrp) == RPMRC_OK) {
-	    rc = RPMRC_OK;
-	} else {
-	    rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
+    if (fstat(Fileno(fd), &st) == 0) {
+	if (update_use_header_cache(ts)) {
+	    plugins = rpmtsPlugins(ts);
+	    if ((rc = rpmpluginsCallHeaderCacheGet(plugins, fd, fn, &st, hdrp)) == RPMRC_OK)
+		cache_hit = 1;
+	}
 
-	    if (rc != RPMRC_FAIL)
-		rpmpluginsCallHeaderCacheSet(plugins, fd, fn, &st, hdrp);
+	if (rc != RPMRC_OK) {
+	    /* Typical header size is 4-16K, and default readahead is 128K.
+	     * When scanning a large number of packages (with e.g. rpmquery),
+	     * readahead might cause negative effects on the buffer cache. */
+	    if (st.st_size > /* page size */ 4096)
+		if (posix_fadvise(Fileno(fd), 0, 0, POSIX_FADV_RANDOM) == 0)
+		    readahead_off = 1;
+	    rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
+	    /* re-enable readahead for cpio */
+	    if (readahead_off)
+		posix_fadvise(Fileno(fd), 0, 0, POSIX_FADV_NORMAL);
 	}
     } else
-	rc = rpmpkgRead(keyring, vsflags, fd, hdrp, &keyid, &msg);
+	rc = RPMRC_FAIL;
+
+    if (rc != RPMRC_FAIL && !cache_hit && update_use_header_cache(ts))
+	rpmpluginsCallHeaderCacheSet(plugins, fd, fn, &st, hdrp);
 
     if (fn == NULL)
 	fn = Fdescr(fd);
