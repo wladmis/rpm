@@ -7,6 +7,9 @@ while IFS=$'\t' read -r f t; do
 		#!/bin/bash
 		*'Bourne-Again shell script text'*)
 			echo "$f" ;;
+		#!/usr/bin/env sh
+		*' sh script text'*)
+			echo "$f" ;;
 		#!/usr/bin/env bash
 		*' bash script text'*)
 			echo "$f" ;;
