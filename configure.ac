@@ -920,6 +920,7 @@ AC_OUTPUT([ Doxyfile Makefile rpmrc macros platform rpmpopt
 	scripts/brp-adjust_libraries
 	scripts/brp-alt
 	scripts/brp-bytecompile_python
+	scripts/brp-check_contents
 	scripts/brp-cleanup
 	scripts/brp-compress
 	scripts/brp-debuginfo

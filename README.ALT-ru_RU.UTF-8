@@ -220,6 +220,9 @@ BuildRoot.
           атрибуты  файлов  и  каталогов  по  умолчанию для каждой секции
           %files и для каждого файла, включаемого в таких секциях;
 
+   %_check_contents_method:
+          метод, используемый при проверке содержимого файлов в секции %install;
+
    %_cleanup_method:
           метод,  используемый  при  удалении  ненужных  файлов  в секции
           %install;
@@ -251,11 +254,11 @@ BuildRoot.
           :  список каталогов, в которых производится поиск ELF-файлов на
           наличие предоставляемых зависимостей;
 
-   %_{cleanup,compress,fixup,verify_elf,findreq,findprov}_topdir:
+   %_{check_contents,cleanup,compress,fixup,verify_elf,findreq,findprov}_topdir:
           точка  начала  поиска  файлов,  обрабатываемых  соответствующим
           методом;
 
-   %_{cleanup,compress,fixup,verify_elf,findreq,findprov}_skiplist:
+   %_{check_contents,cleanup,compress,fixup,verify_elf,findreq,findprov}_skiplist:
           список  шаблонов  файлов, которые будут пропущены при обработке
           соответствующим методом;
 
@@ -263,15 +266,13 @@ BuildRoot.
           параметр,   определяющий   влияние   неупакованных   файлов  на
           результат сборки;
 
-   %set_{cleanup,compress,fixup,verify_{elf,info},perl_req}_method:
+   %set_{check_contents,cleanup,compress,fixup,verify_{elf,info},perl_req}_method:
           изменить значение соответствующего макроса;
 
-   %set_{cleanup,compress,fixup,verify_elf,findreq,findprov}_{topdi
-          r,skiplist}:
+   %set_{check_contents,cleanup,compress,fixup,verify_elf,findreq,findprov}_{topdir,skiplist}:
           изменить значение соответствующего макроса;
 
-   %add_{cleanup,compress,fixup,verify_elf,findreq,findprov}_skipli
-          st:
+   %add_{check_contents,cleanup,compress,fixup,verify_elf,findreq,findprov}_skiplist:
           добавить значение в соответствующий список;
 
    %{add,set}_findprov_lib_path:

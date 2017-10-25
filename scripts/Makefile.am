@@ -9,7 +9,7 @@ EXTRA_DIST = \
 	find-debuginfo-files \
 	find-scriptlet-requires \
 	brp-adjust_libraries brp-alt brp-bytecompile_python \
-	brp-cleanup brp-compress brp-debuginfo \
+	brp-check_contents brp-cleanup brp-compress brp-debuginfo \
 	brp-fix-perms brp-fixup brp-hardlink_pyo_pyc \
 	brp-verify_elf brp-verify-info \
 	compress_files \
@@ -69,6 +69,7 @@ install-data-local:
 	$(INSTALL) -m755 brp-cleanup $(DESTDIR)$(configdir)/brp.d/008-cleanup.brp
 	$(INSTALL) -m755 brp-fix-perms $(DESTDIR)$(configdir)/brp.d/016-fix-perms.brp
 	$(INSTALL) -m755 brp-fixup $(DESTDIR)$(configdir)/brp.d/024-fixup.brp
+	$(INSTALL) -m755 brp-check_contents $(DESTDIR)$(configdir)/brp.d/028-check_contents.brp
 	$(INSTALL) -m755 brp-compress $(DESTDIR)$(configdir)/brp.d/032-compress.brp
 	$(INSTALL) -m755 brp-verify-info $(DESTDIR)$(configdir)/brp.d/040-verify-info.brp
 	$(INSTALL) -m755 brp-adjust_libraries $(DESTDIR)$(configdir)/brp.d/048-adjust_libraries.brp
