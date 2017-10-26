@@ -31,8 +31,8 @@ echo "Checking contents of files in $RPM_BUILD_ROOT/$RPM_CHECK_CONTENTS_TOPDIR (
 
 case "$RPM_CHECK_CONTENTS_METHOD" in
 	no|none|skip) exit 0 ;;
-	strict) report=Fatal ;;
-	*) report=Warning ;;
+	relaxed) report=Warning ;;
+	*) report=Fatal ;;
 esac
 
 [ -d "$RPM_BUILD_ROOT/$RPM_CHECK_CONTENTS_TOPDIR" ] || exit 0
