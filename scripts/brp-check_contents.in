@@ -38,7 +38,7 @@ esac
 [ -d "$RPM_BUILD_ROOT/$RPM_CHECK_CONTENTS_TOPDIR" ] || exit 0
 
 bogus_re='/var/lib/(cache|lib|lock|log|nis|run|spool|www|yp)/'
-if grep -Elre "$bogus_re" -- "$RPM_BUILD_ROOT/$RPM_CHECK_CONTENTS_TOPDIR"; then
+if grep -Ere "$bogus_re" -- "$RPM_BUILD_ROOT/$RPM_CHECK_CONTENTS_TOPDIR"; then
 	$report "Contents of files listed above match pattern $bogus_re"
 fi
 
