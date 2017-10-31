@@ -2640,6 +2640,12 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
 		continue;
 	    tagflags = RPMSENSE_FIND_PROVIDES;
 	    /*@switchbreak@*/ break;
+	case RPMTAG_CONFLICTFLAGS:
+	    tagflags = RPMSENSE_ANY;
+	    /*@switchbreak@*/ break;
+	case RPMTAG_OBSOLETEFLAGS:
+	    tagflags = RPMSENSE_ANY;
+	    /*@switchbreak@*/ break;
 	case RPMTAG_REQUIREFLAGS:
 	    if (!*pkg->autoReq && !instScript)
 		continue;
