@@ -8,6 +8,7 @@
 
 #define	MYALLPERMS	07777
 
+#include <stdlib.h>
 #include <regex.h>
 #include <signal.h>	/* getOutputFrom() */
 
@@ -997,7 +998,27 @@ static void genCpioListAndHeader(Spec spec, /*@partial@*/ FileList fl,
     FileListRec flp;
     char buf[BUFSIZ];
     int i;
-    
+    int override_date = 0;
+    time_t source_date_epoch;
+    const char *srcdate = getenv("SOURCE_DATE_EPOCH");
+
+    /* Limit the maximum date to SOURCE_DATE_EPOCH if defined
+     * similar to the tar --clamp-mtime option
+     * https://reproducible-builds.org/specs/source-date-epoch/
+     */
+    if (srcdate && *srcdate) {
+	char *endptr;
+	errno = 0;
+	source_date_epoch = strtol(srcdate, &endptr, 10);
+	if (srcdate == endptr || *endptr
+	    || ((source_date_epoch == LONG_MIN || source_date_epoch == LONG_MAX)
+		&& errno != 0)) {
+	    rpmlog(RPMLOG_ERR, _("unable to parse %s=%s\n"), "SOURCE_DATE_EPOCH", srcdate);
+	} else {
+	    override_date = 1;
+	}
+    }
+
     /* Sort the big list */
     qsort(fl->fileList, fl->fileListRecsUsed,
 	  sizeof(*(fl->fileList)), compareFileListRecs);
@@ -1066,6 +1087,10 @@ static void genCpioListAndHeader(Spec spec, /*@partial@*/ FileList fl,
 	    AUTO_REALLOC(spec->exclude, spec->excludeCount, 8);
 	    spec->exclude[spec->excludeCount++] = xstrdup(flp->fileURL);
 	    continue;
+	}
+
+	if (override_date && flp->fl_mtime > source_date_epoch) {
+	    flp->fl_mtime = source_date_epoch;
 	}
 
 	/* Omit '/' and/or URL prefix, leave room for "./" prefix */
