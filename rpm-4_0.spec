@@ -194,7 +194,7 @@ the Python programming language to use the interface supplied by RPM
 
 %build
 gettextize --force --quiet --no-changelog --symlink
-install -pv -m644 /usr/share/automake/mkinstalldirs .
+install -pv -m0644 /usr/share/automake/mkinstalldirs .
 autoreconf -fisv -I m4
 # avoid extra build dependencies
 export ac_cv_path___CPIO=/bin/cpio
@@ -253,10 +253,10 @@ rm %buildroot%_libdir/librpm{,build,db,io}.so
 %if 0
 # Save list of packages through cron.
 #mkdir -p %buildroot%_sysconfdir/cron.daily
-#install -p -m750 scripts/%oname.daily %buildroot%_sysconfdir/cron.daily/%oname
+#install -p -m0750 scripts/%oname.daily -T %buildroot%_sysconfdir/cron.daily/%oname
 #
 #mkdir -p %buildroot%_sysconfdir/logrotate.d
-#install -p -m640 scripts/%oname.log %buildroot%_sysconfdir/logrotate.d/%oname
+#install -p -m0640 scripts/%oname.log -T %buildroot%_sysconfdir/logrotate.d/%oname
 
 mkdir -p %buildroot{%_rpmlibdir/macros.d,%_sysconfdir/%oname/macros.d}
 touch %buildroot%_sysconfdir/%oname/macros
@@ -279,7 +279,7 @@ touch %buildroot%_localstatedir/%oname/files-awaiting-filetriggers
 # Prepare documentation.
 xz -9 CHANGES ||:
 mkdir -p %buildroot%_docdir/%oname-%rpm_version
-install -p -m644 CHANGES.xz CREDITS README README.ALT* \
+install -p -m0644 CHANGES.xz CREDITS README README.ALT* \
 	%buildroot%_docdir/%oname-%rpm_version/
 cp -a doc/manual %buildroot%_docdir/%oname-%rpm_version/
 rm -f %buildroot%_docdir/%oname-%rpm_version/manual/{Makefile*,buildroot}
@@ -289,15 +289,15 @@ cp -a apidocs/html %buildroot%_docdir/%oname-%rpm_version/apidocs/
 #endif #with apidocs
 
 # rpminit(1).
-install -pD -m755 rpminit %buildroot%_bindir/rpminit
-install -pD -m644 rpminit.1 %buildroot%_man1dir/rpminit.1
+install -pD -m0755 rpminit -T %buildroot%_bindir/rpminit
+install -pD -m0644 rpminit.1 -T %buildroot%_man1dir/rpminit.1
 
 # Valid groups.
-install -p -m644 GROUPS %buildroot%_rpmlibdir/
+install -p -m0644 GROUPS %buildroot%_rpmlibdir/
 %endif
 
 # buildreq ignore rules.
-install -pD -m644 rpm-build.buildreq %buildroot%_sysconfdir/buildreqs/files/ignore.d/rpm-build
+install -pD -m0644 rpm-build.buildreq -T %buildroot%_sysconfdir/buildreqs/files/ignore.d/rpm-build
 
 chmod a+x scripts/find-lang
 # Manpages have been moved to their own packages.
@@ -340,8 +340,8 @@ sed -r -n 's/^(.+)64(_.*|$)/\1\2/p' all-funcs |
 	> %buildroot%_rpmlibdir/verify-elf-non-lfs-funcs.list
 %endif
 
-mv %buildroot%_rpmlibdir/rpm{,build}rc
-mv %buildroot%_rpmlibdir/{,build}macros
+mv -T %buildroot%_rpmlibdir/rpm{,build}rc
+mv -T %buildroot%_rpmlibdir/{,build}macros
 
 %pre
 [ ! -L %_rpmlibdir/noarch-alt-%_target_os ] || rm -f %_rpmlibdir/noarch-alt-%_target_os ||:
