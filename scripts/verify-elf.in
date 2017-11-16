@@ -46,7 +46,7 @@ rc=0
 get_verify_policy()
 {
 	local name value
-        name="VERIFY_ELF_$1" && shift
+	name="VERIFY_ELF_$1" && shift
 	eval "value=\"\$$name\""
 	[ -n "$value" ] || value=normal
 	printf %s "$value"
