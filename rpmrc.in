@@ -71,6 +71,10 @@ optflags: hppa2.0 %optflags_default -mpa-risc-1-0
 
 optflags: mips %optflags_default
 optflags: mipsel %optflags_default
+optflags: mipsn32 %optflags_default
+optflags: mipsn32el %optflags_default
+optflags: mips64 %optflags_default
+optflags: mips64el %optflags_default
 
 optflags: armv3l %optflags_default -fomit-frame-pointer -march=armv3
 optflags: armv4l %optflags_default -fomit-frame-pointer -march=armv4
@@ -82,6 +86,7 @@ optflags: arm %optflags_default -fomit-frame-pointer -march=armv5te
 optflags: armv7l %optflags_default -fomit-frame-pointer -march=armv7-a -mthumb
 optflags: armh %optflags_default -fomit-frame-pointer -march=armv7-a -mthumb
 optflags: aarch64 %optflags_default
+optflags: riscv64 %optflags_default
 
 optflags: atarist %optflags_default -fomit-frame-pointer
 optflags: atariste %optflags_default -fomit-frame-pointer
@@ -139,7 +144,12 @@ arch_canon:     ia64:	ia64	9
 
 arch_canon:	sparc64:sparc64 10
 arch_canon:	sun4u:	sparc64 10
+
 arch_canon:	mipsel:	mipsel	11
+arch_canon:	mipsn32:	mipsn32	11
+arch_canon:	mipsn32el:	mipsn32el	11
+arch_canon:	mips64:	mips64	11
+arch_canon:	mips64el:	mips64el	11
 
 arch_canon:	armv6l:	arm 	12
 arch_canon:	armv5tejl:	armv5tejl 	12
@@ -327,6 +337,10 @@ arch_compat: sparc: noarch
 
 arch_compat: mips: noarch
 arch_compat: mipsel: noarch
+arch_compat: mipsn32: noarch
+arch_compat: mipsn32el: noarch
+arch_compat: mips64: noarch
+arch_compat: mips64el: noarch
 
 arch_compat: hppa2.0: hppa1.2
 arch_compat: hppa1.2: hppa1.1
@@ -365,6 +379,8 @@ arch_compat: ia64: noarch
 arch_compat: amd64: x86_64
 arch_compat: ia32e: x86_64
 arch_compat: x86_64: athlon_xp pentium4
+
+arch_compat: riscv64: noarch
 
 os_compat:   IRIX64: IRIX
 os_compat: solaris2.7: solaris2.3 solaris2.4 solaris2.5 solaris2.6
@@ -448,6 +464,10 @@ buildarch_compat: ppc64: noarch
 
 buildarch_compat: mips: noarch
 buildarch_compat: mipsel: noarch
+buildarch_compat: mipsn32: noarch
+buildarch_compat: mipsn32el: noarch
+buildarch_compat: mips64: noarch
+buildarch_compat: mips64el: noarch
 
 buildarch_compat: armv8l: armv7l
 buildarch_compat: armv7l: armh
@@ -482,6 +502,8 @@ buildarch_compat: ia64: noarch
 
 buildarch_compat: s390: noarch
 buildarch_compat: s390x: noarch
+
+buildarch_compat: riscv64: noarch
 
 macrofiles:	@RPMCONFIGDIR@/buildmacros:@RPMCONFIGDIR@/%{_target}/macros:@RPMCONFIGDIR@/macros.d/*:@SYSCONFIGDIR@/macros.specspo:@SYSCONFIGDIR@/macros.cdb:@SYSCONFIGDIR@/macros:@SYSCONFIGDIR@/%{_target}/macros:@SYSCONFIGDIR@/macros.d/*:~/.rpmmacros
 

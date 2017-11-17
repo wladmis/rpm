@@ -305,13 +305,13 @@ chmod a+x scripts/find-lang
 RPMCONFIGDIR=./scripts ./scripts/find-lang %oname rpm2cpio --output %oname.lang
 
 pushd %buildroot%_rpmlibdir
-	for f in *-alt-%_target_os; do
-		n=`echo "$f" |sed -e 's/-alt//'`
+	for f in *-alt-%_target_os%{?_gnueabi:%_gnueabi}; do
+		n=`echo "$f" |sed -e 's/-alt//' %{?_gnueabi:-e 's/%_gnueabi$//'}`
 		[ -e "$n" ] || ln -s "$f" "$n"
 	done
 popd
 
-/bin/ls -1d %buildroot%_rpmlibdir/*-%_target_os |
+ls -d %buildroot%_rpmlibdir/*-%{_target_os}* |
 	grep -Fv /brp- |
 	sed -e "s|^%buildroot|%%attr(-,root,%oname) |g" >>rpmbuild.platform
 

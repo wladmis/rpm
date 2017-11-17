@@ -812,6 +812,30 @@
 %_configure_platform_e2k16c e2k-%{_vendor}-%{_target_os}%{_gnueabi}
 %_configure_platform_e2k2c3 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
 
+#------------------------------------------------------------------------------
+# arch macro for o32 MIPS targets
+%mips32	mips mipsel
+
+#------------------------------------------------------------------------------
+# arch macro for n32 MIPS targets
+%mipsn32	mipsn32 mipsn32el
+
+#------------------------------------------------------------------------------
+# arch macro for n64 MIPS targets
+%mips64	mips64 mips64el
+
+#------------------------------------------------------------------------------
+# arch macro for big endian MIPS targets
+%mipseb	mips mipsn32 mips64
+
+#------------------------------------------------------------------------------
+# arch macro for little endian MIPS targets
+%mipsel	mipsel mipsn32el mips64el
+
+#------------------------------------------------------------------------------
+# arch macro for all supported MIPS targets
+%mips	%{mips32} %{mipsn32} %{mips64}
+
 #------------------------------------------------------------------------
 # Use in %install to generate locale specific file lists. For example,
 #

@@ -48,11 +48,35 @@ case "$arch" in
   e2k*)
     SUBSTS='s,e2k.*,e2k, s,e2k.*,e2kv4, s,e2k.*,e2kv5, s,e2k.*,e2kv6, s,e2k.*,noarch,'
     ;;
+  mips)
+    SUBSTS='s,mips,mips, s,mips,noarch,'
+    ;;
+  mipsel)
+    SUBSTS='s,mipsel,mipsel, s,mipsel,noarch,'
+    ;;
+  mipsn32)
+    SUBSTS='s,mipsn32,mipsn32, s,mipsn32,noarch,'
+    ;;
+  mipsn32el)
+    SUBSTS='s,mipsn32el,mipsn32el, s,mipsn32el,noarch,'
+    ;;
+  mips64)
+    SUBSTS='s,mips64,mips64, s,mips64,noarch,'
+    ;;
+  mips64el)
+    SUBSTS='s,mips64el,mips64el, s,mips64el,noarch,'
+    ;;
+  s390x)
+    SUBSTS='s,s390x,s390x, s,s390x,noarch,'
+    ;;
   sparc*)
     SUBSTS='s,sparc\(64\|v9\),sparc, s,sparc64,sparcv9,;s,sparc\([^v]\|$\),sparcv9\1, s,sparcv9,sparc64,;s,sparc\([^6]\|$\),sparc64\1,'
     ;;
   powerpc*|ppc*)
     SUBSTS='s,ppc64,ppc, s,ppc\([^6]\|$\),ppc64\1,'
+    ;;
+  riscv64)
+    SUBSTS='s,riscv64,riscv64, s,riscv64,noarch,'
     ;;
   x86_64)
     SUBSTS='s,x86_64,x86_64, s,x86_64,noarch,'
@@ -79,6 +103,12 @@ for SUBST in $SUBSTS ; do
   ARCH_INSTALL_POST='%{nil}'
   case "${ARCH}-${OS}" in
     aarch64-linux) LIBSUFF=64 ;;
+    mipsn32-linux*) LIBSUFF=32 ;;
+    mipsn32el-linux*) LIBSUFF=32 ;;
+    mips64-linux*) LIBSUFF=64 ;;
+    mips64el-linux*) LIBSUFF=64 ;;
+    riscv64-linux) LIBSUFF=64 ;;
+    s390x-linux) LIBSUFF=64 ;;
     sparc64-linux) LIBSUFF=64 ;;
     x86_64-linux) LIBSUFF=64 ;;
     e2k*-linux) LIBSUFF=64 ;;

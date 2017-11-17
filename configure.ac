@@ -793,6 +793,16 @@ case "$build_os" in
 		RPMCANONGNU='-gnueabi'
 		RPMCANONGNUEABI='-gnueabi'
 		;;
+	*-gnuabin32)
+		build_os="${build_os%-gnuabin32}"
+		RPMCANONGNU='-gnuabin32'
+		RPMCANONGNUEABI='-gnuabin32'
+		;;
+	*-gnuabi64)
+		build_os="${build_os%-gnuabi64}"
+		RPMCANONGNU='-gnuabi64'
+		RPMCANONGNUEABI='-gnuabi64'
+		;;
 esac
 
 changequote(<, >)
