@@ -67,7 +67,7 @@ for SUBST in $SUBSTS ; do
   ARCH=`echo $arch | sed -e $SUBST`
   TARGET_PLATFORM=`echo $target_platform | sed -e $SUBST`
   TARGET=`echo $target | sed -e $SUBST`
-  LIB=lib
+  LIBSUFF='%nil'
 
   PPD="${DESTDIR}/${pkglibdir}/${ARCH}-${VENDOR}-${OS}"
 
@@ -78,10 +78,10 @@ for SUBST in $SUBSTS ; do
 
   ARCH_INSTALL_POST='%{nil}'
   case "${ARCH}-${OS}" in
-    aarch64-linux) LIB=lib64 ;;
-    sparc64-linux) LIB=lib64 ;;
-    x86_64-linux) LIB=lib64 ;;
-    e2k*-linux) LIB=lib64 ;;
+    aarch64-linux) LIBSUFF=64 ;;
+    sparc64-linux) LIBSUFF=64 ;;
+    x86_64-linux) LIBSUFF=64 ;;
+    e2k*-linux) LIBSUFF=64 ;;
   esac
 
   case $VENDOR in
@@ -103,11 +103,15 @@ for SUBST in $SUBSTS ; do
     ;;
   esac
 
+  LIBSUFF_EXISTS=@
+  [ "$LIBSUFF" = '%nil' ] || LIBSUFF_EXISTS=
+
   cat $PLATFORM \
   | sed -e "s,@RPMRC_OPTFLAGS@,$RPMRC_OPTFLAGS," \
 	-e "s,@RPMRC_ARCH@,$ARCH," \
 	-e "s,@RPMRC_GNU@,$RPMRC_GNU," \
-	-e "s,@LIB@,$LIB," \
+	-e "s,@LIBSUFF@,$LIBSUFF," \
+	-e "s,@LIBSUFF_EXISTS@,$LIBSUFF_EXISTS," \
 	-e "s,@ARCH_INSTALL_POST@,$ARCH_INSTALL_POST," \
 	-e "s,@DEFAULTDOCDIR@,$DEFAULTDOCDIR," \
 	$VENDORSED \
