@@ -287,18 +287,6 @@ dnl zlib-1.0.4 has not gzseek
 AC_CHECK_LIB(${zlib}, gzseek, [AC_DEFINE(HAVE_GZSEEK, 1, [Define as 1 if your zlib has gzseek()])])
 fi
 
-BZLIB=
-AC_CHECK_LIB(bz2, BZ2_bzread, [
-	WITH_BZIP2=1
-	LIBBZ2="-lbz2"
-	AC_DEFINE(HAVE_BZ2_1_0, 1, [Define as 1 if you bzip2 1.0]) ], 
-	AC_CHECK_LIB(bz2, bzread, [
-		WITH_BZIP2=1
-		LIBBZ2="-lbz2" ], 
-		WITH_BZIP2=0))
-AC_SUBST(WITH_BZIP2)
-AC_SUBST(LIBBZ2)
-
 LIBPOPT=
 AC_CHECK_LIB(popt, poptGetContext, [LIBPOPT="-lpopt"])
 AC_SUBST(LIBPOPT)
@@ -328,7 +316,7 @@ AC_CHECK_HEADERS(netinet/in_systm.h)
 AC_CHECK_HEADERS(machine/types.h)
 AC_CHECK_HEADERS(mntent.h sys/mnttab.h sys/systemcfg.h)
 AC_CHECK_HEADERS(sys/mount.h sys/mntctl.h sys/param.h sys/vmount.h)
-AC_CHECK_HEADERS(bzlib.h libio.h zlib.h)
+AC_CHECK_HEADERS(libio.h zlib.h)
 AC_CHECK_HEADERS(err.h mcheck.h syslog.h)
 AC_CHECK_HEADERS(locale.h)
 

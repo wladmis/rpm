@@ -180,7 +180,7 @@ static /*@observer@*/ const char * fdbg(/*@null@*/ FD_t fd)
 	    sprintf(be, "FAD %d fp %p", fps->fdno, fps->fp);
 	} else if (fps->io == gzdio) {
 	    sprintf(be, "GZD %p fdno %d", fps->fp, fps->fdno);
-#if HAVE_BZLIB_H
+#ifdef HAVE_BZLIB_H
 	} else if (fps->io == bzdio) {
 	    sprintf(be, "BZD %p fdno %d", fps->fp, fps->fdno);
 #endif
@@ -2554,7 +2554,7 @@ FDIO_t gzdio = /*@-compmempass@*/ &gzdio_s /*@=compmempass@*/ ;
 /* =============================================================== */
 /* Support for BZIP2 library.
  */
-#if HAVE_BZLIB_H
+#ifdef HAVE_BZLIB_H
 /*@-moduncon@*/
 
 #include <bzlib.h>
@@ -3485,7 +3485,7 @@ fprintf(stderr, "*** Fdopen(%p,%s) %s\n", fd, fmode, fdbg(fd));
 	    /*@-internalglobs@*/
 	    fd = gzdFdopen(fd, zstdio);
 	    /*@=internalglobs@*/
-#if HAVE_BZLIB_H
+#ifdef HAVE_BZLIB_H
 	} else if (!strcmp(end, "bzdio")) {
 	    iof = bzdio;
 	    /*@-internalglobs@*/
@@ -3659,7 +3659,7 @@ int Fflush(FD_t fd)
     vh = fdGetFp(fd);
     if (vh && fdGetIo(fd) == gzdio)
 	return gzdFlush(vh);
-#if HAVE_BZLIB_H
+#ifdef HAVE_BZLIB_H
     if (vh && fdGetIo(fd) == bzdio)
 	return bzdFlush(vh);
 #endif
@@ -3685,7 +3685,7 @@ int Ferror(FD_t fd)
 	} else if (fps->io == gzdio) {
 	    ec = (fd->syserrno || fd->errcookie != NULL) ? -1 : 0;
 	    i--;	/* XXX fdio under gzdio always has fdno == -1 */
-#if HAVE_BZLIB_H
+#ifdef HAVE_BZLIB_H
 	} else if (fps->io == bzdio) {
 	    ec = (fd->syserrno  || fd->errcookie != NULL) ? -1 : 0;
 	    i--;	/* XXX fdio under bzdio always has fdno == -1 */

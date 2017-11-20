@@ -1716,8 +1716,10 @@ assert(psm->mi == NULL);
 	t = stpcpy(t, "r");
 	if (!strcmp(payload_compressor, "gzip"))
 	    t = stpcpy(t, ".gzdio");
+#ifdef HAVE_BZLIB_H
 	if (!strcmp(payload_compressor, "bzip2"))
 	    t = stpcpy(t, ".bzdio");
+#endif
 	if (!strcmp(payload_compressor, "lzma"))
 	    t = stpcpy(t, ".lzdio");
 	if (!strcmp(payload_compressor, "xz"))

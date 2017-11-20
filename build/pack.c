@@ -438,11 +438,13 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
 	if (s[1] == 'g' && s[2] == 'z')
 	    (void) headerAddEntry(h, RPMTAG_PAYLOADCOMPRESSOR, RPM_STRING_TYPE,
 		"gzip", 1);
+#ifdef HAVE_BZLIB_H
 	if (s[1] == 'b' && s[2] == 'z') {
 	    (void) headerAddEntry(h, RPMTAG_PAYLOADCOMPRESSOR, RPM_STRING_TYPE,
 		"bzip2", 1);
 	    (void) rpmlibNeedsFeature(h, "PayloadIsBzip2", NULL);
 	}
+#endif
 	if (s[1] == 'l' && s[2] == 'z') {
 	    (void) headerAddEntry(h, RPMTAG_PAYLOADCOMPRESSOR, RPM_STRING_TYPE,
 		"lzma", 1);
