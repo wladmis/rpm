@@ -5,7 +5,7 @@
 
 Name: rpm-build
 Version: 4.0.4
-Release: alt105
+Release: alt106
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -509,6 +509,11 @@ mv %buildroot%_rpmlibdir/{,build}macros
 %endif #with python
 
 %changelog
+* Mon Nov 20 2017 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt106
+- Added support for SOURCE_DATE_EPOCH environment variable
+  (by Vladimir D. Seleznev; closes: #34200).
+- Dropped bzdio support.
+
 * Thu Oct 26 2017 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt105
 - brp-check_contents: enabled strict error checking by default.
 
