@@ -314,7 +314,7 @@
 @alt@
 @alt@%__nprocs	%(N=`egrep -cs ^cpu[0-9]+ /proc/stat`; [ "$N" -gt 0 ] 2>/dev/null && echo "$N" || echo 1)
 @alt@
-@alt@%make_build	[ -n "$NPROCS" ] || NPROCS=%__nprocs; %_make_bin -j$NPROCS
+@alt@%make_build	%_make_bin -j${NPROCS:-%__nprocs}
 @alt@
 @alt@%make_install	%_make_bin INSTALL="%__install -p"
 @alt@%makeinstall_std	%make_install %{?_makeinstall_target:%{_makeinstall_target}} DESTDIR=%buildroot
