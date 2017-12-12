@@ -663,7 +663,7 @@
 @alt@## compiler optflags defaults
 @alt@
 @alt@# core flags
-@alt@%optflags_core	-pipe
+@alt@%optflags_core	-pipe -frecord-gcc-switches
 @alt@
 @alt@# default optimization level
 @alt@%_optlevel	2
