@@ -1028,11 +1028,11 @@ static void genCpioListAndHeader(Spec spec, /*@partial@*/ FileList fl,
 	skipLen = 1;
     }
 
-    for (i = 0, flp = fl->fileList; i < fl->fileListRecsUsed; i++, flp++) {
+    for (i = 1, flp = fl->fileList; i <= fl->fileListRecsUsed; i++, flp++) {
 	char *s;
 
  	/* Merge duplicate entries. */
-	while (i < (fl->fileListRecsUsed - 1) &&
+	while (i < fl->fileListRecsUsed &&
 	    !strcmp(flp->fileURL, flp[1].fileURL)) {
 
 	    /* Two entries for the same file found, merge the entries. */
@@ -1144,22 +1144,24 @@ static void genCpioListAndHeader(Spec spec, /*@partial@*/ FileList fl,
 	(void) headerAddOrAppendEntry(h, RPMTAG_FILERDEVS, RPM_INT16_TYPE,
 			       &(flp->fl_rdev), 1);
       }
-      if (sizeof(flp->fl_dev) != sizeof(uint_32)) {
-	uint_32 pdevice = (uint_32)flp->fl_dev;
-	(void) headerAddOrAppendEntry(h, RPMTAG_FILEDEVICES, RPM_INT32_TYPE,
-			       &(pdevice), 1);
-      } else {
-	(void) headerAddOrAppendEntry(h, RPMTAG_FILEDEVICES, RPM_INT32_TYPE,
-			       &(flp->fl_dev), 1);
+
+      uint_32 pdev = !!flp->fl_dev;
+      (void) headerAddOrAppendEntry(h, RPMTAG_FILEDEVICES, RPM_INT32_TYPE,
+				    &pdev, 1);
+
+      uint_32 ino = i;
+      if (S_ISREG(flp->fl_mode) && flp->fl_nlink != 1) {
+	int j;
+	FileListRec tmp;
+	for (j = 1, tmp = fl->fileList; j < i; j++, tmp++) {
+	  if (flp->fl_ino == tmp->fl_ino) {
+	    ino = j;
+	    break;
+	  }
+	}
       }
-      if (sizeof(flp->fl_ino) != sizeof(uint_32)) {
-	uint_32 ino = (uint_32)flp->fl_ino;
-	(void) headerAddOrAppendEntry(h, RPMTAG_FILEINODES, RPM_INT32_TYPE,
-				&(ino), 1);
-      } else {
-	(void) headerAddOrAppendEntry(h, RPMTAG_FILEINODES, RPM_INT32_TYPE,
-				&(flp->fl_ino), 1);
-      }
+      (void) headerAddOrAppendEntry(h, RPMTAG_FILEINODES, RPM_INT32_TYPE,
+				    &ino, 1);
 /*@=sizeoftype@*/
 
 	(void) headerAddOrAppendEntry(h, RPMTAG_FILELANGS, RPM_STRING_ARRAY_TYPE,
