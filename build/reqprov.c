@@ -224,8 +224,9 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 	     * that they are equal, then the dep that has Epoch wins.
 	     */
 	    const char *ae = aE, *be = bE;
-	    if ((!(aE && *aE) || !(bE && *bE)))
+	    if ((!(aE && *aE) || !(bE && *bE))) {
 		ae = NULL; be = NULL;
+	    }
 
 		if ((aR && *aR) && !(bR && *bR))
 			wcmp = -1;
