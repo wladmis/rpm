@@ -86,10 +86,6 @@
 	infodir=%{?buildroot:%{buildroot}}%{_infodir} \\\
   %{?_makeinstall_target:%{_makeinstall_target}}
 
-%_smp_mflags %([ -z "$RPM_BUILD_NCPUS" ] \\\
-	&& RPM_BUILD_NCPUS="`/usr/bin/getconf _NPROCESSORS_ONLN`"; \\\
-	[ "$RPM_BUILD_NCPUS" -gt 1 ] && echo "-j$RPM_BUILD_NCPUS")
-
 #==============================================================================
 # ---- Build policy macros.
 #
@@ -313,8 +309,8 @@
 @alt@%_make_bin make
 @alt@
 @alt@%__nprocs	%(N=`egrep -cs ^cpu[0-9]+ /proc/stat`; [ "$N" -gt 0 ] 2>/dev/null && echo "$N" || echo 1)
-@alt@
-@alt@%make_build	%_make_bin -j${NPROCS:-%__nprocs}
+@alt@%_smp_mflags	-j${NPROCS:-%__nprocs}
+@alt@%make_build	%_make_bin %_smp_mflags
 @alt@
 @alt@%make_install	%_make_bin INSTALL="%__install -p"
 @alt@%makeinstall_std	%make_install %{?_makeinstall_target:%{_makeinstall_target}} DESTDIR=%buildroot
