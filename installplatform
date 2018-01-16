@@ -39,7 +39,7 @@ case "$arch" in
   alpha*)
     SUBSTS='s,alpha,alpha, s,alpha,alphaev5, s,alpha,alphaev56, s,alpha,alphapca56, s,alpha,alphaev6, s,alpha,alphaev67,'
     ;;
-  armv7*)
+  armv8*|armv7*)
     SUBSTS='s,arm.*,armh, s,arm.*,armv7l, s,arm.*,noarch,'
     ;;
   arm*)

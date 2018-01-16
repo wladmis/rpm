@@ -296,6 +296,7 @@ arch_compat: hppa1.1: hppa1.0
 arch_compat: hppa1.0: parisc
 arch_compat: parisc: noarch
 
+arch_compat: armv8l: armv7l
 arch_compat: armv7l: armh
 arch_compat: armh: noarch
 arch_compat: armv6l: armv5tejl
@@ -398,6 +399,7 @@ buildarch_compat: ppc64: noarch
 buildarch_compat: mips: noarch
 buildarch_compat: mipsel: noarch
 
+buildarch_compat: armv8l: armv7l
 buildarch_compat: armv7l: armh
 buildarch_compat: armh: noarch
 buildarch_compat: armv6l: armv5tejl
