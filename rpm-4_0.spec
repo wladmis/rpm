@@ -5,7 +5,7 @@
 
 Name: rpm-build
 Version: 4.0.4
-Release: alt107
+Release: alt108
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -511,6 +511,12 @@ mv %buildroot%_rpmlibdir/{,build}macros
 %endif #with python
 
 %changelog
+* Thu Jan 18 2018 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt108
+- platform.in:
+  + %%_smp_mflags: changed to use %%__nprocs;
+  + added -O option to MAKEFLAGS.
+- installplatform, rpmrc.in: made armv8l compatible with armh (by Sergey Bolshakov).
+
 * Sun Jan 07 2018 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt107
 - compare_deps: fixed a bug in handling epochs.
 - platform.in:
