@@ -257,7 +257,7 @@
 @alt@	export PAM_SO_SUFFIX=\"%{?_pam_so_suffix}\"\
 @alt@	export PAM_NAME_SUFFIX=\"%{?_pam_name_suffix}\"\
 @alt@	\
-@alt@	export MAKEFLAGS=\"-w PAM_SO_SUFFIX=%{?_pam_so_suffix}\"\
+@alt@	export MAKEFLAGS=\"-w -O PAM_SO_SUFFIX=%{?_pam_so_suffix}\"\
 @alt@	\
 @alt@	%{expand:%(cat @RPMCONFIGDIR@/macros.d/*.env @SYSCONFIGDIR@/macros.d/*.env 2>/dev/null)}\
 @alt@	\

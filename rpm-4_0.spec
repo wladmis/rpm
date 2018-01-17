@@ -34,12 +34,14 @@ Obsoletes: spec-helper
 PreReq: librpmbuild = %version-%release
 PreReq: shadow-utils
 Requires: autoconf autoconf-common automake automake-common bison coreutils cpio
-Requires: gcc gettext-tools glibc-devel gnu-config file kernel-headers libtool m4 make
+Requires: gcc gettext-tools glibc-devel gnu-config file kernel-headers libtool m4
 Requires: procps psmisc sed service which
 Requires: bash >= 0:3.1.17-alt4
 Requires: bzip2 >= 1:1.0.2-alt4
 Requires: xz
 Requires: gzip >= 0:1.3.3-alt2
+# due to -O option in $MAKEFLAGS
+Requires: make >= 4.0
 Requires: mktemp >= 1:1.3.1
 Requires: patch >= 2.5
 Requires: tar >= 0:1.13.22-alt1
