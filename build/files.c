@@ -2023,9 +2023,8 @@ static int finalizeSize(TFI_t fi)
 	return 0;
     int totalFileSize = 0;
     int partialHardlinkSets = 0;
-    int i, j;
-    for (i = 0; i < fi->fc; i++) {
-	if (fi->actions[i] == FA_SKIP) // GHOST
+    for (int i = 0; i < fi->fc; i++) {
+	if (fi->actions[i] == FA_SKIP) // %ghost
 	    continue;
 	if (!S_ISREG(fi->fsts[i].st_mode))
 	    continue;
@@ -2035,7 +2034,8 @@ static int finalizeSize(TFI_t fi)
 	}
 	assert(fi->fsts[i].st_nlink > 1);
 	int found = 0;
-	for (j = 0; j < i; j++) {
+	// Look backwards, more likely in the same dir.
+	for (int j = i - 1; j >= 0; j--) {
 	    if (fi->actions[j] == FA_SKIP)
 		continue;
 	    if (fi->fsts[i].st_dev != fi->fsts[j].st_dev)
@@ -2050,7 +2050,7 @@ static int finalizeSize(TFI_t fi)
 	// first hardlink occurrence
 	totalFileSize += fi->fsts[i].st_size;
 	int nlink = 1;
-	for (j = i + 1; j < fi->fc; j++) {
+	for (int j = i + 1; j < fi->fc; j++) {
 	    if (fi->actions[j] == FA_SKIP)
 		continue;
 	    if (fi->fsts[i].st_dev != fi->fsts[j].st_dev)
