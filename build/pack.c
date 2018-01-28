@@ -42,7 +42,7 @@ static inline int genSourceRpmName(Spec spec)
  * @todo Create transaction set *much* earlier.
  */
 static int cpio_doio(FD_t fdo, /*@unused@*/ Header h, CSA_t csa,
-		const char * fmodeMacro)
+		const char * fmode)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem@*/
 	/*@modifies fdo, csa, rpmGlobalMacroContext, fileSystem @*/
@@ -55,14 +55,11 @@ static int cpio_doio(FD_t fdo, /*@unused@*/ Header h, CSA_t csa,
     FD_t cfd;
     int rc, ec;
 
-    {	const char *fmode = rpmExpand(fmodeMacro, NULL);
-	if (!(fmode && fmode[0] == 'w'))
-	    fmode = xstrdup("w9.gzdio");
+    {
 	/*@-nullpass@*/
 	(void) Fflush(fdo);
 	cfd = Fdopen(fdDup(Fileno(fdo)), fmode);
 	/*@=nullpass@*/
-	fmode = _free(fmode);
     }
     if (cfd == NULL)
 	return 1;
@@ -415,6 +412,36 @@ static uint64_t calcArchiveSize(TFI_t fi)
     return size;
 }
 
+// LZMA compressions levels 6-9 are equivalent, except for the dictionary size,
+// which is 8-64M.  For smaller inputs, levels 7-9 are downgraded automatically.
+static void downgradeLzmaLevel(char *mode, uint64_t archiveSize)
+{
+#define C(c) if (!(c)) return
+    C(mode[1] == '7' || mode[1] == '8' || mode[1] == '9');
+    C(mode[2] == '.');
+    C(mode[3] == 'l' || mode[3] == 'x');
+    C(mode[4] == 'z');
+#define S(m) ((m << 20) + (m << 10))
+    switch (mode[1]) {
+    case '9':
+	if (archiveSize > S(32))
+	    break;
+	mode[1] = '8';
+	/*@fallthrough@*/
+    case '8':
+	if (archiveSize > S(16))
+	    break;
+	mode[1] = '7';
+	/*@fallthrough@*/
+    case '7':
+	if (archiveSize > S(8))
+	    break;
+	mode[1] = '6';
+    }
+#undef C
+#undef S
+}
+
 int writeRPM(Header *hdrp, const char *fileName, int type,
 		    CSA_t csa, char *passPhrase, const char **cookie)
 {
@@ -451,7 +478,7 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
     if (type == RPMLEAD_BINARY)
 	providePackageNVR(h);
 
-    const char *rpmio_flags = NULL;
+    char *rpmio_flags = NULL;
     const char *N, *dash;
 
     /* Save payload information */
@@ -470,10 +497,11 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
 	break;
     }
     /*@=branchstate@*/
-    if (!(rpmio_flags && *rpmio_flags)) {
+    if (!(rpmio_flags && *rpmio_flags == 'w')) {
 	rpmio_flags = _free(rpmio_flags);
 	rpmio_flags = xstrdup("w9.gzdio");
     }
+    downgradeLzmaLevel(rpmio_flags, archiveSize);
     s = strchr(rpmio_flags, '.');
     if (s) {
 	(void) headerAddEntry(h, RPMTAG_PAYLOADFORMAT, RPM_STRING_TYPE, "cpio", 1);
