@@ -3104,7 +3104,7 @@ static ssize_t lzdWrite(void * cookie, const char * buf, size_t count)
 
     fdstat_enter(fd, FDSTAT_WRITE);
     rc = lzwrite(lzfile, (void *)buf, count);
-    if (rc < 0) {
+    if (rc == -1) {
 	fd->errcookie = "Lzma: encoding error";
     } else if (rc > 0) {
 	fdstat_exit(fd, FDSTAT_WRITE, rc);
@@ -3244,9 +3244,6 @@ DBGIO(fd, (stderr, "==> Fread(%p,%u,%u,%p) %s\n", buf, (unsigned)size, (unsigned
 
 size_t Fwrite(const void *buf, size_t size, size_t nmemb, FD_t fd)
 {
-    fdio_write_function_t _write;
-    int rc;
-
     FDSANE(fd);
 /*@-modfilesys@*/
 DBGIO(fd, (stderr, "==> Fwrite(%p,%u,%u,%p) %s\n", buf, (unsigned)size, (unsigned)nmemb, (fd ? fd : NULL), fdbg(fd)));
@@ -3254,17 +3251,28 @@ DBGIO(fd, (stderr, "==> Fwrite(%p,%u,%u,%p) %s\n", buf, (unsigned)size, (unsigne
 
     if (fdGetIo(fd) == fpio) {
 	/*@+voidabstract -nullpass@*/
-	rc = fwrite(buf, size, nmemb, fdGetFILE(fd));
+	size_t ret = fwrite(buf, size, nmemb, fdGetFILE(fd));
 	/*@=voidabstract =nullpass@*/
-	return rc;
+	return ret * size;
     }
 
     /*@-nullderef@*/
-    _write = FDIOVEC(fd, write);
+    fdio_write_function_t _write = FDIOVEC(fd, write);
     /*@=nullderef@*/
+    assert(_write);
 
-    rc = (_write ? _write(fd, buf, size * nmemb) : -2);
-    return rc;
+    // XXX check for overflow instead of assuming that size=1.
+    size_t n = size * nmemb;
+
+    // XXX sloppy mixing of size_t and ssize_t is going on here.
+    ssize_t ret = _write(fd, buf, n);
+    if (ret == -1)
+	return 0;
+    if (ret == n)
+	return n;
+    if (ret < 0)
+	return 0;
+    return ret;
 }
 
 int Fseek(FD_t fd, _libio_off_t offset, int whence) {
