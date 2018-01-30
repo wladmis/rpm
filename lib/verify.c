@@ -173,7 +173,7 @@ int rpmVerifyFile(const char * root, Header h, int filenum,
     } 
 
     if (flags & RPMVERIFY_FILESIZE) {
-	int_32 * sizeList;
+	uint32_t *sizeList;
 
 	if (!hge(h, RPMTAG_FILESIZES, NULL, (void **) &sizeList, NULL)
 	|| sizeList[filenum] != sb.st_size)
