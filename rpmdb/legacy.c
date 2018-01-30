@@ -161,6 +161,11 @@ int domd5(const char * fn, unsigned char * digest, int asAscii)
 /*@-globs -internalglobs -mods @*/
     fdno = open_dso(path, &pid, &fsize);
 /*@=globs =internalglobs =mods @*/
+    /* Traditionally rpm-4.0 endows zero-sized files with empty md5sum. */
+    if (fdno >= 0 && fsize == 0) {
+	close(fdno);
+	fdno = -1;
+    }
     if (fdno < 0) {
 	rc = 1;
 	goto exit;
@@ -174,26 +179,27 @@ int domd5(const char * fn, unsigned char * digest, int asAscii)
 	DIGEST_CTX ctx;
 	void * mapped;
 
+	/* Preallocate ctx, no malloc calls between mmap and munmap. */
+	ctx = rpmDigestInit(PGPHASHALGO_MD5, RPMDIGEST_NONE);
 	mapped = mmap(NULL, fsize, PROT_READ, MAP_SHARED, fdno, 0);
-	if (mapped == (void *)-1) {
-	    xx = close(fdno);
-	    rc = 1;
-	    break;
+	if (mapped == (void *)-1) { // probably EOVERFLOW
+	    rpmDigestFinal(ctx, NULL, NULL, asAscii);
+	    goto readloop;
 	}
 
 #ifdef	MADV_SEQUENTIAL
         xx = madvise(mapped, fsize, MADV_SEQUENTIAL);
 #endif
 
-	ctx = rpmDigestInit(PGPHASHALGO_MD5, RPMDIGEST_NONE);
 	xx = rpmDigestUpdate(ctx, mapped, fsize);
-	xx = rpmDigestFinal(ctx, (void **)&md5sum, &md5len, asAscii);
 	xx = munmap(mapped, fsize);
+	xx = rpmDigestFinal(ctx, (void **)&md5sum, &md5len, asAscii);
 	xx = close(fdno);
 	break;
       }	/*@fallthrough@*/
 #endif
     default:
+    readloop:
 	/* Either use the pipe to prelink -y or open the URL. */
 	fd = (pid != 0) ? fdDup(fdno) : Fopen(fn, "r.ufdio");
 	(void) close(fdno);
