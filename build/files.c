@@ -2021,7 +2021,7 @@ static int finalizeSize(TFI_t fi)
 {
     if (fi == NULL)
 	return 0;
-    int totalFileSize = 0;
+    uint32_t totalFileSize = 0;
     int partialHardlinkSets = 0;
     for (int i = 0; i < fi->fc; i++) {
 	if (fi->actions[i] == FA_SKIP) // %ghost
