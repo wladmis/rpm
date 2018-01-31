@@ -2787,7 +2787,7 @@ static LZFILE *lzopen_internal(const char *path, const char *mode, int fd, int x
 	    encoding = 1;
 	else if (*mode == 'r')
 	    encoding = 0;
-	else if (*mode >= '1' && *mode <= '9')
+	else if (*mode >= '0' && *mode <= '9')
 	    level = *mode - '0';
     }
     if (fd != -1)
@@ -2795,12 +2795,8 @@ static LZFILE *lzopen_internal(const char *path, const char *mode, int fd, int x
     else
 	fp = fopen(path, encoding ? "w" : "r");
     if (!fp)
-	return 0;
-    lzfile = calloc(1, sizeof(*lzfile));
-    if (!lzfile) {
-	fclose(fp);
-	return 0;
-    }
+	return NULL;
+    lzfile = xcalloc(1, sizeof(*lzfile));
     lzfile->file = fp;
     lzfile->encoding = encoding;
     lzfile->eof = 0;
@@ -2808,14 +2804,20 @@ static LZFILE *lzopen_internal(const char *path, const char *mode, int fd, int x
     if (encoding) {
 	lzma_lzma_preset(&lzfile->options, level);
 #if 1	/* tweak options for better compression */
-	if (level >= 2) {
-	    unsigned int dict_size = 1<<20;
-	    if (lzfile->options.dict_size < dict_size)
-		lzfile->options.dict_size = dict_size;
-	    unsigned int nice_len = (level < LZMA_PRESET_DEFAULT) ? 64 : 128;
-	    if (lzfile->options.nice_len < nice_len)
-		lzfile->options.nice_len = nice_len;
-	}
+	if (level == 5)
+	    /* This level is still used by default in girar-builder, as of
+	     * early 2018, due to a historical accident: sometime around 10
+	     * years ago it was using a smaller dictionary and was deemed more
+	     * appropriate for the minimum system requirements at the time.
+	     * Since xz v4.999.9beta-161-gb4b1cbc, level 5 and level 6,
+	     * the default one, both use 8M dictionary; the only difference
+	     * is that level 5 should compress slightly faster. */
+	    lzfile->options.nice_len = 64; /* default 32 */
+	else if (level > 5)
+	    /* The constant 112 was found to be a local optimum on some cpio
+	     * inputs.  Both size and "saved bytes per second" metrics were
+	     * taken into account. */
+	    lzfile->options.nice_len = 112; /* default 64 */
 #endif
 	if (xz) {
 	    lzfile->filters[0].id = LZMA_FILTER_LZMA2;
@@ -2835,7 +2837,7 @@ static LZFILE *lzopen_internal(const char *path, const char *mode, int fd, int x
     if (ret != LZMA_OK) {
 	fclose(fp);
 	free(lzfile);
-	return 0;
+	return NULL;
     }
     return lzfile;
 }
