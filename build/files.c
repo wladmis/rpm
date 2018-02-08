@@ -1154,7 +1154,7 @@ static void genCpioListAndHeader(Spec spec, /*@partial@*/ FileList fl,
 	int j;
 	FileListRec tmp;
 	for (j = 1, tmp = fl->fileList; j < i; j++, tmp++) {
-	  if (flp->fl_ino == tmp->fl_ino) {
+	  if (flp->fl_ino == tmp->fl_ino && flp->fl_dev == tmp->fl_dev) {
 	    ino = j;
 	    break;
 	  }
