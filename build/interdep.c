@@ -796,4 +796,101 @@ int processInterdep(Spec spec)
     return 0;
 }
 
+/*
+ * Replace odeps and oevr with ndeps and nevr
+ */
+static
+int replaceDeps(Package pkg1, Package pkg2, const char * strict_interdeps)
+{
+    int rc = RPMRC_OK;
+    char * name = pkgName(pkg1);
+    char * evr = headerSprintf(pkg1->header, "%|epoch?{%{epoch}:}|%{version}-%{release}",
+	    rpmTagTable, rpmHeaderFormats, NULL);
+    char * strictdep = NULL;
+
+    char **reqNv = NULL;
+    char **reqVv = NULL;
+    int *reqFv = NULL;
+    int reqc;
+
+    HGE_t hge = (HGE_t) headerGetEntry;
+    HME_t hme = (HME_t) headerModifyEntry;
+    HFD_t hfd = (HFD_t) headerFreeData;
+
+    int ok = hge(pkg2->header, RPMTAG_REQUIRENAME, NULL, (void **) &reqNv, &reqc) &&
+	hge(pkg2->header, RPMTAG_REQUIREVERSION, NULL, (void **) &reqVv, NULL) &&
+	hge(pkg2->header, RPMTAG_REQUIREFLAGS, NULL, (void *) &reqFv, NULL);
+    if (!ok) {
+	return RPMRC_OK;
+    }
+
+    if (pkg1 == pkg2)
+	goto exit;
+
+    for (int i = 0; i < reqc; i++) {
+	/* skip strict dependencies */
+	if (reqNv[i][0] == '.')
+	    continue;
+
+	if (strcmp(reqNv[i], name) ||
+		strcmp(reqVv[i], evr) ||
+		(reqFv[i] & RPMSENSE_SENSEMASK) != RPMSENSE_EQUAL)
+	    continue;
+
+	if (strictdep == NULL)
+	    if (asprintf(&strictdep, ".%s-%s-%s", strict_interdeps, name, evr) == -1) {
+		rc = RPMRC_FAIL;
+		rpmlog(RPMLOG_ERR, "Cannot allocate memory for strictdep\n");
+		goto exit;
+	    }
+	reqNv[i] = strictdep;
+	reqVv[i] = "";
+	reqFv[i] = reqFv[i] & ~RPMSENSE_SENSEMASK;
+	rpmMessage(RPMMESS_NORMAL,
+		"%s: replacing strict dependency on %s with %s\n",
+		pkgName(pkg2), name, strictdep);
+	if (!addReqProv(NULL, pkg1->header,
+		   RPMSENSE_PROVIDES | RPMSENSE_FIND_PROVIDES,
+		   strictdep, 0, 0))
+	    rpmMessage(RPMMESS_NORMAL, "%s: adding %s to provides\n", name, strictdep);
+	break;
+    }
+
+    if (strictdep) {
+	hme(pkg2->header, RPMTAG_REQUIRENAME, RPM_STRING_ARRAY_TYPE, reqNv, reqc);
+	hme(pkg2->header, RPMTAG_REQUIREVERSION, RPM_STRING_ARRAY_TYPE, reqVv, reqc);
+	hme(pkg2->header, RPMTAG_REQUIREFLAGS, RPM_INT32_TYPE, reqFv, reqc);
+    }
+
+ exit:
+    reqNv = hfd(reqNv, RPM_STRING_ARRAY_TYPE);
+    reqVv = hfd(reqVv, RPM_STRING_ARRAY_TYPE);
+    strictdep = _free(strictdep);
+    return rc;
+}
+
+int upgradeInterdep(Spec spec, const char * strict_interdeps)
+{
+    if (strict_interdeps == NULL || !*strict_interdeps)
+	return RPMRC_OK;
+
+    Package pkg1, pkg2;
+
+    for (pkg1 = spec->packages; pkg1; pkg1 = pkg1->next) {
+	if (!pkg1->cpioList)
+	    continue;
+
+	for (pkg2 = pkg1->next; pkg2; pkg2 = pkg2->next) {
+	    if (!pkg2->cpioList)
+		continue;
+	    if (replaceDeps(pkg1, pkg2, strict_interdeps) != RPMRC_OK)
+		return RPMRC_FAIL;
+	    if (replaceDeps(pkg2, pkg1, strict_interdeps) != RPMRC_OK)
+		return RPMRC_FAIL;
+	}
+    }
+
+    return RPMRC_OK;
+}
+
 // ex: set ts=8 sts=4 sw=4 noet:
