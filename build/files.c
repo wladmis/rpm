@@ -2980,6 +2980,11 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
     if (rc == 0)
 	rc = processInterdep(spec);
 
+    if (rc == 0) {
+	const char * strict_deps = getenv("RPM_STRICT_INTERDEPS");
+	rc = upgradeInterdep(spec, strict_deps);
+    }
+
     if (rc == 0)
 	rc = checkFiles(spec);
 
