@@ -2943,6 +2943,116 @@ static void printDeps(Header h)
     versions = hfd(versions, dvt);
 }
 
+
+/*
+ * Rewrite the upper/lower bounds in deps into equivalent ones with a
+ * different or absent disttag.
+ *
+ * (n < E:V-R:D) and (n < E:V-R) are equivalent constraints when interpreted
+ * by a disttag-aware rpm. (They "overlap" with the same packages.)
+ * Similarly for >.
+ *
+ * One form or another can be better for compatibility with
+ * disttag-unaware tools.
+ */
+static
+int fillInsignificantDisttagInDep(const Package pkg,
+                                  const DepMsg_t * const dm,
+                                  const int senseMask,
+                                  const char * const newDisttag,
+                                  const int overwrite)
+{
+    /* The change or removal of the disttag is an equivalent rewrite if
+       the rewritten constraint is a lower/upper bound (after a > or < sign).
+    */
+    assert ( !(senseMask & ~(RPMSENSE_LESS | RPMSENSE_GREATER)) );
+
+    int rc = RPMRC_OK;
+
+    const char * const *depNv = NULL;
+    const char **depVv = NULL;
+    const int *depFv = NULL;
+    int depc;
+
+    HGE_t hge = (HGE_t) headerGetEntryMinMemory; /* pointers reference header memory */
+    HME_t hme = (HME_t) headerModifyEntry;
+    HFD_t hfd = (HFD_t) headerFreeData;
+
+    const int ok =
+      hge(pkg->header, dm->ntag, NULL, (void **) &depNv, &depc) &&
+      hge(pkg->header, dm->vtag, NULL, (void **) &depVv, NULL) &&
+      hge(pkg->header, dm->ftag, NULL, (void *) &depFv, NULL);
+    if (!ok) {
+	return RPMRC_OK;
+    }
+
+    for (int i = 0; i < depc; i++) {
+        const char *e, *v, *r, *d, *evr;
+
+        /* Skip if there are no bits from senseMask in the flags,
+           or if there are other sense bits in the flags (not from senseMask).
+        */
+	if ( !(depFv[i] & senseMask)
+             || ((depFv[i] & RPMSENSE_SENSEMASK) & ~senseMask) )
+	    continue;
+
+	/* Skip set dependencies. */
+        if (strncmp(depVv[i], "set:", 4) == 0)
+            continue;
+
+	parseEVRD(strdupa(depVv[i]), &e, &v, &r, &d);
+
+        /* Skip dependencies with underspecified release.
+           We assert that a release must be present if there is a disttag.
+         */
+        if (!r || !*r)
+            continue;
+
+        if (d && *d) {
+            if (!overwrite)
+                continue;
+        } else {
+            if (!newDisttag || !*newDisttag)
+                continue;
+        }
+
+        if (e && *e)
+            evr = xasprintf("%s:%s-%s", e, v, r);
+        else
+            evr = xasprintf("%s-%s", v, r);
+
+        if (!newDisttag || !*newDisttag) {
+            rpmMessage(RPMMESS_NORMAL,
+                       "Discarding an insignificant disttag from ");
+            printDepMsg(dm, 1, &depNv[i], &depVv[i], &depFv[i]);
+            // Not freeing old depVv[i] because we have got it from hge().
+            depVv[i] = evr;
+        } else {
+            rpmMessage(RPMMESS_NORMAL,
+                       (d && *d)
+                       ? "Overwriting the insignificant disttag (with %s) in "
+                       : "Adding an insignificant disttag (%s) into ",
+                       newDisttag);
+            printDepMsg(dm, 1, &depNv[i], &depVv[i], &depFv[i]);
+            // Not freeing old depVv[i] because we have got it from hge().
+            depVv[i] = xasprintf("%s:%s", evr, newDisttag);
+            evr = _free(evr);
+        }
+        // I suspect that the new allocated value depVv[i] might not be freed.
+        // But it would be too much hassle to care about this.
+    }
+
+    hme(pkg->header, dm->vtag, RPM_STRING_ARRAY_TYPE, depVv, depc);
+
+ exit:
+    depNv = hfd(depNv, RPM_STRING_ARRAY_TYPE);
+    depVv = hfd(depVv, RPM_STRING_ARRAY_TYPE);
+    // depFv (as an array of int) seems not to need to be freed with hfd().
+    // At least, it's not done in timeCheck() or printDeps() in this file.
+    return rc;
+}
+
+
 #include "interdep.h"
 #include "checkFiles.h"
 
@@ -2967,6 +3077,111 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
 	if (rc) break;
 
 	rc = checkProvides(spec, pkg);
+	if (rc) break;
+
+        /* Rewriting "< E:V-R:D" dependencies for compatibility with older
+           disttag-unaware tools, so that such a dependency means in a
+           disttag-unaware tool the same thing as in the disttag-aware rpm.
+
+           In the disttag-aware rpm tool,
+           "x < E:V-R:D" iff "x < E:V-R"
+           (i.e., the disttag is not significant).
+
+           For example, "E1:V1-R1:D1 < E:V-R:D" iff "E1:V1-R1 < E:V-R".
+
+           "x < E:V-R" in the disttag-aware rpm tool
+           iff
+           "x < E:V-R" in a disttag-unaware tool
+           (i.e., this condition has the same meaning
+           in disttag-aware and -unaware tools).
+
+           For example, in a disttag-unaware tool,
+           "E:V-R1:D1 < E:V-R" iff R1:D1<R iff R1<R,
+           the same condition as in the disttag-aware rpm tool.
+
+           But in a disttag-unaware tool,
+           the conditions "x < E:V-R:D" and "x < E:V-R" mean different things.
+           ("R:D" is understood as the release.)
+
+           For example, "E:V-R < E:V-R:D" is true in a disttag-unaware tool,
+           although--from the point fo view of the disttag-aware rpm tool--it shouldn't.
+
+           Therefore, for compatibility with older disttag-unaware tools
+           we discard the insignificant disttag in such dependencies.
+         */
+
+        static const DepMsg_t
+            conflicts_depMsg = { "Conflicts", { 0 }, RPMTAG_CONFLICTNAME, RPMTAG_CONFLICTVERSION, RPMTAG_CONFLICTFLAGS, 0, -1 },
+            obsoletes_depMsg = { "Obsoletes", { 0 }, RPMTAG_OBSOLETENAME, RPMTAG_OBSOLETEVERSION, RPMTAG_OBSOLETEFLAGS, 0, -1 },
+            requires_depMsg = { "Requires(..)", { 0 }, RPMTAG_REQUIRENAME, RPMTAG_REQUIREVERSION, RPMTAG_REQUIREFLAGS, 0, -1 };
+
+	rc = fillInsignificantDisttagInDep(pkg,
+                                           &conflicts_depMsg,
+                                           RPMSENSE_LESS,
+                                           NULL,
+                                           1 /* overwrite */);
+	if (rc) break;
+	rc = fillInsignificantDisttagInDep(pkg,
+                                           &obsoletes_depMsg,
+                                           RPMSENSE_LESS,
+                                           NULL,
+                                           1 /* overwrite */);
+	if (rc) break;
+	rc = fillInsignificantDisttagInDep(pkg,
+                                           &requires_depMsg,
+                                           RPMSENSE_LESS,
+                                           NULL,
+                                           1 /* overwrite */);
+	if (rc) break;
+
+        /* Rewriting "> E:V-R[:D]" dependencies for compatibility with older
+           disttag-unaware tools, so that such a dependency means in a
+           disttag-unaware tool ALMOST the same thing as in the disttag-aware rpm.
+
+           In the disttag-aware rpm tool,
+           "x > E:V-R:D" iff "x > E:V-R"
+           (i.e., the disttag is not significant).
+
+           For example, "E1:V1-R1:D1 > E:V-R:D" iff "E1:V1-R1 > E:V-R".
+
+           But in a disttag-unaware tool,
+           "E1:V1-R1:D1 > E:V-R" would be true also if "E1:V1-R1 = E:V-R" and D1 is non-empty;
+           "E1:V1-R1:D1 > E:V-R:D" would be true also if "E1:V1-R1 = E:V-R" and D1>D.
+
+           To make this impossible, we would like to rewrite "x > E:V-R[:D]"
+           in the form "x > E:V-R:MAX",
+           where MAX>=D1 for any other possible disttag D1.
+
+           In a disttag-unaware tool,
+           "E1:V1-R1:D1 > E:V-R:MAX" iff "E1:V1-R1 > E:V-R";
+           this is also true in the disttag-aware rpm tool.
+           So, the meaning of "x > E:V-R:MAX" would be the same
+           both in the disttag-aware rpm tool and in a disttag-unaware tool,
+           and--from the point fo view of the disttag-aware rpm tool--it is
+           equivalent to "x > E:V-R[:D]" with any D.
+
+           Therefore, for compatibility with older disttag-unaware tools,
+           we rewrite such dependencies; as an approximation to MAX,
+           we take "z", and fill the insignificant disttag with it.
+         */
+        static const char * const maximal_disttag = "z";
+	rc = fillInsignificantDisttagInDep(pkg,
+                                           &conflicts_depMsg,
+                                           RPMSENSE_GREATER,
+                                           maximal_disttag,
+                                           1 /* overwrite */);
+	if (rc) break;
+	rc = fillInsignificantDisttagInDep(pkg,
+                                           &obsoletes_depMsg,
+                                           RPMSENSE_GREATER,
+                                           maximal_disttag,
+                                           1 /* overwrite */);
+	if (rc) break;
+	rc = fillInsignificantDisttagInDep(pkg,
+                                           &requires_depMsg,
+                                           RPMSENSE_GREATER,
+                                           maximal_disttag,
+                                           1 /* overwrite */);
 	if (rc) break;
 
 	/*@-noeffect@*/
