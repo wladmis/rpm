@@ -45,6 +45,7 @@ struct rpmte_s {
     char * arch;		/*!< Architecture hint. */
     char * os;			/*!< Operating system hint. */
     int isSource;		/*!< (TR_ADDED) source rpm? */
+    uint32_t autoinstalled;	/*! Indicates whether package was installed just as dependency satisfier or not */
 
     rpmte depends;              /*!< Package updated by this package (ERASE te) */
     rpmte parent;		/*!< Parent transaction element. */
@@ -196,6 +197,8 @@ static int addTE(rpmte p, Header h, fnpyKey key, rpmRelocation * relocs)
 
     if (p->type == TR_ADDED)
 	p->pkgFileSize = headerGetNumber(h, RPMTAG_LONGSIGSIZE) + 96 + 256;
+
+    p->autoinstalled = headerGetNumber(h, RPMTAG_AUTOINSTALLED);
 
     rc = 0;
 
@@ -586,6 +589,11 @@ static int rpmteOpen(rpmte te, int reload_fi)
 	    rc = 1;
 	}
 	
+	if (rc)
+	{
+		rc = (headerPutUint32(h, RPMTAG_AUTOINSTALLED, &(te->autoinstalled), 1) == 1);
+	}
+
 	rpmteSetHeader(te, h);
 	headerFree(h);
     }
