@@ -418,6 +418,7 @@ typedef enum rpmTag_e {
     RPMTAG_SOURCEPKGID		= 1146,
     RPMTAG_DISTTAG		= 1155, /* s */
     RPMTAG_AUTOINSTALLED	= 5094, /* i */
+    RPMTAG_IDENTITY		= 5095, /* s */
 /*@-enummemuse@*/
     RPMTAG_FIRSTFREE_TAG	/*!< internal */
 /*@=enummemuse@*/
