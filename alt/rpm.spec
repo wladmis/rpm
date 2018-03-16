@@ -31,6 +31,7 @@ License: GPLv2+
 
 Requires: coreutils
 Requires: popt >= 1.10.2.1
+Requires: librpm%sover = %EVR
 Conflicts: apt < 0.5.15lorg2-alt54
 
 BuildRequires(pre): rpm-build-python3
@@ -92,6 +93,7 @@ the package like its version, a description, etc.
 %package -n rpm2archive
 Summary: Program which converts rpm payload to tar archive
 Group: Archiving/Other
+Requires: librpm%sover = %EVR
 
 %description -n rpm2archive
 This package contains rpm2archive utility. It can be used to convert rpm
@@ -101,6 +103,7 @@ package into tarball.
 Summary: Program which allows to query rpm specfile.
 Group: Archiving/Other
 Conflicts: rpm < 4.13.0-alt6
+Requires: librpmbuild%sover = %EVR
 
 %description -n rpmspec
 This package contains rpmspec utility. It can be used to query rpm specfile.
