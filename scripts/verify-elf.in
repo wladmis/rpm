@@ -339,10 +339,17 @@ VerifyELF()
 		error_normal FHS "$f" 'ELF object out of allowed directory tree'
 	fi
 
-	if ! lint_info=$(run_eu elflint --gnu-ld "$f" 2>&1); then
-		printf '%s\n' "$lint_info" >&2
-		error_normal LINT "$f" 'eu-elflint failed'
-	fi
+	case "$VERIFY_ELF_LINT" in
+		no|skip)
+			error_normal LINT "$f" 'skipping eu-elflint by request'
+			;;
+		*)
+			if ! lint_info=$(run_eu elflint --gnu-ld "$f" 2>&1); then
+				printf '%s\n' "$lint_info" >&2
+				error_normal LINT "$f" 'eu-elflint failed'
+			fi
+			;;
+	esac
 
 	local rpath rpaths
 	rpaths="$(printf %s "$objdump_info" |awk '($1=="RPATH"||$1=="RUNPATH"){print $2}')"
