@@ -89,6 +89,7 @@ Cflags()
 gcc=
 cpp=
 cxx=
+llvm=
 cxx_test=
 CppReq()
 {
@@ -107,6 +108,11 @@ CppReq()
 			[ -n "$gcc" ] ||
 			Verbose "$f: $PROG disabled for gcc"
 			gcc=$srpm
+			return 0 ;;
+		llvm | llvm[0-9]* )
+			[ -n "$llvm" ] ||
+			Verbose "$f: $PROG disabled for llvm"
+			llvm=$srpm
 			return 0 ;;
 	esac
 
