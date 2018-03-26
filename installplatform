@@ -45,6 +45,9 @@ case "$arch" in
   arm*)
     SUBSTS='s,arm.*,arm, s,arm.*,armv3l, s,arm.*,armv4l, s,arm.*,armv5l, s,arm.*,armv5tel, s,arm.*,armv5tejl, s,arm.*,armv6l, s,arm.*,noarch,'
     ;;
+  e2k*)
+    SUBSTS='s,e2k.*,e2k, s,e2k.*,e2kv4, s,e2k.*,e2kv5, s,e2k.*,e2kv6, s,e2k.*,noarch,'
+    ;;
   sparc*)
     SUBSTS='s,sparc\(64\|v9\),sparc, s,sparc64,sparcv9,;s,sparc\([^v]\|$\),sparcv9\1, s,sparcv9,sparc64,;s,sparc\([^6]\|$\),sparc64\1,'
     ;;
@@ -78,6 +81,7 @@ for SUBST in $SUBSTS ; do
     aarch64-linux) LIB=lib64 ;;
     sparc64-linux) LIB=lib64 ;;
     x86_64-linux) LIB=lib64 ;;
+    e2k*-linux) LIB=lib64 ;;
   esac
 
   case $VENDOR in
