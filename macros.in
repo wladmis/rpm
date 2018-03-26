@@ -797,6 +797,21 @@
 #
 %arm	arm armv3l armv4l armv5l armv5tel armv5tejl armv6l armv7l armh
 
+#------------------------------------------------------------------------------
+# arch macro for all E2K processors
+#
+%e2k	e2k e2kv4 e2kv5 e2kv6 e2k4c e2k8c e2k1cp e2k8c2 e2k12c e2k16c e2k2c3
+%_configure_platform_e2kv4 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2kv5 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2kv6 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k4c e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k8c e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k1cp e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k8c2 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k12c e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k16c e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k2c3 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+
 #------------------------------------------------------------------------
 # Use in %install to generate locale specific file lists. For example,
 #
