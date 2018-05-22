@@ -308,7 +308,7 @@
 @alt@# Make
 @alt@%_make_bin make
 @alt@
-@alt@%__nprocs	%(N=`egrep -cs ^cpu[0-9]+ /proc/stat`; [ "$N" -gt 0 ] 2>/dev/null && echo "$N" || echo 1)
+@alt@%__nprocs	%(N=`nproc`; [ "$N" -gt 0 ] 2>/dev/null && echo "$N" || echo 1)
 @alt@%_smp_mflags	-j${NPROCS:-%__nprocs}
 @alt@%make_build	%_make_bin %_smp_mflags
 @alt@
