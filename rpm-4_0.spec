@@ -513,7 +513,7 @@ mv -T %buildroot%_rpmlibdir/{,build}macros
 %changelog
 * Tue May 22 2018 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt111
 - ldd: changed to try interpreters listed in /usr/bin/ldd.
-- platform: changed %__nprocs to use nproc(1) instead of /proc/stat.
+- platform: changed %%__nprocs to use nproc(1) instead of /proc/stat.
 
 * Tue Apr 17 2018 Vladimir D. Seleznev <vseleznv@altlinux.org> 4.0.4-alt110
 - Added support for RPM_STRICT_INTERDEPS environment variable.
