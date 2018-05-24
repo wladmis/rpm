@@ -87,7 +87,7 @@ typedef /*@abstract@*/ struct MacroBuf_s {
 
 /*@-exportlocal -exportheadervar@*/
 
-#define	MAX_MACRO_DEPTH	16
+#define	MAX_MACRO_DEPTH	24
 /*@unchecked@*/
 int max_macro_depth = MAX_MACRO_DEPTH;
 
@@ -1594,7 +1594,7 @@ rpmInitMacrofile (const char *macrofile)
 
 	/* XXX Assume new fangled macro expansion */
 	/*@-mods@*/
-	max_macro_depth = 16;
+	max_macro_depth = 24;
 	/*@=mods@*/
 
 	while(rdcl(buf, sizeof(buf), fd) != NULL) {
