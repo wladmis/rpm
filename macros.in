@@ -123,6 +123,8 @@
 #
 %__find_provides	%{_rpmconfigdir}/find-provides
 %__find_requires	%__find_requires     %{_rpmconfigdir}/find-requires
+%__find_scriptlet_requires	@RPMCONFIGDIR@/find-scriptlet-requires
+%__find_debuginfo_files	@RPMCONFIGDIR@/find-debuginfo-files
 #%__find_prereq		???
 #%__find_conflicts	???
 #%__find_obsoletes	???
@@ -767,6 +769,45 @@
 # arch macro for all ARM processors
 #
 %arm	arm armv3l armv4l armv5l armv5tel armv5tejl armv6l armv7l armh
+
+#------------------------------------------------------------------------------
+# arch macro for all E2K processors
+#
+%e2k	e2k e2kv4 e2kv5 e2kv6 e2k4c e2k8c e2k1cp e2k8c2 e2k12c e2k16c e2k2c3
+%_configure_platform_e2kv4 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2kv5 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2kv6 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k4c e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k8c e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k1cp e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k8c2 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k12c e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k16c e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+%_configure_platform_e2k2c3 e2k-%{_vendor}-%{_target_os}%{_gnueabi}
+
+#------------------------------------------------------------------------------
+# arch macro for o32 MIPS targets
+%mips32	mips mipsel
+
+#------------------------------------------------------------------------------
+# arch macro for n32 MIPS targets
+%mipsn32	mipsn32 mipsn32el
+
+#------------------------------------------------------------------------------
+# arch macro for n64 MIPS targets
+%mips64	mips64 mips64el
+
+#------------------------------------------------------------------------------
+# arch macro for big endian MIPS targets
+%mipseb	mips mipsn32 mips64
+
+#------------------------------------------------------------------------------
+# arch macro for little endian MIPS targets
+%mipsel	mipsel mipsn32el mips64el
+
+#------------------------------------------------------------------------------
+# arch macro for all supported MIPS targets
+%mips	%{mips32} %{mipsn32} %{mips64}
 
 #------------------------------------------------------------------------
 # Use in %install to generate locale specific file lists. For example,

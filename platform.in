@@ -23,8 +23,10 @@
 %_sysconfdir		@sysconfdir@
 %_sharedstatedir	%{_var}/lib
 %_localstatedir		@localstatedir@
-%_lib			@LIB@
-%_libdir		@prefix@/@LIB@
+%_libsuff		@LIBSUFF@
+@LIBSUFF_EXISTS@%_is_libsuff	1
+%_lib			lib@LIBSUFF@
+%_libdir		@prefix@/lib@LIBSUFF@
 %_includedir		@includedir@
 %_oldincludedir		@oldincludedir@
 %_infodir		@infodir@
@@ -85,10 +87,6 @@
 	mandir=%{?buildroot:%{buildroot}}%{_mandir} \\\
 	infodir=%{?buildroot:%{buildroot}}%{_infodir} \\\
   %{?_makeinstall_target:%{_makeinstall_target}}
-
-%_smp_mflags %([ -z "$RPM_BUILD_NCPUS" ] \\\
-	&& RPM_BUILD_NCPUS="`/usr/bin/getconf _NPROCESSORS_ONLN`"; \\\
-	[ "$RPM_BUILD_NCPUS" -gt 1 ] && echo "-j$RPM_BUILD_NCPUS")
 
 #==============================================================================
 # ---- Build policy macros.
@@ -204,6 +202,7 @@
 @alt@	export RPM_PACKAGE_VERSION=\"%version\"\
 @alt@	export RPM_PACKAGE_RELEASE=\"%release\"\
 @alt@	export RPM_BUILD_ROOT=\"%{u2p:%buildroot}\"\
+@alt@	%{?_check_contents_method:export RPM_CHECK_CONTENTS_METHOD=\"%_check_contents_method\"}\
 @alt@	%{?_cleanup_method:export RPM_CLEANUP_METHOD=\"%_cleanup_method\"}\
 @alt@	%{?_compress_method:export RPM_COMPRESS_METHOD=\"%_compress_method\"}\
 @alt@	%{?_fixup_method:export RPM_FIXUP_METHOD=\"%_fixup_method\"}\
@@ -211,12 +210,14 @@
 @alt@	%{?_verify_info_method:export RPM_VERIFY_INFO_METHOD=\"%_verify_info_method\"}\
 @alt@	%{?_findreq_method:export RPM_FINDREQ_METHOD=\"%_findreq_method\"}\
 @alt@	%{?_findprov_method:export RPM_FINDPROV_METHOD=\"%_findprov_method\"}\
+@alt@	%{?_check_contents_topdir:export RPM_CHECK_CONTENTS_TOPDIR=\"%_check_contents_topdir\"}\
 @alt@	%{?_cleanup_topdir:export RPM_CLEANUP_TOPDIR=\"%_cleanup_topdir\"}\
 @alt@	%{?_compress_topdir:export RPM_COMPRESS_TOPDIR=\"%_compress_topdir\"}\
 @alt@	%{?_fixup_topdir:export RPM_FIXUP_TOPDIR=\"%_fixup_topdir\"}\
 @alt@	%{?_verify_elf_topdir:export RPM_VERIFY_ELF_TOPDIR=\"%_verify_elf_topdir\"}\
 @alt@	%{?_findreq_topdir:export RPM_FINDREQ_TOPDIR=\"%_findreq_topdir\"}\
 @alt@	%{?_findprov_topdir:export RPM_FINDPROV_TOPDIR=\"%_findprov_topdir\"}\
+@alt@	%{?_check_contents_skiplist:export RPM_CHECK_CONTENTS_SKIPLIST=\"%_check_contents_skiplist\"}\
 @alt@	%{?_cleanup_skiplist:export RPM_CLEANUP_SKIPLIST=\"%_cleanup_skiplist\"}\
 @alt@	%{?_compress_skiplist:export RPM_COMPRESS_SKIPLIST=\"%_compress_skiplist\"}\
 @alt@	%{?_debuginfo_skiplist:export RPM_DEBUGINFO_SKIPLIST=\"%_debuginfo_skiplist\"}\
@@ -261,7 +262,7 @@
 @alt@	export PAM_SO_SUFFIX=\"%{?_pam_so_suffix}\"\
 @alt@	export PAM_NAME_SUFFIX=\"%{?_pam_name_suffix}\"\
 @alt@	\
-@alt@	export MAKEFLAGS=\"-w PAM_SO_SUFFIX=%{?_pam_so_suffix}\"\
+@alt@	export MAKEFLAGS=\"-w -O PAM_SO_SUFFIX=%{?_pam_so_suffix}\"\
 @alt@	\
 @alt@	%{expand:%(cat @RPMCONFIGDIR@/macros.d/*.env @SYSCONFIGDIR@/macros.d/*.env 2>/dev/null)}\
 @alt@	\
@@ -312,9 +313,9 @@
 @alt@# Make
 @alt@%_make_bin make
 @alt@
-@alt@%__nprocs	%(N=`egrep -cs ^cpu[0-9]+ /proc/stat`; [ "$N" -gt 0 ] 2>/dev/null && echo "$N" || echo 1)
-@alt@
-@alt@%make_build	[ -n "$NPROCS" ] || NPROCS=%__nprocs; %_make_bin -j$NPROCS
+@alt@%__nprocs	%(N=`nproc`; [ "$N" -gt 0 ] 2>/dev/null && echo "$N" || echo 1)
+@alt@%_smp_mflags	-j${NPROCS:-%__nprocs}
+@alt@%make_build	%_make_bin %_smp_mflags
 @alt@
 @alt@%make_install	%_make_bin INSTALL="%__install -p"
 @alt@%makeinstall_std	%make_install %{?_makeinstall_target:%{_makeinstall_target}} DESTDIR=%buildroot
@@ -445,12 +446,14 @@
 @alt@
 @alt@%_defattr	%%defattr(-,root,root,755)
 @alt@
+@alt@%_check_contents_method	default
 @alt@%_cleanup_method	auto
 @alt@%_compress_method	auto
 @alt@%_verify_elf_method	default
 @alt@%_verify_info_method	normal
 @alt@%_fixup_method	binconfig pkgconfig libtool desktop
 @alt@
+@alt@%_check_contents_topdir	%nil
 @alt@%_cleanup_topdir	%nil
 @alt@%_compress_topdir	%_usr
 @alt@%_fixup_topdir	%nil
@@ -458,6 +461,7 @@
 @alt@%_findreq_topdir	%nil
 @alt@%_findprov_topdir	%nil
 @alt@
+@alt@%_check_contents_skiplist	%nil
 @alt@%_cleanup_skiplist	%nil
 @alt@%_compress_skiplist	%nil
 @alt@%_debuginfo_skiplist	%nil
@@ -469,12 +473,14 @@
 @alt@%_findpackage_path		%nil
 @alt@%_findprov_lib_path	%nil
 @alt@
+@alt@%set_check_contents_method()	%global _check_contents_method %*
 @alt@%set_cleanup_method()	%global _cleanup_method %*
 @alt@%set_compress_method()	%global _compress_method %*
 @alt@%set_fixup_method()	%global _fixup_method %*
 @alt@%set_verify_elf_method()	%global _verify_elf_method %*
 @alt@%set_verify_info_method()	%global _verify_info_method %*
 @alt@
+@alt@%set_check_contents_topdir()	%global _check_contents_topdir %*
 @alt@%set_cleanup_topdir()	%global _cleanup_topdir %*
 @alt@%set_compress_topdir()	%global _compress_topdir %*
 @alt@%set_fixup_topdir()	%global _fixup_topdir %*
@@ -482,6 +488,7 @@
 @alt@%set_findreq_topdir()	%global _findreq_topdir %*
 @alt@%set_findprov_topdir()	%global _findprov_topdir %*
 @alt@
+@alt@%set_check_contents_skiplist()	%global _check_contents_skiplist %*
 @alt@%set_cleanup_skiplist()	%global _cleanup_skiplist %*
 @alt@%set_compress_skiplist()	%global _compress_skiplist %*
 @alt@%set_debuginfo_skiplist()	%global _debuginfo_skiplist %*
@@ -493,6 +500,7 @@
 @alt@%set_findpackage_path()	%global _findpackage_path %*
 @alt@%set_findprov_lib_path()	%global _findprov_lib_path %*
 @alt@
+@alt@%add_check_contents_skiplist()	%global _check_contents_skiplist %_check_contents_skiplist %*
 @alt@%add_cleanup_skiplist()	%global _cleanup_skiplist %_cleanup_skiplist %*
 @alt@%add_compress_skiplist()	%global _compress_skiplist %_compress_skiplist %*
 @alt@%add_debuginfo_skiplist()	%global _debuginfo_skiplist %_debuginfo_skiplist %*
@@ -656,7 +664,7 @@
 @alt@## compiler optflags defaults
 @alt@
 @alt@# core flags
-@alt@%optflags_core	-pipe
+@alt@%optflags_core	-pipe -frecord-gcc-switches
 @alt@
 @alt@# default optimization level
 @alt@%_optlevel	2

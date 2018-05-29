@@ -21,6 +21,7 @@ for ARCH in noarch `grep ^arch_canon $RPMRC | cut -d: -f2`; do
 
   ARCH_INSTALL_POST='%{nil}'
   LIB=lib
+  LIBSUFF=%nil
 
   # XXX FIXME: incomplete and quite likely wrong too in places,
   # consult various arch folks for correct names etc.
@@ -191,7 +192,7 @@ for ARCH in noarch `grep ^arch_canon $RPMRC | cut -d: -f2`; do
   [ -z "$CANONARCH" ] && continue
 
   if [ "$OS" = "linux" ] && [ "$CANONCOLOR" = 3 ]; then
-      LIB=${LIB}64
+      LIBSUFF=64
   fi
 
   PPD="${DESTDIR}/${platformdir}/${ARCH}-${OS}"
@@ -202,7 +203,7 @@ for ARCH in noarch `grep ^arch_canon $RPMRC | cut -d: -f2`; do
 	-e "s,@RPMCANONARCH@,$CANONARCH,g" \
 	-e "s,@RPMCANONCOLOR@,$CANONCOLOR," \
 	-e "s,@RPMRC_GNU@,$RPMRC_GNU," \
-	-e "s,@LIB@,$LIB," \
+	-e "s,@LIBSUFF@,$LIBSUFF," \
 	-e "s,@ARCH_INSTALL_POST@,$ARCH_INSTALL_POST," \
 	-e '/\${\w*:-/!s,\${,%{_,' \
 	-e "s,@ISANAME@,$ISANAME," \
