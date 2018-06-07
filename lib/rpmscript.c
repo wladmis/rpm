@@ -716,11 +716,12 @@ void rpmScriptTriggerPosttrans(rpmts ts)
     script->nextFileFunc.func = NULL;
     script->nextFileFunc.param = NULL;
 
-    const char *s = RPMCONFIGDIR "/posttrans-filetriggers";
-    const char *file = rpmGetPath(rpmdbHome(rpmtsGetRdb(ts)), "/files-awaiting-filetriggers", NULL);
-
     if (rpmChrootIn() != 0)
 	return;
+
+    const char *s = RPMCONFIGDIR "/posttrans-filetriggers";
+    /* rpmdbHome(db) returns path relative to chroot after rpmChrootIn() */
+    const char *file = rpmGetPath(rpmdbHome(rpmtsGetRdb(ts)), "/files-awaiting-filetriggers", NULL);
 
     rasprintf(&script->body, "exec %s %s", s, file);
     if (rpmIsVerbose())
