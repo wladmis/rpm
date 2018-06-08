@@ -1575,7 +1575,9 @@ int rpmtsRun(rpmts ts, rpmps okProbs, rpmprobFilterFlags ignoreSet)
 	runTransScripts(ts, PKG_TRANSFILETRIGGERIN);
     }
 
-    rpmScriptTriggerPosttrans(ts);
+    if (!(rpmtsFlags(ts) & (RPMTRANS_FLAG_TEST))) {
+	rpmScriptTriggerPosttrans(ts);
+    }
 exit:
     /* Run post transaction hook for all plugins */
     if (TsmPreDone) /* If TsmPre hook has been called, call the TsmPost hook */

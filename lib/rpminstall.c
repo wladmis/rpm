@@ -22,7 +22,7 @@ int fancyPercents = 0;
 #include "lib/manifest.h"
 #include "debug.h"
 
-static int rpmcliCheckedTTY = 0;
+static int rpmcliCheckedTTY = -1;
 static int rpmcliCountWidth = 0;
 static int rpmcliNameWidth = 40;
 static int rpmcliPackagesTotal = 0;
@@ -37,7 +37,7 @@ static void checkTTY(void)
 {
     struct winsize ws;
 
-    if (rpmcliCheckedTTY)
+    if (rpmcliCheckedTTY > -1)
 	return;
 
     rpmcliCheckedTTY = 1;
@@ -46,6 +46,7 @@ static void checkTTY(void)
 
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, (char *)&ws) < 0)
     {
+	rpmcliCheckedTTY = 0;
 	fancyPercents = 0;
 	w = 80;
     }
@@ -212,7 +213,9 @@ void * rpmShowProgress(const void * arg,
 	    break;
 	if (flags & INSTALL_HASH) {
 	    char *s = headerGetAsString(h, RPMTAG_NEVR);
-	    if (rpmcliCountWidth > 0)
+	    if (!rpmcliCheckedTTY)
+		fprintf(stdout, "%*d" DELIM "%-*s ", rpmcliCountWidth, rpmcliProgressCurrent + 1, rpmcliNameWidth - 1, s);
+	    else if (rpmcliCountWidth > 0)
 		fprintf(stdout, "%*d" DELIM "%-*.*s", rpmcliCountWidth, rpmcliProgressCurrent + 1, rpmcliNameWidth, rpmcliNameWidth, s);
 	    else
 		fprintf(stdout, "%-*.*s", rpmcliNameWidth, rpmcliNameWidth, s);
