@@ -5,7 +5,7 @@
 
 Name: rpm-build
 Version: 4.0.4
-Release: alt111
+Release: alt112
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -328,13 +328,14 @@ sh -n %buildroot%_rpmlibdir/find-package
 %endif
 
 %if "%_lib" == "lib"
-if [ -s /lib/libc.so.6 -a -s /lib/libz.so.1 -a -n "$(getconf LFS_CFLAGS)" ]; then
-	readelf --wide --symbols /lib/libc.so.6 /lib/libz.so.1 |
+if [ -s /lib/libc.so.6 -a -s /lib/libz.so.1 -a -s /lib/librt.so.1 -a -n "$(getconf LFS_CFLAGS)" ]; then
+	readelf --wide --symbols /lib/libc.so.6 /lib/libz.so.1 /lib/librt.so.1 |
 		sed -n 's/^[[:space:]]*[0-9]\+:[[:space:]]\+[0-9a-f]\+[[:space:]]\+[0-9]\+[[:space:]]\+FUNC[[:space:]]\+[^[:space:]]\+[[:space:]]\+DEFAULT[[:space:]]\+[0-9]\+[[:space:]]\+\([^@[:space:]]\+\)@\?.*/\1/p' |
 		sort -u
 fi > all-funcs
 sed -r -n 's/^(.+)64(_.*|$)/\1\2/p' all-funcs |
 	sort -u |
+	egrep -v '^(wcs|str)' |
 	comm -12 - all-funcs |
 	LC_ALL=C sort -u \
 	> %buildroot%_rpmlibdir/verify-elf-non-lfs-funcs.list
@@ -511,6 +512,17 @@ mv -T %buildroot%_rpmlibdir/{,build}macros
 %endif #with python
 
 %changelog
+* Fri Jun 08 2018 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt112
+- imz@:
+  + Turned on running %%__find_{conflicts,obsoletes} if they are defined.
+  + shell.req.files: included #!/usr/bin/env sh.
+  + verify-elf: allowed standalone use (without failing due to grep's status).
+- macro.c: increased maximal macro depth.
+- Introduced %%_libsuff and %%_is_libsuff macros.
+- Added support of mips{,n32,64}{,el}, riscv64, and s390x targets.
+- Added non-lfs symbols from librt.so.1 library to verify_lfs check.
+- Filtered string functions from the list of non-lfs symbols.
+
 * Tue May 22 2018 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt111
 - ldd: changed to try interpreters listed in /usr/bin/ldd.
 - platform: changed %%__nprocs to use nproc(1) instead of /proc/stat.
