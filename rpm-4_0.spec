@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt100.76.M70C.1
+Release: alt100.76.M70C.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -529,6 +529,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Sep 18 2018 Vladimir D. Seleznev <vseleznv@altlinux.org> 4.0.4-alt100.76.M70C.2
+- rpm-build (backported from Sisyphus rpm-build):
+  + backported support for SOURCE_DATE_EPOCH environment variable
+  + backported device and inode numbers remaping
+  + backported upgradeInterdep function
+  + backported support for $RPM_ADD_CHANGELOG_{NAME,TEXT,TIME} environment variables
+
 * Tue Sep 22 2015 Anton V. Boyarshinov <boyarsh@altlinux.ru> 4.0.4-alt100.76.M70C.1
 - backport from p7
 
@@ -558,7 +565,6 @@ fi
 * Mon Oct 28 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.73
 - fixup-pkgconfig: workaround some broken pkgconfig files (closes: #29427).
 - Fixed build with new automake.
->>>>>>> p7
 
 * Mon Apr 08 2013 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.72
 - Fixed build with new gettext.
