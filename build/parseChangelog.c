@@ -205,6 +205,7 @@ static int addChangelog(Header h, StringBuf sb)
 int parseChangelog(Spec spec)
 {
     int nextPart, res, rc;
+    char *fmt_name = NULL, *fmt_text = NULL, *fmt_time = NULL;
     StringBuf sb = newStringBuf();
     
     /* There are no options to %changelog */
@@ -223,6 +224,41 @@ int parseChangelog(Spec spec)
 	}
 	if (rc)
 	    return rc;
+    }
+
+    if ((fmt_name = getenv("RPM_ADD_CHANGELOG_NAME"))
+	    && (fmt_text = getenv("RPM_ADD_CHANGELOG_TEXT"))
+	    && (fmt_time = getenv("RPM_ADD_CHANGELOG_TIME"))) {
+	const char *errstr = NULL;
+	char *end = NULL;
+	time_t time;
+	long long ltime = strtoll(fmt_time, &end, 0);
+
+	const long long tmax = (1ULL << (sizeof(size_t) * 8 - 1)) - 1;
+	if (ltime > 0 && ltime < tmax && !*end) {
+	    time = ltime;
+	} else {
+	    rpmlog(RPMLOG_WARNING, "RPM_ADD_CHANGELOG_TIME cannot be converted from %s.\n", fmt_time);
+	    time = 0;
+	}
+
+	char *name = headerSprintf(spec->packages->header, fmt_name, rpmTagTable, rpmHeaderFormats, &errstr);
+	if (!name)
+	    rpmlog(RPMLOG_WARNING, "RPM_ADD_CHANGELOG_NAME: %s\n", errstr);
+
+	char *text = headerSprintf(spec->packages->header, fmt_text, rpmTagTable, rpmHeaderFormats, &errstr);
+	if (!text)
+	    rpmlog(RPMLOG_WARNING, "RPM_ADD_CHANGELOG_TEXT: %s\n", errstr);
+
+	if (time != 0 && name && text)
+	    addChangelogEntry(spec->packages->header, time, name, text);
+
+	free(name);
+	free(text);
+    } else if (fmt_name || fmt_text || fmt_time) {
+	rpmlog(RPMLOG_WARNING,
+	       "Each of RPM_ADD_CHANGELOG_NAME, RPM_ADD_CHANGELOG_TEXT and RPM_ADD_CHANGELOG_TIME"
+	       " environment variables should be set to add a changelog entry.\n");
     }
 
     res = addChangelog(spec->packages->header, sb);
