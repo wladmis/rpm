@@ -26,6 +26,8 @@ export CFLAGS
 AC_PROG_CPP
 AC_PROG_GCC_TRADITIONAL
 
+AC_SYS_LARGEFILE
+
 dnl Does this platform require array notation to assign to a va_list?
 dnl If cross-compiling, we assume va_list is "normal".  If this breaks
 dnl you, set ac_cv_valistisarray=true and maybe define HAVE_VA_LIST_AS_ARRAY

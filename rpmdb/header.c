@@ -2803,7 +2803,7 @@ static char * formatValue(sprintfTag tag, Header h,
 	} else {
 	    need = 10 + tag->pad + 20;
 	    val = xmalloc(need+1);
-	    strcat(buf, "d");
+	    strcat(buf, "u");
 	    /*@-formatconst@*/
 	    sprintf(val, buf, intVal);
 	    /*@=formatconst@*/
@@ -3228,7 +3228,7 @@ static char * shescapeFormat(int_32 type, hPTR_t data,
 
     if (type == RPM_INT32_TYPE) {
 	result = xmalloc(padding + 20);
-	strcat(formatPrefix, "d");
+	strcat(formatPrefix, "u");
 	/*@-formatconst@*/
 	sprintf(result, formatPrefix, *((int_32 *) data));
 	/*@=formatconst@*/

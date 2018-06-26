@@ -42,7 +42,7 @@ static inline int genSourceRpmName(Spec spec)
  * @todo Create transaction set *much* earlier.
  */
 static int cpio_doio(FD_t fdo, /*@unused@*/ Header h, CSA_t csa,
-		const char * fmodeMacro)
+		const char * fmode)
 	/*@globals rpmGlobalMacroContext,
 		fileSystem@*/
 	/*@modifies fdo, csa, rpmGlobalMacroContext, fileSystem @*/
@@ -55,14 +55,11 @@ static int cpio_doio(FD_t fdo, /*@unused@*/ Header h, CSA_t csa,
     FD_t cfd;
     int rc, ec;
 
-    {	const char *fmode = rpmExpand(fmodeMacro, NULL);
-	if (!(fmode && fmode[0] == 'w'))
-	    fmode = xstrdup("w9.gzdio");
+    {
 	/*@-nullpass@*/
 	(void) Fflush(fdo);
 	cfd = Fdopen(fdDup(Fileno(fdo)), fmode);
 	/*@=nullpass@*/
-	fmode = _free(fmode);
     }
     if (cfd == NULL)
 	return 1;
@@ -380,6 +377,71 @@ static int rpmLeadVersion(void)
     return rpmlead_version;
 }
 
+// Estimate the uncompressed size of cpio archive before it is actually written.
+static uint64_t calcArchiveSize(TFI_t fi)
+{
+    uint64_t size = 124; // cpio trailer
+    for (int i = 0; i < fi->fc; i++) {
+	if (fi->actions[i] == FA_SKIP) // %ghost
+	    continue;
+	size += 110; // cpio header
+	size += strlen(fi->apath[i]) + 1;
+	size = (size + 3) & ~(uint64_t)3;
+	if (!S_ISREG(fi->fsts[i].st_mode) && !S_ISLNK(fi->fsts[i].st_mode))
+	    continue;
+	if (fi->fsts[i].st_nlink > 1) {
+	    // Only the first hardlink occurrence counts.
+	    int found = 0;
+	    for (int j = i - 1; j >= 0; j--) {
+		if (fi->actions[j] == FA_SKIP)
+		    continue;
+		if (fi->fsts[i].st_dev != fi->fsts[j].st_dev)
+		    continue;
+		if (fi->fsts[i].st_ino != fi->fsts[j].st_ino)
+		    continue;
+		found = 1;
+		break;
+	    }
+	    if (found)
+		continue;
+	}
+	// Valid for symlinks, target not null-terminated.
+	size += fi->fsts[i].st_size;
+	size = (size + 3) & ~(uint64_t)3;
+    }
+    return size;
+}
+
+// LZMA compressions levels 6-9 are equivalent, except for the dictionary size,
+// which is 8-64M.  For smaller inputs, levels 7-9 are downgraded automatically.
+static void downgradeLzmaLevel(char *mode, uint64_t archiveSize)
+{
+#define C(c) if (!(c)) return
+    C(mode[1] == '7' || mode[1] == '8' || mode[1] == '9');
+    C(mode[2] == '.');
+    C(mode[3] == 'l' || mode[3] == 'x');
+    C(mode[4] == 'z');
+#define S(m) ((m << 20) + (m << 10))
+    switch (mode[1]) {
+    case '9':
+	if (archiveSize > S(32))
+	    break;
+	mode[1] = '8';
+	/*@fallthrough@*/
+    case '8':
+	if (archiveSize > S(16))
+	    break;
+	mode[1] = '7';
+	/*@fallthrough@*/
+    case '7':
+	if (archiveSize > S(8))
+	    break;
+	mode[1] = '6';
+    }
+#undef C
+#undef S
+}
+
 int writeRPM(Header *hdrp, const char *fileName, int type,
 		    CSA_t csa, char *passPhrase, const char **cookie)
 {
@@ -393,6 +455,13 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
     Header h;
     Header sig = NULL;
     int rc = 0;
+
+    uint64_t archiveSize = calcArchiveSize(csa->cpioList);
+    if (archiveSize >= UINT32_MAX) { // sic, UINT32_MAX proper is kind of special
+	rpmError(RPMERR_FWRITE, "cpio archive too big - %uM\n",
+				 (unsigned)(archiveSize>>20));
+	return RPMERR_FWRITE;
+    }
 
     /* Transfer header reference form *hdrp to h. */
     h = headerLink(*hdrp);
@@ -409,7 +478,7 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
     if (type == RPMLEAD_BINARY)
 	providePackageNVR(h);
 
-    const char *rpmio_flags = NULL;
+    char *rpmio_flags = NULL;
     const char *N, *dash;
 
     /* Save payload information */
@@ -428,10 +497,11 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
 	break;
     }
     /*@=branchstate@*/
-    if (!(rpmio_flags && *rpmio_flags)) {
+    if (!(rpmio_flags && *rpmio_flags == 'w')) {
 	rpmio_flags = _free(rpmio_flags);
 	rpmio_flags = xstrdup("w9.gzdio");
     }
+    downgradeLzmaLevel(rpmio_flags, archiveSize);
     s = strchr(rpmio_flags, '.');
     if (s) {
 	(void) headerAddEntry(h, RPMTAG_PAYLOADFORMAT, RPM_STRING_TYPE, "cpio", 1);
@@ -518,10 +588,21 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
      * archive size within the header region.
      */
     if (Fileno(csa->cpioFdIn) < 0) {
+	if (archiveSize != csa->cpioArchiveSize) {
+	    rpmError(RPMERR_FWRITE, "wrong archive size: %" PRIu64 " -> %u\n",
+				     archiveSize, csa->cpioArchiveSize);
+	    rc = RPMERR_FWRITE;
+	    goto exit;
+	}
 	HGE_t hge = (HGE_t)headerGetEntryMinMemory;
-	int_32 * archiveSize;
-	if (hge(h, RPMTAG_ARCHIVESIZE, NULL, (void *)&archiveSize, NULL))
-	    *archiveSize = csa->cpioArchiveSize;
+	uint32_t *sizep;
+	if (hge(h, RPMTAG_ARCHIVESIZE, NULL, (void *)&sizep, NULL))
+	    *sizep = csa->cpioArchiveSize;
+	else {
+	    rpmError(RPMERR_FWRITE, "cannot add RPMTAG_ARCHIVESIZE\n");
+	    rc = RPMERR_FWRITE;
+	    goto exit;
+	}
     }
 
     (void) Fflush(fd);

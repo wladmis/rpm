@@ -691,7 +691,7 @@ static int expandRegular(/*@special@*/ FSM_t fsm)
 {
     const char * fmd5sum;
     const struct stat * st = &fsm->sb;
-    int left = st->st_size;
+    size_t left = st->st_size;
     int rc = 0;
 
     rc = fsmStage(fsm, FSM_WOPEN);
@@ -758,7 +758,7 @@ static int writeFile(/*@special@*/ FSM_t fsm, int writeData)
     struct stat * ost = &fsm->osb;
     size_t pos = fdGetCpioPos(fsm->cfd);
     char * symbuf = NULL;
-    int left;
+    size_t left;
     int xx;
     int rc;
 
