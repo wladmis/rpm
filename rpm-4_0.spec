@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt101.M80P.1
+Release: alt101.M80P.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -533,6 +533,11 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Tue Jun 26 2018 Alexey Tourbin <at@altlinux.ru> 4.0.4-alt101.M80P.2
+- Implemented limited support for large files: a 2GB+ file can now be packaged,
+  but the total size of uncompressed cpio payload is capped at 4 GB.
+- Automatically downgrade LZMA compression levels 7-9 -> 6 on small payloads.
+
 * Mon Jan 16 2017 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt101.M80P.1
 - Merged rpm-build-4.0.4-alt102 into p8
   (everything except for separating rpm & -build):
