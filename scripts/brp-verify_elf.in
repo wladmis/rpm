@@ -110,11 +110,13 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	esac
 done
 
-# No stack verification available on arm*
-if [ -n "$RPM_TARGET_ARCH" -a -z "${RPM_TARGET_ARCH##arm*}" ]; then
+# No stack verification available on arm* and mips*
+case "$RPM_TARGET_ARCH" in
+    arm*|mips*)
 	VERIFY_ELF_LINT=no
 	VERIFY_ELF_STACK=no
-fi
+        ;;
+esac
 
 : ${RPM_VERIFY_ELF_TOPDIR:=}
 : ${RPM_VERIFY_ELF_SKIPLIST:=}
