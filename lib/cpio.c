@@ -27,7 +27,7 @@ extern int _fsm_debug;
  * @param num		max no. of bytes to read
  * @return		converted integer
  */
-static int strntoul(const char *str, /*@out@*/char **endptr, int base, int num)
+static unsigned long strntoul(const char *str, /*@out@*/char **endptr, int base, int num)
 	/*@modifies *endptr @*/
 {
     char * buf, * end;
