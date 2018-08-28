@@ -21,7 +21,6 @@
 /etc/sudo.d	sudo
 /etc/sudoers.d	sudo
 /etc/sysconfig/limits.d	service
-/etc/syslog.d	syslog-common
 /etc/udev/rules.d	udev-rules
 /etc/xinetd.d	xinetd
 /lib/udev/rules.d	udev-rules
