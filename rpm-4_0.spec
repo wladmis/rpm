@@ -3,7 +3,7 @@
 
 Name: rpm
 Version: 4.0.4
-Release: alt101.M80P.1
+Release: alt101.M80P.2
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -533,6 +533,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+* Mon Sep 03 2018 Vladimir D. Seleznev <vseleznv@altlinux.org> 4.0.4-alt101.M80P.2
+- rpm-build (backported from Sisyphus rpm-build):
+  + backported support for SOURCE_DATE_EPOCH environment variable
+  + backported device and inode numbers remaping
+  + backported upgradeInterdep function
+  + backported support for $RPM_ADD_CHANGELOG_{NAME,TEXT,TIME} environment variables
+
 * Mon Jan 16 2017 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt101.M80P.1
 - Merged rpm-build-4.0.4-alt102 into p8
   (everything except for separating rpm & -build):
