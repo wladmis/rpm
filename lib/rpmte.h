@@ -83,6 +83,15 @@ const char * rpmteBT(rpmte te);
 #endif
 
 /** \ingroup rpmte
+ * Retrive disttag string or transaction element.
+ * @param te		transaction element
+ * @return		disttag string
+ */
+#ifdef ALT_RPM_API
+const char * rpmteDT(rpmte te);
+#endif
+
+/** \ingroup rpmte
  * Retrieve arch string of transaction element.
  * @param te		transaction element
  * @return		arch string
