@@ -11,6 +11,9 @@
 #include "system.h"
 #include <netdb.h>
 #include <errno.h>
+#include <locale.h>
+#include <langinfo.h>
+#include <iconv.h>
 #include <rpm/rpmtypes.h>
 #include <rpm/rpmstring.h>
 #include "lib/header_internal.h"
@@ -1247,6 +1250,50 @@ static int headerMatchLocale(const char *td, const char *l, const char *le)
     return 0;
 }
 
+static char *
+convert (char *ed, const char *td)
+{
+	char   *saved_ctype = 0, *from_codeset = 0, *to_codeset = 0;
+	char   *saved_ctype1, *from_codeset1, *to_codeset1, *result = 0;
+	iconv_t icd;
+
+	if (!*ed)
+		return ed;
+
+	if ((saved_ctype1 = setlocale (LC_CTYPE, 0)) &&
+	    (saved_ctype = strdup (saved_ctype1)) &&
+	    (to_codeset1 = nl_langinfo (CODESET)) &&
+	    (to_codeset = strdup (to_codeset1)) &&
+	    setlocale (LC_CTYPE, td) &&
+	    (from_codeset1 = nl_langinfo (CODESET)) &&
+	    (from_codeset = strdup (from_codeset1)) &&
+	    strcmp (from_codeset, to_codeset) &&
+	    ((icd = iconv_open (to_codeset, from_codeset)) != (iconv_t) - 1))
+	{
+		size_t  insize = strlen (ed);
+		size_t  inbufleft = insize, outbufleft = insize * 4 + 1;
+		char    buf[outbufleft];
+		char   *inbuf = ed, *outbuf = buf;
+
+		if (iconv (icd, &inbuf, &inbufleft, &outbuf, &outbufleft) >= 0)
+		{
+			*outbuf = '\0';
+			if (strcmp (ed, buf))
+				/* XXX memory leak */
+				result = strdup (buf);
+		}
+		iconv_close (icd);
+	}
+
+	if (saved_ctype)
+		setlocale (LC_CTYPE, saved_ctype);
+	from_codeset = _free (from_codeset);
+	to_codeset = _free (to_codeset);
+	saved_ctype = _free (saved_ctype);
+
+	return result ? : ed;
+}
+
 /**
  * Return i18n string from header that matches locale.
  * @param h		header
@@ -1295,10 +1342,10 @@ static int copyI18NEntry(Header h, indexEntry entry, rpmtd td,
 
 	    int match = headerMatchLocale(t, l, le);
 	    if (match == 1) {
-		td->data = ed;
+		td->data = convert(ed, t);
 		goto exit;
 	    } else if (match == 2) { 
-		ed_weak = ed;
+		ed_weak = convert(ed, t);
 	    }
 	}
 	if (ed_weak) {
