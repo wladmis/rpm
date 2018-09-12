@@ -648,7 +648,11 @@ static void te_log(rpmte te, const char *s)
 #if HAVE_SYSLOG_H
     if (!geteuid())
     {
-	syslog (LOG_NOTICE, "%s %s %s\n", rpmteNEVR(te), rpmteBT(te), s);
+	const char * dt = rpmteDT(te);
+	if (dt == NULL)
+	    syslog (LOG_NOTICE, "%s %s %s\n", rpmteNEVR(te), rpmteBT(te), s);
+	else
+	    syslog (LOG_NOTICE, "%s %s %s %s\n", rpmteNEVR(te), dt, rpmteBT(te), s);
     }
 #endif
 }
