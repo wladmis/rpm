@@ -819,7 +819,8 @@ int replaceDeps(Package pkg1, Package pkg2, const char * strict_interdeps)
     if (pkg1 == pkg2)
 	goto exit;
 
-    for (int i = 0; i < reqc; i++) {
+    int i;
+    for (i = 0; i < reqc; i++) {
 	/* skip strict dependencies */
 	if (reqNv[i][0] == '.')
 	    continue;
