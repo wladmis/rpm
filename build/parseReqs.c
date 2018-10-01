@@ -35,6 +35,7 @@ static struct ReqComp {
 int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	       int index, rpmsenseFlags tagflags)
 {
+    static int allowbdot = -1;
     const char *r, *re, *v, *ve;
     char * req, * version;
     Header h;
@@ -95,8 +96,11 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 
 	flags = (tagflags & ~RPMSENSE_SENSEMASK);
 
-	/* Tokens must begin with alphanumeric, _, or / */
-	if (!(xisalnum(r[0]) || r[0] == '_' || r[0] == '/')) {
+	/* Tokens must begin with alphanumeric, _, or /
+	   It also can begin with dot symbol if _allow_deps_with_beginning_dot macro is set */
+	if (allowbdot < 0)
+	    allowbdot = rpmExpandNumeric("%{?_allow_deps_with_beginning_dot}");
+	if (!(xisalnum(r[0]) || r[0] == '_' || r[0] == '/' || (allowbdot && r[0] == '.'))) {
 	    rpmError(RPMERR_BADSPEC,
 		     _("line %d: Dependency tokens must begin with alpha-numeric, '_' or '/': %s\n"),
 		     spec->lineNum, (spec->fileStack ? spec->line : field));
