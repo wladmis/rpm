@@ -38,11 +38,15 @@ static rpmRC checkEpoch(const char *s, char **emsg)
 
 static rpmRC checkDep(rpmSpec spec, char *N, char *EVR, char **emsg)
 {
+    static int allowbdot = -1;
     /* 
      * Tokens must begin with alphanumeric, _, or /, but we don't know
      * the spec's encoding so we only check what we can: plain ascii.
+     * It also may begin with dot symbol if _allow_deps_with_beginning_dot macro is set.
      */
-    if (isascii(N[0]) && !(risalnum(N[0]) || N[0] == '_' || N[0] == '/')) {
+    if (allowbdot < 0)
+	allowbdot = rpmExpandNumeric("%{?_allow_deps_with_beginning_dot}");
+    if (isascii(N[0]) && !(risalnum(N[0]) || N[0] == '_' || N[0] == '/' || (allowbdot && N[0] == '.'))) {
         rasprintf(emsg, _("Dependency tokens must begin with alpha-numeric, '_' or '/'"));
         return RPMRC_FAIL;
     }
