@@ -1345,6 +1345,7 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 #	endif
 
 #	if defined(__linux__) && defined(__powerpc__)
+#	    if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	{
 	    unsigned pvr = 0;
 	    __sighandler_t oldh = signal(SIGILL, mfspr_ill);
@@ -1376,6 +1377,7 @@ static void defaultMachine(/*@out@*/ const char ** arch,
 		}
 	    }
 	}
+#	    endif
 #	endif
 
 	/* the uname() result goes through the arch_canon table */

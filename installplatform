@@ -72,6 +72,9 @@ case "$arch" in
   sparc*)
     SUBSTS='s,sparc\(64\|v9\),sparc, s,sparc64,sparcv9,;s,sparc\([^v]\|$\),sparcv9\1, s,sparcv9,sparc64,;s,sparc\([^6]\|$\),sparc64\1,'
     ;;
+  ppc64le)
+    SUBSTS='s,ppc64le,ppc64le, s,ppc64le,noarch,'
+    ;;
   powerpc*|ppc*)
     SUBSTS='s,ppc64,ppc, s,ppc\([^6]\|$\),ppc64\1,'
     ;;
@@ -107,6 +110,7 @@ for SUBST in $SUBSTS ; do
     mipsn32el-linux*) LIBSUFF=32 ;;
     mips64-linux*) LIBSUFF=64 ;;
     mips64el-linux*) LIBSUFF=64 ;;
+    ppc64le-linux*) LIBSUFF=64 ;;
     riscv64-linux) LIBSUFF=64 ;;
     s390x-linux) LIBSUFF=64 ;;
     sparc64-linux) LIBSUFF=64 ;;
