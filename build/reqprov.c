@@ -94,7 +94,7 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 	rpmsenseFlags Asense, Bsense;
 	int sense, wcmp = 0;
 	char *aEVR = NULL, *bEVR = NULL;
-	const char *aE, *aV, *aR, *bE, *bV, *bR;
+	const char *aE, *aV, *aR, *aD, *bE, *bV, *bR, *bD;
 
 	/* 1. filter out noise */
 	Aflags &= ~(RPMSENSE_FIND_REQUIRES | RPMSENSE_FIND_PROVIDES);
@@ -213,9 +213,9 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 	}
 	else {
 	    aEVR = xstrdup(Aevr);
-	    parseEVR(aEVR, &aE, &aV, &aR);
+	    parseEVRD(aEVR, &aE, &aV, &aR, &aD);
 	    bEVR = xstrdup(Bevr);
-	    parseEVR(bEVR, &bE, &bV, &bR);
+	    parseEVRD(bEVR, &bE, &bV, &bR, &bD);
 
 	    /*
 	     * Promote Epoch by giving it special treatment:
@@ -246,6 +246,14 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 			cmp_rc = DEP_ST;
 		else if ((bE && *bE) && !(aE && *aE))
 			cmp_rc = DEP_WK;
+	}
+	/* 11. EVRs with DistTag are stronger. */
+	if (cmp_rc == DEP_EQ)
+	{
+	    if ((aD && *aD) && !(bD && *bD))
+		cmp_rc = DEP_ST;
+	    else if ((bD && *bD) && !(aD && *aD))
+		cmp_rc = DEP_WK;
 	}
 
 	aEVR = _free(aEVR);

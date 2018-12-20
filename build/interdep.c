@@ -1,6 +1,6 @@
 /*
  * interdep.c - inter-package analysis and optimizations based on
- * strict dependencies between subpackages (Requires: N = [E:]V-R).
+ * strict dependencies between subpackages (Requires: N = [E:]V-R[:D]).
  *
  * Written by Alexey Tourbin <at@altlinux.org>.
  * License: GPLv2+.
@@ -89,19 +89,19 @@ addDeps1(struct Req *r, Package pkg1, Package pkg2)
     if (Requires(r, pkg1, pkg2))
 	return;
     const char *name = pkgName(pkg2);
-    const char *evr = headerSprintf(pkg2->header,
-	    "%|epoch?{%{epoch}:}|%{version}-%{release}",
+    const char *evrd = headerSprintf(pkg2->header,
+	    "%|epoch?{%{epoch}:}|%{version}-%{release}%|disttag?{:%{disttag}}|",
 	    rpmTagTable, rpmHeaderFormats, NULL);
-    assert(evr);
+    assert(evrd);
     int flags = RPMSENSE_EQUAL | RPMSENSE_FIND_REQUIRES;
-    int added = !addReqProv(NULL, pkg1->header, flags, name, evr, 0);
+    int added = !addReqProv(NULL, pkg1->header, flags, name, evrd, 0);
     if (added) {
 	addRequires(r, pkg1, pkg2);
 	propagateRequires(r);
 	rpmMessage(RPMMESS_NORMAL, "Adding to %s a strict dependency on %s\n",
 		   pkgName(pkg1), pkgName(pkg2));
     }
-    evr = _free(evr);
+    evrd = _free(evrd);
 }
 
 static
@@ -118,8 +118,8 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn)
        hge(pkg1->header, RPMTAG_REQUIREFLAGS, NULL, (void **) &reqFv, NULL);
     if (!ok)
 	return;
-    const char *provN, *provV, *provR;
-    headerNVR(pkg2->header, &provN, &provV, &provR);
+    const char *provN, *provV, *provR, *provD;
+    headerNVRD(pkg2->header, &provN, &provV, &provR, &provD);
     int i;
     for (i = 0; i < c; i++) {
 	if (strcmp(reqNv[i], provN))
@@ -133,15 +133,32 @@ void makeReq1(struct Req *r, Package pkg1, Package pkg2, int warn)
 	const char *reqR = skipPrefixDash(reqVR, provV);
 	if (reqR == NULL && xisdigit(*reqVR)) {
 	    colon = strchr(reqVR, ':');
-	    if (colon)
+	    if (colon) {
+		/* reqVR contains an epoch */
 		reqR = skipPrefixDash(colon + 1, provV);
+	    }
 	}
 	if (reqR == NULL)
 	    continue;
-	if (strcmp(reqR, provR))
-	    continue;
+	const char *reqD = NULL;
+	if (strcmp(reqR, provR)) {
+	    /* Check whether reqR contains a disttag. */
+	    reqD = strchr(reqR, ':');
+	    if (!reqD)
+		continue;
+	    if (strncmp(provR, reqR, reqD - reqR)
+		|| provR[reqD - reqR])
+		continue;
+	    reqD++;
+	    if (provD && strcmp(provD, reqD))
+		continue;
+	}
 	if (warn && colon == NULL && headerIsEntry(pkg2->header, RPMTAG_EPOCH)) {
 	    rpmMessage(RPMMESS_WARNING, "%s: dependency on %s needs Epoch\n",
+		       pkgName(pkg1), pkgName(pkg2));
+	    addDeps1(r, pkg1, pkg2);
+	} else if (warn && provD && !reqD) {
+	    rpmMessage(RPMMESS_DEBUG, "%s: dependency on %s needs disttag\n",
 		       pkgName(pkg1), pkgName(pkg2));
 	    addDeps1(r, pkg1, pkg2);
 	} else {

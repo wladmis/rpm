@@ -431,16 +431,15 @@ void buildOrigFileList(Header h, const char *** fileListPtr, int * fileCountPtr)
 
 /*
  * Up to rpm 3.0.4, packages implicitly provided their own name-version-release.
- * Retrofit an explicit "Provides: name = epoch:version-release.
+ * Retrofit an explicit "Provides: name = epoch:version-release:disttag.
  */
 void providePackageNVR(Header h)
 {
     HGE_t hge = (HGE_t)headerGetEntryMinMemory;
     HFD_t hfd = headerFreeData;
-    const char *name, *version, *release;
+    const char *name, *version, *release, *disttag;
     int_32 * epoch;
     const char *pEVR;
-    char *p;
     int_32 pFlags = RPMSENSE_EQUAL;
     const char ** provides = NULL;
     const char ** providesEVR = NULL;
@@ -451,17 +450,20 @@ void providePackageNVR(Header h)
     int bingo = 1;
 
     /* Generate provides for this package name-version-release. */
-    xx = headerNVR(h, &name, &version, &release);
+    xx = headerNVRD(h, &name, &version, &release, &disttag);
     if (!(name && version && release))
 	return;
-    pEVR = p = alloca(21 + strlen(version) + 1 + strlen(release) + 1);
-    *p = '\0';
-    if (hge(h, RPMTAG_EPOCH, NULL, (void **) &epoch, NULL)) {
-	sprintf(p, "%d:", *epoch);
-	while (*p != '\0')
-	    p++;
-    }
-    (void) stpcpy( stpcpy( stpcpy(p, version) , "-") , release);
+    if (disttag && !*disttag)
+	disttag = NULL;
+
+    char ebuf[sizeof(*epoch) * 3 + 2] = "";
+    if (hge(h, RPMTAG_EPOCH, NULL, (void **) &epoch, NULL))
+	sprintf(ebuf, "%u:", *epoch);
+
+    pEVR = xasprintf("%s%s-%s%s%s",
+		     ebuf, version, release,
+		     disttag ? ":" : "",
+		     disttag ?: "");
 
     /*
      * Rpm prior to 3.0.3 does not have versioned provides.
@@ -512,4 +514,5 @@ exit:
 	xx = headerAddOrAppendEntry(h, RPMTAG_PROVIDEVERSION, RPM_STRING_ARRAY_TYPE,
 		&pEVR, 1);
     }
+    pEVR = _free(pEVR);
 }
