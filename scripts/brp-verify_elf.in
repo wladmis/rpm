@@ -110,9 +110,9 @@ for t in `printf %s "$RPM_VERIFY_ELF_METHOD" |tr , ' '`; do
 	esac
 done
 
-# No stack verification available on arm* and mips*
+# No stack verification available on arm*, mips* and riscv*
 case "$RPM_TARGET_ARCH" in
-    arm*|mips*)
+    arm*|mips*|riscv*)
 	VERIFY_ELF_LINT=no
 	VERIFY_ELF_STACK=no
         ;;
