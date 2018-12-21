@@ -233,10 +233,12 @@
 @alt@	\
 @alt@	%{?__find_requires_filter:export RPM_FIND_REQUIRES_FILTER=$(cat <<'!FIND!REQUIRES!FILTER!'\
 @alt@%__find_requires_filter\
-@alt@!FIND!REQUIRES!FILTER!)}\
+@alt@!FIND!REQUIRES!FILTER!\
+@alt@)}\
 @alt@	%{?__find_provides_filter:export RPM_FIND_PROVIDES_FILTER=$(cat <<'!FIND!PROVIDES!FILTER!'\
 @alt@%__find_provides_filter\
-@alt@!FIND!PROVIDES!FILTER!)}\
+@alt@!FIND!PROVIDES!FILTER!\
+@alt@)}\
 @alt@	unset LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL ||:\
 @alt@	%{?_build_lang:export LANG=\"%_build_lang\"\
 @alt@	export LANGUAGE=\"%_build_lang\"\
