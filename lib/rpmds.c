@@ -991,45 +991,60 @@ int rpmdsSearch(rpmds ds, rpmds ods)
     return i;
 }
 /**
- * Split EVR into epoch, version, and release components.
- * @param evr		[epoch:]version[-release] string
+ * Split EVRD into epoch, version, release and disttag components.
+ * @param evrd		[epoch:]version[-release[:disttag]] string
  * @retval *ep		pointer to epoch
  * @retval *vp		pointer to version
  * @retval *rp		pointer to release
+ * @retval *dp		pointer to disttag
  */
-void parseEVR(char * evr,
+void parseEVRD(char * evrd,
 		const char ** ep,
 		const char ** vp,
-		const char ** rp)
+		const char ** rp,
+		const char ** dp)
 {
-    const char *epoch;
-    const char *version;		/* assume only version is present */
-    const char *release;
+    const char *epoch = NULL;
+    const char *version = NULL;		/* assume only version is present */
+    const char *release = NULL;
+    const char *disttag = NULL;
     char *s, *se;
 
-    s = evr;
+    s = evrd;
     while (*s && risdigit(*s)) s++;	/* s points to epoch terminator */
     se = strrchr(s, '-');		/* se points to version terminator */
 
     if (*s == ':') {
-	epoch = evr;
+	epoch = evrd;
 	*s++ = '\0';
 	version = s;
 	if (*epoch == '\0') epoch = "0";
     } else {
-	epoch = NULL;	/* XXX disable epoch compare if missing */
-	version = evr;
+	version = evrd;
     }
     if (se) {
 	*se++ = '\0';
 	release = se;
-    } else {
-	release = NULL;
+	se = strchr(se, ':');
+	if (se) {
+	    *se++ = '\0';
+	    disttag = se;
+	}
     }
 
     if (ep) *ep = epoch;
     if (vp) *vp = version;
     if (rp) *rp = release;
+    if (dp) *dp = disttag;
+}
+
+/* compat function */
+void parseEVR(char *evr,
+	      const char ** ep,
+	      const char ** vp,
+	      const char ** rp)
+{
+    parseEVRD(evr, ep, vp, rp, NULL);
 }
 
 static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
