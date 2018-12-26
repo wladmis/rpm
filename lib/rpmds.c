@@ -1051,7 +1051,7 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 				  const char *BEVR, uint32_t BFlags,
 				  int nopromote)
 {
-    const char *aE, *aV, *aR, *bE, *bV, *bR;
+    const char *aE, *aV, *aR, *aD, *bE, *bV, *bR, *bD;
     char *aEVR = NULL;
     char *bEVR = NULL;
     int sense = 0;
@@ -1109,10 +1109,10 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 	aEVR = xstrdup(AEVR);
 	bEVR = xstrdup(BEVR);
 
-	parseEVR(aEVR, &aE, &aV, &aR);
-	parseEVR(bEVR, &bE, &bV, &bR);
+	parseEVRD(aEVR, &aE, &aV, &aR, &aD);
+	parseEVRD(bEVR, &bE, &bV, &bR, &bD);
 
-	/* Compare {A,B} [epoch:]version[-release] */
+	/* Compare {A,B} [epoch:]version[-release[:disttag]] */
 	if (aE && *aE && bE && *bE)
 	    sense = rpmvercmp(aE, bE);
 	else if (aE && *aE && atol(aE) > 0) {
@@ -1128,6 +1128,12 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 	    if (sense == 0) {
 		if (aR && *aR && bR && *bR) {
 		    sense = rpmvercmp(aR, bR);
+		    if (sense == 0) {
+			if (aD && bD && strcmp(aD, bD)) {
+			    result = 0;
+			    goto exit;
+			}
+		    }
 		} else {
 		    /* always matches if the side with no release has SENSE_EQUAL */
 		    if ((aR && *aR && (BFlags & RPMSENSE_EQUAL)) ||
