@@ -1488,7 +1488,9 @@ rpmEVRcmp(const char * const aE, const char * const aV, const char * const aR,
  * @retval *ep		pointer to epoch
  * @retval *vp		pointer to version
  * @retval *rp		pointer to release
+ * @retval *dp		pointer to disttag
  */
+void parseEVRD(char * evr, const char ** ep, const char ** vp, const char ** rp, const char ** dp);
 void parseEVR(char * evr,
 		/*@exposed@*/ /*@out@*/ const char ** ep,
 		/*@exposed@*/ /*@out@*/ const char ** vp,
