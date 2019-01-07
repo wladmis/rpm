@@ -446,6 +446,55 @@ if (multiToken) { \
     return RPMERR_BADSPEC; \
 }
 
+/**
+ * Check for inappropriate characters.
+ * All alphanumerics are allowed.
+ *
+ * @param spec		spec (or NULL)
+ * @param str		string to check
+ * @param accept_bytes	string of permitted bytes
+ * @param reject_substr	sequence of rejected bytes
+ * @return		RPMRC_OK if OK
+ */
+static rpmRC
+rpmCharCheck(Spec spec, const char *str,
+	     const char *accept_bytes, const char *reject_substr)
+{
+	const char *err = 0;
+
+	for (const char *p = str; *p; ++p) {
+		const unsigned char c = *p;
+
+		if (xisalnum(c))
+			continue;
+
+		/* the first byte must be alphanumeric */
+		if (p != str && accept_bytes && strchr(accept_bytes, c))
+			continue;
+
+		err = isprint(c)
+		      ? xasprintf("Invalid symbol '%c' (%#x)", c, c)
+		      : xasprintf("Invalid symbol (%#x)", c);
+	}
+
+	if (!err && reject_substr && reject_substr[0]
+	    && strstr(str, reject_substr))
+		err = xasprintf("Invalid sequence \"%s\"", reject_substr);
+
+	if (!err)
+		return RPMRC_OK;
+
+	if (spec) {
+		rpmlog(RPMLOG_ERR, "line %d: %s in: %s\n",
+		       spec->lineNum, err, spec->line);
+	} else {
+		rpmlog(RPMLOG_ERR, "%s in: %s\n", err, str);
+	}
+
+	err = _free(err);
+	return RPMRC_FAIL;
+}
+
 /*@-redecl@*/
 extern int noLang;
 /*@=redecl@*/
@@ -504,27 +553,34 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
 
     switch (tag) {
       case RPMTAG_NAME:
+	SINGLE_TOKEN_ONLY;
+	if (rpmCharCheck(spec, field, "-._+", ".."))
+	    return RPMERR_BADSPEC;
+	(void) headerAddEntry(pkg->header, tag, RPM_STRING_TYPE, field, 1);
+	break;
       case RPMTAG_VERSION:
+	SINGLE_TOKEN_ONLY;
+	if (rpmCharCheck(spec, field, "._+", ".."))
+	    return RPMERR_BADSPEC;
+	/* This macro is for backward compatibility */
+	addMacro(spec->macros, "PACKAGE_VERSION", NULL, field, RMIL_OLDSPEC);
+	(void) headerAddEntry(pkg->header, tag, RPM_STRING_TYPE, field, 1);
+	break;
       case RPMTAG_RELEASE:
-      case RPMTAG_URL:
+	if (rpmCharCheck(spec, field, "._+", ".."))
+	    return RPMERR_BADSPEC;
+	/* This macro is for backward compatibility */
+	addMacro(spec->macros, "PACKAGE_RELEASE", NULL, field, RMIL_OLDSPEC-1);
+	(void) headerAddEntry(pkg->header, tag, RPM_STRING_TYPE, field, 1);
+	break;
       case RPMTAG_DISTTAG:
 	SINGLE_TOKEN_ONLY;
-	/* These macros are for backward compatibility */
-	if (tag == RPMTAG_VERSION) {
-	    if (strchr(field, '-') != NULL) {
-		rpmError(RPMERR_BADSPEC, _("line %d: Illegal char '-' in %s: %s\n"),
-		    spec->lineNum, "version", spec->line);
-		return RPMERR_BADSPEC;
-	    }
-	    addMacro(spec->macros, "PACKAGE_VERSION", NULL, field, RMIL_OLDSPEC);
-	} else if (tag == RPMTAG_RELEASE) {
-	    if (strchr(field, '-') != NULL) {
-		rpmError(RPMERR_BADSPEC, _("line %d: Illegal char '-' in %s: %s\n"),
-		    spec->lineNum, "release", spec->line);
-		return RPMERR_BADSPEC;
-	    }
-	    addMacro(spec->macros, "PACKAGE_RELEASE", NULL, field, RMIL_OLDSPEC-1);
-	}
+	if (rpmCharCheck(spec, field, "._+", ".."))
+	    return RPMERR_BADSPEC;
+	(void) headerAddEntry(pkg->header, tag, RPM_STRING_TYPE, field, 1);
+	break;
+      case RPMTAG_URL:
+	SINGLE_TOKEN_ONLY;
 	(void) headerAddEntry(pkg->header, tag, RPM_STRING_TYPE, field, 1);
 	break;
       case RPMTAG_GROUP:
