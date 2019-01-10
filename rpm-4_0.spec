@@ -31,7 +31,7 @@ Summary(ru_RU.UTF-8): Файлы, необходимые для установк
 License: GPL
 Group: Development/Other
 Obsoletes: spec-helper
-PreReq: librpmbuild = %version-%release
+Requires: librpmbuild = %version-%release
 PreReq: shadow-utils
 Requires: autoconf autoconf-common automake automake-common bison coreutils cpio
 Requires: gcc gettext-tools glibc-devel gnu-config file kernel-headers libtool m4
