@@ -354,14 +354,27 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		continue;
 
 	    if (flagtag && flags && versions) {
-	    	dep_compare_t rc = compare_deps (flagtag, versions[i], flags[i], depEVR, depFlags);
+		dep_compare_t rc = compare_deps(flagtag, versions[i], flags[i],
+						depEVR, depFlags);
 
 #if 0
 		fprintf (stderr, "D: name=%s, compare_deps=%d: tag=%d, AEVR=%s, Aflags=%#x, BEVR=%s, Bflags=%#x\n",
 			depName, rc, flagtag, versions[i], flags[i], depEVR, depFlags);
 #endif
-	    	switch (rc)
-		{
+		if (rc == DEP_UN && flagtag == RPMTAG_REQUIREFLAGS) {
+			const rpmsenseFlags mergedFlags = depFlags |
+				(flags[i] & _ALL_REQUIRES_MASK & ~RPMSENSE_FIND_REQUIRES);
+			if (mergedFlags != depFlags &&
+			    compare_deps(flagtag, versions[i], flags[i],
+					 depEVR, mergedFlags) == DEP_WK) {
+				rpmMessage(RPMMESS_DEBUG,
+					"new dep \"%s\" flags %#x upgraded to %#x\n",
+					depName, depFlags, mergedFlags);
+				depFlags = mergedFlags;
+				rc = DEP_WK;
+			}
+		}
+		switch (rc) {
 			case DEP_EQ:
 				rpmMessage (RPMMESS_DEBUG,
 					"new dep \"%s\" already exists, optimized out\n",
