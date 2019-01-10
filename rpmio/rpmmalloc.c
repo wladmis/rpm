@@ -19,6 +19,22 @@
 }
 /*@=modfilesys@*/
 
+char *
+xasprintf(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+
+	char *res;
+	if (vasprintf(&res, fmt, ap) < 0) {
+		fprintf(stderr, "vasprintf: %m\n");
+		exit(EXIT_FAILURE);
+	}
+
+	va_end(ap);
+	return res;
+}
+
 #if !(HAVE_MCHECK_H && defined(__GNUC__)) && !defined(__LCLINT__)
 
 /*@out@*/ /*@only@*/ void * xmalloc (size_t size)

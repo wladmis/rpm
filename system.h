@@ -298,6 +298,11 @@ typedef char * security_context_t;
 /*@unused@*/ /*@exits@*/ /*@only@*/ void * vmefail(size_t size)
 	/*@*/;
 
+#define xasprintf rpm_xasprintf
+
+char *xasprintf(const char *fmt, ...)
+	__attribute__((__format__(__printf__, 1, 2), __malloc__));
+
 #if HAVE_MCHECK_H
 #include <mcheck.h>
 #if defined(__LCLINT__)
