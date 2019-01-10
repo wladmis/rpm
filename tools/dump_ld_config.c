@@ -25,6 +25,9 @@
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE
 #endif
+#ifndef _FILE_OFFSET_BITS
+# define _FILE_OFFSET_BITS 64
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
