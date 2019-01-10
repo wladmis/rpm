@@ -104,6 +104,22 @@ int headerNVR(Header h,
 	/*@modifies *np, *vp, *rp @*/;
 
 /** \ingroup header
+ * Return name, version, release, and disttag strings from header.
+ * @param h		header
+ * @retval *np		name pointer (or NULL)
+ * @retval *vp		version pointer (or NULL)
+ * @retval *rp		release pointer (or NULL)
+ * @retval *dp		disttag pointer (or NULL)
+ * @return		0 always
+ */
+int headerNVRD(Header h,
+		/*@null@*/ /*@out@*/ const char ** np,
+		/*@null@*/ /*@out@*/ const char ** vp,
+		/*@null@*/ /*@out@*/ const char ** rp,
+		/*@null@*/ /*@out@*/ const char ** dp)
+	/*@modifies *np, *vp, *rp, *dp @*/;
+
+/** \ingroup header
  * Return name, epoch, version, release, arch strings from header.
  * @param h		header
  * @retval *np		name pointer (or NULL)

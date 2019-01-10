@@ -6,7 +6,8 @@
 #include "rpmlib.h"
 #include "debug.h"
 
-int headerNVR(Header h, const char **np, const char **vp, const char **rp)
+int headerNVRD(Header h, const char **np, const char **vp, const char **rp,
+	       const char **dp)
 {
     int type;
     int count;
@@ -27,8 +28,18 @@ int headerNVR(Header h, const char **np, const char **vp, const char **rp)
 	    && type == RPM_STRING_TYPE && count == 1))
 		*rp = NULL;
     }
+    if (dp) {
+	if (!(headerGetEntry(h, RPMTAG_DISTTAG, &type, (void **) dp, &count)
+	      && type == RPM_STRING_TYPE && count == 1))
+		*dp = NULL;
+    }
 /*@=boundswrite@*/
     return 0;
+}
+
+int headerNVR(Header h, const char **np, const char **vp, const char **rp)
+{
+    return headerNVRD(h, np, vp, rp, NULL);
 }
 
 int headerNEVRA(Header h, const char **np,
