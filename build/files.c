@@ -2553,10 +2553,8 @@ const char *saveInstScript(Spec spec, Package pkg, const char *scriptname)
     headerNVR(pkg->header, &N, NULL, NULL);
     assert(N);
 
-    const char *path = NULL;
-    asprintf(&path, "%s/.%s:%s", buildroot, scriptname, N);
-    assert(path);
-
+    const char *path =
+	    xasprintf("%s/.%s:%s", buildroot, scriptname, N);
     FILE *fp = fopen(path, "w");
     if (!fp) {
 	rpmMessage(RPMMESS_ERROR, _("cannot write %s\n"), path);
@@ -2673,9 +2671,9 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
 		const char **av;
 		for ( av = dm->argv + 1; av[0]; ++av )
 		{
-			const char *p = xstrdup( runBody );
-			asprintf( &runBody, "%s %s", p, av[0] );
-			p = _free( p );
+			char *p = xasprintf("%s %s", runBody, av[0]);
+			_free(runBody);
+			runBody = p;
 		}
 	}
 
@@ -2683,9 +2681,9 @@ static int generateDepends(Spec spec, Package pkg, TFI_t cpioList)
 
 	if (instScript) {
 	    /* pass extra argument, the script filename */
-	    const char *p = xstrdup( runBody );
-	    asprintf( &runBody, "%s %s", p, instScript);
-	    p = _free( p );
+	    char *p = xasprintf("%s %s", runBody, instScript);
+	    _free(runBody);
+	    runBody = p;
 	}
 
 	readBuf = runPkgScript(pkg, runBody,
@@ -2809,9 +2807,8 @@ static int makeDebugInfo(Spec spec, Package pkg)
 	    rpmTagTable, rpmHeaderFormats, NULL);
     assert(include);
 
-    char *path = NULL;
-    asprintf(&path, "%s/.include:%s-debuginfo", spec->buildRootURL, N);
-    assert(path);
+    const char *path =
+	    xasprintf("%s/.include:%s-debuginfo", spec->buildRootURL, N);
     FILE *fp = fopen(path, "w");
     assert(fp);
     fputs(include, fp);

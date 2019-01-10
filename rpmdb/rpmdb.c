@@ -3152,14 +3152,8 @@ int rpmdbRebuild(const char * prefix)
     tfn = rpmGetPath("%{?_dbpath_rebuild}", NULL);
     /*@=nullpass@*/
     if (!(tfn && tfn[0] && strcmp(tfn, dbpath))) {
-	char *pidbuf;
-	char *t;
-	asprintf(&pidbuf, "rebuilddb.%u", getpid());
-	t = xmalloc(strlen(dbpath) + strlen(pidbuf) + 1);
-	(void)stpcpy(stpcpy(t, dbpath), pidbuf);
-	pidbuf = _free(pidbuf);
 	tfn = _free(tfn);
-	tfn = t;
+	tfn = xasprintf("%srebuilddb.%u", dbpath, getpid());
 	nocleanup = 0;
     }
     newdbpath = newrootdbpath = rpmGetPath(prefix, tfn, NULL);

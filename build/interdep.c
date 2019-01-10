@@ -837,12 +837,9 @@ int replaceDeps(Package pkg1, Package pkg2, const char * strict_interdeps)
 		(reqFv[i] & RPMSENSE_SENSEMASK) != RPMSENSE_EQUAL)
 	    continue;
 
-	if (strictdep == NULL)
-	    if (asprintf(&strictdep, ".%s-%s-%s", strict_interdeps, name, evr) == -1) {
-		rc = RPMRC_FAIL;
-		rpmlog(RPMLOG_ERR, "Cannot allocate memory for strictdep\n");
-		goto exit;
-	    }
+	if (!strictdep)
+	    strictdep = xasprintf(".%s-%s-%s", strict_interdeps, name, evr);
+
 	reqNv[i] = strictdep;
 	reqVv[i] = "";
 	reqFv[i] = reqFv[i] & ~RPMSENSE_SENSEMASK;
