@@ -361,9 +361,15 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		fprintf (stderr, "D: name=%s, compare_deps=%d: tag=%d, AEVR=%s, Aflags=%#x, BEVR=%s, Bflags=%#x\n",
 			depName, rc, flagtag, versions[i], flags[i], depEVR, depFlags);
 #endif
-		if (rc == DEP_UN && flagtag == RPMTAG_REQUIREFLAGS) {
-			const rpmsenseFlags mergedFlags = depFlags |
-				(flags[i] & _ALL_REQUIRES_MASK & ~RPMSENSE_FIND_REQUIRES);
+		if (rc == DEP_UN &&
+		    flagtag == RPMTAG_REQUIREFLAGS &&
+		    (!isLegacyPreReq(flags[i]) ||
+		     !(depFlags & _ALL_REQUIRES_MASK & ~RPMSENSE_FIND_REQUIRES)) &&
+		    (!isLegacyPreReq(depFlags) ||
+		     !(flags[i] & _ALL_REQUIRES_MASK & ~RPMSENSE_FIND_REQUIRES))) {
+			const rpmsenseFlags mergedFlags =
+				(flags[i] & _ALL_REQUIRES_MASK) |
+				(depFlags & ~RPMSENSE_FIND_REQUIRES);
 			if (mergedFlags != depFlags &&
 			    compare_deps(flagtag, versions[i], flags[i],
 					 depEVR, mergedFlags) == DEP_WK) {
