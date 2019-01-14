@@ -149,34 +149,51 @@ static int parseBits(const char * s, const tokenBits tokbits,
 		/*@out@*/ rpmsenseFlags * bp)
 	/*@modifies *bp @*/
 {
-    tokenBits tb;
-    const char * se;
     rpmsenseFlags bits = RPMSENSE_ANY;
-    int c = 0;
+    int rc = 0;
 
     if (s) {
-	while (*s != '\0') {
+	while (*s) {
+	    int c = 0;
 	    while ((c = *s) && xisspace(c)) s++;
-	    se = s;
+
+	    const char *se = s;
 	    while ((c = *se) && xisalpha(c)) se++;
 	    if (s == se)
 		break;
-	    for (tb = tokbits; tb->name; tb++) {
-		if (tb->name != NULL &&
-		    strlen(tb->name) == (se-s) && !strncmp(tb->name, s, (se-s)))
-		    /*@innerbreak@*/ break;
+
+	    tokenBits tb = NULL;
+	    for (tokenBits t = tokbits; t->name; t++) {
+		if (t->name && !strncasecmp(t->name, s, (se-s))) {
+		    if (!t->name[se-s]) {
+			tb = t;
+			break;
+		    }
+		    if (tb) {
+			tb = NULL;
+			break;
+		    }
+		    tb = t;
+		}
 	    }
-	    if (tb->name == NULL)
+	    if (!tb) {
+		rc = RPMERR_BADSPEC;
 		break;
+	    }
 	    bits |= tb->bits;
+
 	    while ((c = *se) && xisspace(c)) se++;
-	    if (c != ',')
+	    if (c != ',') {
+		if (c)
+		    rc = RPMERR_BADSPEC;
 		break;
+	    }
 	    s = ++se;
 	}
     }
-    if (c == 0 && bp) *bp = bits;
-    return (c ? RPMERR_BADSPEC : 0);
+
+    *bp |= bits;
+    return rc;
 }
 
 /**
