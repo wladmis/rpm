@@ -1,0 +1,11 @@
+#!/bin/sh -efu
+#
+# Copyright (C) 2010  Alexey Tourbin <at@altlinux.org>
+# All rights reserved.
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# For the number of symbols in the range 2^{m-1}..2^m-1,
+# use m+10 bits per symbol.  Upper bound on the error rate
+# is 2^{-10} (about 0.1%).
+exec perl -le 'print int log(shift) / log(2) + 11' "$1"

@@ -1,6 +1,6 @@
 #!/bin/sh -efu
 #
-# Copyright (C) 2000-2006,2008  Dmitry V. Levin <ldv@altlinux.org>
+# Copyright (C) 2000-2019  Dmitry V. Levin <ldv@altlinux.org>
 # Copyright (C) 2007-2010  Alexey Tourbin <at@altlinux.org>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -217,42 +217,6 @@ NF==2 && ($1==name || basename($1)==name) && $1~"^/" && $2~"^[(]0x" {print $1}
 	LC_ALL=C sort -t$'\t' -m -u -k2,2 -k1,1 -o "$tmpdir"/sym2lib{,} "$tmpdir"/a/sym2lib
 }
 
-ProvidedSymbols()
-{
-	readelf --wide --dyn-syms "$1" |
-	awk '+$1 && NF>=8 &&
-# dl-lookup.c: /st_value
-($2!="00000000" && $2!="0000000000000000" || $4=="TLS") &&
-# dl-lookup.c: /ALLOWED_STT
-($4=="NOTYPE" || $4=="OBJECT" || $4 == "FUNC" || $4=="COMMON" || $4=="TLS" || $4=="IFUNC") &&
-# dl-lookup.c: /hidden
-($6=="DEFAULT" || $6=="PROTECTED") &&
-# dl-lookup.c: /switch.*ST_BIND
-($5=="GLOBAL" || $5=="WEAK" || $5 == "UNIQUE") {
-	# dl-lookup.c: /st_shndx
-	match($0, "[[:space:]][[:digit:]]+[[:space:]]+([^[:space:]()@]+)(@+[^[:space:]()@]+)?$", a)
-	sym = a[1]
-	if (sym == "" ||
-	    # ignore special symbols found in each library
-	    sym == "__bss_start" ||
-	    sym == "_edata" ||
-	    sym == "_end" ||
-	    sym == "_fini" ||
-	    sym == "_init")
-		next
-	print sym
-}' |
-	LC_ALL=C sort -u
-}
-
-SuggestBPP()
-{
-	# For the number of symbols in the range 2^{m-1}..2^m-1,
-	# use m+10 bits per symbol.  Upper bound on the error rate
-	# is 2^{-10} (about 0.1%).
-	perl -le 'print int log(shift) / log(2) + 11' "$1"
-}
-
 ArgvFileAction LibReq "$@"
 [ -s "$tmpdir"/lib2dep ] || exit 0
 
@@ -286,10 +250,10 @@ while IFS=$'\t' read -r lib dep; do
 		continue
 	fi
 	# Deal with bpp.
-	provsym=$(ProvidedSymbols "$lib")
+	provsym=$(@RPMCONFIGDIR@/provided_symbols "$lib")
 	if [ -n "$provsym" ]; then
 		provn=$(printf '%s\n' "$provsym" |wc -l)
-		bpp=$(SuggestBPP "$provn")
+		bpp=$(@RPMCONFIGDIR@/suggest_bpp "$provn")
 	else
 		Warning "$lib provides no symbols"
 		bpp=10

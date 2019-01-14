@@ -475,10 +475,12 @@ mv -T %buildroot%_rpmlibdir/{,build}macros
 %rpmattr %_rpmlibdir/percolate
 %rpmattr %_rpmlibdir/pkgconfig.*
 %rpmattr %_rpmlibdir/pkgconfiglib.*
+%rpmattr %_rpmlibdir/provided_symbols
 %rpmattr %_rpmlibdir/rpmlib.*
 %rpmattr %_rpmlibdir/shell.*
 %rpmattr %_rpmlibdir/shebang.*
 %rpmattr %_rpmlibdir/static.*
+%rpmattr %_rpmlibdir/suggest_bpp
 %rpmattr %_rpmlibdir/symlinks.*
 %rpmattr %_rpmlibdir/tmpdir.sh
 %rpmattr %_rpmlibdir/verify-elf
