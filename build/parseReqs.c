@@ -58,7 +58,19 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 	h = spec->buildRestrictions;
 	break;
     case RPMTAG_PREREQ:
-	tagflags |= RPMSENSE_PREREQ;
+	tag = RPMTAG_REQUIREFLAGS;
+	if (tagflags == RPMSENSE_ANY) {
+		tagflags = RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN;
+		rpmlog(RPMLOG_WARNING,
+		       _("line %d: Deprecated PreReq converted"
+			 " to Requires(pre,postun): %s\n"),
+		       spec->lineNum, spec->line);
+	} else {
+		rpmlog(RPMLOG_WARNING,
+		       _("line %d: Deprecated PreReq converted"
+			 " to Requires: %s\n"),
+		       spec->lineNum, spec->line);
+	}
 	h = pkg->header;
 	break;
     case RPMTAG_BUILDPREREQ:
