@@ -224,12 +224,22 @@ ArgvFileAction LibReq "$@"
 cat >"$tmpdir"/stddep <<EOF
 libc.so.6
 libc.so.6()(64bit)
-libpthread.so.0
-libpthread.so.0()(64bit)
 libm.so.6
 libm.so.6()(64bit)
+libpthread.so.0
+libpthread.so.0()(64bit)
+libresolv.so.2
+libresolv.so.2()(64bit)
+libmvec.so.1
+libmvec.so.1()(64bit)
+librt.so.1
+librt.so.1()(64bit)
 libdl.so.2
 libdl.so.2()(64bit)
+libutil.so.1
+libutil.so.1()(64bit)
+libanl.so.1
+libanl.so.1()(64bit)
 libgcc_s.so.1
 libgcc_s.so.1()(64bit)
 libstdc++.so.6
