@@ -103,8 +103,8 @@ LibProv()
 	if [ -n "$sym" ]; then
 		local n bpp set
 		n=$(printf '%s\n' "$sym" |wc -l)
-		Verbose "$f: $n symbols"
 		bpp=$(@RPMCONFIGDIR@/suggest_bpp "$n")
+		Info "$f: $n symbols, $bpp bpp"
 		set=$(printf '%s\n' "$sym" |@RPMCONFIGDIR@/mkset "$bpp")
 		printf '%s = %s\n' "$provname" "$set"
 	else
