@@ -149,20 +149,23 @@ static int parseBits(const char * s, const tokenBits tokbits,
 		/*@out@*/ rpmsenseFlags * bp)
 	/*@modifies *bp @*/
 {
+    tokenBits tb = NULL;
     rpmsenseFlags bits = RPMSENSE_ANY;
     int rc = 0;
 
     if (s) {
-	while (*s) {
+	for (;;) {
 	    int c = 0;
 	    while ((c = *s) && xisspace(c)) s++;
 
 	    const char *se = s;
 	    while ((c = *se) && xisalpha(c)) se++;
-	    if (s == se)
+	    if (s == se) {
+		if (c || tb)
+		    rc = RPMERR_BADSPEC;
 		break;
+	    }
 
-	    tokenBits tb = NULL;
 	    for (tokenBits t = tokbits; t->name; t++) {
 		if (t->name && !strncasecmp(t->name, s, (se-s))) {
 		    if (!t->name[se-s]) {
