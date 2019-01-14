@@ -2446,11 +2446,8 @@ DepMsg_t depMsgs[] = {
   { "Provides",		{ "%{?__find_provides}", 0 },
 	RPMTAG_PROVIDENAME, RPMTAG_PROVIDEVERSION, RPMTAG_PROVIDEFLAGS,
 	0, -1 },
-  { "PreReq",		{ "%{?__find_prereq}", 0 },
-	RPMTAG_REQUIRENAME, RPMTAG_REQUIREVERSION, RPMTAG_REQUIREFLAGS,
-	RPMSENSE_PREREQ, 0 },
   { "Requires",		{ "%{?__find_requires}", 0 },
-	-1, -1, RPMTAG_REQUIREFLAGS,	/* XXX inherit name/version arrays */
+	RPMTAG_REQUIRENAME, RPMTAG_REQUIREVERSION, RPMTAG_REQUIREFLAGS,
 	RPMSENSE_PREREQ, RPMSENSE_PREREQ },
   { "Requires(interp)",	{ 0, "interp", 0 },
 	-1, -1, RPMTAG_REQUIREFLAGS,

@@ -119,7 +119,6 @@
 %__find_requires	@FINDREQUIRES@
 %__find_scriptlet_requires	@RPMCONFIGDIR@/find-scriptlet-requires
 %__find_debuginfo_files	@RPMCONFIGDIR@/find-debuginfo-files
-#%__find_prereq		???
 #%__find_conflicts	???
 #%__find_obsoletes	???
 
