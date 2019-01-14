@@ -671,7 +671,6 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
 	if ((rc = parseNoSource(spec, field, tag)))
 	    return rc;
 	break;
-      case RPMTAG_BUILDPREREQ:
       case RPMTAG_BUILDREQUIRES:
 	if ((rc = parseBits(lang, buildScriptBits, &tagflags))) {
 	    rpmError(RPMERR_BADSPEC,
@@ -693,6 +692,7 @@ static int handlePreambleTag(Spec spec, Package pkg, int tag, const char *macro,
 	if ((rc = parseRCPOT(spec, pkg, field, tag, 0, tagflags)))
 	    return rc;
 	break;
+      case RPMTAG_BUILDPREREQ:
       case RPMTAG_BUILDCONFLICTS:
       case RPMTAG_CONFLICTFLAGS:
       case RPMTAG_OBSOLETEFLAGS:
@@ -800,7 +800,7 @@ static struct PreambleRec_s const preambleList[] = {
     {RPMTAG_BUILDARCHS,		0, LEN_AND_STR("buildarchitectures")},
     {RPMTAG_BUILDARCHS,		0, LEN_AND_STR("buildarch")},
     {RPMTAG_BUILDCONFLICTS,	0, LEN_AND_STR("buildconflicts")},
-    {RPMTAG_BUILDPREREQ,	2, LEN_AND_STR("buildprereq")},
+    {RPMTAG_BUILDPREREQ,	0, LEN_AND_STR("buildprereq")},
     {RPMTAG_BUILDREQUIRES,	2, LEN_AND_STR("buildrequires")},
     {RPMTAG_AUTOREQPROV,	0, LEN_AND_STR("autoreqprov")},
     {RPMTAG_AUTOREQ,		0, LEN_AND_STR("autoreq")},
