@@ -157,35 +157,11 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 		Breq = Bflags & _ALL_REQUIRES_MASK;
 		/* it is established fact that Areq != Breq */
 
-		/* 7c. Aflags is a legacy PreReq? */
-		if (isLegacyPreReq (Areq))
-		{
-			if (Breq == 0)
-				rc = DEP_ST;
-			else if ((Breq & RPMSENSE_SCRIPT_PRE) == RPMSENSE_SCRIPT_PRE &&
-			         (Breq & RPMSENSE_SCRIPT_POSTUN) == RPMSENSE_SCRIPT_POSTUN)
-				rc = DEP_WK;
-			else
-				return DEP_UN;
-		}
-
-		/* 7d. Bflags is a legacy PreReq? */
-		else if (isLegacyPreReq (Breq))
-		{
-			if (Areq == 0)
-				rc = DEP_WK;
-			else if ((Areq & RPMSENSE_SCRIPT_PRE) == RPMSENSE_SCRIPT_PRE &&
-			         (Areq & RPMSENSE_SCRIPT_POSTUN) == RPMSENSE_SCRIPT_POSTUN)
-				rc = DEP_ST;
-			else
-				return DEP_UN;
-		}
-
-		/* 7e. Aflags contains Bflags? */
-		else if (Breq && (Areq & Breq) == Breq)
+		/* 7c. Aflags contains Bflags? */
+		if (Breq && (Areq & Breq) == Breq)
 			rc = DEP_ST;
 
-		/* 7f. Bflags contains Aflags? */
+		/* 7d. Bflags contains Aflags? */
 		else if (Areq && (Areq & Breq) == Areq)
 			rc = DEP_WK;
 
@@ -361,12 +337,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 		fprintf (stderr, "D: name=%s, compare_deps=%d: tag=%d, AEVR=%s, Aflags=%#x, BEVR=%s, Bflags=%#x\n",
 			depName, rc, flagtag, versions[i], flags[i], depEVR, depFlags);
 #endif
-		if (rc == DEP_UN &&
-		    flagtag == RPMTAG_REQUIREFLAGS &&
-		    (!isLegacyPreReq(flags[i]) ||
-		     !(depFlags & _ALL_REQUIRES_MASK & ~RPMSENSE_FIND_REQUIRES)) &&
-		    (!isLegacyPreReq(depFlags) ||
-		     !(flags[i] & _ALL_REQUIRES_MASK & ~RPMSENSE_FIND_REQUIRES))) {
+		if (rc == DEP_UN && flagtag == RPMTAG_REQUIREFLAGS) {
 			const rpmsenseFlags mergedFlags =
 				(flags[i] & _ALL_REQUIRES_MASK) |
 				(depFlags & ~RPMSENSE_FIND_REQUIRES);
@@ -456,7 +427,6 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 	/* Do not add NEW provided requires. */
 	if (   deps_opt_enabled ()
 	    && (nametag == RPMTAG_REQUIRENAME)
-	    && !isLegacyPreReq (depFlags)
 	    && !(depFlags & _notpre (RPMSENSE_RPMLIB | RPMSENSE_KEYRING |
 				     RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN)))
 	{
@@ -579,8 +549,7 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 			rpmsenseFlags f = flags[i];
 
 			if ((f & _notpre (RPMSENSE_RPMLIB | RPMSENSE_KEYRING |
-					  RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN))
-			    || isLegacyPreReq (f))
+					  RPMSENSE_SCRIPT_PRE | RPMSENSE_SCRIPT_POSTUN)))
 				continue;
 			if (strcmp (depName, names[i]))
 				continue;
