@@ -370,6 +370,7 @@ int rpmdsSearch(rpmds ds, rpmds ods);
  * @retval *rp		pointer to release
  */
 #ifdef ALT_RPM_API
+void parseEVRD(char * evr, const char ** ep, const char ** vp, const char ** rp, const char ** dp);
 void parseEVR(char * evr, const char ** ep, const char ** vp, const char ** rp);
 #endif
 

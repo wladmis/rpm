@@ -83,15 +83,16 @@ rpmRC rpmReadPackageManifest(FD_t fd, int * argcPtr, char *** argvPtr)
 	    break;
 	}
 
-	/* Skip comments. */
-	if ((se = strchr(s, '#')) != NULL) *se = '\0';
+	/* Skip leading whitespaces. */
+	s += strspn(s, " \f\n\r\t\v");
 
-	/* Trim white space. */
-	se = s + strlen(s);
-	while (se > s && (se[-1] == '\n' || se[-1] == '\r'))
-	    *(--se) = '\0';
-	while (*s && strchr(" \f\n\r\t\v", *s) != NULL)
-	    s++;
+	/* Skip lines starting with # symbol. */
+	if (*s == '#') continue;
+
+	/* Trim trailing newline characters. */
+	se = s + strcspn(s, "\n\r");
+	*se = '\0';
+
 	if (*s == '\0') continue;
 
 	/* Sanity checks: skip obviously binary lines and dash (for stdin) */
