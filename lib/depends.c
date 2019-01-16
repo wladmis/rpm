@@ -139,16 +139,41 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 	goto exit;
     }
     else {
-        const char *aE, *aV, *aR, *bE, *bV, *bR;
+        const char *aE, *aV, *aR, *aD, *bE, *bV, *bR, *bD;
 	/* Both AEVR and BEVR exist. */
-	parseEVR(strdupa(AEVR), &aE, &aV, &aR);
-	parseEVR(strdupa(BEVR), &bE, &bV, &bR);
+	parseEVRD(strdupa(AEVR), &aE, &aV, &aR, &aD);
+	parseEVRD(strdupa(BEVR), &bE, &bV, &bR, &bD);
 	/* rpmEVRcmp() is also shared; the code moved to rpmvercmp.c */
 	if (rpmIsDebug()) {
 	    aDepend = printDepend(NULL, AName, AEVR, AFlags);
 	    bDepend = printDepend(NULL, BName, BEVR, BFlags);
 	}
 	sense = rpmEVRcmp(aE, aV, aR, aDepend, bE, bV, bR, bDepend);
+        /* We can't merge the DistTag comparison into rpmEVRcmp(), because
+           rpmEVRcmp() doesn't have a return code for incomparable things.
+           That's similar to set comparison which is done in this function.
+        */
+	if (sense == 0) {
+            if (bD && *bD) {
+                /* (Remember: we are in the case when the EVR components
+                   are equal.) We might detect equal DistTags here.
+                   If not, since DistTags have no order, there is
+                   no possibility here that one thing will be less or greater
+                   than the other; the result is "incomparable".
+                */
+                if (aD && *aD && strcmp(aD, bD) == 0)
+                    sense = 0;
+                else {
+                    result = 0;
+                    goto exit;
+                }
+            } else if (aD && *aD) {
+                /* Support for underspecification on the side of Requires/Conflicts */
+                rpmMessage(RPMMESS_DEBUG, _("the \"B\" dependency doesn't specify a disttag, letting it match any in \"A\"\n\tA %s\tB %s\n"),
+                           aDepend, bDepend);
+                sense = 0;
+            }
+        }
     }
 
 sense_result:
