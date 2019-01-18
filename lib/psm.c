@@ -102,6 +102,41 @@ int rpmVersionCompare(Header first, Header second)
     if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_RELEASE)))
 	return rc;
 
+    /* hack to make packages upgrade between branches possible */
+    const char * fdt;
+    const char * sdt;
+
+    if (!headerGetEntry(first, RPMTAG_DISTTAG, NULL, (void **) &fdt, NULL))
+	fdt = NULL;
+    if (!headerGetEntry(second, RPMTAG_DISTTAG, NULL, (void **) &sdt, NULL))
+	sdt = NULL;
+
+    if (fdt && sdt) {
+	size_t flen = 0, slen = 0;
+	const char * p;
+
+	if ((p = strchrnul(fdt, '+')))
+	    flen = p - fdt;
+
+	if ((p = strchrnul(sdt, '+')))
+	    slen = p - sdt;
+
+	if (flen < slen) {
+	    rc = memcmp(fdt, sdt, flen) > 0 ? 1 : -1;
+	} else if (flen > slen) {
+	    rc = memcmp(fdt, sdt, slen) < 0 ? -1 : 1;
+	} else /* flen == slen */ {
+	    rc = memcmp(fdt, sdt, flen);
+	}
+
+	if (rc) {
+	    if (rc > 0)
+		return 1;
+	    else
+		return -1;
+	}
+    }
+
     if (upgrade_honor_buildtime())
 	return rpm_cmp_tag_int(first, second, RPMTAG_BUILDTIME);
 
