@@ -5,7 +5,7 @@
 
 Name: rpm-build
 Version: 4.0.4
-Release: alt124
+Release: alt125
 
 %define ifdef() %if %{expand:%%{?%{1}:1}%%{!?%{1}:0}}
 %define get_dep() %(rpm -q --qf '%%{NAME} >= %%|SERIAL?{%%{SERIAL}:}|%%{VERSION}-%%{RELEASE}' %1 2>/dev/null || echo '%1 >= unknown')
@@ -528,6 +528,18 @@ mv -T %buildroot%_rpmlibdir/{,build}macros
 %endif #with python
 
 %changelog
+* Sun Jan 20 2019 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt125
+- spec: replaced deprecated PreReq tags with Requires tags.
+- Added automatic conversion of deprecated PreReq tags to Requires tags.
+- Disallowed extra qualifiers with BuildPreReq tag.
+- Disallowed unknown qualifiers with Requires and BuildRequires tags.
+- Allowed abbreviated qualifiers with Requires and BuildRequires tags.
+- Moved ProvidedSymbols() and SuggestBPP() to separate files.
+- lib.prov: Added printing of the number of provided symbols
+  and the bpp value for each library.
+- lib.req: Updated the list of standard libraries with guaranteed versioning.
+- suggest_bpp: Fixed harmless off-by-one error in bpp estimation.
+
 * Mon Jan 14 2019 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt124
 - addReqProv: fixed too aggressive merge of PreReqs introduced
   in 4.0.4-alt122.
