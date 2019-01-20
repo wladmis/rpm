@@ -20,10 +20,10 @@ EXTRA_DIST = \
 	files.req files.req.files 0common-files.req.list \
 	is_elf_so_executable \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
-	provided_symbols suggest_bpp \
 	pam.req pam.req.files pam.prov pam.prov.files \
 	percolate \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
+	provided_symbols \
 	rpmlib.req rpmlib.req.files \
 	rpm2cpio.sh \
 	shebang.req shebang.req.files \
@@ -52,10 +52,10 @@ config_SCRIPTS = \
 	files.req files.req.files \
 	is_elf_so_executable \
 	ldd lib.req lib.req.files lib.prov lib.prov.files shlib.req.awk \
-	provided_symbols suggest_bpp \
 	pam.req pam.req.files pam.prov pam.prov.files \
 	pkgconfig.req pkgconfiglib.req pkgconfig.req.files \
 	percolate \
+	provided_symbols \
 	rpmlib.req rpmlib.req.files \
 	rpm2cpio.sh \
 	shebang.req shebang.req.files \
