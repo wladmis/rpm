@@ -560,7 +560,7 @@
 @alt@%systemd_unitdir	%_unitdir
 @alt@%make_session	%nil
 @alt@
-@alt@%EVR	%{?epoch:%epoch:}%{version}-%{release}
+@alt@%EVR	%{?epoch:%epoch:}%{version}-%{release}%{?disttag::%disttag}
 @alt@
 @alt@# GCC versioning.
 @alt@%__gcc_version %(gcc -dumpversion)
