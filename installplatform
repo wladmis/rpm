@@ -94,7 +94,7 @@ for SUBST in $SUBSTS ; do
   ARCH=`echo $arch | sed -e $SUBST`
   TARGET_PLATFORM=`echo $target_platform | sed -e $SUBST`
   TARGET=`echo $target | sed -e $SUBST`
-  LIBSUFF='%nil'
+  LIBSUFF=
 
   PPD="${DESTDIR}/${pkglibdir}/${ARCH}-${VENDOR}-${OS}"
 
@@ -138,12 +138,13 @@ for SUBST in $SUBSTS ; do
   esac
 
   LIBSUFF_EXISTS=@
-  [ "$LIBSUFF" = '%nil' ] || LIBSUFF_EXISTS=
+  [ "$LIBSUFF" = '' ] || LIBSUFF_EXISTS=
 
   cat $PLATFORM \
   | sed -e "s,@RPMRC_OPTFLAGS@,$RPMRC_OPTFLAGS," \
 	-e "s,@RPMRC_ARCH@,$ARCH," \
 	-e "s,@RPMRC_GNU@,$RPMRC_GNU," \
+	-e "s,@LIBSUFF_DEFINITION@,${LIBSUFF:-%nil}," \
 	-e "s,@LIBSUFF@,$LIBSUFF," \
 	-e "s,@LIBSUFF_EXISTS@,$LIBSUFF_EXISTS," \
 	-e "s,@ARCH_INSTALL_POST@,$ARCH_INSTALL_POST," \

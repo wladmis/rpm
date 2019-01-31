@@ -23,7 +23,7 @@
 %_sysconfdir		@sysconfdir@
 %_sharedstatedir	%{_var}/lib
 %_localstatedir		@localstatedir@
-%_libsuff		@LIBSUFF@
+%_libsuff		@LIBSUFF_DEFINITION@
 @LIBSUFF_EXISTS@%_is_libsuff	1
 %_lib			lib@LIBSUFF@
 %_libdir		@prefix@/lib@LIBSUFF@
