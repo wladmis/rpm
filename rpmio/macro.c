@@ -888,10 +888,15 @@ grabArgs(MacroBuf mb, const MacroEntry me, const char * se, char lastc)
      */
     /* 1003.2 says this must be 1 before any call.  */
 
+    /*
+     * glibc getopt(3) (re)initializes it's internal structure on first call
+     * or if optind == 0.
+     */
+
 #ifdef __GLIBC__
-    /*@-mods@*/
+    optind = 0;
+#else
     optind = 1;
-    /*@=mods@*/
 #endif
 
     opts = me->opts;
