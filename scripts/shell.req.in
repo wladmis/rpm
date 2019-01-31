@@ -35,7 +35,7 @@ ShellReq()
 	local t sh sh_num
 	t=$(file -bL "$f") || Fatal "${t:-$f: file type not available}"
 	sh_num="$(print_sh_number_from_shebang <"$f")"
-	case "$t" in
+	case " $t" in
 		*"Bourne-Again shell script text"*)
 			sh=/bin/bash"$sh_num" ;;
 		*" bash script text"*)
