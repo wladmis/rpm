@@ -1055,7 +1055,6 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
     char *aEVR = NULL;
     char *bEVR = NULL;
     int sense = 0;
-    int result = 0;
 
     if (!AEVR) AEVR = "";
     if (!BEVR) BEVR = "";
@@ -1081,8 +1080,7 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
     }
     else {
 	/* both EVRs are non-existent or empty, always overlap */
-	result = 1;
-	goto exit;
+	return 1;
     }
 
     int aset = strncmp(AEVR, "set:", sizeof("set:")-1) == 0;
@@ -1096,14 +1094,12 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 	    if (sense == -4)
 		rpmlog(RPMLOG_WARNING, _("failed to decode %s\n"), BEVR);
 	    /* neither is subset of each other */
-	    result = 0;
-	    goto exit;
+	    return 0;
 	}
     }
     else if (aset || bset) {
 	/* no overlap between a set and non-set */
-	result = 0;
-	goto exit;
+	return 0;
     }
     else {
 	aEVR = strdupa(AEVR);
@@ -1158,18 +1154,16 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 sense_result:
     /* Detect overlap of {A,B} range. */
     if (sense < 0 && ((AFlags & RPMSENSE_GREATER) || (BFlags & RPMSENSE_LESS))) {
-	result = 1;
+	return 1;
     } else if (sense > 0 && ((AFlags & RPMSENSE_LESS) || (BFlags & RPMSENSE_GREATER))) {
-	result = 1;
+	return 1;
     } else if (sense == 0 &&
 	(((AFlags & RPMSENSE_EQUAL) && (BFlags & RPMSENSE_EQUAL)) ||
 	 ((AFlags & RPMSENSE_LESS) && (BFlags & RPMSENSE_LESS)) ||
 	 ((AFlags & RPMSENSE_GREATER) && (BFlags & RPMSENSE_GREATER)))) {
-	result = 1;
+	return 1;
     }
-
-exit:
-    return result;
+    return 0;
 }
 
 int rpmdsCompareIndex(rpmds A, int aix, rpmds B, int bix)
