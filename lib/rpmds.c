@@ -1126,23 +1126,32 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 	if (sense == 0) {
 	    sense = rpmvercmp(aV, bV);
 	    if (sense == 0) {
-		if (aR && *aR && bR && *bR) {
+		if (aR && *aR && bR && *bR)
 		    sense = rpmvercmp(aR, bR);
-		    if (sense == 0) {
-			if (aD && bD && strcmp(aD, bD)) {
-			    result = 0;
-			    goto exit;
-			}
-		    }
-		} else {
-		    /* always matches if the side with no release has SENSE_EQUAL */
-		    if ((aR && *aR && (BFlags & RPMSENSE_EQUAL)) ||
-			    (bR && *bR && (AFlags & RPMSENSE_EQUAL))) {
-			result = 1;
-			goto exit;
-		    }
-		}
-	    }
+		else if (aR && *aR) {
+                    if (!nopromote)
+                        sense = 0;
+                    else
+                        sense = 1;
+                } else if (bR && *bR)
+                    sense = -1;
+
+                if (sense == 0) {
+                    if (aD && *aD && bD && *bD) {
+                        if (strcmp(aD, bD))
+                            return 0;
+                        else
+                            sense = 0;
+                    } else if (aD && *aD) {
+                        if (!nopromote)
+                            sense = 0;
+                        else
+                            return 0;
+                    } else if (bD && *bD)
+                        return 0;
+                }
+            }
+
 	}
     }
 
