@@ -1106,8 +1106,8 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 	goto exit;
     }
     else {
-	aEVR = xstrdup(AEVR);
-	bEVR = xstrdup(BEVR);
+	aEVR = strdupa(AEVR);
+	bEVR = strdupa(BEVR);
 
 	parseEVRD(aEVR, &aE, &aV, &aR, &aD);
 	parseEVRD(bEVR, &bE, &bV, &bR, &bD);
@@ -1138,8 +1138,6 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 		    /* always matches if the side with no release has SENSE_EQUAL */
 		    if ((aR && *aR && (BFlags & RPMSENSE_EQUAL)) ||
 			    (bR && *bR && (AFlags & RPMSENSE_EQUAL))) {
-			aEVR = _free(aEVR);
-			bEVR = _free(bEVR);
 			result = 1;
 			goto exit;
 		    }
@@ -1162,8 +1160,6 @@ sense_result:
     }
 
 exit:
-    free(aEVR);
-    free(bEVR);
     return result;
 }
 
