@@ -1047,13 +1047,10 @@ void parseEVR(char *evr,
     parseEVRD(evr, ep, vp, rp, NULL);
 }
 
-static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
-				  const char *BEVR, uint32_t BFlags,
+static inline int rpmdsCompareEVR(const char * restrict AEVR, uint32_t AFlags,
+				  const char * restrict BEVR, uint32_t BFlags,
 				  int nopromote)
 {
-    const char *aE, *aV, *aR, *aD, *bE, *bV, *bR, *bD;
-    char *aEVR = NULL;
-    char *bEVR = NULL;
     int sense = 0;
 
     if (!AEVR) AEVR = "";
@@ -1102,11 +1099,12 @@ static inline int rpmdsCompareEVR(const char *AEVR, uint32_t AFlags,
 	return 0;
     }
     else {
-	aEVR = strdupa(AEVR);
-	bEVR = strdupa(BEVR);
+        const char
+            * restrict aE, * restrict aV, * restrict aR, * restrict aD,
+            * restrict bE, * restrict bV, * restrict bR, * restrict bD;
 
-	parseEVRD(aEVR, &aE, &aV, &aR, &aD);
-	parseEVRD(bEVR, &bE, &bV, &bR, &bD);
+        parseEVRD(strdupa(AEVR), &aE, &aV, &aR, &aD);
+	parseEVRD(strdupa(BEVR), &bE, &bV, &bR, &bD);
 
 	/* Compare {A,B} [epoch:]version[-release[:disttag]] */
 	if (aE && *aE && bE && *bE)
