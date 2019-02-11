@@ -17,7 +17,7 @@
 Summary: The RPM package management system
 Name: rpm
 Version: 4.13.0.1
-Release: alt5
+Release: alt6
 Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
 # http://git.altlinux.org/gears/r/rpm.git
@@ -517,6 +517,13 @@ touch /var/lib/rpm/delay-posttrans-filetriggers
 %_includedir/rpm
 
 %changelog
+* Mon Feb 11 2019 Ivan Zakharyaschev <imz@altlinux.org> 4.13.0.1-alt6
+- rpmRangesOverlap() made asymmetric w.r.t. underspecified release or disttag.
+  (Provides: N = V can't anymore satisfy Requires: N = V-R. Look out for unmets!)
+  (thx Vladimir D. Seleznev)
+- rpmRangesOverlap() optimized (can run ca. 30% faster).
+- checkinstall subpackage added.
+
 * Tue Jan 15 2019 Vladimir D. Seleznev <vseleznv@altlinux.org> 4.13.0.1-alt5
 - implemented DistTag support when comparing package versions;
 - fixed handling of ancient packages (closes: #33710);
