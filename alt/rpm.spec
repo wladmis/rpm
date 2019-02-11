@@ -245,6 +245,15 @@ Obsoletes: rpmhdrmemcache <= 0.1.2-alt3.1
 %description plugin-hdrcache
 %summary
 
+%package checkinstall
+Summary: Run tests for %name immediately when this package is installed
+Group: Other
+Requires: %name
+Requires: rpminstall-tests-checkinstall
+
+%description checkinstall
+%summary
+
 %prep
 %setup
 
@@ -457,6 +466,8 @@ touch /var/lib/rpm/delay-posttrans-filetriggers
 %files plugin-hdrcache
 %_libdir/rpm-plugins/hdrcache.so
 %endif
+
+%files checkinstall
 
 %files -n librpmbuild%sover
 %_libdir/librpmbuild.so.*
