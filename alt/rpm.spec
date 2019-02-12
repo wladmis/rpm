@@ -522,7 +522,7 @@ touch /var/lib/rpm/delay-posttrans-filetriggers
 - rpmRangesOverlap() made asymmetric w.r.t. underspecified release or disttag.
   (Provides: N = V can't anymore satisfy Requires: N = V-R. Look out for unmets!)
   (thx Vladimir D. Seleznev)
-- rpmRangesOverlap() optimized (can run ca. 30% faster).
+- rpmRangesOverlap() optimized (can run ca. 30%% faster).
 - checkinstall subpackage added.
 
 * Tue Jan 15 2019 Vladimir D. Seleznev <vseleznv@altlinux.org> 4.13.0.1-alt5
