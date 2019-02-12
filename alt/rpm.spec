@@ -248,6 +248,7 @@ Obsoletes: rpmhdrmemcache <= 0.1.2-alt3.1
 %package checkinstall
 Summary: Run tests for %name immediately when this package is installed
 Group: Other
+BuildArch: noarch
 Requires: %name
 Requires: rpminstall-tests-checkinstall
 
