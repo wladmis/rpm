@@ -530,6 +530,13 @@ fi
 %_bindir/rpm2cpio.static
 
 %changelog
+[rpm-4.13.0.1-alt6 alike]
+- rpmEVRcmp() (and hence rpmRangesOverlap()) made asymmetric w.r.t.
+  underspecified release. (Provides: N = V can't anymore satisfy
+  Requires: N = V-R. Look out for unmets!)
+  (with help of Vladimir D. Seleznev)
+- rpmRangesOverlap() optimized (can run ca. 30%% faster).
+
 * Tue Feb 25 2014 Dmitry V. Levin <ldv@altlinux.org> 4.0.4-alt100.77
 - fixup-binconfig:
   extended library search path stripping algorithm to handle rpaths.
