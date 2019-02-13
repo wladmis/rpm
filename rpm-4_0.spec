@@ -47,7 +47,7 @@ Conflicts: rpm-utils <= 0:0.9.10-alt1
 %{?_with_selinux:BuildPreReq: libselinux-devel >= 2.0.96}
 %{?_with_profile:BuildPreReq: coreutils >= 6.0}
 
-BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1,
+BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel-static >= 4.2.1
 BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 
 # For debugedit.
