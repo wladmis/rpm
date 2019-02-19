@@ -203,6 +203,18 @@ the Python programming language to use the interface supplied by RPM
 (RPM Package Manager) libraries.
 %endif #with python
 
+%package checkinstall
+Summary: Run tests for %name immediately when this package is installed
+Group: Other
+BuildArch: noarch
+Requires: %name
+# rpminstall-tests-checkinstall first uses rpm-build to build packages,
+# then tests how rpm installs them. Useful for testing rpm-build, too.
+Requires: rpminstall-tests-checkinstall
+
+%description checkinstall
+%summary
+
 %prep
 %setup -n rpm-%rpm_version-%release
 
@@ -526,6 +538,8 @@ mv -T %buildroot%_rpmlibdir/{,build}macros
 %files -n python-module-rpm
 %_libdir/python*/site-packages/*module.so
 %endif #with python
+
+%files checkinstall
 
 %changelog
 * Thu Jan 31 2019 Gleb F-Malinovskiy <glebfm@altlinux.org> 4.0.4-alt126
