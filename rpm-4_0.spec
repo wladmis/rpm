@@ -543,19 +543,36 @@ mv -T %buildroot%_rpmlibdir/{,build}macros
 
 %changelog
 * Mon Feb 25 2019 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt128
-[rpm-4.13.0.1-alt5 alike]
+- Reverted one of the changes (for disttag-unaware tools compatibility)
+  from 4.0.4-alt127 (useful in rare cases, but bad for external dependencies
+  on virtual Provides when interpreted by the old rpm):
+  + %%EVR macro (for intersubpackage deps) upgraded to include %%disttag
+    (given the other change, this is only useful for making the rare
+    Conflicts: subpkg = %%EVR more compatible with disttag-unaware tools).
+- Always fix interpackage deps that need Epoch or Disttag (ALT#36180).
+  (This completes the improvement of 4.0.4-alt100.63.)
+- build/reqprov.c: made addReqProv() aware of the disttag of
+  the package (affects deps optimization).
+[rpm-4.13.0.1-alt5 alike; affects deps optimization]
 - Implemented DistTag support when comparing package versions (with
   help by Vladimir D. Seleznev). (It's necessary for the correctness
   of checking dependencies after we introduced parseEVRD().)
   (Affects rpmbuild, too, when optimizing deps.)
 - Dirty hacked to make upgrade packages between branches possible (by
   Vladimir D. Seleznev; probably, dead code for rpm-build without rpm-install.)
-[rpm-4.13.0.1-alt6 alike]
+[rpm-4.13.0.1-alt6 alike; affects deps optimization]
 - rpmEVRcmp() (and hence rpmRangesOverlap()) made asymmetric w.r.t.
   underspecified release. (Provides: N = V can't anymore satisfy
   Requires: N = V-R. Look out for unmets!)
   (with help of Vladimir D. Seleznev)
 - rpmRangesOverlap() optimized (can run ca. 30%% faster).
+[rpmbuild dead code; useful for backporting to p8]
+- lib/psm.c: make runScript() print the disttag on errors
+- lib/psm.c: print disttag to syslog if available
+- lib/depends.c: make headerMatchesDepFlags() aware of the disttag
+  of the header
+- add disttag to struct availablePackage (like buildtime; affects
+  rpm -U & interdep.c)
 
 * Tue Feb 19 2019 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt127
 - Make "new" packages (with disttags) be treated better
