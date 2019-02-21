@@ -2841,8 +2841,8 @@ exit:
 
 /**
  */
-static void printDepMsg(DepMsg_t * dm, int count, const char ** names,
-		const char ** versions, int *flags)
+static void printDepMsg(const DepMsg_t * dm, int count, const char * const * names,
+		const char *const * versions, const int *flags)
 	/*@*/
 {
     int hasVersions = (versions != NULL);
