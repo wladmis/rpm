@@ -3031,7 +3031,7 @@ int fillInsignificantDisttagInDep(const Package pkg,
             rpmMessage(RPMMESS_NORMAL,
                        (d && *d)
                        ? "Overwriting the insignificant disttag (with %s) in "
-                       : "Adding an insignificant disttag (%s) into ",
+                       : "Adding an insignificant disttag (%s) to ",
                        newDisttag);
             printDepMsg(dm, 1, &depNv[i], &depVv[i], &depFv[i]);
             // Not freeing old depVv[i] because we have got it from hge().
@@ -3127,12 +3127,9 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
                                            NULL,
                                            1 /* overwrite */);
 	if (rc) break;
-	rc = fillInsignificantDisttagInDep(pkg,
-                                           &requires_depMsg,
-                                           RPMSENSE_LESS,
-                                           NULL,
-                                           1 /* overwrite */);
-	if (rc) break;
+        /* Not touching unrealistic Requires: x < E:V-R[:D].
+           No one writes like this; there are no such packages in Sisyphus.
+        */
 
         /* Rewriting "> E:V-R[:D]" dependencies for compatibility with older
            disttag-unaware tools, so that such a dependency means in a
@@ -3171,17 +3168,18 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
                                            maximal_disttag,
                                            1 /* overwrite */);
 	if (rc) break;
-	rc = fillInsignificantDisttagInDep(pkg,
-                                           &obsoletes_depMsg,
-                                           RPMSENSE_GREATER,
-                                           maximal_disttag,
-                                           1 /* overwrite */);
-	if (rc) break;
+        /* Not touching unrealistic Obsoletes: x > E:V-R[:D].
+           No one writes like this; there are no such packages in Sisyphus.
+        */
 	rc = fillInsignificantDisttagInDep(pkg,
                                            &requires_depMsg,
                                            RPMSENSE_GREATER,
                                            maximal_disttag,
-                                           1 /* overwrite */);
+                                           0 /* don't overwrite */);
+        /* Not rewriting unrealistic Requires: x > E:V-R:D (with a disttag).
+           Normally, no one would write like this, because this makes no sense,
+           and because one wouldn't know a valid disttag of another package.
+        */
 	if (rc) break;
 
 	/*@-noeffect@*/
