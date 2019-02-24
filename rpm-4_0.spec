@@ -542,6 +542,14 @@ mv -T %buildroot%_rpmlibdir/{,build}macros
 %files checkinstall
 
 %changelog
+* Mon Feb 25 2019 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt128
+[rpm-4.13.0.1-alt5 alike]
+- Implemented DistTag support when comparing package versions (with
+  help by Vladimir D. Seleznev). (It's necessary for the correctness
+  of checking dependencies after we introduced parseEVRD().)
+  (Affects rpmbuild, too, when optimizing deps.)
+- Dirty hacked to make upgrade packages between branches possible (by
+  Vladimir D. Seleznev; probably, dead code for rpm-build without rpm-install.)
 [rpm-4.13.0.1-alt6 alike]
 - rpmEVRcmp() (and hence rpmRangesOverlap()) made asymmetric w.r.t.
   underspecified release. (Provides: N = V can't anymore satisfy
