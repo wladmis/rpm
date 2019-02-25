@@ -749,7 +749,7 @@ static int runScript(PSM_t psm, Header h,
     int freePrefixes = 0;
     FD_t out;
     rpmRC rc = RPMRC_OK;
-    const char *n = NULL, *v = NULL, *r = NULL;
+    const char *n = NULL, *v = NULL, *r = NULL, *d = NULL;
     char arg1_str [sizeof(int)*3+1] = "";
     char arg2_str [sizeof(int)*3+1] = "";
 
@@ -767,7 +767,7 @@ static int runScript(PSM_t psm, Header h,
     }
 
     if (h)
-    xx = headerNVR(h, &n, &v, &r);
+	xx = headerNVRD(h, &n, &v, &r, &d);
 
     if (arg1 >= 0)
 	sprintf(arg1_str, "%d", arg1);
@@ -935,15 +935,15 @@ static int runScript(PSM_t psm, Header h,
 
     if (waitpid(child, &status, 0) < 0) {
 	rpmError(RPMERR_SCRIPT,
-     _("execution of %s scriptlet from %s-%s-%s failed, waitpid returned %s\n"),
-		 sln, n, v, r, strerror (errno));
+     _("execution of %s scriptlet from %s-%s-%s%s%s failed, waitpid returned %s\n"),
+		 sln, n, v, r, d ? ":" : "", d ? : "", strerror (errno));
 	/* XXX what to do here? */
 	rc = RPMRC_OK;
     } else {
 	if (!WIFEXITED(status) || WEXITSTATUS(status)) {
 	    rpmError(RPMERR_SCRIPT,
-     _("execution of %s scriptlet from %s-%s-%s failed, exit status %d\n"),
-		     sln, n, v, r, WEXITSTATUS(status));
+     _("execution of %s scriptlet from %s-%s-%s%s%s failed, exit status %d\n"),
+		     sln, n, v, r, d ? ":" : "", d ? : "", WEXITSTATUS(status));
 	    rc = RPMRC_FAIL;
 	}
     }
