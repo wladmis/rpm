@@ -475,7 +475,7 @@ static int verifyDependencies(rpmdb rpmdb, Header h)
 	const char *n, *v, *r;
 	char * t, * te;
 	int nb = 512;
-	(void) headerNVR(h, &n, &v, &r);
+	(void) headerNVRD(h, &n, &v, &r, NULL); // we don't print the disttag
 
 	int i;
 	for (i = 0; i < numConflicts; i++) {
@@ -523,7 +523,7 @@ int showVerifyPackage(QVA_t qva, rpmdb rpmdb, Header h)
     if (qva->qva_flags & VERIFY_DIGEST) {
 	if ((rc = rpmVerifyDigest(h)) != 0) {
 	    const char *n, *v, *r;
-	    (void) headerNVR(h, &n, &v, &r);
+	    (void) headerNVRD(h, &n, &v, &r, NULL); // we don't print the disttag
 	    rpmMessage(RPMMESS_NORMAL,
 		   _("%s-%s-%s: immutable header region digest check failed\n"),
 			n, v, r);

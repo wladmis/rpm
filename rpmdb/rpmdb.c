@@ -2041,7 +2041,7 @@ exit:
 #ifdef	NOTNOW
     if (mi->mi_h) {
 	const char *n, *v, *r;
-	(void) headerNVR(mi->mi_h, &n, &v, &r);
+	(void) headerNVRD(mi->mi_h, &n, &v, &r, NULL); // we don't print the disttag
 	rpmMessage(RPMMESS_DEBUG, "%s-%s-%s at 0x%x, h %p\n", n, v, r,
 		mi->mi_offset, mi->mi_h);
     }
@@ -2312,7 +2312,7 @@ int rpmdbRemove(rpmdb db, /*@unused@*/ int rid, unsigned int hdrNum)
 #endif
 
     {	const char *n, *v, *r;
-	(void) headerNVR(h, &n, &v, &r);
+	(void) headerNVRD(h, &n, &v, &r, NULL); // we don't print the disttag
 	rpmMessage(RPMMESS_DEBUG, "  --- %10u %s-%s-%s\n", hdrNum, n, v, r);
     }
 
@@ -2646,7 +2646,7 @@ int rpmdbAdd(rpmdb db, int iid, Header h)
 		if (!dbi->dbi_no_dbsync)
 		    xx = dbiSync(dbi, 0);
 		{   const char *n, *v, *r;
-		    xx = headerNVR(h, &n, &v, &r);
+		    xx = headerNVRD(h, &n, &v, &r, NULL); // we don't print the disttag
 		    rpmMessage(RPMMESS_DEBUG, "  +++ %10u %s-%s-%s\n", hdrNum, n, v, r);
 		}
 	      }
