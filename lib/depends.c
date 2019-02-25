@@ -269,7 +269,7 @@ int headerMatchesDepFlags(Header h,
 		const char * reqName, const char * reqEVR, int reqFlags)
 {
     HGE_t hge = (HGE_t)headerGetEntryMinMemory;
-    const char *name, *version, *release;
+    const char *name, *version, *release, *disttag;
     int_32 * epoch;
     const char *pkgEVR;
     char *p;
@@ -279,16 +279,19 @@ int headerMatchesDepFlags(Header h,
 	return 1;
 
     /* Get package information from header */
-    (void) headerNVR(h, &name, &version, &release);
+    (void) headerNVRD(h, &name, &version, &release, &disttag);
 
-    pkgEVR = p = alloca(21 + strlen(version) + 1 + strlen(release) + 1);
+    pkgEVR = p = alloca(21 + strlen(version) + 1 + strlen(release) + 1
+                        + (disttag ? strlen(disttag) + 1 : 0));
     *p = '\0';
     if (hge(h, RPMTAG_EPOCH, NULL, (void **) &epoch, NULL)) {
 	sprintf(p, "%d:", *epoch);
 	while (*p != '\0')
 	    p++;
     }
-    (void) stpcpy( stpcpy( stpcpy(p, version) , "-") , release);
+    p = stpcpy( stpcpy( stpcpy(p, version) , "-") , release);
+    if (disttag)
+        (void) stpcpy( stpcpy(p , ":") , disttag);
 
     return rpmRangesOverlap(name, pkgEVR, pkgFlags, reqName, reqEVR, reqFlags);
 }
