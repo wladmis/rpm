@@ -74,7 +74,7 @@ int lookupPackage(Spec spec, const char *name, int flag, /*@out@*/Package *pkg)
     /* Construct package name */
   { char *n;
     if (flag == PART_SUBNAME) {
-	(void) headerNVR(spec->packages->header, &pname, NULL, NULL);
+	(void) headerName(spec->packages->header, &pname);
 	fullName = n = alloca(strlen(pname) + 1 + strlen(name) + 1);
 	while (*pname != '\0') *n++ = *pname++;
 	*n++ = '-';
@@ -88,7 +88,7 @@ int lookupPackage(Spec spec, const char *name, int flag, /*@out@*/Package *pkg)
 
     /* Locate package with fullName */
     for (p = spec->packages; p != NULL; p = p->next) {
-	(void) headerNVR(p->header, &pname, NULL, NULL);
+	(void) headerName(p->header, &pname);
 	if (pname && (! strcmp(fullName, pname))) {
 	    break;
 	}

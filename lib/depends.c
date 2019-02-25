@@ -448,7 +448,7 @@ int rpmtransAddPackage(rpmTransactionSet ts, Header h, FD_t fd,
     if (headerIsEntry(h, RPMTAG_SOURCEPACKAGE))
 	return 0;
 
-    (void) headerNVR(h, &name, NULL, NULL);
+    (void) headerName(h, &name);
 
     {	rpmdbMatchIterator mi;
 	Header h2;

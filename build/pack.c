@@ -29,7 +29,7 @@ static inline int genSourceRpmName(Spec spec)
 	const char *name, *version, *release;
 	char fileName[BUFSIZ];
 
-	(void) headerNVR(spec->packages->header, &name, &version, &release);
+	(void) headerNVRD(spec->packages->header, &name, &version, &release, NULL);
 	sprintf(fileName, "%s-%s-%s.%ssrc.rpm", name, version, release,
 	    spec->noSource ? "no" : "");
 	spec->sourceRpmName = xstrdup(fileName);
@@ -488,7 +488,7 @@ int writeRPM(Header *hdrp, const char *fileName, int type,
 	rpmio_flags = rpmExpand("%{?_source_payload}", NULL);
 	break;
     case RPMLEAD_BINARY:
-	headerNVR(h, &N, NULL, NULL);
+	headerName(h, &N);
 	dash = strrchr(N, '-');
 	if (dash && strcmp(dash, "-debuginfo") == 0)
 	    rpmio_flags = rpmExpand("%{?_debuginfo_payload}", NULL);
@@ -837,7 +837,7 @@ int packageBinaries(Spec spec)
 	    binFormat = _free(binFormat);
 	    if (binRpm == NULL) {
 		const char *name;
-		(void) headerNVR(pkg->header, &name, NULL, NULL);
+		(void) headerName(pkg->header, &name);
 		rpmError(RPMERR_BADFILENAME, _("Could not generate output "
 		     "filename for package %s: %s\n"), name, errorString);
 		return RPMERR_BADFILENAME;

@@ -860,7 +860,7 @@ fprintf(stderr, "*** PS buildRootURL(%s) %p macro set to %s\n", spec->buildRootU
     for (pkg = spec->packages; pkg != NULL; pkg = pkg->next) {
 	if (!headerIsEntry(pkg->header, RPMTAG_DESCRIPTION)) {
 	    const char * name;
-	    (void) headerNVR(pkg->header, &name, NULL, NULL);
+	    (void) headerName(pkg->header, &name);
 	    rpmError(RPMERR_BADSPEC, _("Package has no %%description: %s\n"),
 			name);
 	    spec = freeSpec(spec);

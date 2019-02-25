@@ -119,6 +119,16 @@ int headerNVRD(Header h,
 		/*@null@*/ /*@out@*/ const char ** dp)
 	/*@modifies *np, *vp, *rp, *dp @*/;
 
+static inline int headerNameVersion(Header h, const char **np, const char **vp)
+{
+    return headerNVRD(h, np, vp, NULL, NULL);
+}
+
+static inline int headerName(Header h, const char **np)
+{
+    return headerNVRD(h, np, NULL, NULL, NULL);
+}
+
 /** \ingroup header
  * Return name, epoch, version, release, arch strings from header.
  * @param h		header

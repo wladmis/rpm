@@ -908,7 +908,7 @@ static int parseForSimple(/*@unused@*/Spec spec, Package pkg, char * buf,
 		    custom = 1;
 		} else {
 		    const char *n, *v;
-		    (void) headerNVR(pkg->header, &n, &v, NULL);
+		    (void) headerNameVersion(pkg->header, &n, &v);
 		    ddir = rpmGetPath("%{_docdir}/", n, "-", v, NULL);
 		}
 		strcpy(buf, ddir);
@@ -2547,7 +2547,7 @@ const char *saveInstScript(Spec spec, Package pkg, const char *scriptname)
     assert(buildroot);
 
     const char *N = NULL;
-    headerNVR(pkg->header, &N, NULL, NULL);
+    headerName(pkg->header, &N);
     assert(N);
 
     const char *path =
@@ -2729,10 +2729,10 @@ checkProvides(Spec spec, Package pkg)
 	if (p == pkg)
 	    continue;
 	const char *n = NULL;
-	headerNVR(p->header, &n, NULL, NULL);
+	headerName(p->header, &n);
 	for (i = 0; i < len; ++i) {
 	    if (!strcmp(n, names[i])) {
-		headerNVR(pkg->header, &n, NULL, NULL);
+		headerName(pkg->header, &n);
 		rpmMessage(RPMMESS_WARNING,
 			   "%s provides another subpackage: %s\n", n, names[i]);
 		break;
@@ -3062,13 +3062,14 @@ int processBinaryFiles(Spec spec, int installSpecialDoc, int test)
     int rc = 0;
 
     for (pkg = spec->packages; pkg != NULL; pkg = pkg->next) {
-	const char *n, *v, *r;
-
 	if (pkg->fileList == NULL)
 	    continue;
 
-	(void) headerNVR(pkg->header, &n, &v, &r);
-	rpmMessage(RPMMESS_NORMAL, _("Processing files: %s-%s-%s\n"), n, v, r);
+        {
+            const char *n, *v, *r;
+            (void) headerNVRD(pkg->header, &n, &v, &r, NULL);
+            rpmMessage(RPMMESS_NORMAL, _("Processing files: %s-%s-%s\n"), n, v, r);
+        }
 
 	rc = processPackageFiles(spec, pkg, installSpecialDoc, test);
 	if (rc) break;

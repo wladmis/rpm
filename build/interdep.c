@@ -18,7 +18,7 @@ const char *pkgName(Package pkg)
     if (fi)
 	return fi->name;
     const char *name;
-    headerNVR(pkg->header, &name, NULL, NULL);
+    headerName(pkg->header, &name);
     return name;
 }
 

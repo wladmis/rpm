@@ -1048,7 +1048,7 @@ static int handleOneTrigger(PSM_t psm, Header sourceH, Header triggeredH,
 	)
 	return 0;
 
-    xx = headerNVR(sourceH, &sourceName, NULL, NULL);
+    xx = headerName(sourceH, &sourceName);
 
     for (i = 0; i < numTriggers; i++) {
 	rpmTagType tit, tst, tpt;
@@ -1082,7 +1082,7 @@ static int handleOneTrigger(PSM_t psm, Header sourceH, Header triggeredH,
 	    )
 	    continue;
 
-	xx = headerNVR(triggeredH, &triggerPackageName, NULL, NULL);
+	xx = headerName(triggeredH, &triggerPackageName);
 
 	{   int arg1;
 	    int index;

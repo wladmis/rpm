@@ -467,7 +467,7 @@ restart:
 		    paths = headerFreeData(paths, pft);
 		} else {
 		    const char * name;
-		    xx = headerNVR(eiu->h, &name, NULL, NULL);
+		    xx = headerName(eiu->h, &name);
 		    rpmMessage(RPMMESS_ERROR,
 			       _("package %s is not relocatable\n"), name);
 		    eiu->numFailed++;
@@ -483,7 +483,7 @@ restart:
 		Header oldH;
 		int count;
 
-		xx = headerNVR(eiu->h, &name, NULL, NULL);
+		xx = headerName(eiu->h, &name);
 		/*@-onlytrans@*/
 		mi = rpmdbInitIterator(eiu->db, RPMTAG_NAME, name, 0);
 		/*@=onlytrans@*/
