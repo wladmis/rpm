@@ -86,8 +86,6 @@ propagateRequires(struct Req *r)
 static void
 addDeps1(struct Req *r, Package pkg1, Package pkg2)
 {
-    if (Requires(r, pkg1, pkg2))
-	return;
     const char *name = pkgName(pkg2);
     const char *evr = headerSprintf(pkg2->header,
 	    "%|epoch?{%{epoch}:}|%{version}-%{release}",
@@ -96,8 +94,8 @@ addDeps1(struct Req *r, Package pkg1, Package pkg2)
     int flags = RPMSENSE_EQUAL | RPMSENSE_FIND_REQUIRES;
     int added = !addReqProv(NULL, pkg1->header, flags, name, evr, 0);
     if (added) {
-	addRequires(r, pkg1, pkg2);
-	propagateRequires(r);
+        if (addRequires(r, pkg1, pkg2))
+            propagateRequires(r);
 	rpmMessage(RPMMESS_NORMAL, "Adding to %s a strict dependency on %s\n",
 		   pkgName(pkg1), pkgName(pkg2));
     }
