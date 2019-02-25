@@ -723,7 +723,8 @@ static int checkPackageDeps(rpmTransactionSet ts, problemsSet psp,
     int i, rc;
     int ourrc = 0;
 
-    (void) headerNVR(h, &name, &version, &release);
+    /* FIXME: There is no psp->problems->byDisttag. We don't need it for now. */
+    (void) headerNVRD(h, &name, &version, &release, NULL);
 
     if (!hge(h, RPMTAG_REQUIRENAME, &rnt, (void **) &requires, &requiresCount))
     {
