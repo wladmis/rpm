@@ -1262,14 +1262,20 @@ static void fi_log(TFI_t fi, const char *s)
 #if HAVE_SYSLOG_H
 	if (!geteuid())
 	{
+            const char * const *dp = NULL;
 	    int_32 *uip = 0;
 	    fi->hge(fi->h, RPMTAG_BUILDTIME, NULL, (void **) &uip, NULL);
+	    fi->hge(fi->h, RPMTAG_DISTTAG, NULL, (void **) &dp, NULL);
 	    if (-1 == fi->epoch)
-		syslog (LOG_NOTICE, "%s-%s-%s %u %s\n",
-		    fi->name, fi->version, fi->release, uip ? *uip : 0, s);
+		syslog (LOG_NOTICE, "%s-%s-%s%s%s %u %s\n",
+                        fi->name, fi->version, fi->release,
+                        dp ? " " : "", dp ? *dp : "",
+                        uip ? *uip : 0, s);
 	    else
-		syslog (LOG_NOTICE, "%s-%u:%s-%s %u %s\n",
-		    fi->name, fi->epoch, fi->version, fi->release, uip ? *uip : 0, s);
+		syslog (LOG_NOTICE, "%s-%u:%s-%s%s%s %u %s\n",
+                        fi->name, fi->epoch, fi->version, fi->release,
+                        dp ? " " : "", dp ? *dp : "",
+                        uip ? *uip : 0, s);
 	}
 #endif
 }
