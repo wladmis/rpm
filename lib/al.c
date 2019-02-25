@@ -386,7 +386,7 @@ alAddPackage(availableList al,
     p->depth = p->npreds = 0;
     memset(&p->tsi, 0, sizeof(p->tsi));
 
-    (void) headerNVR(p->h, &p->name, &p->version, &p->release);
+    (void) headerNVRD(p->h, &p->name, &p->version, &p->release, &p->disttag);
 
     if (!hge(h, RPMTAG_EPOCH, NULL, (void **) &p->epoch, NULL))
 	p->epoch = NULL;

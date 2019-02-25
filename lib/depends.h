@@ -60,6 +60,7 @@ struct availablePackage {
 /*@null@*/ FD_t fd;
 
     int_32 * buildtime;
+/*@dependent@*/ const char * disttag;	/*!< Header disttag (if any). */
 } ;
 
 /** \ingroup rpmdep

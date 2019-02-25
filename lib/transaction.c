@@ -1654,6 +1654,10 @@ int rpmRunTransactions(	rpmTransactionSet ts,
 			RPMMIRE_DEFAULT, alp->version);
 	    (void) rpmdbSetIteratorRE(mi, RPMTAG_RELEASE,
 			RPMMIRE_DEFAULT, alp->release);
+	    if (alp->disttag) {
+		(void) rpmdbSetIteratorRE(mi, RPMTAG_DISTTAG,
+			RPMMIRE_DEFAULT, alp->disttag);
+	    }
 	    if (alp->buildtime && upgrade_honor_buildtime()) {
 		sprintf(b, "%u", *alp->buildtime);
 		(void) rpmdbSetIteratorRE(mi, RPMTAG_BUILDTIME,
