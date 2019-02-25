@@ -497,22 +497,26 @@ int addReqProv(/*@unused@*/ Spec spec, Header h,
 			hfd(bn, bnt);
 		}
 		else {
-			const char *N = NULL, *V = NULL, *R = NULL;
-			headerNVR(h, &N, &V, &R);
+			const char *N = NULL, *V = NULL, *R = NULL, *D = NULL;
+			headerNVRD(h, &N, &V, &R, &D);
 			if (N && strcmp(depName, N) == 0) {
 				if (!(depFlags & RPMSENSE_SENSEMASK))
 					skip = 1;
 				else if (V && R) {
 					int_32 *E = NULL;
-					char EVR[BUFSIZ];
+					const char *EVR, *EVRD = NULL;
 					hge(h, RPMTAG_EPOCH, NULL, (void**) &E, NULL);
 					if (E)
-						snprintf(EVR, sizeof(EVR), "%d:%s-%s", *E, V, R);
+						EVR = xasprintf("%d:%s-%s", *E, V, R);
 					else
-						snprintf(EVR, sizeof(EVR), "%s-%s", V, R);
-					if (rpmRangesOverlap("", EVR, RPMSENSE_EQUAL,
+						EVR = xasprintf("%s-%s", V, R);
+					if (D)
+						EVRD = xasprintf("%s:%s", EVR, D);
+					if (rpmRangesOverlap("", EVRD ? : EVR, RPMSENSE_EQUAL,
 							     "", depEVR, depFlags))
 						skip = 1;
+					EVRD = _free(EVRD);
+					EVR = _free(EVR);
 				}
 				else
 					skip = 1;
