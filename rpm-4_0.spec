@@ -86,7 +86,7 @@ Source: rpm-%version-%release.tar
 %{?_with_selinux:BuildPreReq: libselinux-devel >= 2.0.96}
 %{?_with_profile:BuildPreReq: coreutils >= 6.0}
 
-BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel >= 4.2.1,
+BuildPreReq: automake >= 1.7.1, autoconf >= 2.53, libbeecrypt-devel >= 4.2.1
 BuildPreReq: rpm >= 3.0.6-ipl24mdk, %_bindir/subst
 
 # For debugedit.
@@ -542,6 +542,13 @@ mv -T %buildroot%_rpmlibdir/{,build}macros
 %files checkinstall
 
 %changelog
+[rpm-4.13.0.1-alt6 alike]
+- rpmEVRcmp() (and hence rpmRangesOverlap()) made asymmetric w.r.t.
+  underspecified release. (Provides: N = V can't anymore satisfy
+  Requires: N = V-R. Look out for unmets!)
+  (with help of Vladimir D. Seleznev)
+- rpmRangesOverlap() optimized (can run ca. 30%% faster).
+
 * Tue Feb 19 2019 Ivan Zakharyaschev <imz@altlinux.org> 4.0.4-alt127
 - Make "new" packages (with disttags) be treated better
   by the "old" disttag-unaware rpm in some cases; primarily those with

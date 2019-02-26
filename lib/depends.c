@@ -76,8 +76,6 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 {
     const char *aDepend = NULL;
     const char *bDepend = NULL;
-    char *aEVR, *bEVR;
-    const char *aE, *aV, *aR, *bE, *bV, *bR;
     int result;
     int sense;
 
@@ -141,19 +139,16 @@ int rpmRangesOverlap(const char * AName, const char * AEVR, int AFlags,
 	goto exit;
     }
     else {
+        const char *aE, *aV, *aR, *bE, *bV, *bR;
 	/* Both AEVR and BEVR exist. */
-	aEVR = xstrdup(AEVR);
-	parseEVR(aEVR, &aE, &aV, &aR);
-	bEVR = xstrdup(BEVR);
-	parseEVR(bEVR, &bE, &bV, &bR);
+	parseEVR(strdupa(AEVR), &aE, &aV, &aR);
+	parseEVR(strdupa(BEVR), &bE, &bV, &bR);
 	/* rpmEVRcmp() is also shared; the code moved to rpmvercmp.c */
 	if (rpmIsDebug()) {
 	    aDepend = printDepend(NULL, AName, AEVR, AFlags);
 	    bDepend = printDepend(NULL, BName, BEVR, BFlags);
 	}
 	sense = rpmEVRcmp(aE, aV, aR, aDepend, bE, bV, bR, bDepend);
-	aEVR = _free(aEVR);
-	bEVR = _free(bEVR);
     }
 
 sense_result:

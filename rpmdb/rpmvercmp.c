@@ -191,8 +191,16 @@ rpmEVRcmp(const char * const aE, const char * const aV, const char * const aR,
 
     if (sense == 0) {
 	sense = rpmvercmp(aV, bV);
-	if (sense == 0 && aR && *aR && bR && *bR) {
-	    sense = rpmvercmp(aR, bR);
+	if (sense == 0) {
+            if (aR && *aR && bR && *bR)
+                sense = rpmvercmp(aR, bR);
+            else if (aR && *aR) {
+                /* Support for underspecification on the side of Requires/Conflicts */
+                rpmMessage(RPMMESS_DEBUG, _("the \"B\" dependency doesn't specify a release, letting it match any in \"A\"\n\tA %s\tB %s\n"),
+                           aDepend, bDepend);
+                sense = 0;
+            } else if (bR && *bR)
+                sense = -1;
 	}
     }
 
