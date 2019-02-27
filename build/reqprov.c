@@ -223,7 +223,7 @@ compare_deps (rpmTag tag, const char *Aevr, rpmsenseFlags Aflags,
 		else if ((bE && *bE) && !(aE && *aE))
 			cmp_rc = DEP_WK;
 	}
-	/* 11. EVRs with DistTag are stronger. */
+	/* 10b. EVRs with DistTag are stronger. */
 	if (cmp_rc == DEP_EQ)
 	{
 	    if ((aD && *aD) && !(bD && *bD))
