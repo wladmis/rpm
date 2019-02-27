@@ -739,7 +739,7 @@ void pruneRDeps1(struct Req *r, Spec spec, Package pkg1, Package pkg2)
 		continue;
 	    if (cycle && (reqFv[i] & RPMSENSE_SENSEMASK) == RPMSENSE_EQUAL)
 		continue;
-	    dep_compare_t cmp = compare_deps(RPMTAG_REQUIRENAME,
+	    dep_compare_t cmp = compare_deps(RPMTAG_REQUIREFLAGS,
 				provVv[j], provFv[j], reqVv[i], reqFv[i]);
 	    if (!(cmp == DEP_ST || cmp == DEP_EQ))
 		continue;
