@@ -8,7 +8,8 @@
 
 #define ALT_RPM_API /* for isChangeNameMoreFresh, parseEVR, rpmEVRDTCompare */
 
-#include <rpm/rpmlib.h>		/* rpmvercmp proto */
+#include <rpm/rpmvercmp.h>	/* rpmvercmp proto */
+#include <rpm/rpmlib.h>		/* other our protos */
 #include <rpm/rpmstring.h>
 
 #include <rpm/rpmlog.h>

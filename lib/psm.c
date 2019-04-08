@@ -10,7 +10,8 @@
 
 #define ALT_RPM_API /* for rpmteBT */
 
-#include <rpm/rpmlib.h>		/* rpmvercmp and others */
+#include <rpm/rpmvercmp.h>	/* rpmvercmp */
+#include <rpm/rpmlib.h>		/* and others */
 #include <rpm/rpmmacro.h>
 #include <rpm/rpmds.h>
 #include <rpm/rpmts.h>

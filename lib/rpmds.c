@@ -6,7 +6,8 @@
 #define ALT_RPM_API /* for parseEVR */
 
 #include <rpm/rpmtypes.h>
-#include <rpm/rpmlib.h>		/* rpmvercmp */
+#include <rpm/rpmlib.h>
+#include <rpm/rpmvercmp.h>		/* rpmvercmp */
 #include <rpm/rpmstring.h>
 #include <rpm/rpmlog.h>
 #include <rpm/rpmstrpool.h>

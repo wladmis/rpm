@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 #include <errno.h>
-#include <rpmlib.h>
+#include <rpmvercmp.h>
 
 int
 main(int ac, const char *av[])
