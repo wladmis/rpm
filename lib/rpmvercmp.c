@@ -6,7 +6,7 @@
 
 #include <ctype.h>
 
-#define ALT_RPM_API /* for isChangeNameMoreFresh, parseEVR */
+#define ALT_RPM_API /* for isChangeNameMoreFresh, parseEVR, rpmEVRDTCompare */
 
 #include <rpm/rpmlib.h>		/* rpmvercmp proto */
 #include <rpm/rpmstring.h>
@@ -138,13 +138,9 @@ static int upgrade_honor_buildtime(void)
     return honor_buildtime;
 }
 
-static int rpm_cmp_tag_int(Header first, Header second, rpmTag tag)
+static int rpm_cmp_uint(const unsigned long long one,
+                        const unsigned long long two)
 {
-    uint64_t one, two;
-
-    one = headerGetNumber(first, tag);
-    two = headerGetNumber(second, tag);
-
     if (one < two)
 	return -1;
     else if (one > two)
@@ -153,93 +149,147 @@ static int rpm_cmp_tag_int(Header first, Header second, rpmTag tag)
 	return 0;
 }
 
-static int rpm_cmp_tag_version(Header first, Header second, rpmTag tag)
+static int rpm_cmp_disttag(const char * const fdt,
+                           const char * const sdt)
 {
-    const char * one, * two;
+    size_t flen = 0, slen = 0;
+    const char * p;
 
-    one = headerGetString(first, tag);
-    two = headerGetString(second, tag);
+    if ((p = strchrnul(fdt, '+')))
+        flen = p - fdt;
 
-    if (!one && !two)
-	return 0;
-    else if (!one && two)
-	return -1;
-    else if (one && !two)
-	return 1;
-    else
-	return rpmvercmp(one, two);
+    if ((p = strchrnul(sdt, '+')))
+        slen = p - sdt;
+
+    if (flen < slen) {
+        return memcmp(fdt, sdt, flen) > 0 ? 1 : -1;
+    } else if (flen > slen) {
+        return memcmp(fdt, sdt, slen) < 0 ? -1 : 1;
+    } else /* flen == slen */ {
+        const int rc = memcmp(fdt, sdt, flen);
+        if (rc > 0)
+            return 1;
+        else if (rc < 0)
+            return -1;
+        else
+            return 0;
+    }
 }
 
-#if 0
-int rpmVersionCompare(Header first, Header second)
+/* Decide which package is "newer" (for upgrade).
+ */
+int rpmEVRDTCompare(const struct rpmEVRDT * const fst,
+                    const struct rpmEVRDT * const snd)
 {
-    /* Missing epoch becomes zero here, which is what we want */
-    uint32_t epochOne = headerGetNumber(first, RPMTAG_EPOCH);
-    uint32_t epochTwo = headerGetNumber(second, RPMTAG_EPOCH);
-    int rc;
+    int rc = 0; /* same "new" (an upgrade in neither direction is possible) */
 
-    if (epochOne < epochTwo)
-	return -1;
-    else if (epochOne > epochTwo)
-	return 1;
+    /* FIXME: The current treatment of an absent Epoch (as the least one)
+       leads to 0:1-alt1 being "newer" than 2-alt1. (Check with rpmevrcmp tool.)
 
-    rc = rpmvercmp(headerGetString(first, RPMTAG_VERSION),
-		   headerGetString(second, RPMTAG_VERSION));
-    if (rc)
-	return rc;
+       rpmevrcmp from rpm-4.13.0.1-alt6 gives the opposite result for
+       this example (-1), which is more reasonable.
+    */
+    if (!fst->has_epoch && snd->has_epoch)
+        rc = -1;
+    if (fst->has_epoch && !snd->has_epoch)
+        rc = 1;
+    if (fst->has_epoch && snd->has_epoch)
+        rc = rpm_cmp_uint(fst->epoch,
+                          snd->epoch);
 
-    return rpmvercmp(headerGetString(first, RPMTAG_RELEASE),
-		     headerGetString(second, RPMTAG_RELEASE));
-}
-#endif
+    if (rc) return rc;
 
-int rpmVersionCompare(Header first, Header second)
-{
-    int rc;
+    if (!fst->version && snd->version)
+        rc = -1;
+    if (fst->version && !snd->version)
+        rc = 1;
+    if (fst->version && snd->version)
+        rc = rpmvercmp(fst->version,
+                       snd->version);
 
-    if ((rc = rpm_cmp_tag_int(first, second, RPMTAG_EPOCH)))
-	return rc;
+    if (rc) return rc;
 
-    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_VERSION)))
-	return rc;
+    if (!fst->release && snd->release)
+        rc = -1;
+    if (fst->release && !snd->release)
+        rc = 1;
+    if (fst->release && snd->release)
+        rc = rpmvercmp(fst->release,
+                       snd->release);
 
-    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_RELEASE)))
-	return rc;
+    if (rc) return rc;
 
-    /* hack to make packages upgrade between branches possible */
-    const char * fdt = headerGetString(first, RPMTAG_DISTTAG);
-    const char * sdt = headerGetString(second, RPMTAG_DISTTAG);
+    /* NB: if one of disttags is absent, we don't decide based on the disttags;
+       rather we fallback to the decision based on the buildtimes.
+    */
+    if (fst->disttag && snd->disttag)
+        rc = rpm_cmp_disttag(fst->disttag,
+                             snd->disttag);
 
-    if (fdt && sdt) {
-	size_t flen = 0, slen = 0;
-	const char * p;
+    if (rc) return rc;
 
-	if ((p = strchrnul(fdt, '+')))
-	    flen = p - fdt;
-
-	if ((p = strchrnul(sdt, '+')))
-	    slen = p - sdt;
-
-	if (flen < slen) {
-	    rc = memcmp(fdt, sdt, flen) > 0 ? 1 : -1;
-	} else if (flen > slen) {
-	    rc = memcmp(fdt, sdt, slen) < 0 ? -1 : 1;
-	} else /* flen == slen */ {
-	    rc = memcmp(fdt, sdt, flen);
-	}
-
-	if (rc) {
-	    if (rc > 0)
-		return 1;
-	    else
-		return -1;
-	}
+    if (upgrade_honor_buildtime()) {
+        /* Currently an absent buildtime is treated as the least one.
+           Another possibility could be to skip buildtime comparison then.
+           However, the current treatment is good for the work of hsh --with-stuff
+           in case when buildtime is absent in the non-local repo indexes.
+        */
+        if (!fst->has_buildtime && snd->has_buildtime)
+            rc = -1;
+        if (fst->has_buildtime && !snd->has_buildtime)
+            rc = 1;
+        if (fst->has_buildtime && snd->has_buildtime)
+            rc = rpm_cmp_uint(fst->buildtime,
+                              snd->buildtime);
     }
 
-    if (upgrade_honor_buildtime())
-	return rpm_cmp_tag_int(first, second, RPMTAG_BUILDTIME);
+    return rc;
+}
 
-    return 0;
+/* The difference of this helper from headerGetNumber() (apart from
+   the integer type) is that it signals an absent entry by returning 0
+   (otherwise puts the value into the memory location given by the caller).
+*/
+static int headerGetNumberULL(Header h,
+                              rpmTagVal tag,
+                              unsigned long long * const result)
+{
+    int rc = 0;
+    struct rpmtd_s td;
+    headerGet(h, tag, &td, HEADERGET_DEFAULT); /* headerGetNumber() uses HEADERGET_EXT,
+                                                  whose meaning is unknown to me. */
+    if (rpmtdCount(&td) == 1) {
+        *result = rpmtdGetNumber(&td);
+        rc = 1;
+    }
+    rpmtdFreeData(&td);
+    return rc;
+}
+
+/* A convenient local helper.
+
+   We don't add another function akin to headerNEVRA() to the visible API,
+   because it's deprecated and because in headerNEVRA()'s arguments
+   the type of the integer pointer (Epoch) is inconvenient for us.
+*/
+static void headerGetEVRDT(Header const h,
+                           struct rpmEVRDT * const res)
+{
+    res->has_epoch = headerGetNumberULL(h, RPMTAG_EPOCH, &res->epoch);
+    res->version = headerGetString(h, RPMTAG_VERSION);
+    res->release = headerGetString(h, RPMTAG_RELEASE);
+    res->disttag = headerGetString(h, RPMTAG_DISTTAG);
+    res->has_buildtime = headerGetNumberULL(h, RPMTAG_BUILDTIME, &res->buildtime);
+}
+
+int rpmVersionCompare(Header first, Header second)
+{
+    struct rpmEVRDT firstVerInfo, secondVerInfo;
+
+    headerGetEVRDT(first, &firstVerInfo);
+    headerGetEVRDT(second, &secondVerInfo);
+
+    return rpmEVRDTCompare(&firstVerInfo, &secondVerInfo);
 }
 
 static

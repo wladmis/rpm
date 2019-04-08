@@ -208,6 +208,32 @@ rpmRC rpmInstallSourcePackage(rpmts ts, FD_t fd,
 			char ** specFilePtr,
 			char ** cookie);
 
+#ifdef ALT_RPM_API
+/** Version information needed
+ * to decide which package is "newer" (for upgrade).
+ *
+ * If you change this structure, please change its name and the names
+ * of the funcstions that use it, so that the API change is detected
+ * by the compiler and the ABI change is detected by set-versions and
+ * client packages are forced to be changed accordingly.
+ */
+struct rpmEVRDT {
+    int has_epoch;
+    unsigned long long epoch;
+    const char * version;
+    const char * release;
+    const char * disttag;
+    int has_buildtime;
+    unsigned long long buildtime;
+};
+
+/**
+ * Decide which package is "newer" (for upgrade).
+ */
+int rpmEVRDTCompare(const struct rpmEVRDT * fst,
+                    const struct rpmEVRDT * snd);
+#endif
+
 /** \ingroup rpmtrans
  * Segmented string compare for version or release strings.
  *
