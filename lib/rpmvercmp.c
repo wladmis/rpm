@@ -200,19 +200,8 @@ int rpmEVRDTCompare(const struct rpmEVRDT * const fst,
 {
     int rc = 0; /* same "new" (an upgrade in neither direction is possible) */
 
-    /* FIXME: The current treatment of an absent Epoch (as the least one)
-       leads to 0:1-alt1 being "newer" than 2-alt1. (Check with rpmevrcmp tool.)
-
-       rpmevrcmp from rpm-4.13.0.1-alt6 gives the opposite result for
-       this example (-1), which is more reasonable.
-    */
-    if (!fst->has_epoch && snd->has_epoch)
-        rc = -1;
-    if (fst->has_epoch && !snd->has_epoch)
-        rc = 1;
-    if (fst->has_epoch && snd->has_epoch)
-        rc = rpm_cmp_uint(fst->epoch,
-                          snd->epoch);
+    rc = rpm_cmp_uint(fst->has_epoch ? fst->epoch : 0,
+                      snd->has_epoch ? snd->epoch : 0);
 
     if (rc) return rc;
 
