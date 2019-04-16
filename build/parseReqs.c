@@ -177,6 +177,12 @@ int parseRCPOT(Spec spec, Package pkg, const char *field, int tag,
 			spec->lineNum, (spec->fileStack ? spec->line : field));
 		return RPMERR_BADSPEC;
 	    }
+	    if ((tag == RPMTAG_PROVIDEFLAGS) &&
+		(flags & (RPMSENSE_LESS | RPMSENSE_GREATER))) {
+		rpmError(RPMERR_BADSPEC, _("line %d: Invalid logical operator in %s\n"),
+			spec->lineNum, (spec->fileStack ? spec->line : field));
+		return RPMERR_BADSPEC;
+	    }
 	    version = xmalloc((ve-v) + 1);
 	    strncpy(version, v, (ve-v));
 	    version[ve-v] = '\0';
