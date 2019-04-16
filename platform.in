@@ -68,6 +68,7 @@
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} \\\
 	--disable-dependency-tracking \\\
+	--disable-silent-rules \\\
 	%{?_configure_gettext:%{_configure_gettext}}
 
 %_makeinstall_target	install
