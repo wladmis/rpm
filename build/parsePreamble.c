@@ -166,6 +166,7 @@ static int parseBits(const char * s, const tokenBits tokbits,
 		break;
 	    }
 
+	    tb = NULL;
 	    for (tokenBits t = tokbits; t->name; t++) {
 		if (t->name && !strncasecmp(t->name, s, (se-s))) {
 		    if (!t->name[se-s]) {
