@@ -22,6 +22,12 @@
 %nil			%{!?nil}
 
 #==============================================================================
+# ---- Configuration of the upgradability order (which package is "newer"?)
+#
+%_priority_distbranch           @_PRIORITY_DISTBRANCH@
+#%_upgrade_honor_buildtime     1
+
+#==============================================================================
 # ---- filesystem macros.
 #
 %_usr			@prefix@
