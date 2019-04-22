@@ -930,6 +930,9 @@ int rpmPackageFilesInstall(rpmts ts, rpmte te, rpmfiles files,
 	    char *fn = rpmfilesFN(files, firsthardlink);
 	    rc = expandRegular(fi, fn, psm, nodigest, 0);
 	    firsthardlink = -1;
+	    if (!rc) {
+	        rc = fsmSetmeta(fn, fi, plugins, action, &sb);
+	    }
 	    free(fn);
 	}
 
