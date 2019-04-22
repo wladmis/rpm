@@ -6,6 +6,7 @@
 %def_with xz
 %def_with beecrypt
 %def_with memcached
+%def_disable default_priority_distbranch
 
 %define rpmhome /usr/lib/rpm
 
@@ -267,6 +268,14 @@ Requires: rpminstall-tests-checkinstall
 %setup
 
 %build
+_PRIORITY_DISTBRANCH=%{?!_disable_default_priority_distbranch:%{?disttag}}
+case "$_PRIORITY_DISTBRANCH" in
+*+*) _PRIORITY_DISTBRANCH="${_PRIORITY_DISTBRANCH%%+*}" ;;
+*) _PRIORITY_DISTBRANCH= ;;
+esac
+[ -n "$_PRIORITY_DISTBRANCH" ] || _PRIORITY_DISTBRANCH='%%nil'
+export _PRIORITY_DISTBRANCH
+
 CPPFLAGS="$CPPFLAGS -I/usr/include/beecrypt -DLUA_COMPAT_APIINTCASTS"
 export CPPFLAGS
 %add_optflags -DLUA_COMPAT_APIINTCASTS
