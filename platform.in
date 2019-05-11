@@ -27,6 +27,9 @@
 @LIBSUFF_EXISTS@%_is_libsuff	1
 %_lib			lib@LIBSUFF@
 %_libdir		@prefix@/lib@LIBSUFF@
+%_pointer_size		@POINTER_SIZE@
+%_is_ilp32		@ARCH_ILP32@
+%_is_lp64		@ARCH_LP64@
 %_includedir		@includedir@
 %_oldincludedir		@oldincludedir@
 %_infodir		@infodir@
