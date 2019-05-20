@@ -743,7 +743,7 @@ int rpmErase(rpmts ts, struct rpmInstallArguments_s * ia, ARGV_const_t argv)
 
     setNotifyFlag(ia, ts);
 
-    qfmt = rpmExpand("%{?_query_all_fmt}\n", NULL);
+    qfmt = rpmExpand("%{nevr}%|disttag?{:%{disttag}}:{@%{buildtime}}|.%{arch}\n", NULL);
     for (arg = argv; *arg; arg++) {
 	rpmdbMatchIterator mi = rpmtsInitIterator(ts, RPMDBI_LABEL, *arg, 0);
 	int matches = rpmdbGetIteratorCount(mi);
