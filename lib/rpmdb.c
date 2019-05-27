@@ -120,7 +120,7 @@ static int64_t splitEpoch(const char *s, const char **version)
     int saveerrno = errno;
 
     *version = s;
-    e = strtol(s, &end, 10);
+    e = strtoll(s, &end, 10);
     if (*end == ':' && e >= 0 && e <= UINT32_MAX) {
 	*version = end + 1;
     } else {
