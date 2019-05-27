@@ -113,9 +113,9 @@ static unsigned int uintId(unsigned int a)
  * @return		epoch integer within the [0; UINT32_MAX] interval,
  *                      or -1 for no epoch
  */
-static int64_t splitEpoch(const char *s, const char **version)
+static long long splitEpoch(const char *s, const char **version)
 {
-    int64_t e;
+    long long e;
     char *end;
     int saveerrno = errno;
 
@@ -805,7 +805,7 @@ int rpmdbCountPackages(rpmdb db, const char * name)
  */
 static rpmRC dbiFindMatches(rpmdb db, dbiIndex dbi,
 		const char * name,
-		int64_t epoch,
+		long long epoch,
 		const char * version,
 		const char * release,
 		const char * arch,
@@ -902,7 +902,7 @@ static rpmRC dbiFindByLabelArch(rpmdb db, dbiIndex dbi,
 			    dbiIndexSet * matches)
 {
     char localarg[arglen+1];
-    int64_t epoch;
+    long long epoch;
     const char * version;
     const char * release;
     char * s;
