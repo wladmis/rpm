@@ -6,7 +6,7 @@
 %def_with xz
 %def_with beecrypt
 %def_with memcached
-%def_disable default_priority_distbranch
+%def_enable default_priority_distbranch
 
 %define rpmhome /usr/lib/rpm
 
