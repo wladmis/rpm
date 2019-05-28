@@ -295,6 +295,7 @@ popd
 # We need to build with --enable-python for the self-test suite, but we
 # actually package the bindings built with setup.py (#531543#c26)
 rm -rf %buildroot/%python_sitelibdir
+rm -rf %buildroot/%python3_sitelibdir
 pushd python
 %python_install
 %python3_install
