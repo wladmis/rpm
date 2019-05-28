@@ -306,7 +306,11 @@ rm -rf %buildroot/%python_sitelibdir
 rm -rf %buildroot/%python3_sitelibdir
 pushd python
 %python_install
+export RPM_LD_PRELOAD_py2_rpmb=%buildroot%python_sitelibdir/rpm/_rpmb.so
+export RPM_FILES_TO_LD_PRELOAD_py2_rpmb=%python_sitelibdir/rpm/_rpms.so
 %python3_install
+export RPM_LD_PRELOAD_py3_rpmb=%buildroot%python3_sitelibdir/rpm/_rpmb%_python3_extension_suffix
+export RPM_FILES_TO_LD_PRELOAD_py3_rpmb=%python3_sitelibdir/rpm/_rpms%_python3_extension_suffix
 popd
 
 mkdir -p %buildroot/usr/lib/tmpfiles.d
