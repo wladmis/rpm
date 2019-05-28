@@ -2,7 +2,6 @@
 
 #include <rpm/rpmtypes.h>
 #include <rpm/rpmstring.h>
-#include <rpm/rpmlib.h>		/* rpmvercmp */
 
 #include "header-py.h"
 #include "rpmds-py.h"

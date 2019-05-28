@@ -1,6 +1,6 @@
 #include "rpmsystem-py.h"
 
-#include <rpm/rpmlib.h>		/* rpmvercmp */
+#include <rpm/rpmlib.h>
 #include <rpm/rpmtag.h>
 #include <rpm/rpmstring.h>
 #include <rpm/rpmts.h>	/* XXX rpmtsCreate/rpmtsFree */
@@ -898,37 +898,3 @@ PyObject * versionCompare (PyObject * self, PyObject * args, PyObject * kwds)
 
     return Py_BuildValue("i", rpmVersionCompare(h1->h, h2->h));
 }
-
-static int compare_values(const char *str1, const char *str2)
-{
-    if (!str1 && !str2)
-	return 0;
-    else if (str1 && !str2)
-	return 1;
-    else if (!str1 && str2)
-	return -1;
-    return rpmvercmp(str1, str2);
-}
-
-PyObject * labelCompare (PyObject * self, PyObject * args)
-{
-    const char *v1, *r1, *v2, *r2;
-    const char *e1, *e2;
-    int rc;
-
-    if (!PyArg_ParseTuple(args, "(zzz)(zzz)",
-			&e1, &v1, &r1, &e2, &v2, &r2))
-	return NULL;
-
-    if (e1 == NULL)	e1 = "0";
-    if (e2 == NULL)	e2 = "0";
-
-    rc = compare_values(e1, e2);
-    if (!rc) {
-	rc = compare_values(v1, v2);
-	if (!rc)
-	    rc = compare_values(r1, r2);
-    }
-    return Py_BuildValue("i", rc);
-}
-

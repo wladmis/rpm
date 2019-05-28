@@ -182,9 +182,6 @@ static PyMethodDef rpmModuleMethods[] = {
       "Returns 1 if version0 > version1\n"
       "Returns 0 if version0 == version1\n"
       "Returns -1 if version0 < version1\n"},
-    { "labelCompare", (PyCFunction) labelCompare, METH_VARARGS|METH_KEYWORDS,
-      "labelCompare(version0, version1) -- as versionCompare()\n\n"
-      "but arguments are tuples of of strings for (epoch, version, release)"},
     { "setVerbosity", (PyCFunction) setVerbosity, METH_O,
       "setVerbosity(level) -- Set log level. See RPMLOG_* constants." },
     { "setEpochPromote", (PyCFunction) setEpochPromote, METH_O,
