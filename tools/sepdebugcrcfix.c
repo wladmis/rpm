@@ -16,6 +16,9 @@
 /* Version 2013-06-24.  */
 
 #define _GNU_SOURCE
+
+#include "system.h"
+
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -30,7 +33,9 @@
 #include <gelf.h>
 #include <bfd.h>
 
+#ifndef _
 #define _(x) x
+#endif
 #define static_assert(expr) \
   extern int never_defined_just_used_for_checking[(expr) ? 1 : -1]
 #ifndef min
