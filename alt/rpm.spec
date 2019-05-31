@@ -269,6 +269,7 @@ Requires: rpminstall-tests-checkinstall
 
 %build
 _PRIORITY_DISTBRANCH=%{?!_disable_default_priority_distbranch:%{?disttag}}
+_PRIORITY_DISTBRANCH="${_PRIORITY_DISTBRANCH#*:}" # skip the optional padding
 case "$_PRIORITY_DISTBRANCH" in
 *+*) _PRIORITY_DISTBRANCH="${_PRIORITY_DISTBRANCH%%+*}" ;;
 *) _PRIORITY_DISTBRANCH= ;;
