@@ -18,7 +18,7 @@
 Summary: The RPM package management system
 Name: rpm
 Version: 4.13.0.1
-Release: alt8
+Release: alt9
 Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
 # http://git.altlinux.org/gears/r/rpm.git
@@ -541,6 +541,29 @@ touch /var/lib/rpm/delay-posttrans-filetriggers
 %_includedir/rpm
 
 %changelog
+* Tue Jun 11 2019 Ivan Zakharyaschev <imz@altlinux.org> 4.13.0.1-alt9
+- lib: introduced rpmEVRDTCompare() (useful for APT).
+- Changes in what is considered "newer" by rpm -U  pertaining to disttag
+  comparison. (On the whole, to determine which package is "newer", first,
+  the EVRs are compared, then the branch prefixes of the disttags if the
+  disttags are present, and then the buildtimes.) The comparison of the disttags:
+  + Before the comparison of disttags, an optional initial padding
+    (which is terminated by :) is skipped. (This will be useful for
+    generating >,<-deps compatible with disttag-unaware rpm & apt.)
+  + If a disttag contains no + separator (old format), the branch prefix is
+    assumed to be empty (and hence "older" than any other branch prefix).
+  + If the branch prefix of a disttag is equal to %%_priority_distbranch
+    (and it is not empty), then it is "newer" than any other ones.
+  + The branch prefixes of disttags are ordered by rpmvercmp() rather than
+    lexicographically. (For example, the numeric parts of "p8" or "p10" are
+    compared as numbers. However, the first letter in "p7" or "c8.1" is more
+    significant.)
+- Give a default value to %%_priority_distbranch based on the disttag
+  when this package is built (the prefix before +),
+  i.e., the current repo branch by default.
+  (Useful for getting the rpm tool with good behavior in branches (like p9)
+  forked off Sisyphus after disttags were introduced.)
+
 * Tue Jun 11 2019 Ivan A. Melnikov <iv@altlinux.org> 4.13.0.1-alt8
 - Fix crash in syslog plugin (closes: #35722).
 - Fix setting permissions for hardlinked files even if some
