@@ -150,10 +150,17 @@ static int rpm_cmp_uint(const unsigned long long one,
 	return 0;
 }
 
-static int rpm_cmp_disttag(const char * const fdt,
-                           const char * const sdt)
+static int rpm_cmp_disttag(const char * fdt,
+                           const char * sdt)
 {
-    /* the branch prefixes (the only substrings important for the decision) */
+    { /* skip optional padding, which is terminated by : */
+        const char * const fpad = strchr(fdt, ':');
+        const char * const spad = strchr(sdt, ':');
+        if (fpad) fdt = fpad + 1;
+        if (spad) sdt = spad + 1;
+    }
+
+   /* the branch prefixes (the only substrings important for the decision) */
     const char * one, * two;
 
     {
