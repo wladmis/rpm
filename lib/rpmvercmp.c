@@ -153,28 +153,44 @@ static int rpm_cmp_uint(const unsigned long long one,
 static int rpm_cmp_disttag(const char * const fdt,
                            const char * const sdt)
 {
-    size_t flen = 0, slen = 0;
-    const char * p;
+    /* the branch prefixes (the only substrings important for the decision) */
+    const char * one, * two;
 
-    if ((p = strchrnul(fdt, '+')))
-        flen = p - fdt;
+    {
+        /* The lengths of the branch substrings in the disttags. */
+        const size_t flen = (strchr(fdt, '+') ? : fdt) - fdt;
+        const size_t slen = (strchr(sdt, '+') ? : sdt) - sdt;
 
-    if ((p = strchrnul(sdt, '+')))
-        slen = p - sdt;
-
-    if (flen < slen) {
-        return memcmp(fdt, sdt, flen) > 0 ? 1 : -1;
-    } else if (flen > slen) {
-        return memcmp(fdt, sdt, slen) < 0 ? -1 : 1;
-    } else /* flen == slen */ {
-        const int rc = memcmp(fdt, sdt, flen);
-        if (rc > 0)
-            return 1;
-        else if (rc < 0)
-            return -1;
-        else
-            return 0;
+        /* The space allocated with alloca(3) remains until
+           the end of the function or the closest enclosing scope
+           which defines any variable length array. */
+        one = strndupa(fdt, flen);
+        two = strndupa(sdt, slen);
     }
+
+    /* A hack to make packages upgrade between branches possible:
+     * simply order by rpmvercmp, also honor %_priority_distbranch.
+     */
+
+    int rc = rpmvercmp(one, two);
+
+    if (rc != 0) {
+        static const char * pri_branch = NULL;
+        if (!pri_branch)
+            pri_branch = rpmExpand("%{?_priority_distbranch}", NULL) ? : "";
+
+        /* Prefer packages built for pri_branch. */
+        if (*pri_branch) {
+            /* Only one branch substring can match, because they are knwown
+             * to be different. */
+            if (strcmp(one, pri_branch) == 0)
+                rc = 1;
+            else if (strcmp(two, pri_branch) == 0)
+                rc = -1;
+        }
+    }
+
+    return rc;
 }
 
 /* Decide which package is "newer" (for upgrade).
