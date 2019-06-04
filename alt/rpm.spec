@@ -39,6 +39,8 @@ Conflicts: apt < 0.5.15lorg2-alt54
 Provides: RPMQ(EPOCH)
 # Can find pkgs by N[-E:V-R]@BUILDTIME
 Provides: RPMQ(BUILDTIME)
+# Can find pkgs by N-E:V-R:DISTTAG[@T]
+Provides: RPMQ(DISTTAG)
 
 BuildRequires(pre): rpm-build-python3
 BuildRequires: %bdbname-devel
