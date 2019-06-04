@@ -37,6 +37,8 @@ Conflicts: apt < 0.5.15lorg2-alt54
 # Can find pkgs by N-EPOCH:V-R
 # (a feature present in rpm-4.13, but not in all releases of rpm-4.0.4):
 Provides: RPMQ(EPOCH)
+# Can find pkgs by N[-E:V-R]@BUILDTIME
+Provides: RPMQ(BUILDTIME)
 
 BuildRequires(pre): rpm-build-python3
 BuildRequires: %bdbname-devel
