@@ -34,6 +34,10 @@ Requires: popt >= 1.10.2.1
 Requires: librpm%sover
 Conflicts: apt < 0.5.15lorg2-alt54
 
+# Can find pkgs by N-EPOCH:V-R
+# (a feature present in rpm-4.13, but not in all releases of rpm-4.0.4):
+Provides: RPMQ(EPOCH)
+
 BuildRequires(pre): rpm-build-python3
 BuildRequires: %bdbname-devel
 
