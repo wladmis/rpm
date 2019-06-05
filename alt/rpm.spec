@@ -17,7 +17,7 @@
 Summary: The RPM package management system
 Name: rpm
 Version: 4.13.0.1
-Release: alt7
+Release: alt7.1
 Group: System/Configuration/Packaging
 Url: http://www.rpm.org/
 # http://git.altlinux.org/gears/r/rpm.git
@@ -531,6 +531,11 @@ touch /var/lib/rpm/delay-posttrans-filetriggers
 %_includedir/rpm
 
 %changelog
+* Wed Jun 05 2019 Ivan Zakharyaschev <imz@altlinux.org> 4.13.0.1-alt7.1
+- Provides: RPMQ(EPOCH) RPMQ(BUILDTIME) RPMQ(DISTTAG)
+  (to be required by APT and other tools such as update-kernel, which need
+  to query the RPM db by specifying Epoch, Buildtime, and Disttag).
+
 * Mon May 27 2019 Ivan Zakharyaschev <imz@altlinux.org> 4.13.0.1-alt7
 (thx Vladimir D. Seleznev vseleznv@)
 - Added support for dbi matching against DistTag and BuildTime (closes: #36375).
