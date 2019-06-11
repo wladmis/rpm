@@ -32,6 +32,7 @@ static void syslog_cleanup(rpmPlugin plugin)
 static rpmRC syslog_tsm_pre(rpmPlugin plugin, rpmts ts)
 {
     struct logstat * state = rpmPluginGetData(plugin);
+    const char* rootDir;
     
     /* Reset counters */
     state->scriptfail = 0;
@@ -45,7 +46,8 @@ static rpmRC syslog_tsm_pre(rpmPlugin plugin, rpmts ts)
 	state->logging = 0;
 
     /* ...don't log chroot transactions */
-    if (!rstreq(rpmtsRootDir(ts), "/"))
+    rootDir = rpmtsRootDir(ts);
+    if (rootDir && !rstreq(rootDir, "/"))
 	state->logging = 0;
 
     if (state->logging) {
