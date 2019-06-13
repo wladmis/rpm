@@ -833,6 +833,8 @@ AC_SUBST(RPMCONFIGDIR)
 
 AC_SUBST(OBJDUMP)
 
+AC_SUBST(_PRIORITY_DISTBRANCH)
+
 if test "$with_external_db" = no; then
     AC_CONFIG_SUBDIRS(db3)
 fi

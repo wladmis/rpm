@@ -6,9 +6,10 @@
 
 #include <ctype.h>
 
-#define ALT_RPM_API /* for isChangeNameMoreFresh, parseEVR */
+#define ALT_RPM_API /* for isChangeNameMoreFresh, parseEVR, rpmEVRDTCompare */
 
-#include <rpm/rpmlib.h>		/* rpmvercmp proto */
+#include <rpm/rpmvercmp.h>	/* rpmvercmp proto */
+#include <rpm/rpmlib.h>		/* other our protos */
 #include <rpm/rpmstring.h>
 
 #include <rpm/rpmlog.h>
@@ -138,13 +139,9 @@ static int upgrade_honor_buildtime(void)
     return honor_buildtime;
 }
 
-static int rpm_cmp_tag_int(Header first, Header second, rpmTag tag)
+static int rpm_cmp_uint(const unsigned long long one,
+                        const unsigned long long two)
 {
-    uint64_t one, two;
-
-    one = headerGetNumber(first, tag);
-    two = headerGetNumber(second, tag);
-
     if (one < two)
 	return -1;
     else if (one > two)
@@ -153,93 +150,159 @@ static int rpm_cmp_tag_int(Header first, Header second, rpmTag tag)
 	return 0;
 }
 
-static int rpm_cmp_tag_version(Header first, Header second, rpmTag tag)
+static int rpm_cmp_disttag(const char * fdt,
+                           const char * sdt)
 {
-    const char * one, * two;
-
-    one = headerGetString(first, tag);
-    two = headerGetString(second, tag);
-
-    if (!one && !two)
-	return 0;
-    else if (!one && two)
-	return -1;
-    else if (one && !two)
-	return 1;
-    else
-	return rpmvercmp(one, two);
-}
-
-#if 0
-int rpmVersionCompare(Header first, Header second)
-{
-    /* Missing epoch becomes zero here, which is what we want */
-    uint32_t epochOne = headerGetNumber(first, RPMTAG_EPOCH);
-    uint32_t epochTwo = headerGetNumber(second, RPMTAG_EPOCH);
-    int rc;
-
-    if (epochOne < epochTwo)
-	return -1;
-    else if (epochOne > epochTwo)
-	return 1;
-
-    rc = rpmvercmp(headerGetString(first, RPMTAG_VERSION),
-		   headerGetString(second, RPMTAG_VERSION));
-    if (rc)
-	return rc;
-
-    return rpmvercmp(headerGetString(first, RPMTAG_RELEASE),
-		     headerGetString(second, RPMTAG_RELEASE));
-}
-#endif
-
-int rpmVersionCompare(Header first, Header second)
-{
-    int rc;
-
-    if ((rc = rpm_cmp_tag_int(first, second, RPMTAG_EPOCH)))
-	return rc;
-
-    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_VERSION)))
-	return rc;
-
-    if ((rc = rpm_cmp_tag_version(first, second, RPMTAG_RELEASE)))
-	return rc;
-
-    /* hack to make packages upgrade between branches possible */
-    const char * fdt = headerGetString(first, RPMTAG_DISTTAG);
-    const char * sdt = headerGetString(second, RPMTAG_DISTTAG);
-
-    if (fdt && sdt) {
-	size_t flen = 0, slen = 0;
-	const char * p;
-
-	if ((p = strchrnul(fdt, '+')))
-	    flen = p - fdt;
-
-	if ((p = strchrnul(sdt, '+')))
-	    slen = p - sdt;
-
-	if (flen < slen) {
-	    rc = memcmp(fdt, sdt, flen) > 0 ? 1 : -1;
-	} else if (flen > slen) {
-	    rc = memcmp(fdt, sdt, slen) < 0 ? -1 : 1;
-	} else /* flen == slen */ {
-	    rc = memcmp(fdt, sdt, flen);
-	}
-
-	if (rc) {
-	    if (rc > 0)
-		return 1;
-	    else
-		return -1;
-	}
+    { /* skip optional padding, which is terminated by : */
+        const char * const fpad = strchr(fdt, ':');
+        const char * const spad = strchr(sdt, ':');
+        if (fpad) fdt = fpad + 1;
+        if (spad) sdt = spad + 1;
     }
 
-    if (upgrade_honor_buildtime())
-	return rpm_cmp_tag_int(first, second, RPMTAG_BUILDTIME);
+   /* the branch prefixes (the only substrings important for the decision) */
+    const char * one, * two;
 
-    return 0;
+    {
+        /* The lengths of the branch substrings in the disttags. */
+        const size_t flen = (strchr(fdt, '+') ? : fdt) - fdt;
+        const size_t slen = (strchr(sdt, '+') ? : sdt) - sdt;
+
+        /* The space allocated with alloca(3) remains until
+           the end of the function or the closest enclosing scope
+           which defines any variable length array. */
+        one = strndupa(fdt, flen);
+        two = strndupa(sdt, slen);
+    }
+
+    /* A hack to make packages upgrade between branches possible:
+     * simply order by rpmvercmp, also honor %_priority_distbranch.
+     */
+
+    int rc = rpmvercmp(one, two);
+
+    if (rc != 0) {
+        static const char * pri_branch = NULL;
+        if (!pri_branch)
+            pri_branch = rpmExpand("%{?_priority_distbranch}", NULL) ? : "";
+
+        /* Prefer packages built for pri_branch. */
+        if (*pri_branch) {
+            /* Only one branch substring can match, because they are knwown
+             * to be different. */
+            if (strcmp(one, pri_branch) == 0)
+                rc = 1;
+            else if (strcmp(two, pri_branch) == 0)
+                rc = -1;
+        }
+    }
+
+    return rc;
+}
+
+/* Decide which package is "newer" (for upgrade).
+ */
+int rpmEVRDTCompare(const struct rpmEVRDT * const fst,
+                    const struct rpmEVRDT * const snd)
+{
+    int rc = 0; /* same "new" (an upgrade in neither direction is possible) */
+
+    rc = rpm_cmp_uint(fst->has_epoch ? fst->epoch : 0,
+                      snd->has_epoch ? snd->epoch : 0);
+
+    if (rc) return rc;
+
+    if (!fst->version && snd->version)
+        rc = -1;
+    if (fst->version && !snd->version)
+        rc = 1;
+    if (fst->version && snd->version)
+        rc = rpmvercmp(fst->version,
+                       snd->version);
+
+    if (rc) return rc;
+
+    if (!fst->release && snd->release)
+        rc = -1;
+    if (fst->release && !snd->release)
+        rc = 1;
+    if (fst->release && snd->release)
+        rc = rpmvercmp(fst->release,
+                       snd->release);
+
+    if (rc) return rc;
+
+    /* NB: if one of disttags is absent, we don't decide based on the disttags;
+       rather we fallback to the decision based on the buildtimes.
+    */
+    if (fst->disttag && snd->disttag)
+        rc = rpm_cmp_disttag(fst->disttag,
+                             snd->disttag);
+
+    if (rc) return rc;
+
+    if (upgrade_honor_buildtime()) {
+        /* Currently an absent buildtime is treated as the least one.
+           Another possibility could be to skip buildtime comparison then.
+           However, the current treatment is good for the work of hsh --with-stuff
+           in case when buildtime is absent in the non-local repo indexes.
+        */
+        if (!fst->has_buildtime && snd->has_buildtime)
+            rc = -1;
+        if (fst->has_buildtime && !snd->has_buildtime)
+            rc = 1;
+        if (fst->has_buildtime && snd->has_buildtime)
+            rc = rpm_cmp_uint(fst->buildtime,
+                              snd->buildtime);
+    }
+
+    return rc;
+}
+
+/* The difference of this helper from headerGetNumber() (apart from
+   the integer type) is that it signals an absent entry by returning 0
+   (otherwise puts the value into the memory location given by the caller).
+*/
+static int headerGetNumberULL(Header h,
+                              rpmTagVal tag,
+                              unsigned long long * const result)
+{
+    int rc = 0;
+    struct rpmtd_s td;
+    headerGet(h, tag, &td, HEADERGET_DEFAULT); /* headerGetNumber() uses HEADERGET_EXT,
+                                                  whose meaning is unknown to me. */
+    if (rpmtdCount(&td) == 1) {
+        *result = rpmtdGetNumber(&td);
+        rc = 1;
+    }
+    rpmtdFreeData(&td);
+    return rc;
+}
+
+/* A convenient local helper.
+
+   We don't add another function akin to headerNEVRA() to the visible API,
+   because it's deprecated and because in headerNEVRA()'s arguments
+   the type of the integer pointer (Epoch) is inconvenient for us.
+*/
+static void headerGetEVRDT(Header const h,
+                           struct rpmEVRDT * const res)
+{
+    res->has_epoch = headerGetNumberULL(h, RPMTAG_EPOCH, &res->epoch);
+    res->version = headerGetString(h, RPMTAG_VERSION);
+    res->release = headerGetString(h, RPMTAG_RELEASE);
+    res->disttag = headerGetString(h, RPMTAG_DISTTAG);
+    res->has_buildtime = headerGetNumberULL(h, RPMTAG_BUILDTIME, &res->buildtime);
+}
+
+int rpmVersionCompare(Header first, Header second)
+{
+    struct rpmEVRDT firstVerInfo, secondVerInfo;
+
+    headerGetEVRDT(first, &firstVerInfo);
+    headerGetEVRDT(second, &secondVerInfo);
+
+    return rpmEVRDTCompare(&firstVerInfo, &secondVerInfo);
 }
 
 static
