@@ -323,8 +323,8 @@ export RPM_LD_PRELOAD_py3_rpmb=%buildroot%python3_sitelibdir/rpm/_rpmb%_python3_
 export RPM_FILES_TO_LD_PRELOAD_py3_rpmb=%python3_sitelibdir/rpm/_rpms%_python3_extension_suffix
 popd
 
-mkdir -p %buildroot/usr/lib/tmpfiles.d
-echo "r /var/lib/rpm/__db.*" > %buildroot/usr/lib/tmpfiles.d/rpm.conf
+mkdir -p %buildroot/lib/tmpfiles.d
+echo "r /var/lib/rpm/__db.*" > %buildroot/lib/tmpfiles.d/rpm.conf
 
 mkdir -p %buildroot%_sysconfdir/rpm
 mkdir -p %buildroot%_sysconfdir/rpm/macros.d
@@ -402,7 +402,7 @@ touch /var/lib/rpm/delay-posttrans-filetriggers
 %files -f %name.lang
 %doc CREDITS doc/manual/[a-z]*
 
-/usr/lib/tmpfiles.d/rpm.conf
+/lib/tmpfiles.d/rpm.conf
 %dir %_sysconfdir/rpm
 
 %attr(0755, root, root) %dir /var/lib/rpm
