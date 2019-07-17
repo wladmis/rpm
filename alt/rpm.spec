@@ -287,7 +287,6 @@ for i in $(find . -name ltmain.sh) ; do
      sed -i.backup -e 's~compiler_flags=$~compiler_flags="%optflags"~' $i
 done;
 
-%define _configure_target --build=%_target_platform --host=%_target_platform
 %configure \
 	--with-vendor=alt \
 	--with-external-db \
