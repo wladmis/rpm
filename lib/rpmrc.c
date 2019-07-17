@@ -1269,6 +1269,19 @@ static void defaultMachine(rpmrcCtx ctx, const char ** arch, const char ** os)
 	}
 #	endif
 
+#	if defined(__e2k__)
+	{
+		if (__builtin_cpu_is("elbrus-v4"))
+			strcpy(un.machine, "e2kv4");
+		else if (__builtin_cpu_is("elbrus-v5"))
+			strcpy(un.machine, "e2kv5");
+		else if (__builtin_cpu_is("elbrus-v6"))
+			strcpy(un.machine, "e2kv6");
+		else // always fallback on e2k
+			strcpy(un.machine, "e2k");
+	}
+#	endif
+
 	/* the uname() result goes through the arch_canon table */
 	canon = lookupInCanonTable(un.machine,
 			   ctx->tables[RPM_MACHTABLE_INSTARCH].canons,
