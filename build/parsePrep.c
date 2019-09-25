@@ -442,6 +442,84 @@ static int doSetupMacro(Spec spec, char *line)
     return 0;
 }
 
+static int cmppn(const void *p1, const void *p2)
+{
+    unsigned int i1 = (unsigned int *)p1, i2 = (unsigned int *)p2;
+    return (i1 < i2) ? 1 :
+		       ((i1 > i2) ? -1 : 0);
+}
+
+/**
+ * Parse %autopatch line.
+ * @param spec		build info
+ * @param line		current line from spec file
+ * @return		0 on success
+ */
+static int doAutopatchMacro(Spec spec, const char *line)
+{
+    int argc = 0, c, rc;
+    const char **argv = NULL;
+
+    int opt_p = 0;
+    int opt_F = rpmExpandNumeric("%{?_default_patch_fuzz}%{?!_default_patch_fuzz:-1}");
+    struct poptOption const autopatchOpts[] = {
+	{ NULL, 'p', POPT_ARG_INT, &opt_p, 'p', NULL, NULL },
+	{ NULL, 'F', POPT_ARG_INT, &opt_F, 'F', NULL, NULL },
+	{ NULL, 0, 0, NULL, 0, NULL, NULL }
+    };
+
+    if ((rc = poptParseArgvString(line, &argc, &argv))) {
+	rpmError(RPMERR_BADSPEC, _("Error parsing %%autopatch: %s\n"),
+		 poptStrerror(rc));
+	return RPMERR_BADSPEC;
+    }
+
+    poptContext optCon = poptGetContext(NULL, argc, argv, autopatchOpts, 0);
+    while ((c = poptGetNextOpt(optCon)) > 0)
+	;
+
+    if (c < -1) {
+	rpmError(RPMERR_BADSPEC, _("%s: %s: %s\n"), poptStrerror(c),
+	       poptBadOption(optCon, POPT_BADOPTION_NOALIAS), line);
+	optCon = poptFreeContext(optCon);
+	_free(argv);
+	return RPMERR_BADSPEC;
+    }
+
+    optCon = poptFreeContext(optCon);
+    _free(argv);
+
+    unsigned int patch_num = 0;
+    for (struct Source *sp = spec->sources; sp != NULL; sp = sp->next) {
+	if (sp->flags & RPMBUILD_ISPATCH)
+	    patch_num++;
+    }
+
+    if (!patch_num)
+	return 0;
+
+    unsigned int *patches = calloc(patch_num, sizeof(*patches)), i = 0;
+    for (struct Source *sp = spec->sources; sp != NULL; sp = sp->next) {
+	if (sp->flags & RPMBUILD_ISPATCH)
+	    patches[i++] = sp->num;
+    }
+
+    qsort(patches, patch_num, sizeof(*patches), cmppn);
+
+    for (i = 0; i < patch_num; i++) {
+	const char *s = doPatch(spec, patches[i], opt_p, NULL, 0, 0, opt_F, NULL, 0);
+	if (s == NULL) {
+	    _free(patches);
+	    return RPMERR_BADSPEC;
+	}
+	appendLineStringBuf(spec->prep, s);
+    }
+
+    _free(patches);
+
+    return 0;
+}
+
 /**
  * Parse %patch line.
  * @param spec		build info
@@ -630,6 +708,8 @@ int parsePrep(Spec spec)
 	    res = doSetupMacro(spec, *lines);
 	} else if (! strncmp(*lines, "%patch", sizeof("%patch")-1)) {
 	    res = doPatchMacro(spec, *lines);
+	} else if (! strncmp(*lines, "%autopatch", sizeof("%autopatch")-1)) {
+	    res = doAutopatchMacro(spec, *lines);
 	} else {
 	    appendLineStringBuf(spec->prep, *lines);
 	}

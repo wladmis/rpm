@@ -576,6 +576,10 @@ is_builtin_prep_tag(const char *line, int len)
 			return line;
 	}
 
+	if (len >= sizeof("autopatch") - 1 &&
+		  !strncasecmp(line, "autopatch", sizeof("autopatch") - 1))
+	    return line;
+
 	return 0;
 }
 
