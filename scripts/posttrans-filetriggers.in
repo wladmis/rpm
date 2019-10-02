@@ -19,6 +19,9 @@
 filelist="${1:?}"
 shift
 
+# Remove variables defined by runExtScript() and leaked from other scripts.
+unset RPM_INSTALL_NAME RPM_INSTALL_ARG1 RPM_INSTALL_ARG2 ||:
+
 RC=0
 
 if [ -s "$filelist" ]; then
