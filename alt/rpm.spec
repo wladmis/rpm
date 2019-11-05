@@ -385,6 +385,10 @@ ls -A tests/rpmtests.dir 2>/dev/null ||:
 #[ ! -L %%_rpmlibdir/noarch-alt-%%_target_os ] || rm -f %%_rpmlibdir/noarch-alt-%%_target_os ||:
 
 %post
+if [ -f %_localstatedir/PackageKit/disable-rpm-triggers ]; then
+        exit 0
+fi
+
 #chgrp %%name %%_localstatedir/%%name/[A-Z]*
 [ -n "$DURING_INSTALL" -o -n "$BTE_INSTALL" ] ||
         %_rpmlibdir/pdeath_execute $PPID %_rpmlibdir/postupdate
