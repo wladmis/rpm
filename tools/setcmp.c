@@ -39,7 +39,7 @@ int main(int argc, const char **argv)
     int rc = 0;
     while (1) {
 	char *s1 = NULL, *s2 = NULL;
-	int n = scanf("%as %as", &s1, &s2);
+	int n = scanf("%ms %ms", &s1, &s2);
 	if (n == EOF)
 	    break;
 	assert(n == 2);
