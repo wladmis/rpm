@@ -7,6 +7,7 @@
 %def_with beecrypt
 %def_with memcached
 %def_enable default_priority_distbranch
+%def_with profile
 
 %define rpmhome /usr/lib/rpm
 
@@ -300,6 +301,27 @@ done;
 	#
 
 %make_build
+
+rpmquery -a --provides |fgrep '= set:' |sort >P
+rpmquery -a --requires |fgrep '= set:' |sort >R
+join -o 1.3,2.3 P R |shuf >setcmp-data
+time ./setcmp <setcmp-data >/dev/null
+rm lib/set.lo lib/librpm.la
+set_c_cflags="$(sed -n 's/^CFLAGS = //p' lib/Makefile) -W -Wno-override-init %{!?_enable_debug:-O3} -fno-builtin-memcmp"
+%make_build -C lib set.lo librpm.la CFLAGS="$set_c_cflags"
+
+%if_with profile
+time ./setcmp <setcmp-data >/dev/null
+rm lib/set.lo lib/librpm.la
+%make_build -C lib set.lo librpm.la CFLAGS="$set_c_cflags -fprofile-generate"
+./setcmp <setcmp-data >/dev/null
+ls -l lib/.libs/set.gcda
+rm lib/set.lo lib/librpm.la
+%make_build -C lib set.lo CFLAGS="$set_c_cflags -fprofile-use"
+%endif #with profile
+
+%make_build
+time ./setcmp <setcmp-data >/dev/null
 
 pushd python
 %python_build
