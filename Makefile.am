@@ -230,6 +230,10 @@ bin_PROGRAMS +=		rpmgraph
 rpmgraph_SOURCES =	tools/rpmgraph.c
 rpmgraph_LDADD =	lib/librpm.la rpmio/librpmio.la @WITH_POPT_LIB@
 
+noinst_PROGRAMS =	setcmp
+setcmp_SOURCES =	tools/setcmp.c
+setcmp_LDADD =		lib/librpm.la
+
 dist_bin_SCRIPTS =	scripts/gendiff
 
 rpmconfig_DATA = rpmrc
