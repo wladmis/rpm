@@ -143,7 +143,7 @@ static struct poptOption rpmAllPoptTable[] = {
 	N_("display final rpmrc and macro configuration"),
 	NULL },
 
-#if HAVE_LIBIO_H && defined(_G_IO_IO_FILE_VERSION)
+#ifdef HAVE_COOKIE_IO_FUNCTIONS_T
  { "nolibio", '\0', POPT_ARG_VAL|POPT_ARGFLAG_DOC_HIDDEN, &noLibio, 1,
 	N_("disable use of libio(3) API"), NULL},
 #endif
@@ -352,7 +352,7 @@ int main(int argc, const char ** argv)
     /* set the defaults for the various command line options */
     _ftp_debug = 0;
 
-#if HAVE_LIBIO_H && defined(_G_IO_IO_FILE_VERSION)
+#ifdef HAVE_COOKIE_IO_FUNCTIONS_T
     noLibio = 0;
 #else
     noLibio = 1;

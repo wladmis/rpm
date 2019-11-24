@@ -318,7 +318,7 @@ AC_CHECK_HEADERS(netinet/in_systm.h)
 AC_CHECK_HEADERS(machine/types.h)
 AC_CHECK_HEADERS(mntent.h sys/mnttab.h sys/systemcfg.h)
 AC_CHECK_HEADERS(sys/mount.h sys/mntctl.h sys/param.h sys/vmount.h)
-AC_CHECK_HEADERS(libio.h zlib.h)
+AC_CHECK_HEADERS(zlib.h)
 AC_CHECK_HEADERS(err.h mcheck.h syslog.h)
 AC_CHECK_HEADERS(locale.h)
 
@@ -326,6 +326,8 @@ dnl popt w float/double needs.
 AC_CHECK_HEADERS(float.h)
 
 AC_CHECK_HEADERS(glob.h)
+
+AC_CHECK_TYPES([cookie_io_functions_t],,, [#include <stdio.h>])
 
 dnl statfs portability fiddles.
 dnl
