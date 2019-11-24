@@ -434,7 +434,7 @@ static inline int fdSeek(void * cookie, _libio_pos_t pos, int whence)
 	/*@modifies fileSystem, internalState @*/
 {
 #ifdef USE_COOKIE_SEEK_POINTER
-    _IO_off64_t p = *pos;
+    off64_t p = *pos;
 #else
     off_t p = pos;
 #endif
@@ -2460,7 +2460,7 @@ static inline int gzdSeek(void * cookie, _libio_pos_t pos, int whence)
 	/*@modifies fileSystem, internalState @*/
 {
 #ifdef USE_COOKIE_SEEK_POINTER
-    _IO_off64_t p = *pos;
+    off64_t p = *pos;
 #else
     off_t p = pos;
 #endif
@@ -3280,7 +3280,7 @@ DBGIO(fd, (stderr, "==> Fwrite(%p,%u,%u,%p) %s\n", buf, (unsigned)size, (unsigne
 int Fseek(FD_t fd, _libio_off_t offset, int whence) {
     fdio_seek_function_t _seek;
 #ifdef USE_COOKIE_SEEK_POINTER
-    _IO_off64_t o64 = offset;
+    off64_t o64 = offset;
     _libio_pos_t pos = &o64;
 #else
     _libio_pos_t pos = offset;
