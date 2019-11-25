@@ -315,7 +315,11 @@ time ./setcmp <setcmp-data >/dev/null
 rm lib/set.lo lib/librpm.la
 %make_build -C lib set.lo librpm.la CFLAGS="$set_c_cflags -fprofile-generate"
 ./setcmp <setcmp-data >/dev/null
+%ifnarch %e2k
 ls -l lib/.libs/set.gcda
+%else
+mv eprof.sum* lib
+%endif
 rm lib/set.lo lib/librpm.la
 %make_build -C lib set.lo CFLAGS="$set_c_cflags -fprofile-use"
 %endif #with profile
